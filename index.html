@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="hi-en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Free Mock Test Platform for SSC, Railway, Police & Competitive Exams. Practice with 55+ questions, timer, negative marking, and detailed analysis.">
+  <meta name="keywords" content="mock test, SSC, Railway, Police, competitive exam, practice test, quiz, online test">
+  <meta name="author" content="MockTestPro">
+  <meta name="theme-color" content="#060a13">
+
+  <title>MockTestPro — Free Mock Tests for SSC, Railway & More</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+
+  <style>
+    /* Splash loading */
+    .splash-loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .splash-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .splash-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--bg-glass);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash loader -->
+  <div class="splash-loader" id="splash">
+    <div class="splash-spinner"></div>
+  </div>
+
+  <!-- App Mount Point -->
+  <div id="app"></div>
+
+  <!-- Scripts (order matters) -->
+  <script src="js/data/questions.js"></script>
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/storage.js"></script>
+  <script src="js/engine/testEngine.js"></script>
+  <script src="js/engine/analytics.js"></script>
+  <script src="js/pages/home.js"></script>
+  <script src="js/pages/setup.js"></script>
+  <script src="js/pages/test.js"></script>
+  <script src="js/pages/result.js"></script>
+  <script src="js/pages/analysis.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    // Hide splash after app loads
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('splash').classList.add('hidden');
+        setTimeout(() => document.getElementById('splash').remove(), 400);
+      }, 300);
+    });
+  </script>
+</body>
+</html>
