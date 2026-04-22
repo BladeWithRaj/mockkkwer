@@ -5,6 +5,8 @@
 const App = {
   currentPage: null,
   lastResult: null,
+  lastTestConfig: null,
+  lastTestQuestionIds: null,
   params: {},
   questionsLoaded: false,
 

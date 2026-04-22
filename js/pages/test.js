@@ -1,5 +1,7 @@
 // ============================================
-// MOCK TEST PLATFORM — Test Page
+// TEST PAGE — Full UX Upgrade
+// Progress bar, % timer, slide animation,
+// mobile bottom sheet, clean question states
 // ============================================
 
 const TestPage = {
@@ -22,14 +24,29 @@ const TestPage = {
     const current = TestEngine.getCurrentQuestion();
     const navStatus = TestEngine.getNavStatus();
     const noTimer = TestEngine.state.totalTime >= 99999;
+    const progressPercent = ((current.index + 1) / current.total) * 100;
+    const answeredCount = TestEngine.state.answers.filter(a => a !== null).length;
+
+    // Progress bar color based on completion
+    let progressClass = '';
+    if (progressPercent >= 80) progressClass = 'intense';
+    else if (progressPercent >= 50) progressClass = 'active';
 
     return `
       <div class="test-page">
+        <!-- Progress Bar -->
+        <div class="test-progress-wrap">
+          <div class="test-progress-bar ${progressClass}" style="width: ${progressPercent}%" id="test-progress-bar"></div>
+        </div>
+
         <!-- Top Bar -->
         <div class="test-topbar">
           <div class="test-info">
             <span class="test-info-item">
               Q <strong>${current.index + 1}/${current.total}</strong>
+            </span>
+            <span class="test-info-item answered-badge">
+              ✅ ${answeredCount}
             </span>
             <span class="chip ${Helpers.getDifficultyClass(current.question.difficulty)}">
               ${current.question.difficulty}
@@ -54,8 +71,8 @@ const TestPage = {
             ${this._renderQuestion(current)}
           </div>
 
-          <!-- Nav Panel -->
-          <div class="question-nav-panel">
+          <!-- Nav Panel (desktop) -->
+          <div class="question-nav-panel" id="nav-panel-desktop">
             <div class="nav-panel-card">
               <div class="nav-panel-title">Questions</div>
               <div class="nav-grid" id="nav-grid">
@@ -73,6 +90,37 @@ const TestPage = {
             </div>
           </div>
         </div>
+
+        <!-- Mobile Bottom Bar -->
+        <div class="test-mobile-bar">
+          <button class="mobile-nav-btn" onclick="TestPage.prev()"
+                  ${current.index === 0 ? 'disabled' : ''}>← Prev</button>
+          <button class="mobile-nav-btn nav-toggle" onclick="TestPage.toggleMobileNav()">
+            ${current.index + 1}/${current.total}
+          </button>
+          <button class="mobile-nav-btn primary" onclick="TestPage.next()">
+            ${current.index === current.total - 1 ? 'Submit' : 'Next →'}
+          </button>
+        </div>
+
+        <!-- Mobile Nav Sheet -->
+        <div class="mobile-nav-sheet" id="mobile-nav-sheet">
+          <div class="mobile-nav-sheet-overlay" onclick="TestPage.toggleMobileNav()"></div>
+          <div class="mobile-nav-sheet-content">
+            <div class="nav-panel-title">Questions</div>
+            <div class="nav-grid" id="nav-grid-mobile">
+              ${navStatus.map((ns, i) => `
+                <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
+                        onclick="TestPage.goTo(${i});TestPage.toggleMobileNav()">${i + 1}</button>
+              `).join('')}
+            </div>
+            <div class="nav-legend" style="justify-content: center;">
+              <span class="legend-item"><span class="legend-dot current"></span> Current</span>
+              <span class="legend-item"><span class="legend-dot answered"></span> Answered</span>
+              <span class="legend-item"><span class="legend-dot review"></span> Review</span>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -80,22 +128,23 @@ const TestPage = {
   _renderQuestion(current) {
     const q = current.question;
     const labels = ['A', 'B', 'C', 'D'];
+    const showTopic = q.topic && q.topic !== q.subject;
 
     return `
       <div class="question-header">
         <div class="question-number">${current.index + 1}</div>
         <div class="question-meta">
           <span class="chip chip-primary">${q.subject}</span>
-          <span class="chip">${q.topic}</span>
-          ${q.pyq ? `<span class="chip chip-warning">PYQ ${q.year || ''}</span>` : ''}
+          ${showTopic ? `<span class="chip">${q.topic}</span>` : ''}
         </div>
       </div>
 
-      <div class="question-text">${q.question}</div>
+      <div class="question-text question-slide-in">${q.question}</div>
 
       <div class="options-list" id="options-list">
         ${q.options.map((opt, i) => `
-          <button class="option-btn ${current.selectedAnswer === i ? 'selected' : ''}"
+          <button class="option-btn ${current.selectedAnswer === i ? 'selected' : ''} option-slide-in"
+                  style="animation-delay: ${i * 60}ms;"
                   onclick="TestPage.selectOption(${i})" id="option-${i}">
             <span class="option-label">${labels[i]}</span>
             <span class="option-text">${opt}</span>
@@ -113,7 +162,7 @@ const TestPage = {
             🔖 ${current.isMarkedForReview ? 'Marked' : 'Mark for Review'}
           </button>
         </div>
-        <div class="question-actions-right">
+        <div class="question-actions-right desktop-only">
           <button class="btn btn-secondary btn-sm" onclick="TestPage.prev()"
                   ${current.index === 0 ? 'disabled style="opacity:0.4;pointer-events:none"' : ''}
                   id="prev-btn">
@@ -128,7 +177,6 @@ const TestPage = {
   },
 
   afterRender() {
-    // Start timer
     this.startTimer();
 
     // Keyboard shortcuts
@@ -145,6 +193,9 @@ const TestPage = {
       }
     };
     document.addEventListener('keydown', this._keyHandler);
+
+    // Swipe support for mobile
+    this._setupSwipe();
   },
 
   destroy() {
@@ -154,6 +205,22 @@ const TestPage = {
     }
   },
 
+  // ── Swipe support ──
+  _setupSwipe() {
+    const area = document.getElementById('question-area');
+    if (!area) return;
+    let startX = 0;
+    area.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+    area.addEventListener('touchend', (e) => {
+      const diff = e.changedTouches[0].clientX - startX;
+      if (Math.abs(diff) > 60) {
+        if (diff > 0) this.prev();
+        else this.next();
+      }
+    }, { passive: true });
+  },
+
+  // ── Timer with %-based thresholds ──
   startTimer() {
     this.stopTimer();
     if (!TestEngine.state || TestEngine.state.totalTime >= 99999) return;
@@ -173,11 +240,16 @@ const TestPage = {
       if (timerEl) {
         timerEl.textContent = Helpers.formatTime(result);
       }
+
       if (timerDisplay) {
-        timerDisplay.classList.remove('warning', 'danger');
-        if (result <= 30) {
-          timerDisplay.classList.add('danger');
-        } else if (result <= 60) {
+        const totalTime = TestEngine.state.totalTime;
+        const percentLeft = result / totalTime;
+
+        timerDisplay.classList.remove('warning', 'danger', 'timer-shake');
+
+        if (percentLeft <= 0.10) {
+          timerDisplay.classList.add('danger', 'timer-shake');
+        } else if (percentLeft <= 0.20) {
           timerDisplay.classList.add('warning');
         }
       }
@@ -194,11 +266,15 @@ const TestPage = {
   selectOption(index) {
     TestEngine.selectAnswer(index);
     this.refreshQuestion();
+    this.refreshNav();
+    this._updateProgress();
   },
 
   clearAnswer() {
     TestEngine.clearAnswer();
     this.refreshQuestion();
+    this.refreshNav();
+    this._updateProgress();
   },
 
   toggleReview() {
@@ -213,33 +289,38 @@ const TestPage = {
       this.confirmSubmit();
     } else {
       TestEngine.nextQuestion();
-      this.refreshQuestion();
+      this.refreshQuestion('left');
       this.refreshNav();
+      this._updateProgress();
     }
   },
 
   prev() {
+    const current = TestEngine.getCurrentQuestion();
+    if (current.index === 0) return;
     TestEngine.prevQuestion();
-    this.refreshQuestion();
+    this.refreshQuestion('right');
     this.refreshNav();
+    this._updateProgress();
   },
 
   goTo(index) {
     TestEngine.goToQuestion(index);
     this.refreshQuestion();
     this.refreshNav();
+    this._updateProgress();
   },
 
-  refreshQuestion() {
+  refreshQuestion(direction) {
     const area = document.getElementById('question-area');
     if (area) {
       const current = TestEngine.getCurrentQuestion();
       area.innerHTML = this._renderQuestion(current);
-      area.querySelector('.question-text').style.animation = 'fadeIn 200ms ease';
     }
   },
 
   refreshNav() {
+    // Desktop nav
     const grid = document.getElementById('nav-grid');
     if (grid) {
       const navStatus = TestEngine.getNavStatus();
@@ -248,18 +329,50 @@ const TestPage = {
                 onclick="TestPage.goTo(${i})" id="nav-btn-${i}">${i + 1}</button>
       `).join('');
     }
+    // Mobile nav
+    const mGrid = document.getElementById('nav-grid-mobile');
+    if (mGrid) {
+      const navStatus = TestEngine.getNavStatus();
+      mGrid.innerHTML = navStatus.map((ns, i) => `
+        <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
+                onclick="TestPage.goTo(${i});TestPage.toggleMobileNav()">${i + 1}</button>
+      `).join('');
+    }
+  },
+
+  _updateProgress() {
+    const bar = document.getElementById('test-progress-bar');
+    if (bar && TestEngine.state) {
+      const current = TestEngine.getCurrentQuestion();
+      const pct = ((current.index + 1) / current.total) * 100;
+      bar.style.width = pct + '%';
+      bar.classList.remove('active', 'intense');
+      if (pct >= 80) bar.classList.add('intense');
+      else if (pct >= 50) bar.classList.add('active');
+    }
+  },
+
+  toggleMobileNav() {
+    const sheet = document.getElementById('mobile-nav-sheet');
+    if (sheet) sheet.classList.toggle('open');
   },
 
   confirmSubmit() {
     const summary = TestEngine.getSummary();
     if (!summary) return;
 
+    const unansweredWarning = summary.unanswered > 0
+      ? `<p style="font-size: var(--text-sm); color: var(--warning); margin-top: var(--space-3);">
+           ⚠️ You have <strong>${summary.unanswered}</strong> unanswered question${summary.unanswered > 1 ? 's' : ''}. Submit anyway?
+         </p>`
+      : '';
+
     const modalHTML = `
       <div class="modal-backdrop" id="submit-modal" onclick="if(event.target===this)document.getElementById('submit-modal').remove()">
         <div class="modal">
           <div class="modal-title">Submit Test?</div>
           <div class="modal-text">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0;">
               <div style="padding: var(--space-3); background: var(--success-bg); border-radius: var(--radius-md); text-align: center;">
                 <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--success);">${summary.answered}</div>
                 <div style="font-size: var(--text-xs); color: var(--text-muted);">Answered</div>
@@ -268,13 +381,16 @@ const TestPage = {
                 <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--danger);">${summary.unanswered}</div>
                 <div style="font-size: var(--text-xs); color: var(--text-muted);">Unanswered</div>
               </div>
+              <div style="padding: var(--space-3); background: var(--warning-bg); border-radius: var(--radius-md); text-align: center;">
+                <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--warning);">${summary.reviewed}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Review</div>
+              </div>
             </div>
-            ${summary.reviewed > 0 ? `<p style="font-size: var(--text-sm);">⚠️ ${summary.reviewed} questions marked for review</p>` : ''}
-            <p style="font-size: var(--text-sm); margin-top: var(--space-2);">Are you sure you want to submit?</p>
+            ${unansweredWarning}
           </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" onclick="document.getElementById('submit-modal').remove()">Cancel</button>
-            <button class="btn btn-primary" onclick="TestPage.submitTest()">Submit</button>
+            <button class="btn btn-primary" onclick="TestPage.submitTest()">✅ Submit</button>
           </div>
         </div>
       </div>
@@ -284,11 +400,16 @@ const TestPage = {
   },
 
   submitTest() {
-    // Remove modal
     const modal = document.getElementById('submit-modal');
     if (modal) modal.remove();
 
     this.stopTimer();
+
+    // Store config for retry
+    if (TestEngine.state) {
+      App.lastTestConfig = { ...TestEngine.state.config };
+      App.lastTestQuestionIds = TestEngine.state.questions.map(q => q.id);
+    }
 
     const result = TestEngine.submit();
     if (result) {

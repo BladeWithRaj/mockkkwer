@@ -1,5 +1,7 @@
 // ============================================
-// MOCK TEST PLATFORM — Result Page
+// RESULT PAGE — Full UX Upgrade
+// Retry same/new, insights, performance bands,
+// strong/weak areas, animated stats
 // ============================================
 
 const ResultPage = {
@@ -20,15 +22,38 @@ const ResultPage = {
 
     const circumference = 2 * Math.PI * 72;
     const offset = circumference - (result.accuracy / 100) * circumference;
+
+    // Performance band
+    let band, bandClass, bandEmoji;
+    if (result.accuracy >= 80) { band = 'Excellent!'; bandClass = 'excellent'; bandEmoji = '🏆'; }
+    else if (result.accuracy >= 60) { band = 'Good Effort!'; bandClass = 'good'; bandEmoji = '👍'; }
+    else if (result.accuracy >= 40) { band = 'Keep Going!'; bandClass = 'average'; bandEmoji = '💪'; }
+    else { band = 'Needs Practice'; bandClass = 'weak'; bandEmoji = '📚'; }
+
+    // Strong/weak subjects
+    const subjectEntries = Object.entries(result.subjectWise);
+    let strongArea = null, weakArea = null;
+    if (subjectEntries.length > 0) {
+      const sorted = subjectEntries
+        .map(([name, data]) => ({ name, acc: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0, ...data }))
+        .sort((a, b) => b.acc - a.acc);
+      strongArea = sorted[0];
+      weakArea = sorted.length > 1 ? sorted[sorted.length - 1] : null;
+    }
+
     const scoreColor = result.accuracy >= 70 ? 'var(--success)' :
                        result.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
 
     return `
       <div class="result-page page-enter">
+        <!-- Header with performance band -->
         <div class="result-header animate-fadeInDown">
-          <h1>${result.accuracy >= 70 ? '🎉 Excellent!' : result.accuracy >= 40 ? '👍 Good Effort!' : '💪 Keep Practicing!'}</h1>
+          <div class="result-band ${bandClass}">
+            <span class="result-band-emoji">${bandEmoji}</span>
+            <span class="result-band-text">${band}</span>
+          </div>
           <p style="color: var(--text-secondary); margin-top: var(--space-2);">
-            Here's how you performed
+            Here's your performance breakdown
           </p>
         </div>
 
@@ -87,6 +112,45 @@ const ResultPage = {
           ` : ''}
         </div>
 
+        <!-- Insights Card -->
+        <div class="card animate-fadeInUp stagger-1" style="margin-bottom: var(--space-6);">
+          <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">🧠 Insights</h3>
+          <div class="insights-grid">
+            <div class="insight-item">
+              <div class="insight-icon">🎯</div>
+              <div>
+                <div class="insight-label">Accuracy</div>
+                <div class="insight-value" style="color: ${scoreColor};">${result.accuracy}%</div>
+              </div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-icon">⏱️</div>
+              <div>
+                <div class="insight-label">Avg per Question</div>
+                <div class="insight-value">${result.avgTimePerQuestion}s</div>
+              </div>
+            </div>
+            ${strongArea ? `
+            <div class="insight-item">
+              <div class="insight-icon">💪</div>
+              <div>
+                <div class="insight-label">Strong Area</div>
+                <div class="insight-value" style="color: var(--success);">${strongArea.name} (${strongArea.acc}%)</div>
+              </div>
+            </div>
+            ` : ''}
+            ${weakArea && weakArea.name !== (strongArea && strongArea.name) ? `
+            <div class="insight-item">
+              <div class="insight-icon">📚</div>
+              <div>
+                <div class="insight-label">Needs Work</div>
+                <div class="insight-value" style="color: var(--danger);">${weakArea.name} (${weakArea.acc}%)</div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
         <!-- Accuracy Bar -->
         <div class="card animate-fadeInUp stagger-2" style="margin-bottom: var(--space-6);">
           <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-3);">
@@ -103,11 +167,11 @@ const ResultPage = {
         </div>
 
         <!-- Subject Breakdown -->
-        ${Object.keys(result.subjectWise).length > 1 ? `
+        ${subjectEntries.length > 1 ? `
           <div class="card animate-fadeInUp stagger-3" style="margin-bottom: var(--space-6);">
             <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-6);">Subject-wise Performance</h3>
             <div class="subject-breakdown">
-              ${Object.entries(result.subjectWise).map(([subject, data]) => {
+              ${subjectEntries.map(([subject, data]) => {
                 const acc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
                 return `
                   <div class="subject-bar">
@@ -123,7 +187,7 @@ const ResultPage = {
           </div>
         ` : ''}
 
-        <!-- Chart Area -->
+        <!-- Chart -->
         <div class="card animate-fadeInUp stagger-4" style="margin-bottom: var(--space-6);">
           <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Score Distribution</h3>
           <canvas id="result-donut-chart" width="280" height="280" style="margin: 0 auto; display: block;"></canvas>
@@ -134,41 +198,54 @@ const ResultPage = {
           </div>
         </div>
 
-        <!-- Weak Topics -->
-        ${result.weakTopics.length > 0 ? `
-          <div class="card animate-fadeInUp stagger-5" style="margin-bottom: var(--space-6);">
-            <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">⚠️ Areas to Improve</h3>
-            <div class="weak-topics-list">
-              ${result.weakTopics.map(topic => `
-                <div class="weak-topic-item">
-                  <div class="weak-topic-info">
-                    <div class="weak-topic-icon">${Helpers.getSubjectIcon(topic.subject)}</div>
-                    <div>
-                      <div class="weak-topic-name">${topic.topic}</div>
-                      <div class="weak-topic-detail">${topic.subject} • ${topic.correct}/${topic.total} correct</div>
-                    </div>
-                  </div>
-                  <span class="chip chip-danger">${topic.accuracy}%</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-
         <!-- Actions -->
-        <div class="result-actions animate-fadeInUp stagger-6">
+        <div class="result-actions animate-fadeInUp stagger-5">
           <button class="btn btn-primary btn-lg" onclick="App.navigate('analysis')" id="view-analysis-btn">
             📊 View Detailed Analysis
           </button>
-          <button class="btn btn-secondary btn-lg" onclick="App.navigate('setup')" id="retake-btn">
-            🔄 Take Another Test
-          </button>
+          <div style="display: flex; gap: var(--space-3); width: 100%;">
+            <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
+              🔄 Retry Same
+            </button>
+            <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="App.navigate('setup')" id="retry-new-btn">
+              🆕 New Test
+            </button>
+          </div>
           <button class="btn btn-ghost" onclick="App.navigate('home')">
             🏠 Back to Home
           </button>
         </div>
       </div>
     `;
+  },
+
+  // Retry with same config (new random from same filters)
+  retrySameTest() {
+    const config = App.lastTestConfig;
+    if (!config) {
+      Helpers.showToast('No previous test config found', 'error');
+      App.navigate('setup');
+      return;
+    }
+
+    const result = TestEngine.createTest({
+      subject: config.subject || 'all',
+      exam: config.exam || 'all',
+      difficulty: config.difficulty || 'all',
+      numQuestions: config.numQuestions || config.actualQuestions || 10,
+      timePerQuestion: 60,
+      totalTime: null,
+      negativeMarking: config.negativeMarking || false,
+      negativeValue: config.negativeValue || 0.25
+    });
+
+    if (result.error) {
+      Helpers.showToast(result.error, 'error');
+      return;
+    }
+
+    Helpers.showToast(`Retry! ${result.questionCount} questions`, 'success');
+    App.navigate('test');
   },
 
   afterRender() {
@@ -178,9 +255,7 @@ const ResultPage = {
     // Animate score circle
     setTimeout(() => {
       const circle = document.getElementById('score-circle-fill');
-      if (circle) {
-        circle.style.strokeDashoffset = circle.dataset.target;
-      }
+      if (circle) circle.style.strokeDashoffset = circle.dataset.target;
     }, 300);
 
     // Animate counters
