@@ -5,7 +5,7 @@
 const HomePage = {
   render() {
     const stats = Storage.getStats();
-    const questions = Storage.getQuestionBank();
+    const questions = window.QUESTION_BANK || [];
 
     // Count by exam
     const examCounts = {};

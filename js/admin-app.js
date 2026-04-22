@@ -13,7 +13,34 @@ const AdminApp = {
 
   sections: ['dashboard', 'questions', 'add', 'bulk-upload', 'analytics'],
 
-  init() {
+  async init() {
+    // Show loading state
+    const mainEl = document.getElementById('admin-main');
+    if (mainEl) {
+      mainEl.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 20px;">
+          <div style="width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary, #6366f1); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p style="color: var(--text-secondary, #94a3b8); font-size: 16px;">Loading questions from database...</p>
+        </div>
+      `;
+    }
+
+    // Fetch questions from Supabase
+    try {
+      console.log("Admin: Fetching questions...");
+      const data = await window.fetchQuestions();
+      if (data && data.length > 0) {
+        window.QUESTION_BANK = window.mapDBToUI(data);
+        console.log("Admin:", window.QUESTION_BANK.length, "questions loaded");
+      } else {
+        window.QUESTION_BANK = [];
+        console.warn("Admin: No questions found");
+      }
+    } catch (err) {
+      console.error("Admin: Failed:", err);
+      window.QUESTION_BANK = [];
+    }
+
     const hash = window.location.hash.slice(1) || 'dashboard';
     this.navigateTo(hash);
 
@@ -76,8 +103,7 @@ const AdminApp = {
   // DASHBOARD
   // ═══════════════════════════════════════
   renderDashboard() {
-    const questions = Storage.getQuestionBank();
-    const custom = Storage.getCustomQuestions();
+    const questions = window.QUESTION_BANK || [];
     const history = Storage.getHistory();
     const stats = Storage.getStats();
 
@@ -115,10 +141,10 @@ const AdminApp = {
             </div>
           </div>
           <div class="admin-stat-card animate-fadeInUp stagger-1">
-            <div class="admin-stat-icon green">✏️</div>
+            <div class="admin-stat-icon green">🗄️</div>
             <div class="admin-stat-info">
-              <div class="admin-stat-value">${custom.length}</div>
-              <div class="admin-stat-label">Custom Questions</div>
+              <div class="admin-stat-value">${questions.length}</div>
+              <div class="admin-stat-label">DB Questions</div>
             </div>
           </div>
           <div class="admin-stat-card animate-fadeInUp stagger-2">
@@ -179,7 +205,7 @@ const AdminApp = {
   },
 
   afterDashboardRender() {
-    const questions = Storage.getQuestionBank();
+    const questions = window.QUESTION_BANK || [];
     const subjectCounts = {};
     const difficultyCounts = { easy: 0, medium: 0, hard: 0 };
 
@@ -211,7 +237,7 @@ const AdminApp = {
   // QUESTION MANAGER
   // ═══════════════════════════════════════
   renderQuestions() {
-    let questions = Storage.getQuestionBank();
+    let questions = [...(window.QUESTION_BANK || [])];
     const subjects = [...new Set(questions.map(q => q.subject))];
     const exams = [...new Set(questions.flatMap(q => q.exam || []))];
 
@@ -312,8 +338,7 @@ const AdminApp = {
   renderAddQuestion() {
     const q = this.editingQuestion || {
       question: '', options: ['', '', '', ''], correct: 0,
-      explanation: '', subject: 'Math', topic: '',
-      difficulty: 'medium', exam: [], pyq: false, year: ''
+      subject: 'Math', difficulty: 'medium', exam: []
     };
     const isEdit = !!this.editingQuestion;
     const labels = ['A', 'B', 'C', 'D'];
@@ -323,7 +348,7 @@ const AdminApp = {
         <div class="admin-page-header">
           <div>
             <h1 class="admin-page-title">${isEdit ? 'Edit Question' : 'Add Question'}</h1>
-            <p class="admin-page-subtitle">${isEdit ? 'Update question details' : 'Add a new question to the bank'}</p>
+            <p class="admin-page-subtitle">${isEdit ? 'Update question details' : 'Add a new question to the database'}</p>
           </div>
           <button class="btn btn-ghost" onclick="AdminApp.navigateTo('questions')">← Back to Questions</button>
         </div>
@@ -360,13 +385,7 @@ const AdminApp = {
             </div>
           </div>
 
-          <!-- Explanation -->
-          <div class="input-group">
-            <label class="input-label">Explanation</label>
-            <textarea class="textarea" id="q-explanation" rows="2" placeholder="Explain the answer...">${q.explanation}</textarea>
-          </div>
-
-          <!-- Subject & Topic -->
+          <!-- Subject & Difficulty -->
           <div class="form-row">
             <div class="input-group">
               <label class="input-label">Subject *</label>
@@ -377,14 +396,6 @@ const AdminApp = {
               </select>
             </div>
             <div class="input-group">
-              <label class="input-label">Topic *</label>
-              <input type="text" class="input" id="q-topic" value="${q.topic}" placeholder="e.g., Profit & Loss">
-            </div>
-          </div>
-
-          <!-- Difficulty & Exam -->
-          <div class="form-row">
-            <div class="input-group">
               <label class="input-label">Difficulty *</label>
               <select class="select" id="q-difficulty">
                 <option value="easy" ${q.difficulty === 'easy' ? 'selected' : ''}>Easy</option>
@@ -392,28 +403,12 @@ const AdminApp = {
                 <option value="hard" ${q.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
               </select>
             </div>
-            <div class="input-group">
-              <label class="input-label">Exam Tags (comma separated)</label>
-              <input type="text" class="input" id="q-exam" value="${(q.exam || []).join(', ')}" placeholder="SSC, Railway, Police">
-            </div>
           </div>
 
-          <!-- PYQ -->
-          <div class="form-row">
-            <div class="input-group">
-              <label class="input-label">Previous Year Question?</label>
-              <div class="switch-wrapper">
-                <label class="switch">
-                  <input type="checkbox" id="q-pyq" ${q.pyq ? 'checked' : ''}>
-                  <span class="switch-track"></span>
-                </label>
-                <span style="font-size: var(--text-sm); color: var(--text-secondary);">PYQ</span>
-              </div>
-            </div>
-            <div class="input-group">
-              <label class="input-label">Year (if PYQ)</label>
-              <input type="number" class="input" id="q-year" value="${q.year || ''}" placeholder="2023" min="2000" max="2030">
-            </div>
+          <!-- Exam -->
+          <div class="input-group">
+            <label class="input-label">Exam</label>
+            <input type="text" class="input" id="q-exam" value="${(q.exam || []).join(', ')}" placeholder="SSC, Railway, Police">
           </div>
 
           <!-- Submit -->
@@ -439,7 +434,7 @@ const AdminApp = {
     });
   },
 
-  saveQuestion() {
+  async saveQuestion() {
     const question = document.getElementById('q-text').value.trim();
     const options = [
       document.getElementById('q-opt-0').value.trim(),
@@ -448,42 +443,57 @@ const AdminApp = {
       document.getElementById('q-opt-3').value.trim()
     ];
     const correct = this._selectedCorrect;
-    const explanation = document.getElementById('q-explanation').value.trim();
     const subject = document.getElementById('q-subject').value;
-    const topic = document.getElementById('q-topic').value.trim();
     const difficulty = document.getElementById('q-difficulty').value;
     const examStr = document.getElementById('q-exam').value;
-    const exam = examStr ? examStr.split(',').map(e => e.trim()).filter(Boolean) : [];
-    const pyq = document.getElementById('q-pyq').checked;
-    const yearVal = document.getElementById('q-year').value;
-    const year = yearVal ? parseInt(yearVal) : null;
+    const exam = examStr ? examStr.split(',').map(e => e.trim()).filter(Boolean).join(',') : '';
 
     // Validate
     if (!question) { Helpers.showToast('Question text is required', 'error'); return; }
     if (options.some(o => !o)) { Helpers.showToast('All 4 options are required', 'error'); return; }
-    if (!topic) { Helpers.showToast('Topic is required', 'error'); return; }
 
-    const questionData = {
-      id: this.editingQuestion ? this.editingQuestion.id : Helpers.generateId(),
-      question, options, correct, explanation,
-      subject, topic, difficulty, exam, pyq, year
+    // Build DB row — correct_answer = actual option text
+    const dbRow = {
+      question: question,
+      option_a: options[0],
+      option_b: options[1],
+      option_c: options[2],
+      option_d: options[3],
+      correct_answer: options[correct],
+      subject: subject,
+      exam: exam,
+      difficulty: difficulty
     };
 
-    if (this.editingQuestion) {
-      Storage.updateQuestion(questionData.id, questionData);
-      Helpers.showToast('Question updated successfully!', 'success');
-    } else {
-      Storage.addQuestion(questionData);
-      Helpers.showToast('Question added successfully!', 'success');
+    // Validate: correct_answer must match one option
+    if (!options.includes(dbRow.correct_answer)) {
+      Helpers.showToast('Correct answer must match an option', 'error');
+      return;
     }
 
+    // Save to DB
+    const saveBtn = document.getElementById('save-question-btn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ Saving...'; }
+
+    const result = await addQuestionToDB(dbRow);
+
+    if (!result.success) {
+      Helpers.showToast(`Failed: ${result.error}`, 'error');
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '➕ Add Question'; }
+      return;
+    }
+
+    Helpers.showToast('Question added to database!', 'success');
+
+    // Reload questions from DB
+    await this._reloadQuestions();
     this.editingQuestion = null;
     this.navigateTo('questions');
   },
 
   editQuestion(id) {
-    const questions = Storage.getQuestionBank();
-    const q = questions.find(q => q.id === id);
+    const questions = window.QUESTION_BANK || [];
+    const q = questions.find(q => String(q.id) === String(id));
     if (q) {
       this.editingQuestion = { ...q };
       this._selectedCorrect = q.correct;
@@ -491,23 +501,23 @@ const AdminApp = {
     }
   },
 
-  deleteQuestion(id) {
-    // Check if it's a default question
-    const isDefault = QUESTION_BANK.some(q => q.id === id);
-    if (isDefault) {
-      Helpers.showToast('Cannot delete default questions', 'error');
+  async deleteQuestion(id) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+
+    const result = await deleteQuestionFromDB(id);
+
+    if (!result.success) {
+      Helpers.showToast(`Delete failed: ${result.error}`, 'error');
       return;
     }
 
-    if (confirm('Are you sure you want to delete this question?')) {
-      Storage.deleteQuestion(id);
-      Helpers.showToast('Question deleted', 'success');
-      this.render();
-    }
+    Helpers.showToast('Question deleted from database', 'success');
+    await this._reloadQuestions();
+    this.render();
   },
 
   exportQuestions() {
-    const questions = Storage.getQuestionBank();
+    const questions = window.QUESTION_BANK || [];
     Helpers.exportQuestionsJSON(questions);
     Helpers.showToast(`Exported ${questions.length} questions`, 'success');
   },
@@ -657,12 +667,32 @@ const AdminApp = {
 
   _pendingUpload: [],
 
-  confirmUpload() {
+  async confirmUpload() {
     if (this._pendingUpload.length === 0) return;
 
-    this._pendingUpload.forEach(q => Storage.addQuestion(q));
-    Helpers.showToast(`✅ ${this._pendingUpload.length} questions uploaded!`, 'success');
+    // Convert UI format → DB format for bulk insert
+    const dbRows = this._pendingUpload.map(q => ({
+      question: q.question,
+      option_a: q.options[0],
+      option_b: q.options[1],
+      option_c: q.options[2],
+      option_d: q.options[3],
+      correct_answer: q.options[q.correct],
+      subject: q.subject || 'General',
+      exam: (q.exam || []).join(','),
+      difficulty: q.difficulty || 'medium'
+    }));
+
+    const result = await bulkInsertQuestions(dbRows);
+
+    if (!result.success) {
+      Helpers.showToast(`Upload failed: ${result.error}`, 'error');
+      return;
+    }
+
+    Helpers.showToast(`✅ ${dbRows.length} questions uploaded to database!`, 'success');
     this._pendingUpload = [];
+    await this._reloadQuestions();
     this.navigateTo('questions');
   },
 
@@ -799,8 +829,17 @@ const AdminApp = {
         color: s.color
       })));
     }
+  },
+
+  // ── Reload questions from DB after mutations ──
+  async _reloadQuestions() {
+    const data = await window.fetchQuestions();
+    if (data && data.length > 0) {
+      window.QUESTION_BANK = window.mapDBToUI(data);
+      console.log("Reloaded:", window.QUESTION_BANK.length, "questions");
+    }
   }
 };
 
-// Init
-document.addEventListener('DOMContentLoaded', () => AdminApp.init());
+// Init (async)
+document.addEventListener('DOMContentLoaded', async () => await AdminApp.init());

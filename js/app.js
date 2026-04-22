@@ -1,11 +1,12 @@
 // ============================================
-// MOCK TEST PLATFORM — App Router & Init
+// APP — Router & Init (Async, DB-driven)
 // ============================================
 
 const App = {
   currentPage: null,
   lastResult: null,
   params: {},
+  questionsLoaded: false,
 
   pages: {
     home: HomePage,
@@ -15,12 +16,43 @@ const App = {
     analysis: AnalysisPage
   },
 
-  init() {
-    // Handle hash-based routing
-    window.addEventListener('hashchange', () => this.handleRoute());
+  async init() {
+    const appEl = document.getElementById('app');
 
-    // Initial route
-    this.handleRoute();
+    // Loading State
+    appEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px;">
+        <div class="splash-spinner" style="width: 48px; height: 48px; border: 3px solid var(--bg-glass, rgba(255,255,255,0.1)); border-top-color: var(--primary, #6366f1); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Loading questions...</p>
+      </div>
+    `;
+
+    try {
+      // Fetch from DB
+      const data = await window.fetchQuestions();
+
+      if (!data || data.length === 0) {
+        appEl.innerHTML = this._renderError("No questions found in database. Add questions via Admin panel.");
+        this.questionsLoaded = true;
+        return;
+      }
+
+      // Map DB → UI format
+      const questions = window.mapDBToUI(data);
+      window.QUESTION_BANK = questions;
+      this.questionsLoaded = true;
+
+      console.log("App ready:", questions.length, "questions loaded");
+
+      // Start routing
+      window.addEventListener('hashchange', () => this.handleRoute());
+      this.handleRoute();
+
+    } catch (err) {
+      console.error("App init error:", err);
+      appEl.innerHTML = this._renderError("Something went wrong: " + err.message);
+      this.questionsLoaded = true;
+    }
   },
 
   handleRoute() {
@@ -33,12 +65,10 @@ const App = {
         params[decodeURIComponent(k)] = decodeURIComponent(v || '');
       });
     }
-
     this.navigate(page, params, false);
   },
 
   navigate(page, params = {}, updateHash = true) {
-    // Destroy current page
     if (this.currentPage && this.pages[this.currentPage] && this.pages[this.currentPage].destroy) {
       this.pages[this.currentPage].destroy();
     }
@@ -46,35 +76,29 @@ const App = {
     this.currentPage = page;
     this.params = params;
 
-    // Update hash
     if (updateHash) {
       const paramStr = Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&');
       window.location.hash = paramStr ? `${page}?${paramStr}` : page;
     }
 
-    // Render page
     const pageModule = this.pages[page];
     if (!pageModule) {
       document.getElementById('app').innerHTML = this._render404();
       return;
     }
 
-    // Render header + page content
     const appEl = document.getElementById('app');
     appEl.innerHTML = this._renderHeader(page) + pageModule.render(params);
 
-    // After render hooks
     if (pageModule.afterRender) {
       requestAnimationFrame(() => pageModule.afterRender());
     }
 
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   _renderHeader(activePage) {
     const isTest = activePage === 'test';
-
     return `
       <header class="header">
         <div class="header-inner">
@@ -94,6 +118,19 @@ const App = {
     `;
   },
 
+  _renderError(message) {
+    return `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; padding: 24px;">
+        <div style="font-size: 64px;">⚠️</div>
+        <h2 style="color: var(--text-primary, #f1f5f9); font-size: 20px; font-weight: 600; margin: 0;">Failed to Load Questions</h2>
+        <p style="color: var(--text-secondary, #94a3b8); font-size: 14px; text-align: center; max-width: 400px; margin: 0;">${message}</p>
+        <button onclick="location.reload()" style="margin-top: 12px; padding: 10px 24px; background: var(--primary, #6366f1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">
+          🔄 Retry
+        </button>
+      </div>
+    `;
+  },
+
   _render404() {
     return `
       ${this._renderHeader('')}
@@ -109,7 +146,5 @@ const App = {
   }
 };
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  App.init();
-});
+// Init
+document.addEventListener('DOMContentLoaded', () => App.init());

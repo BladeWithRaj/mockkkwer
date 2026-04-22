@@ -25,7 +25,7 @@ const TestEngine = {
     } = config;
 
     // Get and filter questions
-    let questions = Storage.getQuestionBank();
+    let questions = [...(window.QUESTION_BANK || [])];
 
     if (subject !== 'all') {
       questions = questions.filter(q => q.subject === subject);

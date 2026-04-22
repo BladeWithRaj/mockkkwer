@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,8 @@
   <title>Admin Panel — MockTestPro</title>
 
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/variables.css">
@@ -16,6 +18,7 @@
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
   <!-- Mobile Sidebar Toggle -->
   <button class="admin-sidebar-toggle" onclick="AdminApp.toggleSidebar()">☰</button>
@@ -35,31 +38,28 @@
       </a>
 
       <nav class="admin-nav">
-        <a class="admin-nav-item active" data-section="dashboard"
-           onclick="AdminApp.navigateTo('dashboard')" href="#dashboard">
+        <a class="admin-nav-item active" data-section="dashboard" onclick="AdminApp.navigateTo('dashboard')"
+          href="#dashboard">
           <span class="admin-nav-icon">📊</span>
           Dashboard
         </a>
-        <a class="admin-nav-item" data-section="questions"
-           onclick="AdminApp.navigateTo('questions')" href="#questions">
+        <a class="admin-nav-item" data-section="questions" onclick="AdminApp.navigateTo('questions')" href="#questions">
           <span class="admin-nav-icon">📋</span>
           Questions
         </a>
-        <a class="admin-nav-item" data-section="add"
-           onclick="AdminApp.navigateTo('add')" href="#add">
+        <a class="admin-nav-item" data-section="add" onclick="AdminApp.navigateTo('add')" href="#add">
           <span class="admin-nav-icon">➕</span>
           Add Question
         </a>
-        <a class="admin-nav-item" data-section="bulk-upload"
-           onclick="AdminApp.navigateTo('bulk-upload')" href="#bulk-upload">
+        <a class="admin-nav-item" data-section="bulk-upload" onclick="AdminApp.navigateTo('bulk-upload')"
+          href="#bulk-upload">
           <span class="admin-nav-icon">📁</span>
           Bulk Upload
         </a>
 
         <div class="admin-nav-divider"></div>
 
-        <a class="admin-nav-item" data-section="analytics"
-           onclick="AdminApp.navigateTo('analytics')" href="#analytics">
+        <a class="admin-nav-item" data-section="analytics" onclick="AdminApp.navigateTo('analytics')" href="#analytics">
           <span class="admin-nav-icon">📈</span>
           Analytics
         </a>
@@ -78,11 +78,15 @@
     </main>
   </div>
 
+  <!-- Supabase JS Client CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Scripts -->
-  <script src="js/data/questions.js"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/storage.js"></script>
   <script src="js/engine/analytics.js"></script>
   <script src="js/admin-app.js"></script>
 </body>
+
 </html>

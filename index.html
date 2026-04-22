@@ -20,7 +20,6 @@
   <link rel="stylesheet" href="css/pages.css">
 
   <style>
-    /* Splash loading */
     .splash-loader {
       position: fixed;
       inset: 0;
@@ -57,8 +56,11 @@
   <!-- App Mount Point -->
   <div id="app"></div>
 
+  <!-- Supabase JS Client CDN (pinned v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Scripts (order matters) -->
-  <script src="js/data/questions.js"></script>
+  <script src="js/supabaseClient.js"></script>
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/storage.js"></script>
   <script src="js/engine/testEngine.js"></script>
@@ -71,13 +73,28 @@
   <script src="js/app.js"></script>
 
   <script>
-    // Hide splash after app loads
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('splash').classList.add('hidden');
-        setTimeout(() => document.getElementById('splash').remove(), 400);
-      }, 300);
-    });
+    // Hide splash once app finishes loading (success or error)
+    function hideSplash() {
+      const splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(() => splash.remove(), 400);
+      }
+    }
+
+    // Check every 200ms if app finished init
+    const _splashCheck = setInterval(() => {
+      if (App && App.questionsLoaded) {
+        clearInterval(_splashCheck);
+        hideSplash();
+      }
+    }, 200);
+
+    // Fallback: always hide after 5 seconds
+    setTimeout(() => {
+      clearInterval(_splashCheck);
+      hideSplash();
+    }, 5000);
   </script>
 </body>
 </html>

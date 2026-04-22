@@ -26,7 +26,7 @@ const SetupPage = {
       this.config.difficulty = 'all';
     }
 
-    const questions = Storage.getQuestionBank();
+    const questions = window.QUESTION_BANK || [];
     const subjects = [...new Set(questions.map(q => q.subject))];
     const exams = [...new Set(questions.flatMap(q => q.exam || []))];
 
