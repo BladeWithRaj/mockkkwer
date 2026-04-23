@@ -205,14 +205,17 @@ window.explainQuestion = async function(question) {
     const res = await fetch("/api/explain", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question })
     });
 
     const data = await res.json();
 
-    alert(data.explanation || "No explanation");
+    if (!res.ok) throw new Error(data.error);
+
+    alert(data.explanation);
+
   } catch (err) {
     console.error(err);
     alert("Error loading explanation");

@@ -1,35 +1,75 @@
-import fetch from "node-fetch";
+// explain.js – AI Explanation API (Gemini + Supabase Cache)
+// ─────────────────────────────────────────────────────────
+// Flow:
+//   1. POST { question } →
+//   2. Hash question → check Supabase cache
+//   3. Cache hit → return immediately
+//   4. Cache miss → Gemini API → save to Supabase → return
+// ─────────────────────────────────────────────────────────
+
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
+
+function hashQuestion(q) {
+  // Normalize: trim, lowercase, collapse whitespace
+  const normalized = q.trim().toLowerCase().replace(/\s+/g, " ");
+  return Buffer.from(normalized).toString("base64");
+}
 
 export default async function handler(req, res) {
   try {
+    // ── Only POST ──
     if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
+      return res.status(405).json({ error: "Only POST allowed" });
     }
 
     const { question } = req.body;
-
-    if (!question) {
-      return res.status(400).json({ error: "Question missing" });
+    if (!question || typeof question !== "string") {
+      return res.status(400).json({ error: "Question required" });
     }
 
-    console.log("[API] HIT:", question);
+    const qHash = hashQuestion(question);
+    console.log("[EXPLAIN] Question hash:", qHash.slice(0, 20) + "...");
 
-    // 🔐 ENV KEY
+    // ── STEP 1: Check Supabase cache ──
+    const { data: cached } = await supabase
+      .from("ai_explanations")
+      .select("explanation")
+      .eq("question_hash", qHash)
+      .single();
+
+    if (cached && cached.explanation) {
+      console.log("[EXPLAIN] Cache HIT");
+      return res.status(200).json({
+        explanation: cached.explanation,
+        cached: true,
+      });
+    }
+
+    console.log("[EXPLAIN] Cache MISS → calling Gemini");
+
+    // ── STEP 2: Gemini API call ──
     const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) {
+      console.error("[EXPLAIN] GEMINI_API_KEY not set!");
+      return res.status(500).json({ error: "API key not configured" });
+    }
 
-    const response = await fetch(
+    const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
               parts: [
                 {
-                  text: `Explain this question simply in Hinglish:\n${question}`,
+                  text: `Explain this question simply in Hinglish (Hindi + English mix). Be concise and clear:\n\n${question}`,
                 },
               ],
             },
@@ -38,15 +78,35 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
+    const geminiData = await geminiRes.json();
 
-    const text =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No explanation";
+    const explanation =
+      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    return res.status(200).json({ explanation: text });
+    if (!explanation) {
+      console.error("[EXPLAIN] Gemini returned no explanation:", JSON.stringify(geminiData));
+      return res.status(500).json({ error: "No explanation generated" });
+    }
+
+    // ── STEP 3: Save to Supabase cache ──
+    const { error: insertError } = await supabase.from("ai_explanations").insert([
+      {
+        question_hash: qHash,
+        question,
+        explanation
+      }
+    ]);
+
+    if (insertError) {
+      console.error("[EXPLAIN] Supabase insert error:", insertError.message);
+      // Don't fail the request — explanation was generated successfully
+    } else {
+      console.log("[EXPLAIN] Cached to Supabase");
+    }
+
+    return res.status(200).json({ explanation, cached: false });
   } catch (err) {
-    console.error("[API ERROR]", err);
+    console.error("[EXPLAIN] Server error:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
