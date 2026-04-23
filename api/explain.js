@@ -52,49 +52,37 @@ export default async function handler(req, res) {
 
     console.log("[EXPLAIN] Cache MISS → calling Gemini");
 
-    // ── STEP 2: Gemini API call ──
-    const API_KEY = process.env.GEMINI_API_KEY;
-    if (!API_KEY) {
-      console.error("[EXPLAIN] GEMINI_API_KEY not set!");
+    // ── STEP 2: Groq API call ──
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (!GROQ_API_KEY) {
+      console.error("[EXPLAIN] GROQ_API_KEY not set!");
       return res.status(500).json({ error: "API key not configured" });
     }
 
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `Explain this question simply in Hinglish (Hindi + English mix). Be concise and clear:\n\n${question}`,
-                },
-              ],
-            },
-          ],
-        }),
-      }
-    );
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "llama3-8b-8192",
+        messages: [
+          {
+            role: "user",
+            content: `Explain this question simply in Hinglish (Hindi + English mix). Be concise and clear:\n\n${question}`
+          }
+        ]
+      })
+    });
 
-    const geminiData = await geminiRes.json();
+    const groqData = await groqRes.json();
 
-    let explanation = "";
-
-    if (geminiData?.candidates?.length > 0) {
-      const candidate = geminiData.candidates[0];
-
-      if (candidate?.content?.parts?.length > 0) {
-        explanation = candidate.content.parts
-          .map(p => p.text || "")
-          .join(" ");
-      }
-    }
+    let explanation = groqData?.choices?.[0]?.message?.content || "";
 
     // fallback
     if (!explanation || explanation.trim() === "") {
-      console.error("[EXPLAIN] Gemini FULL response:", JSON.stringify(geminiData));
+      console.error("[EXPLAIN] Groq FULL response:", JSON.stringify(groqData));
       explanation = "Simple explanation not available. Try again.";
     }
 
