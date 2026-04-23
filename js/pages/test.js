@@ -6,6 +6,8 @@
 
 const TestPage = {
   timerInterval: null,
+  _isProcessing: false,
+  _lastWarningShown: false,
 
   render() {
     if (!TestEngine.state) {
@@ -230,8 +232,8 @@ const TestPage = {
 
       if (result === 'timeout') {
         this.stopTimer();
-        Helpers.showToast('⏰ Time\'s up! Auto-submitting...', 'error');
-        setTimeout(() => this.submitTest(), 500);
+        // Show timeout popup then auto-submit
+        this._showTimeoutPopup();
         return;
       }
 
@@ -253,6 +255,12 @@ const TestPage = {
           timerDisplay.classList.add('warning');
         }
       }
+
+      // Show warning popup at 60 seconds remaining (once)
+      if (result === 60 && !this._lastWarningShown) {
+        this._lastWarningShown = true;
+        this._showTimerWarning();
+      }
     }, 1000);
   },
 
@@ -264,10 +272,19 @@ const TestPage = {
   },
 
   selectOption(index) {
+    // Debounce: prevent rapid double-clicks
+    if (this._isProcessing) return;
+    this._isProcessing = true;
+
     TestEngine.selectAnswer(index);
     this.refreshQuestion();
     this.refreshNav();
     this._updateProgress();
+
+    // Release lock after animation frame
+    requestAnimationFrame(() => {
+      this._isProcessing = false;
+    });
   },
 
   clearAnswer() {
@@ -402,8 +419,13 @@ const TestPage = {
   submitTest() {
     const modal = document.getElementById('submit-modal');
     if (modal) modal.remove();
+    const timeoutModal = document.getElementById('timeout-modal');
+    if (timeoutModal) timeoutModal.remove();
+    const warningModal = document.getElementById('timer-warning-modal');
+    if (warningModal) warningModal.remove();
 
     this.stopTimer();
+    this._lastWarningShown = false;
 
     // Store config for retry
     if (TestEngine.state) {
@@ -416,5 +438,50 @@ const TestPage = {
       App.lastResult = result;
       App.navigate('result');
     }
+  },
+
+  // ── Time-up popup ──
+  _showTimeoutPopup() {
+    const html = `
+      <div class="modal-backdrop" id="timeout-modal">
+        <div class="modal">
+          <div class="modal-title" style="color: var(--danger);">⏰ Time's Up!</div>
+          <div class="modal-text">
+            <p>Your time has expired. The test will be submitted automatically.</p>
+          </div>
+          <div class="modal-actions" style="justify-content: center;">
+            <button class="btn btn-primary" onclick="TestPage.submitTest()">View Results</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+  },
+
+  // ── 60-second warning popup ──
+  _showTimerWarning() {
+    const html = `
+      <div class="modal-backdrop" id="timer-warning-modal" onclick="if(event.target===this)document.getElementById('timer-warning-modal').remove()">
+        <div class="modal">
+          <div class="modal-title" style="color: var(--warning);">⚠️ 60 Seconds Remaining!</div>
+          <div class="modal-text">
+            <p>You have <strong>1 minute</strong> left. Please review your answers and submit.</p>
+            <div style="margin-top: var(--space-4); padding: var(--space-3); background: var(--warning-bg); border-radius: var(--radius-md); font-size: var(--text-sm); color: var(--warning);">
+              Unanswered questions will be marked as skipped.
+            </div>
+          </div>
+          <div class="modal-actions" style="justify-content: center;">
+            <button class="btn btn-secondary" onclick="document.getElementById('timer-warning-modal').remove()">Continue Test</button>
+            <button class="btn btn-primary" onclick="TestPage.confirmSubmit()">Submit Now</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      const modal = document.getElementById('timer-warning-modal');
+      if (modal) modal.remove();
+    }, 5000);
   }
 };

@@ -187,6 +187,33 @@ const ResultPage = {
           </div>
         ` : ''}
 
+        <!-- Weak Topics -->
+        ${result.weakTopics && result.weakTopics.length > 0 ? `
+          <div class="card animate-fadeInUp stagger-3-5" style="margin-bottom: var(--space-6);">
+            <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-2);">🎯 Topics That Need Work</h3>
+            <p style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-5);">
+              Focus on these topics to improve your score
+            </p>
+            <div class="weak-topics-list">
+              ${result.weakTopics.slice(0, 5).map(topic => `
+                <div class="weak-topic-item">
+                  <div class="weak-topic-info">
+                    <div class="weak-topic-icon">📉</div>
+                    <div>
+                      <div class="weak-topic-name">${topic.topic || topic.name}</div>
+                      <div class="weak-topic-detail">${topic.subject} • ${topic.correct}/${topic.total} correct</div>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: ${topic.accuracy <= 25 ? 'var(--danger)' : 'var(--warning)'};">${topic.accuracy}%</div>
+                    <div style="font-size: var(--text-xs); color: var(--text-muted);">accuracy</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
         <!-- Chart -->
         <div class="card animate-fadeInUp stagger-4" style="margin-bottom: var(--space-6);">
           <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Score Distribution</h3>

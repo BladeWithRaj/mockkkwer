@@ -3,100 +3,129 @@
 // ============================================
 
 const Analytics = {
-  /**
-   * Get overall performance stats from history
-   */
-  getOverallStats() {
-    const history = Storage.getHistory();
-    if (history.length === 0) {
-      return {
-        totalTests: 0,
-        avgAccuracy: 0,
-        totalQuestions: 0,
-        totalTime: 0,
-        bestScore: 0,
-        worstScore: 0,
-        trend: []
-      };
+
+  // ── CACHE STATE ──
+  _cache: {
+    data: null,
+    timestamp: 0,
+    ttl: 60 * 1000 // 1 minute
+  },
+
+  // ── SUPABASE DRIVEN ANALYTICS ──
+
+  async loadDashboardStats(forceRefresh = false) {
+    // Check Cache first
+    if (!forceRefresh && this._cache.data && (Date.now() - this._cache.timestamp < this._cache.ttl)) {
+      console.log("📊 Serving dashboard from Cache");
+      return this._cache.data;
     }
 
-    const totalTests = history.length;
-    const avgAccuracy = Math.round(
-      history.reduce((sum, t) => sum + (t.accuracy || 0), 0) / totalTests
-    );
-    const totalQuestions = history.reduce((sum, t) => sum + (t.totalQuestions || 0), 0);
-    const totalTime = history.reduce((sum, t) => sum + (t.timeTaken || 0), 0);
-    const bestScore = Math.max(...history.map(t => t.accuracy || 0));
-    const worstScore = Math.min(...history.map(t => t.accuracy || 0));
+    console.log("🔄 Fetching fresh dashboard data from Supabase");
+    window.USER_RESULTS = await window.getUserResults();
+    
+    const results = window.USER_RESULTS || [];
+    
+    if (results.length === 0) {
+      return null; // No data
+    }
 
-    // Performance trend (last 10 tests)
-    const trend = history.slice(0, 10).reverse().map(t => ({
-      accuracy: t.accuracy || 0,
-      date: t.date,
-      score: t.totalMarks || 0
-    }));
+    // Quick Stats
+    const totalTests = results.length;
+    const avgScore = Math.round(results.reduce((sum, r) => sum + (r.score_percent || 0), 0) / totalTests);
+    const bestScore = Math.max(...results.map(r => r.score_percent || 0));
 
-    return { totalTests, avgAccuracy, totalQuestions, totalTime, bestScore, worstScore, trend };
-  },
+    // Accuracy Trend (Last 10 Tests from oldest to newest)
+    const recentTests = results.slice(0, 10).reverse();
+    const accuracyTrendArray = recentTests.map(r => r.score_percent || 0);
+    const trendData = recentTests.map((r, idx) => ({ value: r.score_percent || 0, label: `T${idx+1}` }));
 
-  /**
-   * Get subject-wise performance across all tests
-   */
-  getSubjectPerformance() {
-    const history = Storage.getHistory();
-    const subjects = {};
+    // Improvement Rate (last 5 vs prev 5)
+    let improvementRate = 0;
+    if (results.length >= 2) {
+      const last5 = results.slice(0, 5);
+      const prev5 = results.slice(5, 10);
+      const last5Avg = last5.length ? Math.round(last5.reduce((sum, r) => sum + r.score_percent, 0) / last5.length) : 0;
+      const prev5Avg = prev5.length ? Math.round(prev5.reduce((sum, r) => sum + r.score_percent, 0) / prev5.length) : 0;
+      
+      if (prev5Avg > 0) {
+        improvementRate = last5Avg - prev5Avg;
+      } else {
+        // If less than 6 tests, just compare the most recent with the average of the rest
+        const recent = results[0].score_percent;
+        const restAvg = results.length > 1 ? Math.round(results.slice(1).reduce((sum, r) => sum + r.score_percent, 0) / (results.length - 1)) : recent;
+        improvementRate = recent - restAvg;
+      }
+    }
 
-    history.forEach(test => {
-      if (test.subjectWise) {
-        Object.entries(test.subjectWise).forEach(([subject, data]) => {
-          if (!subjects[subject]) {
-            subjects[subject] = { total: 0, correct: 0, wrong: 0, skipped: 0 };
+    // Topic Breakdown
+    const topicStats = {};
+    let totalQuestionsTime = 0;
+    let totalQuestionsCount = 0;
+
+    results.forEach(test => {
+      // Time calculations - approx for now since time_per_question wasn't in DB fully
+      // We will estimate based on total time / (correct+wrong+skipped)
+      const qCount = (test.correct || 0) + (test.wrong || 0) + (test.skipped || 0);
+      const avgTime = qCount > 0 ? (test.time_taken || 0) / qCount : 0;
+
+      if (test.topic_wise_accuracy) {
+        Object.entries(test.topic_wise_accuracy).forEach(([topic, data]) => {
+          if (!topicStats[topic]) {
+            topicStats[topic] = { correct: 0, wrong: 0, tests: 0, timeTotal: 0, qTotal: 0 };
           }
-          subjects[subject].total += data.total;
-          subjects[subject].correct += data.correct;
-          subjects[subject].wrong += data.wrong;
-          subjects[subject].skipped += data.skipped;
+          topicStats[topic].correct += data.correct || 0;
+          topicStats[topic].wrong += data.wrong || 0;
+          topicStats[topic].tests += 1;
+          
+          const tq = (data.correct || 0) + (data.wrong || 0);
+          topicStats[topic].qTotal += tq;
+          topicStats[topic].timeTotal += (tq * avgTime); // rough estimate
         });
       }
     });
 
-    return Object.entries(subjects).map(([name, data]) => ({
-      name,
-      ...data,
-      accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
-      color: Helpers.getSubjectColor(name),
-      icon: Helpers.getSubjectIcon(name)
-    }));
-  },
-
-  /**
-   * Get weak topics across all tests
-   */
-  getWeakTopics() {
-    const history = Storage.getHistory();
-    const topics = {};
-
-    history.forEach(test => {
-      if (test.topicWise) {
-        Object.entries(test.topicWise).forEach(([key, data]) => {
-          if (!topics[key]) {
-            topics[key] = { total: 0, correct: 0, subject: data.subject, topic: data.topic };
-          }
-          topics[key].total += data.total;
-          topics[key].correct += data.correct;
-        });
-      }
+    // Format Topics
+    const formattedTopics = Object.entries(topicStats).map(([topic, data]) => {
+      const totalAttempted = data.correct + data.wrong;
+      const accuracy = totalAttempted > 0 ? Math.round((data.correct / totalAttempted) * 100) : 0;
+      const avgTimePerQ = data.qTotal > 0 ? Math.round(data.timeTotal / data.qTotal) : 0;
+      
+      return {
+        topic,
+        accuracy,
+        tests: data.tests,
+        avgTimePerQ
+      };
     });
 
-    return Object.entries(topics)
-      .map(([key, data]) => ({
-        name: key,
-        ...data,
-        accuracy: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
-      }))
-      .filter(t => t.accuracy < 60 && t.total >= 2)
-      .sort((a, b) => a.accuracy - b.accuracy);
+    // Weak & Slow logic
+    const sortedByAcc = [...formattedTopics].sort((a, b) => a.accuracy - b.accuracy);
+    const sortedByTime = [...formattedTopics].sort((a, b) => b.avgTimePerQ - a.avgTimePerQ);
+
+    const weakTopic = sortedByAcc.length > 0 ? sortedByAcc[0] : null;
+    const slowTopic = sortedByTime.length > 0 ? sortedByTime[0] : null;
+
+    const finalStats = {
+      totalTests,
+      avgScore,
+      bestScore,
+      weakArea: weakTopic ? weakTopic.topic : 'None',
+      accuracyTrendArray,
+      trendData,
+      improvementRate,
+      topics: sortedByAcc, // weak to strong
+      weakTopic,
+      slowTopic
+    };
+
+    // Update Cache
+    this._cache.data = finalStats;
+    this._cache.timestamp = Date.now();
+
+    return finalStats;
   },
+
+  // ── LEGACY RETAINED FOR RESULTS PAGE ──
 
   /**
    * Draw a donut chart on canvas

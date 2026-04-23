@@ -21,33 +21,45 @@ const TestEngine = {
       negativeMarking = false,
       negativeValue = 0.25,
       marksPerQuestion = 1,
-      pyqOnly = false
+      pyqOnly = false,
+      isDaily = false,
+      dailyQuestions = null
     } = config;
 
-    // Get and filter questions
-    let questions = [...(window.QUESTION_BANK || [])];
+    let selected = [];
 
-    if (subject !== 'all') {
-      questions = questions.filter(q => q.subject === subject);
-    }
-    if (exam !== 'all') {
-      questions = questions.filter(q => q.exam && q.exam.includes(exam));
-    }
-    if (difficulty !== 'all') {
-      questions = questions.filter(q => q.difficulty === difficulty);
-    }
-    if (pyqOnly) {
-      questions = questions.filter(q => q.pyq === true);
-    }
+    if (isDaily && dailyQuestions && Array.isArray(dailyQuestions)) {
+      // ── Daily Challenge Mode ──
+      // Use exact seeded questions provided by the server, no shuffling
+      selected = dailyQuestions;
+      if (selected.length === 0) return { error: 'Failed to load daily questions.' };
+    } else {
+      // ── Normal Mode ──
+      // Get and filter questions
+      let questions = [...(window.QUESTION_BANK || [])];
 
-    // Check if enough questions
-    if (questions.length === 0) {
-      return { error: 'No questions found for the selected filters.' };
-    }
+      if (subject !== 'all') {
+        questions = questions.filter(q => q.subject === subject);
+      }
+      if (exam !== 'all') {
+        questions = questions.filter(q => q.exam && q.exam.includes(exam));
+      }
+      if (difficulty !== 'all') {
+        questions = questions.filter(q => q.difficulty === difficulty);
+      }
+      if (pyqOnly) {
+        questions = questions.filter(q => q.pyq === true);
+      }
 
-    // Shuffle and pick
-    questions = Helpers.shuffleArray(questions);
-    const selected = questions.slice(0, Math.min(numQuestions, questions.length));
+      // Check if enough questions
+      if (questions.length === 0) {
+        return { error: 'No questions found for the selected filters.' };
+      }
+
+      // Shuffle and pick
+      questions = Helpers.shuffleArray(questions);
+      selected = questions.slice(0, Math.min(numQuestions, questions.length));
+    }
 
     // Calculate total time
     const calculatedTime = totalTime || (timePerQuestion * selected.length);
@@ -180,6 +192,7 @@ const TestEngine = {
    * Submit the test
    */
   submit() {
+    console.log("🔥 SUBMIT TRIGGERED");
     if (!this.state || this.state.isSubmitted) return null;
 
     // Track final question time
@@ -194,7 +207,31 @@ const TestEngine = {
     // Calculate results
     const result = this.calculateResult();
 
-    // Save to history
+    // ── SUPABASE SAVE SYSTEM ──
+    // Format strict JSON for topic_wise_accuracy as per PRD
+    const formattedTopics = {};
+    Object.entries(result.topicWise).forEach(([key, data]) => {
+      // Key can be just the subject or specific topic. Using subject for simplicity as per example: "Math": {"correct": 8, "wrong": 2}
+      const finalKey = data.subject || key;
+      if (!formattedTopics[finalKey]) {
+        formattedTopics[finalKey] = { correct: 0, wrong: 0 };
+      }
+      formattedTopics[finalKey].correct += data.correct;
+      formattedTopics[finalKey].wrong += data.wrong;
+    });
+
+    if (window.saveResultToDB) {
+      window.saveResultToDB({
+        scorePercent: result.accuracy,
+        correct: result.correct,
+        wrong: result.wrong,
+        skipped: result.skipped,
+        timeTaken: result.timeTaken,
+        topicStats: formattedTopics
+      });
+    }
+
+    // Save to local history as well for immediate UI access
     Storage.saveTestResult(result);
     Storage.clearCurrentTest();
 

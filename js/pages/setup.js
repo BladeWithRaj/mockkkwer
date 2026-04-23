@@ -18,14 +18,22 @@ const SetupPage = {
   },
 
   render(params = {}) {
+    if (params.mode === 'daily') {
+      this._isDailyMode = true;
+      return `
+        <div class="setup-page page-enter" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
+          <div class="splash-spinner" style="margin-bottom: var(--space-4); width: 48px; height: 48px; border: 4px solid var(--bg-glass); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <h2 style="color: var(--text-primary); margin-bottom: var(--space-2);">Loading Daily Challenge...</h2>
+          <p style="color: var(--text-secondary);">Generating your secure 10-question set</p>
+        </div>
+      `;
+    }
+
+    this._isDailyMode = false;
+
     // Pre-fill from URL params
     if (params.exam && params.exam !== 'All') this.config.exam = params.exam;
     if (params.subject) this.config.subject = params.subject;
-    if (params.mode === 'daily') {
-      this.config.numQuestions = 10;
-      this.config.timeMode = 'auto';
-      this.config.difficulty = 'all';
-    }
 
     const questions = window.QUESTION_BANK || [];
     const subjects = [...new Set(questions.map(q => q.subject))];
@@ -275,5 +283,37 @@ const SetupPage = {
 
     Helpers.showToast(`Test started! ${result.questionCount} questions`, 'success');
     App.navigate('test');
+  },
+
+  async afterRender() {
+    if (this._isDailyMode) {
+      try {
+        const resp = await fetch("/api/daily-questions");
+        if (!resp.ok) throw new Error("Failed to load daily questions");
+        const data = await resp.json();
+        
+        if (!data.questions || data.questions.length === 0) {
+          throw new Error("No daily questions available");
+        }
+
+        const result = TestEngine.createTest({
+           isDaily: true,
+           dailyQuestions: data.questions,
+           numQuestions: 10,
+           timeMode: 'auto',
+           timePerQuestion: 60,
+           negativeMarking: true,
+           negativeValue: 0.25
+        });
+
+        if (result.error) throw new Error(result.error);
+
+        Helpers.showToast("Daily Challenge Started!", "success");
+        App.navigate('test');
+      } catch (err) {
+        Helpers.showToast(err.message || "Could not load daily challenge.", "error");
+        App.navigate('home');
+      }
+    }
   }
 };

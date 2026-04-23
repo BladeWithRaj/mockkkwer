@@ -122,9 +122,199 @@ async function bulkInsertQuestions(questions) {
   return { success: true, data };
 }
 
+// ── RESULTS (DB) ──────────────────────────
+
+async function saveResultToDB(result) {
+  try {
+    const { data: sessionData } = await client.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    
+    // Fallback if no session (should be handled by Auth.init but just in case)
+    if (!token) {
+      console.warn("No session token found, logging in anonymously...");
+      const { data } = await client.auth.signInAnonymously();
+      if (!data.session) return;
+    }
+
+    const testId = crypto.randomUUID();
+    
+    // Format payload for secure API
+    const payload = {
+      testId,
+      questionIds: result.questionResults.map(qr => qr.question.id),
+      answers: result.questionResults.reduce((acc, qr, i) => {
+        acc[i] = qr.selectedAnswer;
+        return acc;
+      }, {}),
+      timeTaken: result.timeTaken,
+      isDaily: result.config.isDaily || false
+    };
+
+    console.log("📤 Sending data to secure API:", payload);
+
+    const headers = { "Content-Type": "application/json" };
+    const latestSession = await client.auth.getSession();
+    if (latestSession.data?.session?.access_token) {
+      headers["Authorization"] = "Bearer " + latestSession.data.session.access_token;
+    }
+
+    const resp = await fetch("/api/submit", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload)
+    });
+
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      console.error("❌ Save failed:", data.error);
+    } else {
+      console.log("✅ Result saved securely:", data);
+      if (data.streak) {
+        console.log(`🔥 Streak updated: ${data.streak.current_streak}`);
+      }
+    }
+
+  } catch (err) {
+    console.error("🔥 Unexpected error:", err);
+  }
+}
+
+async function syncFallbackQueue() {
+  const queue = Storage.getFallbackQueue();
+  if (queue.length === 0) return;
+
+  console.log(`Attempting to sync ${queue.length} offline results...`);
+  const { data, error } = await client
+    .from("results")
+    .insert(queue)
+    .select();
+
+  if (error) {
+    console.error("Sync Failed:", error);
+  } else {
+    console.log("Sync Successful!", data);
+    Storage.clearFallbackQueue();
+  }
+}
+
+// ── SESSION STABILIZATION ─────────────────
+
+async function initSession() {
+  try {
+    const { data: sessionData } = await client.auth.getSession();
+    if (!sessionData.session) {
+      console.log("Initializing new anonymous session...");
+      await client.auth.signInAnonymously();
+    } else {
+      console.log("Session stabilized:", sessionData.session.user.id);
+    }
+  } catch (err) {
+    console.error("Session init error:", err);
+  }
+}
+
+async function getUserResults() {
+  try {
+    const { data: userData } = await client.auth.getUser();
+    if (!userData || !userData.user) {
+      console.warn("Cannot fetch results: No authenticated user");
+      return [];
+    }
+    
+    const userId = userData.user.id;
+
+    const { data, error } = await client
+      .from("results")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error("Fetch Results Error:", error);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Fetch Results Unexpected Error:", err);
+    return [];
+  }
+}
+
+// ── API WRAPPER (Pre-Backend) ─────────────
+
+async function fetchUserResultsAPI(userId) {
+  return await client
+    .from("results")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+}
+
+// ── GET RESULTS ───────────────────────────
+
+async function getUserResults() {
+  try {
+    const { data: userData } = await client.auth.getUser();
+    if (!userData || !userData.user) {
+      console.warn("Cannot fetch results: No authenticated user");
+      return [];
+    }
+    
+    const userId = userData.user.id;
+    const { data, error } = await fetchUserResultsAPI(userId);
+
+    if (error) {
+      console.error("Fetch Results Error:", error);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    console.error("Fetch Results Unexpected Error:", err);
+    return [];
+  }
+}
+
+// ── REALTIME SUBSCRIPTION ─────────────────
+
+let resultsChannel = null;
+
+async function subscribeToResults(callback) {
+  if (resultsChannel) return; // Singleton: Already subscribed
+
+  try {
+    const { data: userData } = await client.auth.getUser();
+    if (!userData || !userData.user) return;
+    const userId = userData.user.id;
+
+    resultsChannel = client
+      .channel('results_realtime')
+      .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'results', filter: `user_id=eq.${userId}` }, 
+          (payload) => {
+             console.log("🔔 Real-time result inserted!", payload);
+             callback(payload);
+          })
+      .subscribe();
+      
+    console.log("📡 Real-time subscription active for user:", userId);
+  } catch (err) {
+    console.error("Subscription Error:", err);
+  }
+}
+
 // ── MAKE GLOBAL ───────────────────────────
 window.fetchQuestions = fetchQuestions;
 window.mapDBToUI = mapDBToUI;
 window.addQuestionToDB = addQuestionToDB;
 window.deleteQuestionFromDB = deleteQuestionFromDB;
 window.bulkInsertQuestions = bulkInsertQuestions;
+window.saveResultToDB = saveResultToDB;
+window.getUserResults = getUserResults;
+window.syncFallbackQueue = syncFallbackQueue;
+window.initSession = initSession;
+window.subscribeToResults = subscribeToResults;

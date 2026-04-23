@@ -9,7 +9,38 @@ const Storage = {
     HISTORY: 'mocktest_history',
     SETTINGS: 'mocktest_settings',
     CURRENT_TEST: 'mocktest_current',
+    USER_ID: 'mocktest_user_id',
+    FALLBACK_QUEUE: 'mocktest_fallback_queue'
   },
+
+  // ── User Identity ──
+  getUserId() {
+    let id = localStorage.getItem(this.KEYS.USER_ID);
+    if (!id) {
+      // Create a persistent unique ID for this user's browser
+      id = "user_" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2));
+      localStorage.setItem(this.KEYS.USER_ID, id);
+    }
+    return id;
+  },
+
+  // ── Fallback Queue (Offline Support) ──
+  addToFallbackQueue(result) {
+    const queue = this.getFallbackQueue();
+    queue.push(result);
+    localStorage.setItem(this.KEYS.FALLBACK_QUEUE, JSON.stringify(queue));
+    console.log("Added result to fallback queue. Total pending:", queue.length);
+  },
+
+  getFallbackQueue() {
+    const stored = localStorage.getItem(this.KEYS.FALLBACK_QUEUE);
+    return stored ? JSON.parse(stored) : [];
+  },
+
+  clearFallbackQueue() {
+    localStorage.removeItem(this.KEYS.FALLBACK_QUEUE);
+  },
+
 
   // ── Test History ──
   getHistory() {

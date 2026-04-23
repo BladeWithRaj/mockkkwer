@@ -15,7 +15,9 @@ const App = {
     setup: SetupPage,
     test: TestPage,
     result: ResultPage,
-    analysis: AnalysisPage
+    analysis: AnalysisPage,
+    dashboard: DashboardPage,
+    leaderboard: LeaderboardPage
   },
 
   async init() {
@@ -30,6 +32,13 @@ const App = {
     `;
 
     try {
+      // Stabilize Session via Auth module
+      if (window.Auth) {
+        await window.Auth.init();
+      } else if (window.initSession) {
+        await window.initSession();
+      }
+
       // Fetch from DB
       const data = await window.fetchQuestions();
 
@@ -46,9 +55,21 @@ const App = {
 
       console.log("App ready:", questions.length, "questions loaded");
 
+      // Check for in-progress test to resume
+      this._tryResumeTest();
+
       // Start routing
       window.addEventListener('hashchange', () => this.handleRoute());
       this.handleRoute();
+
+      // Protect against accidental navigation during test
+      window.addEventListener('beforeunload', (e) => {
+        if (TestEngine.state && TestEngine.state.isActive && !TestEngine.state.isSubmitted) {
+          e.preventDefault();
+          e.returnValue = 'You have an active test. Are you sure you want to leave?';
+          return e.returnValue;
+        }
+      });
 
     } catch (err) {
       console.error("App init error:", err);
@@ -112,7 +133,8 @@ const App = {
             ${isTest ? '' : `
               <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
               <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
-              <a href="admin.html" target="_blank" class="">Admin</a>
+              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">🏆</a>
             `}
           </nav>
         </div>
@@ -145,6 +167,40 @@ const App = {
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Try to resume an in-progress test from localStorage
+   */
+  _tryResumeTest() {
+    const savedTest = Storage.getCurrentTest();
+    if (!savedTest || savedTest.isSubmitted || !savedTest.isActive) return;
+
+    // Validate that the saved test questions still exist in the question bank
+    const bank = window.QUESTION_BANK || [];
+    if (bank.length === 0) return;
+
+    // Recalculate timeRemaining based on elapsed time
+    const elapsed = Math.round((Date.now() - savedTest.startTime) / 1000);
+    if (savedTest.totalTime < 99999) {
+      savedTest.timeRemaining = Math.max(0, savedTest.totalTime - elapsed);
+      if (savedTest.timeRemaining <= 0) {
+        // Test has timed out while away — auto submit
+        Storage.clearCurrentTest();
+        return;
+      }
+    }
+
+    // Reset questionStartTime to now (to avoid wrong time tracking)
+    savedTest.questionStartTime = Date.now();
+
+    // Restore engine state
+    TestEngine.state = savedTest;
+
+    // Navigate to test page
+    console.log('Resuming in-progress test:', savedTest.questions.length, 'questions');
+    Helpers.showToast('📝 Resuming your previous test...', 'info');
+    window.location.hash = 'test';
   }
 };
 

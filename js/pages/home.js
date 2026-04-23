@@ -170,5 +170,37 @@ const HomePage = {
         Helpers.animateCounter(el, target, 1200);
       }
     });
+
+    this._fetchDailyStatus();
+  },
+
+  async _fetchDailyStatus() {
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (window.client) {
+        const { data: { session } } = await client.auth.getSession();
+        if (session?.access_token) {
+          headers["Authorization"] = "Bearer " + session.access_token;
+        }
+      }
+
+      const resp = await fetch("/api/daily-status", { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        const btn = document.getElementById("daily-quiz-btn");
+        if (btn) {
+          if (data.completedToday) {
+            btn.innerHTML = `✅ Completed Today! <span style="font-size:12px;opacity:0.8;margin-left:4px;">🔥 ${data.streak}</span>`;
+            btn.style.background = "var(--success)";
+            btn.style.borderColor = "var(--success)";
+            btn.onclick = () => Helpers.showToast("Great job! Come back tomorrow for a new challenge.", "success");
+          } else {
+            btn.innerHTML = `⚡ Play Daily Quiz <span style="font-size:12px;opacity:0.8;margin-left:4px;">🔥 ${data.streak}</span>`;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Could not fetch daily status", err);
+    }
   }
 };
