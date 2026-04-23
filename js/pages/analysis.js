@@ -201,14 +201,20 @@ const AnalysisPage = {
 };
 
 window.explainQuestion = async function(question) {
-  const res = await fetch("/api/explain", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ question })
-  });
+  try {
+    const res = await fetch("/api/explain", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ question }),
+    });
 
-  const data = await res.json();
-  alert(data.explanation);
+    const data = await res.json();
+
+    alert(data.explanation || "No explanation");
+  } catch (err) {
+    console.error(err);
+    alert("Error loading explanation");
+  }
 };
