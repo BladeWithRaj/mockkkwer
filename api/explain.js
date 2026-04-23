@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     }
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,12 +80,22 @@ export default async function handler(req, res) {
 
     const geminiData = await geminiRes.json();
 
-    const explanation =
-      geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    let explanation = "";
 
-    if (!explanation) {
-      console.error("[EXPLAIN] Gemini returned no explanation:", JSON.stringify(geminiData));
-      return res.status(500).json({ error: "No explanation generated" });
+    if (geminiData?.candidates?.length > 0) {
+      const candidate = geminiData.candidates[0];
+
+      if (candidate?.content?.parts?.length > 0) {
+        explanation = candidate.content.parts
+          .map(p => p.text || "")
+          .join(" ");
+      }
+    }
+
+    // fallback
+    if (!explanation || explanation.trim() === "") {
+      console.error("[EXPLAIN] Gemini FULL response:", JSON.stringify(geminiData));
+      explanation = "Simple explanation not available. Try again.";
     }
 
     // ── STEP 3: Save to Supabase cache ──

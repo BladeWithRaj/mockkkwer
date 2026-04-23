@@ -24,12 +24,12 @@ export default async function handler(req, res) {
     try {
       const user = await verifyUser(req);
       currentUserId = user.id;
-    } catch (_) {}
+    } catch (_) { }
 
     // ── Query params ──
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const page   = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
-    const limit  = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)));
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20", 10)));
     const season = (url.searchParams.get("season") || "alltime").toLowerCase();
 
     if (!["weekly", "monthly", "alltime"].includes(season)) {
@@ -103,10 +103,10 @@ export default async function handler(req, res) {
         .filter(([, u]) => {
           // Minimum 10 tests
           if (u.tests.length < MIN_TESTS) return false;
-          
+
           // Activity filter: Seasonal leaderboards require activity within last 7 days
           if (season !== "alltime" && u.lastTestDate < sevenDaysAgo) return false;
-          
+
           return true;
         })
         .map(([uid, u]) => {
@@ -174,7 +174,7 @@ export default async function handler(req, res) {
         } else {
           rankCounter++;
           if (i > 0 && !ranking[i - 1].flagged &&
-              entry.adjustedScore === ranking[i - 1].adjustedScore) {
+            entry.adjustedScore === ranking[i - 1].adjustedScore) {
             entry.rank = ranking[i - 1].rank; // tie
           } else {
             entry.rank = rankCounter;
