@@ -15,9 +15,8 @@ const App = {
     setup: SetupPage,
     test: TestPage,
     result: ResultPage,
-    analysis: AnalysisPage,
-    dashboard: DashboardPage,
-    leaderboard: LeaderboardPage
+    leaderboard: LeaderboardPage,
+    analytics: AnalyticsPage
   },
 
   async init() {
@@ -27,7 +26,7 @@ const App = {
     appEl.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px;">
         <div class="splash-spinner" style="width: 48px; height: 48px; border: 3px solid var(--bg-glass, rgba(255,255,255,0.1)); border-top-color: var(--primary, #6366f1); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Loading questions...</p>
+        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Initializing session...</p>
       </div>
     `;
 
@@ -39,24 +38,20 @@ const App = {
         await window.initSession();
       }
 
-      // Fetch from DB
-      const data = await window.fetchQuestions();
-
-      if (!data || data.length === 0) {
-        appEl.innerHTML = this._renderError("No questions found in database. Add questions via Admin panel.");
-        this.questionsLoaded = true;
-        return;
-      }
-
-      // Map DB → UI format
-      const questions = window.mapDBToUI(data);
-      window.QUESTION_BANK = questions;
+      // No full DB fetch on startup for scalability
+      window.QUESTION_BANK = [];
       this.questionsLoaded = true;
 
-      console.log("App ready:", questions.length, "questions loaded");
+      console.log("App ready");
 
       // Check for in-progress test to resume
       this._tryResumeTest();
+
+      // ── Frictionless Username Prompt ──
+      if (!Storage.getUsername()) {
+        this.showUsernamePrompt();
+        return; // Halt initialization and routing until username is set
+      }
 
       // Start routing
       window.addEventListener('hashchange', () => this.handleRoute());
@@ -76,6 +71,51 @@ const App = {
       appEl.innerHTML = this._renderError("Something went wrong: " + err.message);
       this.questionsLoaded = true;
     }
+  },
+
+  showUsernamePrompt() {
+    const appEl = document.getElementById('app');
+    appEl.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px;">
+        <div style="background: var(--bg-surface); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+          <div style="font-size: 48px; margin-bottom: 20px;">👋</div>
+          <h2 style="margin-bottom: 10px; color: var(--text-primary);">Welcome to MockTestPro</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">Enter a username to start practicing immediately. No signup required.</p>
+          
+          <input type="text" id="username-input" class="input" placeholder="Choose a username (3-20 chars)" maxlength="20" style="margin-bottom: 20px; text-align: center; font-size: 18px; font-weight: bold;">
+          
+          <button onclick="App.submitUsername()" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;">Start Practicing</button>
+        </div>
+      </div>
+    `;
+    
+    setTimeout(() => {
+      const input = document.getElementById('username-input');
+      if (input) {
+        input.addEventListener('keypress', (e) => {
+           if (e.key === 'Enter') this.submitUsername();
+        });
+        input.focus();
+      }
+    }, 100);
+  },
+
+  submitUsername() {
+    const input = document.getElementById('username-input');
+    if (!input) return;
+    const val = input.value.trim();
+    if (val.length < 3) {
+      Helpers.showToast("Username must be at least 3 characters", "error");
+      return;
+    }
+    
+    // Generate identity
+    Storage.setUsername(val);
+    Storage.getUserId(); // This auto-generates the UUID
+    
+    // Resume routing
+    window.addEventListener('hashchange', () => this.handleRoute());
+    this.handleRoute();
   },
 
   handleRoute() {
@@ -133,8 +173,7 @@ const App = {
             ${isTest ? '' : `
               <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
               <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
-              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
-              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">🏆</a>
+              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
             `}
           </nav>
         </div>

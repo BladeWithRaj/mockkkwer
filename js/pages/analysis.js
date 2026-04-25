@@ -140,14 +140,8 @@ const AnalysisPage = {
                   }).join('')}
                 </div>
 
-                <div style="margin-top: var(--space-4);">
-                  <button class="btn btn-secondary btn-sm" onclick="explainQuestion(this.dataset.question)" data-question="${q.question.replace(/"/g, '&quot;')}">
-                    💡 Explain
-                  </button>
-                </div>
-
                 ${q.explanation ? `
-                  <div class="explanation-box">
+                  <div class="explanation-box" style="margin-top: var(--space-4);">
                     <div class="explanation-title">💡 Explanation</div>
                     <div class="explanation-text">${q.explanation}</div>
                   </div>
@@ -197,27 +191,5 @@ const AnalysisPage = {
       canvas.height = 400;
       Analytics.drawLineChart(canvas, trendData);
     }
-  }
-};
-
-window.explainQuestion = async function(question) {
-  try {
-    const res = await fetch("/api/explain", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ question })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error);
-
-    alert(data.explanation);
-
-  } catch (err) {
-    console.error(err);
-    alert("Error loading explanation");
   }
 };

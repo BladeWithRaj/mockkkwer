@@ -18,36 +18,20 @@ const SetupPage = {
   },
 
   render(params = {}) {
-    if (params.mode === 'daily') {
-      this._isDailyMode = true;
-      return `
-        <div class="setup-page page-enter" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
-          <div class="splash-spinner" style="margin-bottom: var(--space-4); width: 48px; height: 48px; border: 4px solid var(--bg-glass); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-          <h2 style="color: var(--text-primary); margin-bottom: var(--space-2);">Loading Daily Challenge...</h2>
-          <p style="color: var(--text-secondary);">Generating your secure 10-question set</p>
-        </div>
-      `;
-    }
 
-    this._isDailyMode = false;
 
     // Pre-fill from URL params
     if (params.exam && params.exam !== 'All') this.config.exam = params.exam;
     if (params.subject) this.config.subject = params.subject;
+    if (params.limit) this.config.numQuestions = parseInt(params.limit, 10);
+    if (params.mode === 'demo') {
+      this.config.exam = 'All';
+      this.config.subject = 'all';
+    }
 
-    const questions = window.QUESTION_BANK || [];
-    const subjects = [...new Set(questions.map(q => q.subject))];
-    const exams = [...new Set(questions.flatMap(q => q.exam || []))].filter(Boolean);
-    const filtered = this._getFilteredQuestions();
-    const canStart = filtered.length >= 5;
-    const actualCount = Math.min(this.config.numQuestions, filtered.length);
-
-    // Smart suggestion
-    let suggestion = '';
-    if (filtered.length >= 25) suggestion = '25 questions (optimal)';
-    else if (filtered.length >= 15) suggestion = '15 questions';
-    else if (filtered.length >= 10) suggestion = '10 questions';
-    else if (filtered.length >= 5) suggestion = `${filtered.length} questions (all available)`;
+    // Hardcoded for MVP since global fetch is removed for scale
+    const subjects = ['Math', 'GK', 'Reasoning', 'English', 'Hindi'];
+    const exams = ['SSC', 'Railway', 'Police', 'Banking'];
 
     return `
       <div class="setup-page page-enter">
@@ -102,24 +86,15 @@ const SetupPage = {
             </div>
           </div>
 
-          <!-- Available Count (Live) -->
-          <div class="setup-match-info animate-fadeInUp stagger-4" id="match-info">
-            <div class="match-count ${canStart ? '' : 'danger'}">
-              <span class="match-number">${filtered.length}</span>
-              <span class="match-label">questions match your filters</span>
-            </div>
-            ${suggestion ? `<div class="match-suggestion">💡 Suggested: ${suggestion}</div>` : ''}
-            ${!canStart ? `<div class="match-warning">⚠️ Minimum 5 questions required</div>` : ''}
-          </div>
+
 
           <!-- Number of Questions -->
           <div class="setup-section animate-fadeInUp stagger-5">
             <div class="setup-section-title">📝 Number of Questions</div>
             <div class="setup-chips" id="count-chips">
-              ${[5, 10, 20, 30, 50].map(n => `
-                <button class="setup-chip ${this.config.numQuestions === n ? 'active' : ''} ${n > filtered.length ? 'disabled-chip' : ''}"
-                        onclick="SetupPage.setConfig('numQuestions', ${Math.min(n, filtered.length)})"
-                        ${n > filtered.length ? 'disabled' : ''}>${n}${n > filtered.length ? ` (${filtered.length})` : ''}</button>
+              ${[20, 50, 100].map(n => `
+                <button class="setup-chip ${this.config.numQuestions === n ? 'active' : ''}"
+                        onclick="SetupPage.setConfig('numQuestions', ${n})">${n}</button>
               `).join('')}
             </div>
           </div>
@@ -183,7 +158,7 @@ const SetupPage = {
 
           <!-- Start Button -->
           <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 ${canStart ? 'btn-glow' : ''}"
-                  onclick="SetupPage.startTest()" id="start-test-submit"
+                  onclick="SetupPage.startTest()" id="start-test-btn"
                   ${!canStart ? 'disabled' : ''}>
             ${canStart ? '🚀 Start Test' : '⚠️ Not Enough Questions'}
           </button>
@@ -228,7 +203,7 @@ const SetupPage = {
       </div>
       <div class="summary-row">
         <span class="summary-label">Questions</span>
-        <span class="summary-value">${actualCount}</span>
+        <span class="summary-value">${this.config.numQuestions}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Time</span>
@@ -243,77 +218,70 @@ const SetupPage = {
 
   setConfig(key, value) {
     this.config[key] = value;
-    // Auto-adjust numQuestions if filtered count drops
-    const filtered = this._getFilteredQuestions();
-    if (this.config.numQuestions > filtered.length && filtered.length >= 5) {
-      this.config.numQuestions = Math.min(this.config.numQuestions, filtered.length);
-    }
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
   },
 
-  startTest() {
-    const filtered = this._getFilteredQuestions();
-    if (filtered.length < 5) {
-      Helpers.showToast('At least 5 questions required', 'error');
-      return;
+  async startTest() {
+    const startBtn = document.getElementById('start-test-btn');
+    if (!startBtn) return;
+    
+    const originalText = startBtn.innerHTML;
+    
+    // Add loading state
+    startBtn.disabled = true;
+    startBtn.innerHTML = '<span class="splash-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;"></span> Generating...';
+
+    try {
+      const timePerQuestion = this.config.timeMode === 'auto' ? 60 : 0;
+      const totalTime = this.config.timeMode === 'none'
+        ? 99999
+        : this.config.timeMode === 'manual'
+          ? (this.config.totalTime || 600)
+          : null;
+
+      // 1. Get seen IDs
+      const seenIds = Storage.getSeenQuestions();
+
+      // 2. Fetch random questions from API securely
+      const fetchedQuestions = await window.fetchRandomQuestions({
+        limit: this.config.numQuestions,
+        subject: this.config.subject,
+        difficulty: this.config.difficulty,
+        exam: this.config.exam,
+        seenIds: seenIds
+      });
+
+      if (fetchedQuestions.error) throw new Error(fetchedQuestions.error);
+      if (!fetchedQuestions || fetchedQuestions.length === 0) {
+        throw new Error('No questions found for the selected filters.');
+      }
+
+      // 3. Save newly seen IDs
+      Storage.addSeenQuestions(fetchedQuestions.map(q => q.id));
+
+      console.log("CREATE TEST CALLED", fetchedQuestions.length, "questions");
+
+      // 4. Create test
+      const result = TestEngine.createTest({
+        ...this.config,
+        questions: fetchedQuestions,
+        timePerQuestion,
+        totalTime
+      });
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      Helpers.showToast(`Test started! ${result.questionCount} questions`, 'success');
+      App.navigate('test');
+
+    } catch (err) {
+      Helpers.showToast(err.message, 'error');
+      startBtn.disabled = false;
+      startBtn.innerHTML = originalText;
     }
-
-    const timePerQuestion = this.config.timeMode === 'auto' ? 60 : 0;
-    const totalTime = this.config.timeMode === 'none'
-      ? 99999
-      : this.config.timeMode === 'manual'
-        ? (this.config.totalTime || 600)
-        : null;
-
-    const result = TestEngine.createTest({
-      subject: this.config.subject,
-      exam: this.config.exam,
-      difficulty: this.config.difficulty,
-      numQuestions: Math.min(this.config.numQuestions, filtered.length),
-      timePerQuestion,
-      totalTime,
-      negativeMarking: this.config.negativeMarking,
-      negativeValue: this.config.negativeValue
-    });
-
-    if (result.error) {
-      Helpers.showToast(result.error, 'error');
-      return;
-    }
-
-    Helpers.showToast(`Test started! ${result.questionCount} questions`, 'success');
-    App.navigate('test');
   },
 
-  async afterRender() {
-    if (this._isDailyMode) {
-      try {
-        const resp = await fetch("/api/daily-questions");
-        if (!resp.ok) throw new Error("Failed to load daily questions");
-        const data = await resp.json();
-        
-        if (!data.questions || data.questions.length === 0) {
-          throw new Error("No daily questions available");
-        }
-
-        const result = TestEngine.createTest({
-           isDaily: true,
-           dailyQuestions: data.questions,
-           numQuestions: 10,
-           timeMode: 'auto',
-           timePerQuestion: 60,
-           negativeMarking: true,
-           negativeValue: 0.25
-        });
-
-        if (result.error) throw new Error(result.error);
-
-        Helpers.showToast("Daily Challenge Started!", "success");
-        App.navigate('test');
-      } catch (err) {
-        Helpers.showToast(err.message || "Could not load daily challenge.", "error");
-        App.navigate('home');
-      }
-    }
-  }
+  afterRender() {}
 };

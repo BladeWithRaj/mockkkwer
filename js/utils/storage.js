@@ -9,7 +9,8 @@ const Storage = {
     HISTORY: 'mocktest_history',
     SETTINGS: 'mocktest_settings',
     CURRENT_TEST: 'mocktest_current',
-    USER_ID: 'mocktest_user_id',
+    USER_ID: 'user_id',
+    USERNAME: 'username',
     FALLBACK_QUEUE: 'mocktest_fallback_queue'
   },
 
@@ -17,11 +18,19 @@ const Storage = {
   getUserId() {
     let id = localStorage.getItem(this.KEYS.USER_ID);
     if (!id) {
-      // Create a persistent unique ID for this user's browser
-      id = "user_" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2));
+      // Create a persistent unique UUID for this browser
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : "user_" + Date.now().toString(36) + Math.random().toString(36).substring(2);
       localStorage.setItem(this.KEYS.USER_ID, id);
     }
     return id;
+  },
+
+  getUsername() {
+    return localStorage.getItem(this.KEYS.USERNAME);
+  },
+
+  setUsername(name) {
+    localStorage.setItem(this.KEYS.USERNAME, name);
   },
 
   // ── Fallback Queue (Offline Support) ──
@@ -115,5 +124,28 @@ const Storage = {
         : 0,
       totalTimePracticed: history.reduce((sum, t) => sum + (t.timeTaken || 0), 0)
     };
+  },
+
+  // ── Smart Question Tracking ──
+  getSeenQuestions() {
+    try {
+      return JSON.parse(localStorage.getItem('mocktest_seen_questions')) || [];
+    } catch {
+      return [];
+    }
+  },
+
+  addSeenQuestions(ids) {
+    if (!Array.isArray(ids) || ids.length === 0) return;
+    try {
+      let seen = this.getSeenQuestions();
+      // Add new ids, keeping only unique
+      const seenSet = new Set([...seen, ...ids]);
+      // Cap at last 500 to prevent localstorage bloat
+      seen = Array.from(seenSet).slice(-500);
+      localStorage.setItem('mocktest_seen_questions', JSON.stringify(seen));
+    } catch(e) {
+      console.error("Could not save seen questions:", e);
+    }
   }
 };

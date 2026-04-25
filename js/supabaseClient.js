@@ -10,18 +10,52 @@ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ── FETCH ──────────────────────────────────
 
-async function fetchQuestions() {
-  const { data, error } = await client
-    .from("questions")
-    .select("*");
+async function fetchRandomQuestions(config = {}) {
+  const { limit = 50, subject, difficulty, exam, seenIds = [] } = config;
+  try {
+    const resp = await fetch("/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ limit, subject, difficulty, exam, seen_ids: seenIds })
+    });
+    
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.error || "Network error");
+    }
+    
+    const result = await resp.json();
+    if (!result.success) throw new Error(result.error);
+    
+    return mapDBToUI(result.questions || []);
+  } catch (err) {
+    console.error("fetchRandomQuestions Error:", err);
+    return { error: err.message };
+  }
+}
 
+async function fetchAdminQuestions(page = 1, searchQuery = '') {
+  let query = client.from("questions").select("*");
+  if (searchQuery) query = query.ilike('question', `%${searchQuery}%`);
+  
+  // Hard limit to 1000 for simple admin UI (pagination later)
+  query = query.range((page - 1) * 1000, page * 1000 - 1);
+  
+  const { data, error } = await query;
   if (error) {
-    console.error("Supabase Error:", error);
+    console.error("Admin fetch error:", error);
     return [];
   }
-
-  console.log("Loaded questions:", data);
   return data;
+}
+
+async function checkAdminRole(userId) {
+  try {
+    const { data } = await client.from('user_roles').select('role').eq('user_id', userId).single();
+    return data && data.role === 'admin';
+  } catch (err) {
+    return false;
+  }
 }
 
 // ── DATA MAPPING (DB → UI) ────────────────
@@ -126,17 +160,14 @@ async function bulkInsertQuestions(questions) {
 
 async function saveResultToDB(result) {
   try {
-    const { data: sessionData } = await client.auth.getSession();
-    const token = sessionData?.session?.access_token;
-    
-    // Fallback if no session (should be handled by Auth.init but just in case)
-    if (!token) {
-      console.warn("No session token found, logging in anonymously...");
-      const { data } = await client.auth.signInAnonymously();
-      if (!data.session) return;
-    }
-
     const testId = crypto.randomUUID();
+    const user_id = Storage.getUserId();
+    const username = Storage.getUsername();
+
+    if (!user_id || !username) {
+      console.warn("Skipping submission: No username/identity found.");
+      return;
+    }
     
     // Format payload for secure API
     const payload = {
@@ -147,16 +178,14 @@ async function saveResultToDB(result) {
         return acc;
       }, {}),
       timeTaken: result.timeTaken,
-      isDaily: result.config.isDaily || false
+      isDaily: result.config.isDaily || false,
+      user_id,
+      username
     };
 
     console.log("📤 Sending data to secure API:", payload);
 
     const headers = { "Content-Type": "application/json" };
-    const latestSession = await client.auth.getSession();
-    if (latestSession.data?.session?.access_token) {
-      headers["Authorization"] = "Bearer " + latestSession.data.session.access_token;
-    }
 
     const resp = await fetch("/api/submit", {
       method: "POST",
@@ -170,8 +199,11 @@ async function saveResultToDB(result) {
       console.error("❌ Save failed:", data.error);
     } else {
       console.log("✅ Result saved securely:", data);
-      if (data.streak) {
-        console.log(`🔥 Streak updated: ${data.streak.current_streak}`);
+      
+      if (window.trackEvent) {
+        window.trackEvent("test_submit", {
+          score: result.scorePercent || result.accuracy
+        });
       }
     }
 
@@ -308,7 +340,9 @@ async function subscribeToResults(callback) {
 }
 
 // ── MAKE GLOBAL ───────────────────────────
-window.fetchQuestions = fetchQuestions;
+window.fetchRandomQuestions = fetchRandomQuestions;
+window.fetchAdminQuestions = fetchAdminQuestions;
+window.checkAdminRole = checkAdminRole;
 window.mapDBToUI = mapDBToUI;
 window.addQuestionToDB = addQuestionToDB;
 window.deleteQuestionFromDB = deleteQuestionFromDB;

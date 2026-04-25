@@ -109,127 +109,12 @@ const ResultPage = {
                 (Total deduction: -${(result.wrong * result.negativeValue).toFixed(2)})
               </p>
             </div>
-          ` : ''}
-        </div>
-
-        <!-- Insights Card -->
-        <div class="card animate-fadeInUp stagger-1" style="margin-bottom: var(--space-6);">
-          <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">🧠 Insights</h3>
-          <div class="insights-grid">
-            <div class="insight-item">
-              <div class="insight-icon">🎯</div>
-              <div>
-                <div class="insight-label">Accuracy</div>
-                <div class="insight-value" style="color: ${scoreColor};">${result.accuracy}%</div>
-              </div>
-            </div>
-            <div class="insight-item">
-              <div class="insight-icon">⏱️</div>
-              <div>
-                <div class="insight-label">Avg per Question</div>
-                <div class="insight-value">${result.avgTimePerQuestion}s</div>
-              </div>
-            </div>
-            ${strongArea ? `
-            <div class="insight-item">
-              <div class="insight-icon">💪</div>
-              <div>
-                <div class="insight-label">Strong Area</div>
-                <div class="insight-value" style="color: var(--success);">${strongArea.name} (${strongArea.acc}%)</div>
-              </div>
-            </div>
-            ` : ''}
-            ${weakArea && weakArea.name !== (strongArea && strongArea.name) ? `
-            <div class="insight-item">
-              <div class="insight-icon">📚</div>
-              <div>
-                <div class="insight-label">Needs Work</div>
-                <div class="insight-value" style="color: var(--danger);">${weakArea.name} (${weakArea.acc}%)</div>
-              </div>
-            </div>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- Accuracy Bar -->
-        <div class="card animate-fadeInUp stagger-2" style="margin-bottom: var(--space-6);">
-          <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-3);">
-            <span style="font-size: var(--text-sm); font-weight: var(--font-semibold);">Accuracy</span>
-            <span style="font-size: var(--text-sm); font-weight: var(--font-bold); color: ${scoreColor};">${result.accuracy}%</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-bar-fill" style="width: 0%; background: ${
-              result.accuracy >= 70 ? 'linear-gradient(90deg, #10B981, #34D399)' :
-              result.accuracy >= 40 ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' :
-              'linear-gradient(90deg, #EF4444, #F87171)'
-            };" id="accuracy-bar" data-target="${result.accuracy}"></div>
-          </div>
-        </div>
-
-        <!-- Subject Breakdown -->
-        ${subjectEntries.length > 1 ? `
-          <div class="card animate-fadeInUp stagger-3" style="margin-bottom: var(--space-6);">
-            <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-6);">Subject-wise Performance</h3>
-            <div class="subject-breakdown">
-              ${subjectEntries.map(([subject, data]) => {
-                const acc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
-                return `
-                  <div class="subject-bar">
-                    <span class="subject-name">${Helpers.getSubjectIcon(subject)} ${subject}</span>
-                    <div class="subject-progress">
-                      <div class="subject-progress-fill" style="width: ${acc}%; background: ${Helpers.getSubjectColor(subject)};" data-target="${acc}"></div>
-                    </div>
-                    <span class="subject-score">${data.correct}/${data.total}</span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- Weak Topics -->
-        ${result.weakTopics && result.weakTopics.length > 0 ? `
-          <div class="card animate-fadeInUp stagger-3-5" style="margin-bottom: var(--space-6);">
-            <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-2);">🎯 Topics That Need Work</h3>
-            <p style="font-size: var(--text-sm); color: var(--text-muted); margin-bottom: var(--space-5);">
-              Focus on these topics to improve your score
-            </p>
-            <div class="weak-topics-list">
-              ${result.weakTopics.slice(0, 5).map(topic => `
-                <div class="weak-topic-item">
-                  <div class="weak-topic-info">
-                    <div class="weak-topic-icon">📉</div>
-                    <div>
-                      <div class="weak-topic-name">${topic.topic || topic.name}</div>
-                      <div class="weak-topic-detail">${topic.subject} • ${topic.correct}/${topic.total} correct</div>
-                    </div>
-                  </div>
-                  <div style="text-align: right;">
-                    <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: ${topic.accuracy <= 25 ? 'var(--danger)' : 'var(--warning)'};">${topic.accuracy}%</div>
-                    <div style="font-size: var(--text-xs); color: var(--text-muted);">accuracy</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-
-        <!-- Chart -->
-        <div class="card animate-fadeInUp stagger-4" style="margin-bottom: var(--space-6);">
-          <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">Score Distribution</h3>
-          <canvas id="result-donut-chart" width="280" height="280" style="margin: 0 auto; display: block;"></canvas>
-          <div style="display: flex; justify-content: center; gap: var(--space-6); margin-top: var(--space-4);">
-            <span class="legend-item"><span class="legend-dot" style="background: var(--success);"></span> Correct</span>
-            <span class="legend-item"><span class="legend-dot" style="background: var(--danger);"></span> Wrong</span>
-            <span class="legend-item"><span class="legend-dot" style="background: #475569;"></span> Skipped</span>
+          ` : ''}ed</span>
           </div>
         </div>
 
         <!-- Actions -->
         <div class="result-actions animate-fadeInUp stagger-5">
-          <button class="btn btn-primary btn-lg" onclick="App.navigate('analysis')" id="view-analysis-btn">
-            📊 View Detailed Analysis
-          </button>
           <div style="display: flex; gap: var(--space-3); width: 100%;">
             <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
               🔄 Retry Same
@@ -304,19 +189,6 @@ const ResultPage = {
       if (bar) bar.style.width = bar.dataset.target + '%';
     }, 600);
 
-    // Draw donut chart
-    setTimeout(() => {
-      const canvas = document.getElementById('result-donut-chart');
-      if (canvas) {
-        Analytics.drawDonutChart(canvas, [
-          { label: 'Correct', value: result.correct, color: '#10B981' },
-          { label: 'Wrong', value: result.wrong, color: '#EF4444' },
-          { label: 'Skipped', value: result.skipped, color: '#475569' }
-        ], {
-          centerText: `${result.accuracy}%`,
-          centerSubText: 'Accuracy'
-        });
-      }
-    }, 500);
+
   }
 };
