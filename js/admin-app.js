@@ -14,6 +14,23 @@ const AdminApp = {
   sections: ['dashboard', 'questions', 'add', 'bulk-upload', 'analytics'],
 
   async init() {
+    // Role-based Auth Check
+    if (window.Auth) {
+      await window.Auth.init();
+      const user = window.Auth.getUser();
+      if (!window.Auth.isVerified() || !user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const isAdmin = window.checkAdminRole ? await window.checkAdminRole(user.id) : false;
+      if (!isAdmin) {
+        alert("Unauthorized: Administrator access required.");
+        window.location.href = "index.html";
+        return;
+      }
+    }
+
     // Show loading state
     const mainEl = document.getElementById('admin-main');
     if (mainEl) {
@@ -28,7 +45,7 @@ const AdminApp = {
     // Fetch questions from Supabase
     try {
       console.log("Admin: Fetching questions...");
-      const data = await window.fetchQuestions();
+      const data = await window.fetchAdminQuestions();
       if (data && data.length > 0) {
         window.QUESTION_BANK = window.mapDBToUI(data);
         console.log("Admin:", window.QUESTION_BANK.length, "questions loaded");

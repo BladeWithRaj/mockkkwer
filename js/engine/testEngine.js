@@ -12,16 +12,12 @@ const TestEngine = {
    */
   createTest(config) {
     const {
-      subject = 'all',
-      exam = 'all',
-      difficulty = 'all',
-      numQuestions = 10,
+      questions = [],
       timePerQuestion = 60, // seconds
       totalTime = null, // if set, overrides timePerQuestion
       negativeMarking = false,
       negativeValue = 0.25,
       marksPerQuestion = 1,
-      pyqOnly = false,
       isDaily = false,
       dailyQuestions = null
     } = config;
@@ -30,35 +26,15 @@ const TestEngine = {
 
     if (isDaily && dailyQuestions && Array.isArray(dailyQuestions)) {
       // ── Daily Challenge Mode ──
-      // Use exact seeded questions provided by the server, no shuffling
       selected = dailyQuestions;
       if (selected.length === 0) return { error: 'Failed to load daily questions.' };
     } else {
       // ── Normal Mode ──
-      // Get and filter questions
-      let questions = [...(window.QUESTION_BANK || [])];
-
-      if (subject !== 'all') {
-        questions = questions.filter(q => q.subject === subject);
-      }
-      if (exam !== 'all') {
-        questions = questions.filter(q => q.exam && q.exam.includes(exam));
-      }
-      if (difficulty !== 'all') {
-        questions = questions.filter(q => q.difficulty === difficulty);
-      }
-      if (pyqOnly) {
-        questions = questions.filter(q => q.pyq === true);
-      }
-
-      // Check if enough questions
-      if (questions.length === 0) {
+      selected = questions;
+      
+      if (!selected || selected.length === 0) {
         return { error: 'No questions found for the selected filters.' };
       }
-
-      // Shuffle and pick
-      questions = Helpers.shuffleArray(questions);
-      selected = questions.slice(0, Math.min(numQuestions, questions.length));
     }
 
     // Calculate total time
@@ -86,6 +62,12 @@ const TestEngine = {
 
     // Save state for resume
     Storage.saveCurrentTest(this.state);
+
+    if (window.trackEvent) {
+      window.trackEvent("test_start", {
+        mode: isDaily ? "daily" : (config.exam === 'All' ? "demo" : "full")
+      });
+    }
 
     return { success: true, questionCount: selected.length, totalTime: calculatedTime };
   },
