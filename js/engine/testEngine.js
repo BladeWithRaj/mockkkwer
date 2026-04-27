@@ -45,7 +45,7 @@ const TestEngine = {
       id: Helpers.generateId(),
       config: { ...config, actualQuestions: selected.length },
       questions: selected,
-      answers: new Array(selected.length).fill(null),
+      answers: {},
       markedForReview: new Array(selected.length).fill(false),
       timePerQuestion: new Array(selected.length).fill(0),
       currentQuestion: 0,
@@ -78,11 +78,12 @@ const TestEngine = {
   getCurrentQuestion() {
     if (!this.state) return null;
     const idx = this.state.currentQuestion;
+    const q = this.state.questions[idx];
     return {
       index: idx,
       total: this.state.questions.length,
-      question: this.state.questions[idx],
-      selectedAnswer: this.state.answers[idx],
+      question: q,
+      selectedAnswer: this.state.answers[q.id] !== undefined ? this.state.answers[q.id] : null,
       isMarkedForReview: this.state.markedForReview[idx]
     };
   },
@@ -92,7 +93,8 @@ const TestEngine = {
    */
   selectAnswer(optionIndex) {
     if (!this.state || this.state.isSubmitted) return;
-    this.state.answers[this.state.currentQuestion] = optionIndex;
+    const qId = this.state.questions[this.state.currentQuestion].id;
+    this.state.answers[qId] = optionIndex;
     Storage.saveCurrentTest(this.state);
   },
 
@@ -101,7 +103,8 @@ const TestEngine = {
    */
   clearAnswer() {
     if (!this.state || this.state.isSubmitted) return;
-    this.state.answers[this.state.currentQuestion] = null;
+    const qId = this.state.questions[this.state.currentQuestion].id;
+    delete this.state.answers[qId];
     Storage.saveCurrentTest(this.state);
   },
 
@@ -236,9 +239,9 @@ const TestEngine = {
     const questionResults = [];
 
     this.state.questions.forEach((q, idx) => {
-      const answer = this.state.answers[idx];
-      const isCorrect = answer === q.correct;
-      const isSkipped = answer === null;
+      const answer = this.state.answers[q.id];
+      const isCorrect = answer !== undefined && answer !== null && answer === q.correct;
+      const isSkipped = answer === undefined || answer === null;
       const timeSpent = this.state.timePerQuestion[idx];
 
       // Track subject-wise
@@ -329,9 +332,9 @@ const TestEngine = {
    */
   getNavStatus() {
     if (!this.state) return [];
-    return this.state.questions.map((_, idx) => ({
+    return this.state.questions.map((q, idx) => ({
       index: idx,
-      answered: this.state.answers[idx] !== null,
+      answered: this.state.answers[q.id] !== undefined && this.state.answers[q.id] !== null,
       review: this.state.markedForReview[idx],
       current: idx === this.state.currentQuestion
     }));
@@ -342,7 +345,7 @@ const TestEngine = {
    */
   getSummary() {
     if (!this.state) return null;
-    const answered = this.state.answers.filter(a => a !== null).length;
+    const answered = Object.keys(this.state.answers).length;
     const reviewed = this.state.markedForReview.filter(r => r).length;
     const unanswered = this.state.questions.length - answered;
     return { answered, unanswered, reviewed, total: this.state.questions.length };

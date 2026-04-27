@@ -83,6 +83,12 @@ const ResultPage = {
             </div>
           </div>
 
+          <!-- Accuracy % -->
+          <div style="text-align: center; margin-top: var(--space-4);">
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-extrabold); color: ${scoreColor};" id="accuracy-value">0</div>
+            <div style="font-size: var(--text-sm); color: var(--text-muted);">Accuracy</div>
+          </div>
+
           <div class="result-stats">
             <div class="result-stat">
               <div class="result-stat-value correct" id="correct-count">0</div>
@@ -109,8 +115,60 @@ const ResultPage = {
                 (Total deduction: -${(result.wrong * result.negativeValue).toFixed(2)})
               </p>
             </div>
-          ` : ''}ed</span>
+          ` : ''}
+        </div>
+
+        <!-- Strong / Weak Areas -->
+        ${subjectEntries.length > 0 ? `
+        <div class="animate-fadeInUp stagger-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-6);">
+          ${strongArea ? `
+          <div class="card" style="padding: var(--space-4); border-left: 3px solid var(--success);">
+            <div style="font-size: 20px; margin-bottom: var(--space-2);">💪</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Strongest</div>
+            <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${strongArea.name}</div>
+            <div style="font-size: var(--text-sm); color: var(--success); font-weight: var(--font-semibold);">${strongArea.acc}%</div>
           </div>
+          ` : ''}
+          ${weakArea && weakArea.name !== (strongArea && strongArea.name) ? `
+          <div class="card" style="padding: var(--space-4); border-left: 3px solid var(--danger);">
+            <div style="font-size: 20px; margin-bottom: var(--space-2);">⚠️</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Weakest</div>
+            <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${weakArea.name}</div>
+            <div style="font-size: var(--text-sm); color: var(--danger); font-weight: var(--font-semibold);">${weakArea.acc}%</div>
+          </div>
+          ` : ''}
+        </div>
+        ` : ''}
+
+        <!-- Subject-wise Breakdown -->
+        ${subjectEntries.length > 0 ? `
+        <div class="card animate-fadeInUp stagger-3" style="margin-top: var(--space-6);">
+          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">📊 Subject-wise Breakdown</h3>
+          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+            ${subjectEntries.map(([subject, data]) => {
+              const subjectAcc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+              const barColor = subjectAcc >= 70 ? 'var(--success)' : subjectAcc >= 40 ? 'var(--warning)' : 'var(--danger)';
+              return `
+                <div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1); font-size: var(--text-sm);">
+                    <span style="font-weight: var(--font-semibold);">${Helpers.getSubjectIcon(subject)} ${subject}</span>
+                    <span style="color: ${barColor}; font-weight: var(--font-bold);">${subjectAcc}% <span style="color: var(--text-muted); font-weight: normal;">(${data.correct}/${data.total})</span></span>
+                  </div>
+                  <div style="height: 8px; background: var(--bg-glass); border-radius: var(--radius-full); overflow: hidden;">
+                    <div class="accuracy-bar-anim" style="height: 100%; width: 0%; background: ${barColor}; border-radius: var(--radius-full); transition: width 0.8s ease-out;" data-target="${subjectAcc}"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- View Analysis Button -->
+        <div class="animate-fadeInUp stagger-4" style="margin-top: var(--space-6);">
+          <button class="btn btn-secondary btn-lg btn-block" onclick="App.navigate('analysis')" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary-light); border: 1px solid rgba(139, 92, 246, 0.3);">
+            🔍 View Detailed Analysis
+          </button>
         </div>
 
         <!-- Actions -->
@@ -131,8 +189,8 @@ const ResultPage = {
     `;
   },
 
-  // Retry with same config (new random from same filters)
-  retrySameTest() {
+  // Retry with same config (fetch fresh questions from API)
+  async retrySameTest() {
     const config = App.lastTestConfig;
     if (!config) {
       Helpers.showToast('No previous test config found', 'error');
@@ -140,24 +198,40 @@ const ResultPage = {
       return;
     }
 
-    const result = TestEngine.createTest({
-      subject: config.subject || 'all',
-      exam: config.exam || 'all',
-      difficulty: config.difficulty || 'all',
-      numQuestions: config.numQuestions || config.actualQuestions || 10,
-      timePerQuestion: 60,
-      totalTime: null,
-      negativeMarking: config.negativeMarking || false,
-      negativeValue: config.negativeValue || 0.25
-    });
+    const btn = document.getElementById('retry-same-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Loading...'; }
 
-    if (result.error) {
-      Helpers.showToast(result.error, 'error');
-      return;
+    try {
+      // Fetch fresh questions from API with same filters
+      const questions = await window.fetchRandomQuestions({
+        limit: config.numQuestions || config.actualQuestions || 10,
+        subject: config.subject,
+        difficulty: config.difficulty,
+        exam: config.exam,
+        seenIds: Storage.getSeenQuestions()
+      });
+
+      if (questions.error) throw new Error(questions.error);
+      if (!questions || questions.length === 0) throw new Error('No questions found for these filters');
+
+      Storage.addSeenQuestions(questions.map(q => q.id));
+
+      const result = TestEngine.createTest({
+        questions,
+        timePerQuestion: 60,
+        totalTime: config.totalTime || null,
+        negativeMarking: config.negativeMarking || false,
+        negativeValue: config.negativeValue || 0.25
+      });
+
+      if (result.error) throw new Error(result.error);
+
+      Helpers.showToast(`Retry! ${result.questionCount} questions`, 'success');
+      App.navigate('test');
+    } catch (err) {
+      Helpers.showToast(err.message, 'error');
+      if (btn) { btn.disabled = false; btn.innerHTML = '🔄 Retry Same'; }
     }
-
-    Helpers.showToast(`Retry! ${result.questionCount} questions`, 'success');
-    App.navigate('test');
   },
 
   afterRender() {
@@ -173,22 +247,28 @@ const ResultPage = {
     // Animate counters
     setTimeout(() => {
       const scoreEl = document.getElementById('score-value');
+      const accuracyEl = document.getElementById('accuracy-value');
       const correctEl = document.getElementById('correct-count');
       const wrongEl = document.getElementById('wrong-count');
       const skippedEl = document.getElementById('skipped-count');
 
       if (scoreEl) Helpers.animateCounter(scoreEl, result.totalMarks, 1200);
+      if (accuracyEl) {
+        Helpers.animateCounter(accuracyEl, result.accuracy, 1200);
+        // Append % after animation
+        setTimeout(() => { if (accuracyEl) accuracyEl.textContent = result.accuracy + '%'; }, 1300);
+      }
       if (correctEl) Helpers.animateCounter(correctEl, result.correct, 800);
       if (wrongEl) Helpers.animateCounter(wrongEl, result.wrong, 800);
       if (skippedEl) Helpers.animateCounter(skippedEl, result.skipped, 800);
     }, 400);
 
-    // Animate accuracy bar
+    // Animate subject accuracy bars
     setTimeout(() => {
-      const bar = document.getElementById('accuracy-bar');
-      if (bar) bar.style.width = bar.dataset.target + '%';
+      document.querySelectorAll('.accuracy-bar-anim').forEach(bar => {
+        bar.style.width = bar.dataset.target + '%';
+      });
     }, 600);
-
-
   }
 };
+

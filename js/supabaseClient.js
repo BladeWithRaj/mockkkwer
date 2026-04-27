@@ -61,7 +61,15 @@ async function checkAdminRole(userId) {
 // ── DATA MAPPING (DB → UI) ────────────────
 
 function mapDBToUI(data) {
+  if (!Array.isArray(data)) return [];
+
   return data.map(q => {
+    // Guard: skip malformed questions
+    if (!q || !q.id) {
+      console.warn("⚠️ Skipping malformed question (no ID):", q);
+      return null;
+    }
+
     const options = [
       q.option_a || "",
       q.option_b || "",
@@ -69,19 +77,52 @@ function mapDBToUI(data) {
       q.option_d || ""
     ];
 
-    const correctIdx = options.indexOf(q.correct_answer);
+    // Edge case: null or empty correct_answer
+    if (!q.correct_answer || q.correct_answer.trim() === "") {
+      console.warn(`⚠️ Question ID ${q.id}: correct_answer is null/empty — marking as unanswerable`);
+      return {
+        id: String(q.id),
+        question: q.question || "",
+        options: options,
+        correct: -1,
+        subject: q.subject || "General",
+        topic: q.subject || "General",
+        difficulty: (q.difficulty || "medium").toLowerCase(),
+        exam: q.exam ? q.exam.split(",").map(e => e.trim()).filter(Boolean) : [],
+        _hasError: true
+      };
+    }
+
+    // Find correct answer index (handles duplicates — takes first match)
+    const correctIdx = options.findIndex(opt => opt === q.correct_answer);
+
+    if (correctIdx === -1) {
+      console.warn(`⚠️ Question ID ${q.id}: correct_answer "${q.correct_answer}" does not match any option.`, options);
+    }
+
+    // Edge case: check for duplicate options
+    const uniqueOptions = new Set(options.filter(o => o !== ""));
+    if (uniqueOptions.size < options.filter(o => o !== "").length) {
+      console.warn(`⚠️ Question ID ${q.id}: has duplicate options.`, options);
+    }
+
+    // Edge case: check for empty options (not all 4 filled)
+    const emptyCount = options.filter(o => o === "").length;
+    if (emptyCount > 0) {
+      console.warn(`⚠️ Question ID ${q.id}: has ${emptyCount} empty option(s).`);
+    }
 
     return {
       id: String(q.id),
       question: q.question || "",
       options: options,
-      correct: correctIdx >= 0 ? correctIdx : 0,
+      correct: correctIdx >= 0 ? correctIdx : -1,
       subject: q.subject || "General",
       topic: q.subject || "General",
       difficulty: (q.difficulty || "medium").toLowerCase(),
       exam: q.exam ? q.exam.split(",").map(e => e.trim()).filter(Boolean) : []
     };
-  });
+  }).filter(q => q !== null); // Remove skipped malformed questions
 }
 
 // ── ADD QUESTION (Admin → DB) ─────────────
@@ -173,8 +214,10 @@ async function saveResultToDB(result) {
     const payload = {
       testId,
       questionIds: result.questionResults.map(qr => qr.question.id),
-      answers: result.questionResults.reduce((acc, qr, i) => {
-        acc[i] = qr.selectedAnswer;
+      answers: result.questionResults.reduce((acc, qr) => {
+        if (qr.selectedAnswer !== null && qr.selectedAnswer !== undefined) {
+          acc[qr.question.id] = qr.selectedAnswer;
+        }
         return acc;
       }, {}),
       timeTaken: result.timeTaken,
@@ -185,7 +228,16 @@ async function saveResultToDB(result) {
 
     console.log("📤 Sending data to secure API:", payload);
 
+    // Get auth token from Supabase session for secure API call
     const headers = { "Content-Type": "application/json" };
+    try {
+      const { data: sessionData } = await client.auth.getSession();
+      if (sessionData?.session?.access_token) {
+        headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
+      }
+    } catch (authErr) {
+      console.warn("Could not get auth token, submitting without:", authErr);
+    }
 
     const resp = await fetch("/api/submit", {
       method: "POST",
@@ -246,34 +298,7 @@ async function initSession() {
   }
 }
 
-async function getUserResults() {
-  try {
-    const { data: userData } = await client.auth.getUser();
-    if (!userData || !userData.user) {
-      console.warn("Cannot fetch results: No authenticated user");
-      return [];
-    }
-    
-    const userId = userData.user.id;
 
-    const { data, error } = await client
-      .from("results")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(50);
-
-    if (error) {
-      console.error("Fetch Results Error:", error);
-      return [];
-    }
-
-    return data;
-  } catch (err) {
-    console.error("Fetch Results Unexpected Error:", err);
-    return [];
-  }
-}
 
 // ── API WRAPPER (Pre-Backend) ─────────────
 
@@ -352,3 +377,4 @@ window.getUserResults = getUserResults;
 window.syncFallbackQueue = syncFallbackQueue;
 window.initSession = initSession;
 window.subscribeToResults = subscribeToResults;
+window.supabaseClient = client;

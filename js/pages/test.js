@@ -27,7 +27,7 @@ const TestPage = {
     const navStatus = TestEngine.getNavStatus();
     const noTimer = TestEngine.state.totalTime >= 99999;
     const progressPercent = ((current.index + 1) / current.total) * 100;
-    const answeredCount = TestEngine.state.answers.filter(a => a !== null).length;
+    const answeredCount = Object.keys(TestEngine.state.answers).length;
 
     // Progress bar color based on completion
     let progressClass = '';

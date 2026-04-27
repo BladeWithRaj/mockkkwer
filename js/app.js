@@ -15,6 +15,8 @@ const App = {
     setup: SetupPage,
     test: TestPage,
     result: ResultPage,
+    analysis: AnalysisPage,
+    dashboard: DashboardPage,
     leaderboard: LeaderboardPage,
     analytics: AnalyticsPage
   },
@@ -63,6 +65,21 @@ const App = {
           e.preventDefault();
           e.returnValue = 'You have an active test. Are you sure you want to leave?';
           return e.returnValue;
+        }
+      });
+
+      // Global error boundaries — catch unhandled errors
+      window.addEventListener('error', (event) => {
+        console.error('[GLOBAL ERROR]', event.error);
+        if (Helpers && Helpers.showToast) {
+          Helpers.showToast('Unexpected error: ' + (event.error?.message || 'Unknown'), 'error');
+        }
+      });
+
+      window.addEventListener('unhandledrejection', (event) => {
+        console.error('[UNHANDLED PROMISE]', event.reason);
+        if (Helpers && Helpers.showToast) {
+          Helpers.showToast('Async error: ' + (event.reason?.message || 'Promise rejected'), 'error');
         }
       });
 
@@ -151,10 +168,27 @@ const App = {
     }
 
     const appEl = document.getElementById('app');
-    appEl.innerHTML = this._renderHeader(page) + pageModule.render(params);
 
+    // Error boundary: wrap render in try-catch
+    try {
+      const html = pageModule.render(params);
+      appEl.innerHTML = this._renderHeader(page) + html;
+    } catch (renderErr) {
+      console.error(`[ERROR BOUNDARY] Page "${page}" render crashed:`, renderErr);
+      appEl.innerHTML = this._renderHeader(page) + this._renderCrash(page, renderErr);
+      return;
+    }
+
+    // Error boundary: wrap afterRender in try-catch
     if (pageModule.afterRender) {
-      requestAnimationFrame(() => pageModule.afterRender());
+      requestAnimationFrame(() => {
+        try {
+          pageModule.afterRender();
+        } catch (afterErr) {
+          console.error(`[ERROR BOUNDARY] Page "${page}" afterRender crashed:`, afterErr);
+          Helpers.showToast('Page loaded with errors: ' + afterErr.message, 'error');
+        }
+      });
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -173,6 +207,7 @@ const App = {
             ${isTest ? '' : `
               <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
               <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
+              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
               <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
             `}
           </nav>
@@ -215,9 +250,8 @@ const App = {
     const savedTest = Storage.getCurrentTest();
     if (!savedTest || savedTest.isSubmitted || !savedTest.isActive) return;
 
-    // Validate that the saved test questions still exist in the question bank
-    const bank = window.QUESTION_BANK || [];
-    if (bank.length === 0) return;
+    // Questions are stored inside the saved test state — no QUESTION_BANK needed
+    if (!savedTest.questions || savedTest.questions.length === 0) return;
 
     // Recalculate timeRemaining based on elapsed time
     const elapsed = Math.round((Date.now() - savedTest.startTime) / 1000);
@@ -240,6 +274,28 @@ const App = {
     console.log('Resuming in-progress test:', savedTest.questions.length, 'questions');
     Helpers.showToast('📝 Resuming your previous test...', 'info');
     window.location.hash = 'test';
+  },
+
+  _renderCrash(page, error) {
+    return `
+      <div style="display: flex; align-items: center; justify-content: center; min-height: 60vh; padding: var(--space-8);">
+        <div class="card" style="max-width: 500px; text-align: center; padding: var(--space-8);">
+          <div style="font-size: 48px; margin-bottom: var(--space-4);">💥</div>
+          <h2 style="color: var(--danger); margin-bottom: var(--space-2);">Page Crashed</h2>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-4);">
+            The "${page}" page encountered an error and couldn't render.
+          </p>
+          <details style="text-align: left; background: var(--bg-glass); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); font-size: var(--text-sm);">
+            <summary style="cursor: pointer; color: var(--text-secondary); margin-bottom: var(--space-2);">Error Details</summary>
+            <pre style="color: var(--danger-light); white-space: pre-wrap; word-break: break-all; margin: 0;">${error.message}\n\n${error.stack || ''}</pre>
+          </details>
+          <div style="display: flex; gap: var(--space-3); justify-content: center;">
+            <button class="btn btn-primary" onclick="App.navigate('home')">🏠 Go Home</button>
+            <button class="btn btn-secondary" onclick="location.reload()">🔄 Reload</button>
+          </div>
+        </div>
+      </div>
+    `;
   }
 };
 

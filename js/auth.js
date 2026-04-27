@@ -1,18 +1,20 @@
 // ============================================
 // AUTH MODULE — Email Sign-up, Sign-in,
-// Anonymous Upgrade, Merge
+// Anonymous Upgrade, Merge, Session Management
 // ============================================
 
 const Auth = {
   // ── State ──────────────────────────────────
   _currentUser: null,
   _upgradePromptDismissed: false,
+  _authListener: null,
 
   /**
    * Initialize session.
    * - If no session → create anonymous
    * - If anonymous session → store token in http-only cookie
    * - If email session → auto-merge any leftover anonymous data
+   * - Setup onAuthStateChange for auto token refresh
    */
   async init() {
     try {
@@ -40,9 +42,50 @@ const Auth = {
 
       this._upgradePromptDismissed = localStorage.getItem("upgradePromptDismissed") === "true";
 
+      // ── Setup Auth State Listener ──────────
+      // Handles: token refresh, session expiry, sign-in/sign-out from other tabs
+      this._setupAuthListener();
+
     } catch (err) {
       console.error("Auth init error:", err);
     }
+  },
+
+  /**
+   * Listen for auth state changes — keeps session alive, handles expiry
+   */
+  _setupAuthListener() {
+    if (this._authListener) return; // Already listening
+
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+      console.log(`🔔 Auth event: ${event}`);
+
+      switch (event) {
+        case 'SIGNED_IN':
+          this._currentUser = session?.user || null;
+          break;
+
+        case 'TOKEN_REFRESHED':
+          // Supabase auto-refreshed the JWT — update our reference
+          this._currentUser = session?.user || null;
+          console.log('🔄 Token refreshed successfully');
+          break;
+
+        case 'SIGNED_OUT':
+          this._currentUser = null;
+          console.log('👋 User signed out');
+          break;
+
+        case 'USER_UPDATED':
+          this._currentUser = session?.user || null;
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    this._authListener = subscription;
   },
 
   /**
@@ -90,20 +133,27 @@ const Auth = {
   },
 
   /**
-   * Sign out — clears session.
-   * If user was email-verified, do NOT create a new anonymous session
-   * (prevents identity fragmentation: email→logout→anon→new-data→confusion)
-   * Instead, redirect to login or leave session empty until next visit.
+   * Sign out — clears session AND all local state.
+   * Prevents data leakage between accounts.
    */
   async signOut() {
     try {
       const wasVerified = this.isVerified();
       await client.auth.signOut();
 
+      // ── Clear ALL local state ──
+      Storage.clearCurrentTest();
+      Storage.clearHistory();
+      localStorage.removeItem('mocktest_username');
+      localStorage.removeItem('mocktest_user_id');
+      localStorage.removeItem('mocktest_seen_questions');
+      localStorage.removeItem('upgradePromptDismissed');
+      this._upgradePromptDismissed = false;
+
       if (wasVerified) {
         // Don't create anonymous — user should re-login
         this._currentUser = null;
-        console.log("✅ Signed out (email user) — no anonymous fallback");
+        console.log("✅ Signed out (email user) — all state cleared, no anonymous fallback");
       } else {
         // Was already anonymous — create fresh anonymous session
         const { data } = await client.auth.signInAnonymously();
@@ -113,6 +163,10 @@ const Auth = {
         }
         console.log("✅ Signed out → new anonymous session");
       }
+
+      // Redirect to home
+      window.location.hash = 'home';
+      if (window.App) App.navigate('home');
 
       return { success: true };
     } catch (err) {
@@ -136,6 +190,20 @@ const Auth = {
   /** Get current user object */
   getUser() {
     return this._currentUser;
+  },
+
+  /**
+   * Get current session token for API calls.
+   * Returns null if no active session.
+   */
+  async getSessionToken() {
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      return session?.access_token || null;
+    } catch (err) {
+      console.warn("Could not get session token:", err);
+      return null;
+    }
   },
 
   /** Should we show the upgrade prompt? */
@@ -210,3 +278,4 @@ const Auth = {
 
 // Make globally accessible
 window.Auth = Auth;
+
