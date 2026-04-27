@@ -4,6 +4,9 @@
     { "source": "/api/submit", "destination": "/api" },
     { "source": "/api/track", "destination": "/api" },
     { "source": "/api/analytics", "destination": "/api" },
-    { "source": "/api/leaderboard", "destination": "/api" }
+    { "source": "/api/leaderboard", "destination": "/api" },
+    { "source": "/api/set-anon-cookie", "destination": "/api" },
+    { "source": "/api/clear-anon-cookie", "destination": "/api" },
+    { "source": "/api/merge-anonymous", "destination": "/api" }
   ]
 }

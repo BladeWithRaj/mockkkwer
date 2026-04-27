@@ -51,6 +51,21 @@ export default async function handler(req, res) {
       return await handleLeaderboard(req, res);
     }
 
+    // ── /api/set-anon-cookie ────────────
+    if (path.endsWith("/set-anon-cookie")) {
+      return handleSetAnonCookie(req, res);
+    }
+
+    // ── /api/clear-anon-cookie ──────────
+    if (path.endsWith("/clear-anon-cookie")) {
+      return handleClearAnonCookie(req, res);
+    }
+
+    // ── /api/merge-anonymous ────────────
+    if (path.endsWith("/merge-anonymous")) {
+      return await handleMergeAnonymous(req, res);
+    }
+
     // ── Unknown route ───────────────────
     return res.status(404).json({ error: "Unknown API endpoint", path });
 
@@ -322,4 +337,103 @@ async function handleLeaderboard(req, res) {
   }));
 
   return res.status(200).json({ success: true, leaderboard: rankedData });
+}
+
+// ═══════════════════════════════════════════════
+// HANDLER: /api/set-anon-cookie
+// ═══════════════════════════════════════════════
+
+function handleSetAnonCookie(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const { token } = req.body || {};
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "Token required" });
+  }
+
+  // Set httpOnly cookie — invisible to JS, server-only
+  res.setHeader("Set-Cookie", `anon_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
+  return res.json({ success: true });
+}
+
+// ═══════════════════════════════════════════════
+// HANDLER: /api/clear-anon-cookie
+// ═══════════════════════════════════════════════
+
+function handleClearAnonCookie(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // Expire the cookie immediately
+  res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+  return res.json({ success: true });
+}
+
+// ═══════════════════════════════════════════════
+// HANDLER: /api/merge-anonymous
+// ═══════════════════════════════════════════════
+
+async function handleMergeAnonymous(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  // 1. Get the email user from Authorization header
+  const authHeader = req.headers.authorization || "";
+  const emailToken = authHeader.replace(/^Bearer\s+/i, "");
+
+  if (!emailToken) {
+    return res.status(401).json({ error: "No auth token" });
+  }
+
+  const authClient = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_ANON_KEY
+  );
+
+  const { data: emailUserData, error: emailErr } = await authClient.auth.getUser(emailToken);
+  if (emailErr || !emailUserData?.user?.email) {
+    return res.status(401).json({ error: "Invalid email session" });
+  }
+
+  const emailUserId = emailUserData.user.id;
+
+  // 2. Get the anonymous user from cookie
+  const cookies = req.headers.cookie || "";
+  const anonMatch = cookies.match(/anon_token=([^;]+)/);
+  if (!anonMatch) {
+    return res.json({ merged: 0, message: "No anonymous cookie found" });
+  }
+
+  const anonToken = anonMatch[1];
+  const { data: anonUserData, error: anonErr } = await authClient.auth.getUser(anonToken);
+  if (anonErr || !anonUserData?.user) {
+    return res.json({ merged: 0, message: "Invalid anonymous token" });
+  }
+
+  const anonUserId = anonUserData.user.id;
+
+  if (anonUserId === emailUserId) {
+    return res.json({ merged: 0, message: "Same user — no merge needed" });
+  }
+
+  // 3. Transfer anonymous results to email user
+  const { data: updated, error: updateErr } = await supabase
+    .from("results")
+    .update({ user_id: emailUserId })
+    .eq("user_id", anonUserId)
+    .select("id");
+
+  if (updateErr) {
+    console.error("[MERGE] Error:", updateErr);
+    return res.status(500).json({ error: "Merge failed" });
+  }
+
+  // 4. Clear cookie
+  res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+
+  return res.json({ merged: updated?.length || 0, message: "Results merged" });
 }
