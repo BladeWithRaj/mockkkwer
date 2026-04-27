@@ -1,11 +1,16 @@
 // api/questions.js - Secure Random Fetch API
 import supabase from "./_lib/supabaseAdmin.js";
+import { rateLimitAsync } from "./_lib/rateLimiter.js";
 
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
+
+    // Rate limit by IP to prevent scraping (durable, cross-instance)
+    const clientIp = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown";
+    await rateLimitAsync(`questions_${clientIp}`, 1000);
 
     let { limit = 50, subject, difficulty, exam, seen_ids = [] } = req.body;
 

@@ -147,5 +147,20 @@ const Storage = {
     } catch(e) {
       console.error("Could not save seen questions:", e);
     }
+  },
+
+  // ── Cleanup methods (used by Auth logout) ──
+
+  clearHistory() {
+    localStorage.removeItem(this.KEYS.HISTORY);
+  },
+
+  clearAll() {
+    // Clear everything managed by Storage
+    Object.values(this.KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
+    localStorage.removeItem('mocktest_seen_questions');
+    localStorage.removeItem('upgradePromptDismissed');
   }
 };

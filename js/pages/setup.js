@@ -8,7 +8,6 @@ const SetupPage = {
   config: {
     subject: 'all',
     exam: 'all',
-    difficulty: 'all',
     numQuestions: 10,
     timeMode: 'auto',
     timePerQuestion: 60,
@@ -71,53 +70,53 @@ const SetupPage = {
           </div>
           ` : ''}
 
-          <!-- Difficulty -->
+          <!-- Number of Questions (Free Input) -->
           <div class="setup-section animate-fadeInUp stagger-3">
-            <div class="setup-section-title">📈 Difficulty</div>
-            <div class="setup-chips" id="difficulty-chips">
-              <button class="setup-chip ${this.config.difficulty === 'all' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('difficulty', 'all')">All Levels</button>
-              <button class="setup-chip ${this.config.difficulty === 'easy' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('difficulty', 'easy')">🟢 Easy</button>
-              <button class="setup-chip ${this.config.difficulty === 'medium' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('difficulty', 'medium')">🟡 Medium</button>
-              <button class="setup-chip ${this.config.difficulty === 'hard' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('difficulty', 'hard')">🔴 Hard</button>
-            </div>
-          </div>
-
-
-
-          <!-- Number of Questions -->
-          <div class="setup-section animate-fadeInUp stagger-5">
             <div class="setup-section-title">📝 Number of Questions</div>
-            <div class="setup-chips" id="count-chips">
-              ${[20, 50, 100].map(n => `
-                <button class="setup-chip ${this.config.numQuestions === n ? 'active' : ''}"
-                        onclick="SetupPage.setConfig('numQuestions', ${n})">${n}</button>
-              `).join('')}
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+              <input type="number" class="input" style="width: 120px; text-align: center; font-size: var(--text-lg); font-weight: var(--font-bold);"
+                     value="${this.config.numQuestions}"
+                     min="5" max="200" step="1" placeholder="e.g. 25"
+                     onchange="SetupPage._setNumQuestions(this.value)"
+                     id="num-questions-input">
+              <span style="font-size: var(--text-sm); color: var(--text-muted);">questions (5–200)</span>
+            </div>
+            <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3);">
+              <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=10; SetupPage._setNumQuestions(10)">10</button>
+              <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=25; SetupPage._setNumQuestions(25)">25</button>
+              <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=50; SetupPage._setNumQuestions(50)">50</button>
+              <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=100; SetupPage._setNumQuestions(100)">100</button>
             </div>
           </div>
 
-          <!-- Time Settings -->
-          <div class="setup-section animate-fadeInUp stagger-6">
-            <div class="setup-section-title">⏱️ Time</div>
-            <div class="setup-chips" id="time-chips">
-              <button class="setup-chip ${this.config.timeMode === 'auto' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('timeMode', 'auto')">Auto (1 min/Q)</button>
-              <button class="setup-chip ${this.config.timeMode === 'manual' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('timeMode', 'manual')">Manual</button>
-              <button class="setup-chip ${this.config.timeMode === 'none' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('timeMode', 'none')">No Timer</button>
+          <!-- Time Settings (Free Input) -->
+          <div class="setup-section animate-fadeInUp stagger-4">
+            <div class="setup-section-title">⏱️ Time (minutes)</div>
+            <div class="switch-wrapper" style="margin-bottom: var(--space-3);">
+              <label class="switch">
+                <input type="checkbox" ${this.config.timeMode !== 'none' ? 'checked' : ''}
+                       onchange="SetupPage._toggleTimer(this.checked)"
+                       id="timer-toggle">
+                <span class="switch-track"></span>
+              </label>
+              <span style="font-size: var(--text-sm); color: var(--text-secondary);">
+                ${this.config.timeMode !== 'none' ? 'Timer ON' : 'No Timer'}
+              </span>
             </div>
-            ${this.config.timeMode === 'manual' ? `
-              <div style="margin-top: var(--space-4); display: flex; align-items: center; gap: var(--space-3);">
-                <label class="input-label">Total minutes:</label>
-                <input type="number" class="input" style="width: 100px; text-align: center;"
-                       value="${Math.round((this.config.totalTime || 600) / 60)}"
-                       min="1" max="180"
-                       onchange="SetupPage.setConfig('totalTime', parseInt(this.value) * 60)"
-                       id="manual-time-input">
+            ${this.config.timeMode !== 'none' ? `
+              <div style="display: flex; align-items: center; gap: var(--space-3);">
+                <input type="number" class="input" style="width: 120px; text-align: center; font-size: var(--text-lg); font-weight: var(--font-bold);"
+                       value="${this.config.timeMode === 'auto' ? this.config.numQuestions : Math.round((this.config.totalTime || 600) / 60)}"
+                       min="1" max="300" step="1" placeholder="e.g. 30"
+                       onchange="SetupPage._setTime(this.value)"
+                       id="time-minutes-input">
+                <span style="font-size: var(--text-sm); color: var(--text-muted);">minutes (1–300)</span>
+              </div>
+              <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3);">
+                <button class="setup-chip" onclick="document.getElementById('time-minutes-input').value=10; SetupPage._setTime(10)">10m</button>
+                <button class="setup-chip" onclick="document.getElementById('time-minutes-input').value=30; SetupPage._setTime(30)">30m</button>
+                <button class="setup-chip" onclick="document.getElementById('time-minutes-input').value=60; SetupPage._setTime(60)">60m</button>
+                <button class="setup-chip" onclick="document.getElementById('time-minutes-input').value=120; SetupPage._setTime(120)">2h</button>
               </div>
             ` : ''}
           </div>
@@ -153,14 +152,18 @@ const SetupPage = {
 
           <!-- Summary -->
           <div class="setup-summary animate-fadeInUp stagger-8" id="setup-summary">
-            ${this._renderSummary(actualCount)}
+            ${this._renderSummary()}
+          </div>
+
+          <!-- Available Count Badge -->
+          <div id="available-count-badge" style="text-align: center; margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--text-muted);">
+            Checking available questions...
           </div>
 
           <!-- Start Button -->
-          <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 ${canStart ? 'btn-glow' : ''}"
-                  onclick="SetupPage.startTest()" id="start-test-btn"
-                  ${!canStart ? 'disabled' : ''}>
-            ${canStart ? '🚀 Start Test' : '⚠️ Not Enough Questions'}
+          <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 btn-glow"
+                  onclick="SetupPage.startTest()" id="start-test-btn" disabled>
+            🚀 Start Test
           </button>
 
           <button class="btn btn-ghost btn-block" onclick="App.navigate('home')" style="margin-top: var(--space-2);">
@@ -171,22 +174,10 @@ const SetupPage = {
     `;
   },
 
-  _getFilteredQuestions() {
-    const questions = window.QUESTION_BANK || [];
-    return questions.filter(q => {
-      if (this.config.subject !== 'all' && q.subject !== this.config.subject) return false;
-      if (this.config.exam !== 'all' && !(q.exam && q.exam.includes(this.config.exam))) return false;
-      if (this.config.difficulty !== 'all' && q.difficulty !== this.config.difficulty) return false;
-      return true;
-    });
-  },
-
-  _renderSummary(actualCount) {
-    const timeText = this.config.timeMode === 'auto'
-      ? `${actualCount} min (auto)`
-      : this.config.timeMode === 'manual'
-        ? `${Math.round((this.config.totalTime || 600) / 60)} min`
-        : 'No timer';
+  _renderSummary() {
+    const timeText = this.config.timeMode === 'none'
+      ? 'No timer'
+      : `${Math.round((this.config.totalTime || this.config.numQuestions * 60) / 60)} min`;
 
     return `
       <div class="summary-row">
@@ -196,10 +187,6 @@ const SetupPage = {
       <div class="summary-row">
         <span class="summary-label">Exam</span>
         <span class="summary-value">${this.config.exam === 'all' ? 'All Exams' : this.config.exam}</span>
-      </div>
-      <div class="summary-row">
-        <span class="summary-label">Difficulty</span>
-        <span class="summary-value">${this.config.difficulty === 'all' ? 'All Levels' : this.config.difficulty}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">Questions</span>
@@ -216,9 +203,130 @@ const SetupPage = {
     `;
   },
 
+  // ── Free input handlers (no full re-render to avoid focus loss) ──
+
+  _setNumQuestions(val) {
+    const num = parseInt(val, 10);
+    if (isNaN(num) || num < 5) {
+      Helpers.showToast('Minimum 5 questions required', 'error');
+      return;
+    }
+    if (num > 200) {
+      Helpers.showToast('Maximum 200 questions allowed', 'error');
+      return;
+    }
+    this.config.numQuestions = num;
+
+    // If timer is on and was auto, update time to match
+    if (this.config.timeMode === 'auto') {
+      this.config.totalTime = num * 60;
+      const timeInput = document.getElementById('time-minutes-input');
+      if (timeInput) timeInput.value = num;
+    }
+
+    // Update summary without full re-render
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
+
+    // Re-validate
+    this._validateAvailability();
+  },
+
+  _setTime(val) {
+    const mins = parseInt(val, 10);
+    if (isNaN(mins) || mins < 1) {
+      Helpers.showToast('Minimum 1 minute required', 'error');
+      return;
+    }
+    if (mins > 300) {
+      Helpers.showToast('Maximum 300 minutes (5 hours) allowed', 'error');
+      return;
+    }
+    this.config.timeMode = 'manual';
+    this.config.totalTime = mins * 60;
+
+    // Update summary
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
+  },
+
+  _toggleTimer(checked) {
+    if (checked) {
+      this.config.timeMode = 'auto';
+      this.config.totalTime = this.config.numQuestions * 60;
+    } else {
+      this.config.timeMode = 'none';
+      this.config.totalTime = 99999;
+    }
+    // Full re-render needed to show/hide time input
+    document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
+    this._validateAvailability();
+  },
+
   setConfig(key, value) {
     this.config[key] = value;
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
+    // Re-run validation after config change
+    this._validateAvailability();
+  },
+
+  /**
+   * Check how many questions are available for current filters via API.
+   * Enables/disables Start button based on result.
+   */
+  async _validateAvailability() {
+    const badge = document.getElementById('available-count-badge');
+    const btn = document.getElementById('start-test-btn');
+    if (!badge || !btn) return;
+
+    badge.textContent = 'Checking available questions...';
+    badge.style.color = 'var(--text-muted)';
+    btn.disabled = true;
+    btn.textContent = '⏳ Checking...';
+
+    try {
+      // Quick fetch with limit 1 to check availability (fast)
+      const testFetch = await window.fetchRandomQuestions({
+        limit: this.config.numQuestions,
+        subject: this.config.subject,
+        difficulty: this.config.difficulty,
+        exam: this.config.exam,
+        seenIds: []
+      });
+
+      if (testFetch.error) {
+        badge.innerHTML = `<span style="color: var(--danger);">❌ ${testFetch.error}</span>`;
+        btn.disabled = true;
+        btn.textContent = '⚠️ Cannot Start';
+        return;
+      }
+
+      const count = Array.isArray(testFetch) ? testFetch.length : 0;
+
+      if (count >= this.config.numQuestions) {
+        badge.innerHTML = `<span style="color: var(--success);">✅ ${count} questions available</span>`;
+        btn.disabled = false;
+        btn.textContent = '🚀 Start Test';
+        btn.classList.add('btn-glow');
+      } else if (count >= 5) {
+        badge.innerHTML = `<span style="color: var(--warning);">⚠️ Only ${count} questions available (requested ${this.config.numQuestions})</span>`;
+        btn.disabled = false;
+        btn.textContent = `🚀 Start with ${count} Questions`;
+        btn.classList.add('btn-glow');
+        // Auto-adjust config to available count
+        this.config.numQuestions = count;
+      } else {
+        badge.innerHTML = `<span style="color: var(--danger);">❌ Only ${count} questions found — need at least 5</span>`;
+        btn.disabled = true;
+        btn.textContent = '⚠️ Not Enough Questions';
+        btn.classList.remove('btn-glow');
+      }
+    } catch (err) {
+      badge.innerHTML = `<span style="color: var(--danger);">❌ Failed to check: ${err.message}</span>`;
+      // On network error, still allow start — API will validate again
+      btn.disabled = false;
+      btn.textContent = '🚀 Start Test';
+    }
   },
 
   async startTest() {
@@ -255,6 +363,9 @@ const SetupPage = {
       if (!fetchedQuestions || fetchedQuestions.length === 0) {
         throw new Error('No questions found for the selected filters.');
       }
+      if (fetchedQuestions.length < 5) {
+        throw new Error(`Only ${fetchedQuestions.length} questions found — need at least 5.`);
+      }
 
       // 3. Save newly seen IDs
       Storage.addSeenQuestions(fetchedQuestions.map(q => q.id));
@@ -283,5 +394,9 @@ const SetupPage = {
     }
   },
 
-  afterRender() {}
+  afterRender() {
+    // Run availability check when page loads
+    this._validateAvailability();
+  }
 };
+
