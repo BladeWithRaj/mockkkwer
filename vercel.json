@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/api/questions", "destination": "/api" },
+    { "source": "/api/submit", "destination": "/api" },
+    { "source": "/api/track", "destination": "/api" },
+    { "source": "/api/analytics", "destination": "/api" },
+    { "source": "/api/leaderboard", "destination": "/api" }
+  ]
+}
