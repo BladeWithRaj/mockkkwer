@@ -6,8 +6,7 @@
 
 const SetupPage = {
   config: {
-    subject: 'all',
-    exam: 'all',
+    subjects: [],
     numQuestions: 10,
     timeMode: 'auto',
     timePerQuestion: 60,
@@ -20,17 +19,13 @@ const SetupPage = {
 
 
     // Pre-fill from URL params
-    if (params.exam && params.exam !== 'All') this.config.exam = params.exam;
-    if (params.subject) this.config.subject = params.subject;
-    if (params.limit) this.config.numQuestions = parseInt(params.limit, 10);
-    if (params.mode === 'demo') {
-      this.config.exam = 'All';
-      this.config.subject = 'all';
+    if (params.subject) {
+      this.config.subjects = [params.subject.toLowerCase()];
     }
+    if (params.limit) this.config.numQuestions = parseInt(params.limit, 10);
 
-    // Hardcoded for MVP since global fetch is removed for scale
-    const subjects = ['Math', 'GK', 'Reasoning', 'English', 'Hindi'];
-    const exams = ['SSC', 'Railway', 'Police', 'Banking'];
+    // Available subjects (lowercase)
+    const subjects = ['math', 'gk', 'reasoning', 'english', 'hindi', 'science', 'polity', 'geography', 'history'];
 
     return `
       <div class="setup-page page-enter">
@@ -42,33 +37,18 @@ const SetupPage = {
         </div>
 
         <div class="setup-form">
-          <!-- Subject -->
+          <!-- Subject (Multi-Select Chips) -->
           <div class="setup-section animate-fadeInUp stagger-1">
             <div class="setup-section-title">${Lang.t('setup_subject')}</div>
             <div class="setup-chips" id="subject-chips">
-              <button class="setup-chip ${this.config.subject === 'all' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('subject', 'all')">${Lang.t('setup_all_subjects')}</button>
+              <button class="setup-chip ${this.config.subjects.length === 0 ? 'active' : ''}"
+                      onclick="SetupPage._toggleSubject('all')">${Lang.t('setup_all_subjects')}</button>
               ${subjects.map(s => `
-                <button class="setup-chip ${this.config.subject === s ? 'active' : ''}"
-                        onclick="SetupPage.setConfig('subject', '${s}')">${Helpers.getSubjectIcon(s)} ${s}</button>
+                <button class="setup-chip ${this.config.subjects.includes(s) ? 'active' : ''}"
+                        onclick="SetupPage._toggleSubject('${s}')">${Helpers.getSubjectIcon(s)} ${s.charAt(0).toUpperCase() + s.slice(1)}</button>
               `).join('')}
             </div>
           </div>
-
-          <!-- Exam -->
-          ${exams.length > 0 ? `
-          <div class="setup-section animate-fadeInUp stagger-2">
-            <div class="setup-section-title">${Lang.t('setup_exam')}</div>
-            <div class="setup-chips" id="exam-chips">
-              <button class="setup-chip ${this.config.exam === 'all' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('exam', 'all')">${Lang.t('setup_all_exams')}</button>
-              ${exams.map(e => `
-                <button class="setup-chip ${this.config.exam === e ? 'active' : ''}"
-                        onclick="SetupPage.setConfig('exam', '${e}')">${e}</button>
-              `).join('')}
-            </div>
-          </div>
-          ` : ''}
 
           <!-- Number of Questions (Free Input) -->
           <div class="setup-section animate-fadeInUp stagger-3">
@@ -180,14 +160,14 @@ const SetupPage = {
       ? Lang.t('setup_no_timer')
       : `${Math.round((this.config.totalTime || this.config.numQuestions * 60) / 60)} min`;
 
+    const subjectText = this.config.subjects.length === 0
+      ? Lang.t('setup_all_subjects')
+      : this.config.subjects.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ');
+
     return `
       <div class="summary-row">
         <span class="summary-label">${Lang.t('setup_summary_subject')}</span>
-        <span class="summary-value">${this.config.subject === 'all' ? Lang.t('setup_all_subjects') : this.config.subject}</span>
-      </div>
-      <div class="summary-row">
-        <span class="summary-label">${Lang.t('setup_summary_exam')}</span>
-        <span class="summary-value">${this.config.exam === 'all' ? Lang.t('setup_all_exams') : this.config.exam}</span>
+        <span class="summary-value">${subjectText}</span>
       </div>
       <div class="summary-row">
         <span class="summary-label">${Lang.t('setup_summary_questions')}</span>
@@ -267,7 +247,22 @@ const SetupPage = {
   setConfig(key, value) {
     this.config[key] = value;
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
-    // Re-run validation after config change
+    this._validateAvailability();
+  },
+
+  // ── Multi-select subject toggle ──
+  _toggleSubject(subject) {
+    if (subject === 'all') {
+      this.config.subjects = [];
+    } else {
+      const idx = this.config.subjects.indexOf(subject);
+      if (idx >= 0) {
+        this.config.subjects.splice(idx, 1);
+      } else {
+        this.config.subjects.push(subject);
+      }
+    }
+    document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
     this._validateAvailability();
   },
 
@@ -280,18 +275,16 @@ const SetupPage = {
     const btn = document.getElementById('start-test-btn');
     if (!badge || !btn) return;
 
-    badge.textContent = 'Checking available questions...';
+    badge.textContent = Lang.t('setup_checking');
     badge.style.color = 'var(--text-muted)';
     btn.disabled = true;
-    btn.textContent = '⏳ Checking...';
+    btn.textContent = Lang.t('setup_checking');
 
     try {
       // Quick fetch with limit 1 to check availability (fast)
       const testFetch = await window.fetchRandomQuestions({
         limit: this.config.numQuestions,
-        subject: this.config.subject,
-        difficulty: this.config.difficulty,
-        exam: this.config.exam,
+        subjects: this.config.subjects,
         seenIds: []
       });
 
@@ -305,9 +298,9 @@ const SetupPage = {
       const count = Array.isArray(testFetch) ? testFetch.length : 0;
 
       if (count >= this.config.numQuestions) {
-        badge.innerHTML = `<span style="color: var(--success);">✅ ${count} questions available</span>`;
+        badge.innerHTML = `<span style="color: var(--success);">✅ ${count} ${Lang.t('setup_available')}</span>`;
         btn.disabled = false;
-        btn.textContent = '🚀 Start Test';
+        btn.textContent = Lang.t('setup_start');
         btn.classList.add('btn-glow');
       } else if (count >= 5) {
         badge.innerHTML = `<span style="color: var(--warning);">⚠️ Only ${count} questions available (requested ${this.config.numQuestions})</span>`;
@@ -317,9 +310,9 @@ const SetupPage = {
         // Auto-adjust config to available count
         this.config.numQuestions = count;
       } else {
-        badge.innerHTML = `<span style="color: var(--danger);">❌ Only ${count} questions found — need at least 5</span>`;
+        badge.innerHTML = `<span style="color: var(--danger);">❌ ${Lang.t('setup_not_enough')} (${count})</span>`;
         btn.disabled = true;
-        btn.textContent = '⚠️ Not Enough Questions';
+        btn.textContent = Lang.t('setup_cannot_start');
         btn.classList.remove('btn-glow');
       }
     } catch (err) {
@@ -354,9 +347,7 @@ const SetupPage = {
       // 2. Fetch random questions from API securely
       const fetchedQuestions = await window.fetchRandomQuestions({
         limit: this.config.numQuestions,
-        subject: this.config.subject,
-        difficulty: this.config.difficulty,
-        exam: this.config.exam,
+        subjects: this.config.subjects,
         seenIds: seenIds
       });
 

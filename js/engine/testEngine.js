@@ -65,7 +65,7 @@ const TestEngine = {
 
     if (window.trackEvent) {
       window.trackEvent("test_start", {
-        mode: isDaily ? "daily" : (config.exam === 'All' ? "demo" : "full")
+        mode: isDaily ? "daily" : "full"
       });
     }
 

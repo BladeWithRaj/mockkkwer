@@ -205,9 +205,7 @@ const ResultPage = {
       // Fetch fresh questions from API with same filters
       const questions = await window.fetchRandomQuestions({
         limit: config.numQuestions || config.actualQuestions || 10,
-        subject: config.subject,
-        difficulty: config.difficulty,
-        exam: config.exam,
+        subjects: config.subjects || [],
         seenIds: Storage.getSeenQuestions()
       });
 

@@ -11,12 +11,12 @@ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── FETCH ──────────────────────────────────
 
 async function fetchRandomQuestions(config = {}) {
-  const { limit = 50, subject, difficulty, exam, seenIds = [] } = config;
+  const { limit = 50, subjects = [], seenIds = [] } = config;
   try {
     const resp = await fetch("/api/questions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ limit, subject, difficulty, exam, seen_ids: seenIds })
+      body: JSON.stringify({ limit, subjects, seen_ids: seenIds })
     });
     
     if (!resp.ok) {
@@ -36,7 +36,7 @@ async function fetchRandomQuestions(config = {}) {
 
 async function fetchAdminQuestions(page = 1, searchQuery = '') {
   let query = client.from("questions").select("*");
-  if (searchQuery) query = query.ilike('question', `%${searchQuery}%`);
+  if (searchQuery) query = query.ilike('question_en', `%${searchQuery}%`);
   
   // Hard limit to 1000 for simple admin UI (pagination later)
   query = query.range((page - 1) * 1000, page * 1000 - 1);
@@ -58,7 +58,8 @@ async function checkAdminRole(userId) {
   }
 }
 
-// ── DATA MAPPING (DB → UI) ────────────────
+// ── MAP API RESPONSE → UI FORMAT ─────────────
+// API returns: { id, question_en, question_hi, options_en[], options_hi[], correct_index, subject }
 
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
@@ -66,126 +67,92 @@ function mapDBToUI(data) {
   const isHi = typeof Lang !== 'undefined' && Lang.isHindi();
 
   return data.map(q => {
-    // ── GUARD: skip malformed questions ──
+    // ── GUARD ──
     if (!q || !q.id) {
       console.warn("⚠️ Skipping malformed question (no ID):", q);
       return null;
     }
 
-    // ── TYPE SAFETY: coerce to string (Supabase can return numbers/null) ──
-    const safe = (v) => v != null ? String(v).trim() : "";
+    // ── PARSE OPTIONS (handle string or array from API) ──
+    let optionsEN = typeof q.options_en === "string" ? JSON.parse(q.options_en) : (q.options_en || []);
+    let optionsHI = typeof q.options_hi === "string" ? JSON.parse(q.options_hi) : (q.options_hi || null);
 
-    // ── ENGLISH OPTIONS (source of truth for scoring) ──
-    const optionsEN = [
-      safe(q.option_a),
-      safe(q.option_b),
-      safe(q.option_c),
-      safe(q.option_d)
-    ];
+    // ── TYPE SAFETY: coerce each to string ──
+    optionsEN = Array.isArray(optionsEN) ? optionsEN.map(o => o != null ? String(o) : "") : [];
 
-    // ── VALIDATION: must have at least 2 non-empty options ──
+    // ── VALIDATION: need at least 2 options ──
     const filledEN = optionsEN.filter(o => o !== "").length;
     if (filledEN < 2) {
-      console.error(`❌ Question ID ${q.id}: only ${filledEN} options filled. Skipping.`, optionsEN);
+      console.error(`❌ Q${q.id}: only ${filledEN} options. Skipping.`);
       return null;
     }
 
-    // ── HINDI OPTIONS (per-option fallback to English) ──
-    const optionsHI = [
-      safe(q.option_a_hi) || optionsEN[0],
-      safe(q.option_b_hi) || optionsEN[1],
-      safe(q.option_c_hi) || optionsEN[2],
-      safe(q.option_d_hi) || optionsEN[3]
-    ];
+    // ── HINDI: per-option fallback to English ──
+    if (Array.isArray(optionsHI)) {
+      optionsHI = optionsHI.map((o, i) => (o != null && String(o).trim()) ? String(o) : optionsEN[i]);
+    } else {
+      optionsHI = [...optionsEN];
+    }
 
-    // ── DISPLAY OPTIONS (spread-copy to prevent mutation) ──
-    const options = isHi ? [...optionsHI] : [...optionsEN];
+    // ── QUESTION TEXT ──
+    const questionEN = (q.question_en || "").trim();
+    const questionHI = (q.question_hi || "").trim() || questionEN;
 
-    // ── QUESTION TEXT (both languages stored, Hindi falls back to English) ──
-    const questionEN = safe(q.question);
-    const questionHI = safe(q.question_hi) || questionEN;
-    const questionText = isHi ? questionHI : questionEN;
-
-    // ── VALIDATION: must have question text ──
     if (!questionEN) {
-      console.error(`❌ Question ID ${q.id}: empty question text. Skipping.`);
+      console.error(`❌ Q${q.id}: empty question text. Skipping.`);
       return null;
     }
 
-    // ── CORRECT ANSWER: null/empty = unanswerable ──
-    if (!q.correct_answer || String(q.correct_answer).trim() === "") {
-      console.warn(`⚠️ Question ID ${q.id}: correct_answer is null/empty — marking as unanswerable`);
-      return {
-        id: String(q.id),
-        question: questionText,
-        options: options,
-        correct: -1,
-        subject: safe(q.subject) || "General",
-        topic: safe(q.subject) || "General",
-        difficulty: (safe(q.difficulty) || "medium").toLowerCase(),
-        exam: q.exam ? String(q.exam).split(",").map(e => e.trim()).filter(Boolean) : [],
-        _hasError: true,
-        _raw: { questionEN, questionHI, optionsEN, optionsHI }
-      };
-    }
-
-    // ── FIND CORRECT INDEX (normalized for typo safety) ──
-    const correctNorm = String(q.correct_answer).trim().toLowerCase();
-    let correctIdx = optionsEN.findIndex(opt => opt.toLowerCase() === correctNorm);
-
-    // ── RANGE CHECK: if no match found, log + fallback to 0 (not -1) ──
-    if (correctIdx < 0 || correctIdx >= optionsEN.length) {
-      console.error(`❌ Question ID ${q.id}: correct_answer "${q.correct_answer}" no match. Defaulting to index 0.`, optionsEN);
+    // ── CORRECT INDEX (direct from API, no findIndex needed!) ──
+    let correctIdx = typeof q.correct_index === "number" ? q.correct_index : parseInt(q.correct_index, 10);
+    if (isNaN(correctIdx) || correctIdx < 0 || correctIdx >= optionsEN.length) {
+      console.error(`❌ Q${q.id}: bad correct_index=${q.correct_index}. Defaulting 0.`);
       correctIdx = 0;
     }
 
-    // ── WARNINGS (non-fatal) ──
-    const uniqueOptions = new Set(optionsEN.filter(o => o !== ""));
-    if (uniqueOptions.size < filledEN) {
-      console.warn(`⚠️ Question ID ${q.id}: has duplicate options.`, optionsEN);
-    }
+    // ── DISPLAY ──
+    const questionText = isHi ? questionHI : questionEN;
+    const options = isHi ? [...optionsHI] : [...optionsEN];
 
     return {
       id: String(q.id),
       question: questionText,
       options: options,
       correct: correctIdx,
-      subject: safe(q.subject) || "General",
-      topic: safe(q.subject) || "General",
-      difficulty: (safe(q.difficulty) || "medium").toLowerCase(),
-      exam: q.exam ? String(q.exam).split(",").map(e => e.trim()).filter(Boolean) : [],
+      subject: (q.subject || "general").toLowerCase(),
+      topic: (q.subject || "general").toLowerCase(),
+      difficulty: (q.difficulty || "medium").toLowerCase(),
       _raw: { questionEN, questionHI, optionsEN, optionsHI }
     };
-  }).filter(Boolean); // Remove all null/undefined/false entries
+  }).filter(Boolean);
 }
 
 // ── ADD QUESTION (Admin → DB) ─────────────
 
 async function addQuestionToDB(q) {
-  if (!q.question || !q.question.trim()) {
-    return { success: false, error: "Question text is required" };
+  if (!q.question_en || !q.question_en.trim()) {
+    return { success: false, error: "Question text (EN) is required" };
   }
-  if (!q.option_a || !q.option_b || !q.option_c || !q.option_d) {
-    return { success: false, error: "All 4 options are required" };
+  if (!Array.isArray(q.options_en) || q.options_en.length < 2) {
+    return { success: false, error: "At least 2 options required" };
   }
-  const validOptions = [q.option_a, q.option_b, q.option_c, q.option_d];
-  if (!validOptions.includes(q.correct_answer)) {
-    return { success: false, error: "Correct answer must match one of the options" };
+  if (typeof q.correct_index !== "number" || q.correct_index < 0 || q.correct_index >= q.options_en.length) {
+    return { success: false, error: "correct_index must be 0-" + (q.options_en.length - 1) };
   }
+
+  const row = {
+    question_en: q.question_en.trim(),
+    question_hi: (q.question_hi || "").trim() || null,
+    options_en: q.options_en,
+    options_hi: Array.isArray(q.options_hi) ? q.options_hi : null,
+    correct_index: q.correct_index,
+    subject: (q.subject || "general").toLowerCase(),
+    difficulty: (q.difficulty || "medium").toLowerCase()
+  };
 
   const { data, error } = await client
     .from("questions")
-    .insert([{
-      question: q.question,
-      option_a: q.option_a,
-      option_b: q.option_b,
-      option_c: q.option_c,
-      option_d: q.option_d,
-      correct_answer: q.correct_answer,
-      subject: q.subject,
-      exam: q.exam,
-      difficulty: q.difficulty
-    }])
+    .insert([row])
     .select();
 
   if (error) {

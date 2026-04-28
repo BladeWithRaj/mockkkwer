@@ -21,11 +21,10 @@ if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
   });
 }
 
-// ── Scoring utility (inline, no import needed) ──
+// ── Scoring utility — index-based (no text matching) ──
 function calculateResult(questions, answers) {
   let correct = 0, wrong = 0, skipped = 0;
   const topicStats = {};
-  const optionKeys = ["option_a", "option_b", "option_c", "option_d"];
 
   questions.forEach(q => {
     const userIdx = answers[q.id];
@@ -36,11 +35,8 @@ function calculateResult(questions, answers) {
       return;
     }
 
-    const optKey = optionKeys[userIdx];
-    if (!optKey) { wrong++; topicStats[q.subject].wrong++; return; }
-
-    const userText = q[optKey];
-    if (userText === q.correct_answer) {
+    // Direct index comparison — language-independent
+    if (userIdx === q.correct_index) {
       correct++;
       topicStats[q.subject].correct++;
     } else {
@@ -116,45 +112,39 @@ async function handleQuestions(req, res) {
   }
 
   try {
-    let { limit = 50, subject, difficulty, exam, seen_ids = [] } = req.body || {};
+    let { limit = 50, subjects = [], seen_ids = [] } = req.body || {};
 
     limit = parseInt(limit, 10);
     if (isNaN(limit) || limit < 1) limit = 10;
     if (limit > 200) limit = 200;
     if (!Array.isArray(seen_ids)) seen_ids = [];
     if (seen_ids.length > 300) seen_ids = seen_ids.slice(-300);
+    if (!Array.isArray(subjects)) subjects = [];
 
-    subject = subject === "all" ? null : (subject || null);
-    difficulty = difficulty === "all" ? null : (difficulty || null);
-    exam = exam === "all" ? null : (exam || null);
+    // Normalize subjects to lowercase, filter empties
+    subjects = subjects.map(s => String(s).trim().toLowerCase()).filter(Boolean);
 
-    // Try RPC first, fallback to direct query
-    let questions = [];
+    // Build query — no RPC, direct table query
+    let query = supabase.from("questions").select("*").limit(limit);
 
-    const { data, error } = await supabase.rpc("get_random_questions", {
-      p_limit: limit,
-      p_subject: subject,
-      p_difficulty: difficulty,
-      p_exam: exam,
-      p_seen_ids: seen_ids
-    });
+    // Multi-subject filter (skip if empty = all subjects)
+    if (subjects.length > 0) {
+      query = query.in("subject", subjects);
+    }
+
+    // Exclude seen questions
+    if (seen_ids.length > 0) {
+      query = query.not("id", "in", `(${seen_ids.join(",")})`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
-      console.warn("[QUESTIONS] RPC failed, trying direct query:", error.message);
-      // Fallback: direct table query
-      let query = supabase.from("questions").select("*").limit(limit);
-      if (subject) query = query.eq("subject", subject);
-      if (difficulty) query = query.eq("difficulty", difficulty);
-
-      const { data: fallbackData, error: fallbackErr } = await query;
-      if (fallbackErr) {
-        console.error("[QUESTIONS] Fallback also failed:", fallbackErr);
-        return res.status(500).json({ error: "Failed to fetch questions: " + fallbackErr.message });
-      }
-      questions = fallbackData || [];
-    } else {
-      questions = data || [];
+      console.error("[QUESTIONS] Query failed:", error);
+      return res.status(500).json({ error: "Failed to fetch questions: " + error.message });
     }
+
+    let questions = data || [];
 
     // Shuffle
     for (let i = questions.length - 1; i > 0; i--) {
@@ -162,7 +152,24 @@ async function handleQuestions(req, res) {
       [questions[i], questions[j]] = [questions[j], questions[i]];
     }
 
-    return res.json({ success: true, questions });
+    // Format response — parse jsonb safely
+    const formatted = questions.map(q => {
+      const optionsEN = typeof q.options_en === "string" ? JSON.parse(q.options_en) : (q.options_en || []);
+      const optionsHI = typeof q.options_hi === "string" ? JSON.parse(q.options_hi) : (q.options_hi || null);
+
+      return {
+        id: q.id,
+        question_en: q.question_en || "",
+        question_hi: q.question_hi || "",
+        options_en: optionsEN,
+        options_hi: optionsHI,
+        correct_index: typeof q.correct_index === "number" ? q.correct_index : 0,
+        subject: q.subject || "general",
+        difficulty: q.difficulty || "medium"
+      };
+    });
+
+    return res.json({ success: true, questions: formatted });
   } catch (err) {
     console.error("[QUESTIONS] Crash:", err);
     return res.status(500).json({ error: err.message });
@@ -214,10 +221,10 @@ async function handleSubmit(req, res) {
       return res.status(400).json({ error: "timeTaken required" });
     }
 
-    // Fetch questions from DB
+    // Fetch questions from DB (new schema: correct_index)
     const { data: dbQuestions, error: qErr } = await supabase
       .from("questions")
-      .select("id, correct_answer, subject, option_a, option_b, option_c, option_d")
+      .select("id, correct_index, subject")
       .in("id", questionIds);
 
     if (qErr) {

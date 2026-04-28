@@ -146,8 +146,8 @@ const Helpers = {
    * Generate CSV template
    */
   getCSVTemplate() {
-    return 'question,option_a,option_b,option_c,option_d,correct,explanation,subject,topic,difficulty,exam,pyq,year\n' +
-      '"What is 2+2?","3","4","5","6","B","2+2=4","Math","Arithmetic","easy","SSC;Railway","false",""\n';
+    return 'question,option_a,option_b,option_c,option_d,correct,subject,difficulty\n' +
+      '"What is 2+2?","3","4","5","6","B","math","easy"\n';
   },
 
   /**
