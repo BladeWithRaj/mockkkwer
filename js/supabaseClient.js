@@ -63,66 +63,100 @@ async function checkAdminRole(userId) {
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
 
+  const isHi = typeof Lang !== 'undefined' && Lang.isHindi();
+
   return data.map(q => {
-    // Guard: skip malformed questions
+    // ── GUARD: skip malformed questions ──
     if (!q || !q.id) {
       console.warn("⚠️ Skipping malformed question (no ID):", q);
       return null;
     }
 
-    const options = [
-      q.option_a || "",
-      q.option_b || "",
-      q.option_c || "",
-      q.option_d || ""
+    // ── TYPE SAFETY: coerce to string (Supabase can return numbers/null) ──
+    const safe = (v) => v != null ? String(v).trim() : "";
+
+    // ── ENGLISH OPTIONS (source of truth for scoring) ──
+    const optionsEN = [
+      safe(q.option_a),
+      safe(q.option_b),
+      safe(q.option_c),
+      safe(q.option_d)
     ];
 
-    // Edge case: null or empty correct_answer
-    if (!q.correct_answer || q.correct_answer.trim() === "") {
+    // ── VALIDATION: must have at least 2 non-empty options ──
+    const filledEN = optionsEN.filter(o => o !== "").length;
+    if (filledEN < 2) {
+      console.error(`❌ Question ID ${q.id}: only ${filledEN} options filled. Skipping.`, optionsEN);
+      return null;
+    }
+
+    // ── HINDI OPTIONS (per-option fallback to English) ──
+    const optionsHI = [
+      safe(q.option_a_hi) || optionsEN[0],
+      safe(q.option_b_hi) || optionsEN[1],
+      safe(q.option_c_hi) || optionsEN[2],
+      safe(q.option_d_hi) || optionsEN[3]
+    ];
+
+    // ── DISPLAY OPTIONS (spread-copy to prevent mutation) ──
+    const options = isHi ? [...optionsHI] : [...optionsEN];
+
+    // ── QUESTION TEXT (both languages stored, Hindi falls back to English) ──
+    const questionEN = safe(q.question);
+    const questionHI = safe(q.question_hi) || questionEN;
+    const questionText = isHi ? questionHI : questionEN;
+
+    // ── VALIDATION: must have question text ──
+    if (!questionEN) {
+      console.error(`❌ Question ID ${q.id}: empty question text. Skipping.`);
+      return null;
+    }
+
+    // ── CORRECT ANSWER: null/empty = unanswerable ──
+    if (!q.correct_answer || String(q.correct_answer).trim() === "") {
       console.warn(`⚠️ Question ID ${q.id}: correct_answer is null/empty — marking as unanswerable`);
       return {
         id: String(q.id),
-        question: q.question || "",
+        question: questionText,
         options: options,
         correct: -1,
-        subject: q.subject || "General",
-        topic: q.subject || "General",
-        difficulty: (q.difficulty || "medium").toLowerCase(),
-        exam: q.exam ? q.exam.split(",").map(e => e.trim()).filter(Boolean) : [],
-        _hasError: true
+        subject: safe(q.subject) || "General",
+        topic: safe(q.subject) || "General",
+        difficulty: (safe(q.difficulty) || "medium").toLowerCase(),
+        exam: q.exam ? String(q.exam).split(",").map(e => e.trim()).filter(Boolean) : [],
+        _hasError: true,
+        _raw: { questionEN, questionHI, optionsEN, optionsHI }
       };
     }
 
-    // Find correct answer index (handles duplicates — takes first match)
-    const correctIdx = options.findIndex(opt => opt === q.correct_answer);
+    // ── FIND CORRECT INDEX (normalized for typo safety) ──
+    const correctNorm = String(q.correct_answer).trim().toLowerCase();
+    let correctIdx = optionsEN.findIndex(opt => opt.toLowerCase() === correctNorm);
 
-    if (correctIdx === -1) {
-      console.warn(`⚠️ Question ID ${q.id}: correct_answer "${q.correct_answer}" does not match any option.`, options);
+    // ── RANGE CHECK: if no match found, log + fallback to 0 (not -1) ──
+    if (correctIdx < 0 || correctIdx >= optionsEN.length) {
+      console.error(`❌ Question ID ${q.id}: correct_answer "${q.correct_answer}" no match. Defaulting to index 0.`, optionsEN);
+      correctIdx = 0;
     }
 
-    // Edge case: check for duplicate options
-    const uniqueOptions = new Set(options.filter(o => o !== ""));
-    if (uniqueOptions.size < options.filter(o => o !== "").length) {
-      console.warn(`⚠️ Question ID ${q.id}: has duplicate options.`, options);
-    }
-
-    // Edge case: check for empty options (not all 4 filled)
-    const emptyCount = options.filter(o => o === "").length;
-    if (emptyCount > 0) {
-      console.warn(`⚠️ Question ID ${q.id}: has ${emptyCount} empty option(s).`);
+    // ── WARNINGS (non-fatal) ──
+    const uniqueOptions = new Set(optionsEN.filter(o => o !== ""));
+    if (uniqueOptions.size < filledEN) {
+      console.warn(`⚠️ Question ID ${q.id}: has duplicate options.`, optionsEN);
     }
 
     return {
       id: String(q.id),
-      question: q.question || "",
+      question: questionText,
       options: options,
-      correct: correctIdx >= 0 ? correctIdx : -1,
-      subject: q.subject || "General",
-      topic: q.subject || "General",
-      difficulty: (q.difficulty || "medium").toLowerCase(),
-      exam: q.exam ? q.exam.split(",").map(e => e.trim()).filter(Boolean) : []
+      correct: correctIdx,
+      subject: safe(q.subject) || "General",
+      topic: safe(q.subject) || "General",
+      difficulty: (safe(q.difficulty) || "medium").toLowerCase(),
+      exam: q.exam ? String(q.exam).split(",").map(e => e.trim()).filter(Boolean) : [],
+      _raw: { questionEN, questionHI, optionsEN, optionsHI }
     };
-  }).filter(q => q !== null); // Remove skipped malformed questions
+  }).filter(Boolean); // Remove all null/undefined/false entries
 }
 
 // ── ADD QUESTION (Admin → DB) ─────────────

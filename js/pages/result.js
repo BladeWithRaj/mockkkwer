@@ -12,9 +12,9 @@ const ResultPage = {
         <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
           <div class="empty-state">
             <div class="empty-state-icon">📊</div>
-            <div class="empty-state-title">No Results Available</div>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Take a test to see your results</p>
-            <button class="btn btn-primary" onclick="App.navigate('setup')">Start a Test</button>
+            <div class="empty-state-title">${Lang.t('result_title')}</div>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">${Lang.t('dash_no_tests')}</p>
+            <button class="btn btn-primary" onclick="App.navigate('setup')">${Lang.t('nav_new_test')}</button>
           </div>
         </div>
       `;
@@ -92,19 +92,19 @@ const ResultPage = {
           <div class="result-stats">
             <div class="result-stat">
               <div class="result-stat-value correct" id="correct-count">0</div>
-              <div class="result-stat-label">Correct</div>
+              <div class="result-stat-label">${Lang.t('result_correct')}</div>
             </div>
             <div class="result-stat">
               <div class="result-stat-value wrong" id="wrong-count">0</div>
-              <div class="result-stat-label">Wrong</div>
+              <div class="result-stat-label">${Lang.t('result_wrong')}</div>
             </div>
             <div class="result-stat">
               <div class="result-stat-value skipped" id="skipped-count">0</div>
-              <div class="result-stat-label">Skipped</div>
+              <div class="result-stat-label">${Lang.t('result_skipped')}</div>
             </div>
             <div class="result-stat">
               <div class="result-stat-value time">${Helpers.formatDuration(result.timeTaken)}</div>
-              <div class="result-stat-label">Time Taken</div>
+              <div class="result-stat-label">${Lang.t('result_time')}</div>
             </div>
           </div>
 
@@ -167,7 +167,7 @@ const ResultPage = {
         <!-- View Analysis Button -->
         <div class="animate-fadeInUp stagger-4" style="margin-top: var(--space-6);">
           <button class="btn btn-secondary btn-lg btn-block" onclick="App.navigate('analysis')" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary-light); border: 1px solid rgba(139, 92, 246, 0.3);">
-            🔍 View Detailed Analysis
+            ${Lang.t('result_analysis')}
           </button>
         </div>
 
@@ -175,14 +175,14 @@ const ResultPage = {
         <div class="result-actions animate-fadeInUp stagger-5">
           <div style="display: flex; gap: var(--space-3); width: 100%;">
             <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
-              🔄 Retry Same
+              ${Lang.t('result_retry')}
             </button>
             <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="App.navigate('setup')" id="retry-new-btn">
-              🆕 New Test
+              ${Lang.t('result_new')}
             </button>
           </div>
           <button class="btn btn-ghost" onclick="App.navigate('home')">
-            🏠 Back to Home
+            ${Lang.t('result_home')}
           </button>
         </div>
       </div>

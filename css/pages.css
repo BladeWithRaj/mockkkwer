@@ -559,6 +559,7 @@
   padding-top: var(--space-1);
   color: var(--text-secondary);
   font-size: var(--text-base);
+  line-height: 1.5;
   transition: color var(--transition-fast);
 }
 

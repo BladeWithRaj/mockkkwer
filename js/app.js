@@ -96,12 +96,16 @@ const App = {
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px;">
         <div style="background: var(--bg-surface); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
           <div style="font-size: 48px; margin-bottom: 20px;">👋</div>
-          <h2 style="margin-bottom: 10px; color: var(--text-primary);">Welcome to MockTestPro</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">Enter a username to start practicing immediately. No signup required.</p>
+          <h2 style="margin-bottom: 10px; color: var(--text-primary);">${Lang.t('welcome')}</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">${Lang.t('enter_username')}</p>
           
-          <input type="text" id="username-input" class="input" placeholder="Choose a username (3-20 chars)" maxlength="20" style="margin-bottom: 20px; text-align: center; font-size: 18px; font-weight: bold;">
+          <input type="text" id="username-input" class="input" placeholder="${Lang.t('username_placeholder')}" maxlength="20" style="margin-bottom: 20px; text-align: center; font-size: 18px; font-weight: bold;">
           
-          <button onclick="App.submitUsername()" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;">Start Practicing</button>
+          <button onclick="App.submitUsername()" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;">${Lang.t('start_practicing')}</button>
+          
+          <div style="margin-top: 16px;">
+            <button class="lang-toggle-btn" onclick="Lang.toggle()">🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}</button>
+          </div>
         </div>
       </div>
     `;
@@ -205,11 +209,14 @@ const App = {
           </a>
           <nav class="header-nav">
             ${isTest ? '' : `
-              <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
-              <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
-              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
-              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
+              <a href="#home" class="${activePage === 'home' ? 'active' : ''}">${Lang.t('nav_home')}</a>
+              <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">${Lang.t('nav_new_test')}</a>
+              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">${Lang.t('nav_dashboard')}</a>
+              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">${Lang.t('nav_leaderboard')}</a>
             `}
+            <button class="lang-toggle-btn" onclick="Lang.toggle()" title="Switch Language">
+              🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}
+            </button>
           </nav>
         </div>
       </header>
