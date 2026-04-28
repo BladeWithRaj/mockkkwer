@@ -1,7 +1,7 @@
 // ============================================
 // TEST SETUP PAGE — Full UX Upgrade
-// Live count, smart suggestion, validation,
-// glow button, no PYQ
+// Smooth chip toggle, no count badge,
+// instant start, no PYQ
 // ============================================
 
 const SetupPage = {
@@ -16,7 +16,6 @@ const SetupPage = {
   },
 
   render(params = {}) {
-
 
     // Pre-fill from URL params
     if (params.subject) {
@@ -42,7 +41,7 @@ const SetupPage = {
             <div class="setup-section-title">${Lang.t('setup_subject')}</div>
             <div class="setup-chips" id="subject-chips">
               <button class="setup-chip ${this.config.subjects.length === 0 ? 'active' : ''}"
-                      onclick="SetupPage._toggleSubject('all')">${Lang.t('setup_all_subjects')}</button>
+                      onclick="SetupPage._toggleSubject('all')">🎲 ${Lang.t('setup_all_subjects')}</button>
               ${subjects.map(s => `
                 <button class="setup-chip ${this.config.subjects.includes(s) ? 'active' : ''}"
                         onclick="SetupPage._toggleSubject('${s}')">${Helpers.getSubjectIcon(s)} ${s.charAt(0).toUpperCase() + s.slice(1)}</button>
@@ -135,16 +134,12 @@ const SetupPage = {
             ${this._renderSummary()}
           </div>
 
-          <!-- Available Count Badge -->
-          <div id="available-count-badge" style="text-align: center; margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--text-muted);">
-            ${Lang.t('setup_checking')}
-          </div>
           </div>
 
-          <!-- Start Button -->
+          <!-- Start Button (always enabled — validation happens on click) -->
           <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 btn-glow"
-                  onclick="SetupPage.startTest()" id="start-test-btn" disabled>
-            ${Lang.t('setup_start')}
+                  onclick="SetupPage.startTest()" id="start-test-btn">
+            🚀 ${Lang.t('setup_start')}
           </button>
 
           <button class="btn btn-ghost btn-block" onclick="App.navigate('home')" style="margin-top: var(--space-2);">
@@ -161,7 +156,7 @@ const SetupPage = {
       : `${Math.round((this.config.totalTime || this.config.numQuestions * 60) / 60)} min`;
 
     const subjectText = this.config.subjects.length === 0
-      ? Lang.t('setup_all_subjects')
+      ? '🎲 ' + Lang.t('setup_all_subjects')
       : this.config.subjects.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ');
 
     return `
@@ -179,7 +174,7 @@ const SetupPage = {
       </div>
       <div class="summary-row">
         <span class="summary-label">${Lang.t('setup_summary_neg')}</span>
-        <span class="summary-value">${this.config.negativeMarking ? `-${this.config.negativeValue}` : 'OFF'}</span>
+        <span class="summary-value">${this.config.negativeMarking ? \`-\${this.config.negativeValue}\` : 'OFF'}</span>
       </div>
     `;
   },
@@ -208,9 +203,6 @@ const SetupPage = {
     // Update summary without full re-render
     const summary = document.getElementById('setup-summary');
     if (summary) summary.innerHTML = this._renderSummary();
-
-    // Re-validate
-    this._validateAvailability();
   },
 
   _setTime(val) {
@@ -241,16 +233,14 @@ const SetupPage = {
     }
     // Full re-render needed to show/hide time input
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
-    this._validateAvailability();
   },
 
   setConfig(key, value) {
     this.config[key] = value;
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
-    this._validateAvailability();
   },
 
-  // ── Multi-select subject toggle ──
+  // ── Multi-select subject toggle (SMOOTH — no API call, just DOM update) ──
   _toggleSubject(subject) {
     if (subject === 'all') {
       this.config.subjects = [];
@@ -262,65 +252,28 @@ const SetupPage = {
         this.config.subjects.push(subject);
       }
     }
-    document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
-    this._validateAvailability();
-  },
 
-  /**
-   * Check how many questions are available for current filters via API.
-   * Enables/disables Start button based on result.
-   */
-  async _validateAvailability() {
-    const badge = document.getElementById('available-count-badge');
-    const btn = document.getElementById('start-test-btn');
-    if (!badge || !btn) return;
-
-    badge.textContent = Lang.t('setup_checking');
-    badge.style.color = 'var(--text-muted)';
-    btn.disabled = true;
-    btn.textContent = Lang.t('setup_checking');
-
-    try {
-      // Quick fetch with limit 1 to check availability (fast)
-      const testFetch = await window.fetchRandomQuestions({
-        limit: this.config.numQuestions,
-        subjects: this.config.subjects,
-        seenIds: []
+    // ── SMOOTH: update chips in-place without full page re-render ──
+    const chipsContainer = document.getElementById('subject-chips');
+    if (chipsContainer) {
+      const buttons = chipsContainer.querySelectorAll('.setup-chip');
+      buttons.forEach(btn => {
+        const onclick = btn.getAttribute('onclick') || '';
+        if (onclick.includes("'all'")) {
+          btn.classList.toggle('active', this.config.subjects.length === 0);
+        } else {
+          // Extract subject name from onclick
+          const match = onclick.match(/'([^']+)'/);
+          if (match) {
+            btn.classList.toggle('active', this.config.subjects.includes(match[1]));
+          }
+        }
       });
-
-      if (testFetch.error) {
-        badge.innerHTML = `<span style="color: var(--danger);">❌ ${testFetch.error}</span>`;
-        btn.disabled = true;
-        btn.textContent = '⚠️ Cannot Start';
-        return;
-      }
-
-      const count = Array.isArray(testFetch) ? testFetch.length : 0;
-
-      if (count >= this.config.numQuestions) {
-        badge.innerHTML = `<span style="color: var(--success);">✅ ${count} ${Lang.t('setup_available')}</span>`;
-        btn.disabled = false;
-        btn.textContent = Lang.t('setup_start');
-        btn.classList.add('btn-glow');
-      } else if (count >= 5) {
-        badge.innerHTML = `<span style="color: var(--warning);">⚠️ Only ${count} questions available (requested ${this.config.numQuestions})</span>`;
-        btn.disabled = false;
-        btn.textContent = `🚀 Start with ${count} Questions`;
-        btn.classList.add('btn-glow');
-        // Auto-adjust config to available count
-        this.config.numQuestions = count;
-      } else {
-        badge.innerHTML = `<span style="color: var(--danger);">❌ ${Lang.t('setup_not_enough')} (${count})</span>`;
-        btn.disabled = true;
-        btn.textContent = Lang.t('setup_cannot_start');
-        btn.classList.remove('btn-glow');
-      }
-    } catch (err) {
-      badge.innerHTML = `<span style="color: var(--danger);">❌ Failed to check: ${err.message}</span>`;
-      // On network error, still allow start — API will validate again
-      btn.disabled = false;
-      btn.textContent = '🚀 Start Test';
     }
+
+    // Update summary
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
   },
 
   async startTest() {
@@ -331,7 +284,7 @@ const SetupPage = {
     
     // Add loading state
     startBtn.disabled = true;
-    startBtn.innerHTML = '<span class="splash-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;"></span> Generating...';
+    startBtn.innerHTML = '<span class="splash-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;"></span> Loading...';
 
     try {
       const timePerQuestion = this.config.timeMode === 'auto' ? 60 : 0;
@@ -344,7 +297,8 @@ const SetupPage = {
       // 1. Get seen IDs
       const seenIds = Storage.getSeenQuestions();
 
-      // 2. Fetch random questions from API securely
+      // 2. Fetch random questions from API
+      // subjects=[] means ALL subjects (no filter applied in API)
       const fetchedQuestions = await window.fetchRandomQuestions({
         limit: this.config.numQuestions,
         subjects: this.config.subjects,
@@ -353,10 +307,10 @@ const SetupPage = {
 
       if (fetchedQuestions.error) throw new Error(fetchedQuestions.error);
       if (!fetchedQuestions || fetchedQuestions.length === 0) {
-        throw new Error('No questions found for the selected filters.');
+        throw new Error('No questions found. Please check your database.');
       }
       if (fetchedQuestions.length < 5) {
-        throw new Error(`Only ${fetchedQuestions.length} questions found — need at least 5.`);
+        throw new Error(\`Only \${fetchedQuestions.length} questions found — need at least 5.\`);
       }
 
       // 3. Save newly seen IDs
@@ -376,7 +330,7 @@ const SetupPage = {
         throw new Error(result.error);
       }
 
-      Helpers.showToast(`Test started! ${result.questionCount} questions`, 'success');
+      Helpers.showToast(\`Test started! \${result.questionCount} questions\`, 'success');
       App.navigate('test');
 
     } catch (err) {
@@ -387,8 +341,6 @@ const SetupPage = {
   },
 
   afterRender() {
-    // Run availability check when page loads
-    this._validateAvailability();
+    // No automatic API validation — button is always ready
   }
 };
-
