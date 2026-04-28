@@ -1,15 +1,63 @@
-// ═══════════════════════════════════════════════════════════════
-// UNIFIED API ROUTER — All endpoints in a single serverless function
-// Vercel Hobby plan: max 12 functions. This keeps it to 1.
-// Routes: /api/questions, /api/submit, /api/track, /api/analytics, /api/leaderboard
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// UNIFIED API — Single serverless function
+// All routes handled here. No extras.
+// ═══════════════════════════════════════════════
 
-import supabase from "./_lib/supabaseAdmin.js";
-import { calculateResult } from "./_lib/utils.js";
-import { rateLimitAsync } from "./_lib/rateLimiter.js";
 import { createClient } from "@supabase/supabase-js";
 
-// ── Event whitelist for tracking ────────────
+// ── Supabase Admin (service role) ─────────────
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+} else {
+  console.error("❌ MISSING ENV VARS:", {
+    SUPABASE_URL: SUPABASE_URL ? "✅" : "❌ MISSING",
+    SUPABASE_SERVICE_ROLE_KEY: SUPABASE_SERVICE_KEY ? "✅" : "❌ MISSING",
+    SUPABASE_ANON_KEY: SUPABASE_ANON_KEY ? "✅" : "❌ MISSING"
+  });
+}
+
+// ── Scoring utility (inline, no import needed) ──
+function calculateResult(questions, answers) {
+  let correct = 0, wrong = 0, skipped = 0;
+  const topicStats = {};
+  const optionKeys = ["option_a", "option_b", "option_c", "option_d"];
+
+  questions.forEach(q => {
+    const userIdx = answers[q.id];
+    if (!topicStats[q.subject]) topicStats[q.subject] = { correct: 0, wrong: 0 };
+
+    if (userIdx === undefined || userIdx === null) {
+      skipped++;
+      return;
+    }
+
+    const optKey = optionKeys[userIdx];
+    if (!optKey) { wrong++; topicStats[q.subject].wrong++; return; }
+
+    const userText = q[optKey];
+    if (userText === q.correct_answer) {
+      correct++;
+      topicStats[q.subject].correct++;
+    } else {
+      wrong++;
+      topicStats[q.subject].wrong++;
+    }
+  });
+
+  const total = questions.length;
+  return {
+    correct, wrong, skipped,
+    scorePercent: total > 0 ? Math.round((correct / total) * 100) : 0,
+    topicStats
+  };
+}
+
+// ── Valid tracking events ─────────────────────
 const VALID_EVENTS = new Set([
   "page_view", "cta_click", "test_start", "test_submit",
   "nav_click", "setup_change", "question_answer",
@@ -17,423 +65,370 @@ const VALID_EVENTS = new Set([
 ]);
 
 // ═══════════════════════════════════════════════
-// ROUTER
+// ROUTER — single entry point
 // ═══════════════════════════════════════════════
 
 export default async function handler(req, res) {
-  // Parse the route from the URL path
+  // CORS
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  // Env check
+  if (!supabase) {
+    return res.status(500).json({
+      error: "Server misconfigured — missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
+      hint: "Set these in Vercel → Project Settings → Environment Variables"
+    });
+  }
+
+  // Route
   const url = req.url || "";
-  const path = url.split("?")[0]; // Remove query params
+  const path = url.split("?")[0];
+
+  console.log(`[API] ${req.method} ${path}`);
 
   try {
-    // ── /api/questions ──────────────────
-    if (path.endsWith("/questions")) {
-      return await handleQuestions(req, res);
-    }
+    if (path.includes("/questions"))       return await handleQuestions(req, res);
+    if (path.includes("/submit"))          return await handleSubmit(req, res);
+    if (path.includes("/track"))           return await handleTrack(req, res);
+    if (path.includes("/analytics"))       return await handleAnalytics(req, res);
+    if (path.includes("/leaderboard"))     return await handleLeaderboard(req, res);
+    if (path.includes("/set-anon-cookie")) return handleSetAnonCookie(req, res);
+    if (path.includes("/clear-anon-cookie")) return handleClearAnonCookie(req, res);
+    if (path.includes("/merge-anonymous")) return await handleMergeAnonymous(req, res);
 
-    // ── /api/submit ─────────────────────
-    if (path.endsWith("/submit")) {
-      return await handleSubmit(req, res);
-    }
-
-    // ── /api/track ──────────────────────
-    if (path.endsWith("/track")) {
-      return await handleTrack(req, res);
-    }
-
-    // ── /api/analytics ──────────────────
-    if (path.endsWith("/analytics")) {
-      return await handleAnalytics(req, res);
-    }
-
-    // ── /api/leaderboard ────────────────
-    if (path.endsWith("/leaderboard")) {
-      return await handleLeaderboard(req, res);
-    }
-
-    // ── /api/set-anon-cookie ────────────
-    if (path.endsWith("/set-anon-cookie")) {
-      return handleSetAnonCookie(req, res);
-    }
-
-    // ── /api/clear-anon-cookie ──────────
-    if (path.endsWith("/clear-anon-cookie")) {
-      return handleClearAnonCookie(req, res);
-    }
-
-    // ── /api/merge-anonymous ────────────
-    if (path.endsWith("/merge-anonymous")) {
-      return await handleMergeAnonymous(req, res);
-    }
-
-    // ── Unknown route ───────────────────
-    return res.status(404).json({ error: "Unknown API endpoint", path });
-
+    return res.status(404).json({ error: "Route not found", path });
   } catch (err) {
-    console.error("[API ROUTER] Unhandled error:", err);
-    const status = err.message.includes("Too many") ? 429 : 500;
-    return res.status(status).json({ error: err.message });
+    console.error("[API ERROR]", err.message, err.stack);
+    return res.status(500).json({ error: err.message || "Internal server error" });
   }
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/questions
+// /api/questions — Fetch random questions
 // ═══════════════════════════════════════════════
 
 async function handleQuestions(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "POST only" });
   }
 
-  const clientIp = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown";
-  await rateLimitAsync(`questions_${clientIp}`, 1000);
+  try {
+    let { limit = 50, subject, difficulty, exam, seen_ids = [] } = req.body || {};
 
-  let { limit = 50, subject, difficulty, exam, seen_ids = [] } = req.body;
+    limit = parseInt(limit, 10);
+    if (isNaN(limit) || limit < 1) limit = 10;
+    if (limit > 200) limit = 200;
+    if (!Array.isArray(seen_ids)) seen_ids = [];
+    if (seen_ids.length > 300) seen_ids = seen_ids.slice(-300);
 
-  limit = parseInt(limit, 10);
-  if (isNaN(limit) || limit < 1) limit = 10;
-  if (limit > 100) limit = 100;
+    subject = subject === "all" ? null : (subject || null);
+    difficulty = difficulty === "all" ? null : (difficulty || null);
+    exam = exam === "all" ? null : (exam || null);
 
-  if (!Array.isArray(seen_ids)) seen_ids = [];
-  if (seen_ids.length > 300) seen_ids = seen_ids.slice(-300);
+    // Try RPC first, fallback to direct query
+    let questions = [];
 
-  subject = subject === 'all' ? null : (subject || null);
-  difficulty = difficulty === 'all' ? null : (difficulty || null);
-  exam = exam === 'all' ? null : (exam || null);
+    const { data, error } = await supabase.rpc("get_random_questions", {
+      p_limit: limit,
+      p_subject: subject,
+      p_difficulty: difficulty,
+      p_exam: exam,
+      p_seen_ids: seen_ids
+    });
 
-  const { data, error } = await supabase.rpc('get_random_questions', {
-    p_limit: limit,
-    p_subject: subject,
-    p_difficulty: difficulty,
-    p_exam: exam,
-    p_seen_ids: seen_ids
-  });
+    if (error) {
+      console.warn("[QUESTIONS] RPC failed, trying direct query:", error.message);
+      // Fallback: direct table query
+      let query = supabase.from("questions").select("*").limit(limit);
+      if (subject) query = query.eq("subject", subject);
+      if (difficulty) query = query.eq("difficulty", difficulty);
 
-  if (error) {
-    console.error("[API] get_random_questions error:", error);
-    throw new Error("Failed to fetch test questions");
+      const { data: fallbackData, error: fallbackErr } = await query;
+      if (fallbackErr) {
+        console.error("[QUESTIONS] Fallback also failed:", fallbackErr);
+        return res.status(500).json({ error: "Failed to fetch questions: " + fallbackErr.message });
+      }
+      questions = fallbackData || [];
+    } else {
+      questions = data || [];
+    }
+
+    // Shuffle
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+
+    return res.json({ success: true, questions });
+  } catch (err) {
+    console.error("[QUESTIONS] Crash:", err);
+    return res.status(500).json({ error: err.message });
   }
-
-  const questions = data || [];
-  for (let i = questions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [questions[i], questions[j]] = [questions[j], questions[i]];
-  }
-
-  return res.status(200).json({
-    success: true,
-    questions: questions,
-    next_cursor: null
-  });
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/submit
+// /api/submit — Submit test answers
 // ═══════════════════════════════════════════════
 
 async function handleSubmit(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "POST only" });
   }
 
-  const { questionIds, answers, timeTaken, testId, isDaily, username } = req.body;
+  try {
+    const { questionIds, answers, timeTaken, testId, isDaily, username } = req.body || {};
 
-  // ── Auth: Verify JWT ──
-  let user_id = null;
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.replace(/^Bearer\s+/i, "");
+    // Auth: try JWT first, fallback to client user_id
+    let user_id = null;
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
 
-  if (token) {
-    const authClient = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY
-    );
-    const { data, error } = await authClient.auth.getUser(token);
-    if (error || !data?.user) {
-      return res.status(401).json({ error: "Invalid or expired token" });
+    if (token && SUPABASE_ANON_KEY) {
+      try {
+        const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data, error } = await authClient.auth.getUser(token);
+        if (!error && data?.user) user_id = data.user.id;
+      } catch (e) {
+        console.warn("[SUBMIT] JWT check failed:", e.message);
+      }
     }
-    user_id = data.user.id;
-  } else {
-    user_id = req.body.user_id;
+
     if (!user_id) {
-      return res.status(401).json({ error: "Authentication required" });
+      user_id = req.body?.user_id;
+      if (!user_id) {
+        return res.status(401).json({ error: "No user_id or valid token" });
+      }
     }
-    console.warn("[SUBMIT] No JWT — using client user_id:", user_id);
-  }
 
-  if (!username) {
-    return res.status(400).json({ error: "username is required" });
-  }
-
-  await rateLimitAsync(user_id, 5000);
-
-  // ── Validation ──
-  if (!Array.isArray(questionIds) || questionIds.length === 0) {
-    return res.status(400).json({ error: "questionIds must be a non-empty array" });
-  }
-  if (questionIds.length > 200) {
-    return res.status(400).json({ error: "Too many questions (max 200)" });
-  }
-  if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
-    return res.status(400).json({ error: "answers must be a non-array object" });
-  }
-  for (const [qId, val] of Object.entries(answers)) {
-    if (val !== null && val !== undefined && (typeof val !== 'number' || val < 0 || val > 3 || !Number.isInteger(val))) {
-      return res.status(400).json({ error: `Invalid answer value for question ${qId}: must be 0-3` });
+    if (!username) return res.status(400).json({ error: "username required" });
+    if (!Array.isArray(questionIds) || questionIds.length === 0) {
+      return res.status(400).json({ error: "questionIds required" });
     }
-  }
-  if (typeof timeTaken !== "number" || timeTaken < 0) {
-    return res.status(400).json({ error: "timeTaken must be a positive number" });
-  }
-  if (timeTaken > 36000) {
-    return res.status(400).json({ error: "timeTaken exceeds maximum (10 hours)" });
-  }
-
-  // ── Fetch questions from DB ──
-  const { data: dbQuestions, error: qErr } = await supabase
-    .from("questions")
-    .select("id, correct_answer, subject, option_a, option_b, option_c, option_d")
-    .in("id", questionIds);
-
-  if (qErr) throw qErr;
-
-  if (!dbQuestions || dbQuestions.length !== questionIds.length) {
-    return res.status(400).json({ error: "Question tampering detected — ID mismatch" });
-  }
-
-  const avgTimePerQ = timeTaken / dbQuestions.length;
-  if (avgTimePerQ < 2) {
-    return res.status(400).json({ error: "Suspiciously fast submission" });
-  }
-
-  // ── Score ──
-  const result = calculateResult(dbQuestions, answers);
-
-  await supabase.from("users_light").upsert({
-    id: user_id, username
-  }, { onConflict: "id" }).catch(() => {});
-
-  const test_id = testId || crypto.randomUUID();
-  const { error: insErr } = await supabase.from("results").insert([{
-    user_id, username, test_id,
-    score_percent: result.scorePercent,
-    correct: result.correct,
-    wrong: result.wrong,
-    skipped: result.skipped,
-    time_taken: timeTaken,
-    topic_wise_accuracy: result.topicStats,
-    is_daily: !!isDaily
-  }]);
-
-  if (insErr) {
-    if (insErr.code === '23505') {
-      return res.status(409).json({ error: "Duplicate test submission", alreadyExists: true });
+    if (!answers || typeof answers !== "object" || Array.isArray(answers)) {
+      return res.status(400).json({ error: "answers must be object" });
     }
-    throw insErr;
-  }
+    if (typeof timeTaken !== "number" || timeTaken < 0) {
+      return res.status(400).json({ error: "timeTaken required" });
+    }
 
-  return res.json({ success: true, test_id, result });
+    // Fetch questions from DB
+    const { data: dbQuestions, error: qErr } = await supabase
+      .from("questions")
+      .select("id, correct_answer, subject, option_a, option_b, option_c, option_d")
+      .in("id", questionIds);
+
+    if (qErr) {
+      return res.status(500).json({ error: "DB error: " + qErr.message });
+    }
+
+    if (!dbQuestions || dbQuestions.length === 0) {
+      return res.status(400).json({ error: "No matching questions found in DB" });
+    }
+
+    // Score
+    const result = calculateResult(dbQuestions, answers);
+
+    // Upsert user
+    await supabase.from("users_light").upsert(
+      { id: user_id, username },
+      { onConflict: "id" }
+    ).catch(() => {});
+
+    // Insert result
+    const test_id = testId || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+    const { error: insErr } = await supabase.from("results").insert([{
+      user_id, username, test_id,
+      score_percent: result.scorePercent,
+      correct: result.correct,
+      wrong: result.wrong,
+      skipped: result.skipped,
+      time_taken: timeTaken,
+      topic_wise_accuracy: result.topicStats,
+      is_daily: !!isDaily
+    }]);
+
+    if (insErr) {
+      if (insErr.code === "23505") {
+        return res.status(409).json({ error: "Duplicate submission" });
+      }
+      return res.status(500).json({ error: "Insert failed: " + insErr.message });
+    }
+
+    return res.json({ success: true, test_id, result });
+  } catch (err) {
+    console.error("[SUBMIT] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/track
+// /api/track — Event tracking
 // ═══════════════════════════════════════════════
 
 async function handleTrack(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "POST only" });
   }
 
-  const items = Array.isArray(req.body) ? req.body : [req.body];
+  try {
+    const items = Array.isArray(req.body) ? req.body : [req.body];
+    if (items.length === 0) return res.status(400).json({ error: "Empty" });
+    if (items.length > 50) return res.status(400).json({ error: "Max 50" });
 
-  if (items.length === 0) {
-    return res.status(400).json({ error: "Empty array" });
+    const payload = [];
+    for (const item of items) {
+      if (!item.event || typeof item.event !== "string") continue;
+      if (!VALID_EVENTS.has(item.event)) continue;
+      payload.push({
+        event: item.event,
+        data: typeof item.data === "object" ? item.data : {},
+        created_at: item.ts ? new Date(item.ts).toISOString() : new Date().toISOString()
+      });
+    }
+
+    if (payload.length === 0) return res.status(400).json({ error: "No valid events" });
+
+    const { error } = await supabase.from("events").insert(payload);
+    if (error) console.warn("[TRACK] Insert error:", error.message);
+
+    return res.json({ success: true, tracked: payload.length });
+  } catch (err) {
+    console.error("[TRACK] Crash:", err);
+    return res.status(500).json({ error: err.message });
   }
-  if (items.length > 50) {
-    return res.status(400).json({ error: "Max 50 events per batch" });
-  }
-
-  const payload = [];
-  for (const item of items) {
-    if (!item.event || typeof item.event !== "string") continue;
-    if (!VALID_EVENTS.has(item.event)) continue;
-
-    payload.push({
-      event: item.event,
-      data: typeof item.data === "object" ? item.data : {},
-      created_at: item.ts ? new Date(item.ts).toISOString() : new Date().toISOString()
-    });
-  }
-
-  if (payload.length === 0) {
-    return res.status(400).json({ error: "No valid events" });
-  }
-
-  await supabase.from("events").insert(payload);
-  return res.json({ success: true, tracked: payload.length });
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/analytics
+// /api/analytics — Growth dashboard data
 // ═══════════════════════════════════════════════
 
 async function handleAnalytics(req, res) {
-  const { data: events, error } = await supabase
-    .from("events")
-    .select("event, data, created_at")
-    .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+  try {
+    const { data: events, error } = await supabase
+      .from("events")
+      .select("event, data, created_at")
+      .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString());
 
-  if (error) throw error;
-  if (!events) return res.json({});
+    if (error) return res.status(500).json({ error: error.message });
+    if (!events) return res.json({});
 
-  const count = (name) => events.filter(e => e.event === name).length;
-  const pageViews = count("page_view");
-  const ctaClicks = count("cta_click");
-  const starts = count("test_start");
-  const submits = count("test_submit");
+    const count = (n) => events.filter(e => e.event === n).length;
+    const pv = count("page_view"), cc = count("cta_click");
+    const st = count("test_start"), su = count("test_submit");
 
-  const variants = {};
-  events.forEach(e => {
-    const v = e.data?.variant;
-    if (!v) return;
-    if (!variants[v]) variants[v] = { views: 0, submits: 0 };
-    if (e.event === "page_view") variants[v].views++;
-    if (e.event === "test_submit") variants[v].submits++;
-  });
-
-  Object.keys(variants).forEach(v => {
-    const { views, submits: s } = variants[v];
-    variants[v].conversion = views ? ((s / views) * 100).toFixed(1) + "%" : "0%";
-  });
-
-  return res.json({
-    pageViews, ctaClicks, starts, submits,
-    ctr: pageViews ? ((ctaClicks / pageViews) * 100).toFixed(1) : 0,
-    startRate: ctaClicks ? ((starts / ctaClicks) * 100).toFixed(1) : 0,
-    completion: starts ? ((submits / starts) * 100).toFixed(1) : 0,
-    variants
-  });
+    return res.json({
+      pageViews: pv, ctaClicks: cc, starts: st, submits: su,
+      ctr: pv ? ((cc / pv) * 100).toFixed(1) : 0,
+      startRate: cc ? ((st / cc) * 100).toFixed(1) : 0,
+      completion: st ? ((su / st) * 100).toFixed(1) : 0
+    });
+  } catch (err) {
+    console.error("[ANALYTICS] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/leaderboard
+// /api/leaderboard — Top users
 // ═══════════════════════════════════════════════
 
 async function handleLeaderboard(req, res) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
+  try {
+    const { data, error } = await supabase.rpc("get_leaderboard_lite");
+
+    if (error) {
+      // Fallback: simple query
+      console.warn("[LEADERBOARD] RPC failed:", error.message);
+      const { data: fallback, error: fbErr } = await supabase
+        .from("results")
+        .select("username, score_percent")
+        .order("score_percent", { ascending: false })
+        .limit(20);
+
+      if (fbErr) return res.status(500).json({ error: fbErr.message });
+
+      const ranked = (fallback || []).map((r, i) => ({ ...r, rank: i + 1 }));
+      return res.json({ success: true, leaderboard: ranked });
+    }
+
+    const ranked = (data || []).map((r, i) => ({ ...r, rank: i + 1 }));
+    return res.json({ success: true, leaderboard: ranked });
+  } catch (err) {
+    console.error("[LEADERBOARD] Crash:", err);
+    return res.status(500).json({ error: err.message });
   }
-
-  const { data, error } = await supabase.rpc('get_leaderboard_lite');
-
-  if (error) {
-    console.error("Leaderboard Error:", error);
-    throw new Error("Failed to fetch leaderboard");
-  }
-
-  const rankedData = (data || []).map((row, index) => ({
-    ...row,
-    rank: index + 1
-  }));
-
-  return res.status(200).json({ success: true, leaderboard: rankedData });
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/set-anon-cookie
+// /api/set-anon-cookie
 // ═══════════════════════════════════════════════
 
 function handleSetAnonCookie(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  try {
+    const { token } = req.body || {};
+    if (!token) return res.status(400).json({ error: "Token required" });
+    res.setHeader("Set-Cookie", `anon_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
-
-  const { token } = req.body || {};
-  if (!token || typeof token !== "string") {
-    return res.status(400).json({ error: "Token required" });
-  }
-
-  // Set httpOnly cookie — invisible to JS, server-only
-  res.setHeader("Set-Cookie", `anon_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
-  return res.json({ success: true });
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/clear-anon-cookie
+// /api/clear-anon-cookie
 // ═══════════════════════════════════════════════
 
 function handleClearAnonCookie(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  // Expire the cookie immediately
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
   return res.json({ success: true });
 }
 
 // ═══════════════════════════════════════════════
-// HANDLER: /api/merge-anonymous
+// /api/merge-anonymous
 // ═══════════════════════════════════════════════
 
 async function handleMergeAnonymous(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  try {
+    const authHeader = req.headers.authorization || "";
+    const emailToken = authHeader.replace(/^Bearer\s+/i, "");
+    if (!emailToken || !SUPABASE_ANON_KEY) {
+      return res.json({ merged: 0, message: "No token" });
+    }
+
+    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: emailUser } = await authClient.auth.getUser(emailToken);
+    if (!emailUser?.user?.email) {
+      return res.json({ merged: 0, message: "No email session" });
+    }
+
+    const cookies = req.headers.cookie || "";
+    const match = cookies.match(/anon_token=([^;]+)/);
+    if (!match) return res.json({ merged: 0, message: "No anon cookie" });
+
+    const { data: anonUser } = await authClient.auth.getUser(match[1]);
+    if (!anonUser?.user) return res.json({ merged: 0, message: "Bad anon token" });
+
+    if (anonUser.user.id === emailUser.user.id) {
+      return res.json({ merged: 0, message: "Same user" });
+    }
+
+    const { data: updated } = await supabase
+      .from("results")
+      .update({ user_id: emailUser.user.id })
+      .eq("user_id", anonUser.user.id)
+      .select("id");
+
+    res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
+    return res.json({ merged: updated?.length || 0 });
+  } catch (err) {
+    console.error("[MERGE] Crash:", err);
+    return res.json({ merged: 0, message: err.message });
   }
-
-  // 1. Get the email user from Authorization header
-  const authHeader = req.headers.authorization || "";
-  const emailToken = authHeader.replace(/^Bearer\s+/i, "");
-
-  if (!emailToken) {
-    return res.status(401).json({ error: "No auth token" });
-  }
-
-  const authClient = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
-
-  const { data: emailUserData, error: emailErr } = await authClient.auth.getUser(emailToken);
-  if (emailErr || !emailUserData?.user?.email) {
-    return res.status(401).json({ error: "Invalid email session" });
-  }
-
-  const emailUserId = emailUserData.user.id;
-
-  // 2. Get the anonymous user from cookie
-  const cookies = req.headers.cookie || "";
-  const anonMatch = cookies.match(/anon_token=([^;]+)/);
-  if (!anonMatch) {
-    return res.json({ merged: 0, message: "No anonymous cookie found" });
-  }
-
-  const anonToken = anonMatch[1];
-  const { data: anonUserData, error: anonErr } = await authClient.auth.getUser(anonToken);
-  if (anonErr || !anonUserData?.user) {
-    return res.json({ merged: 0, message: "Invalid anonymous token" });
-  }
-
-  const anonUserId = anonUserData.user.id;
-
-  if (anonUserId === emailUserId) {
-    return res.json({ merged: 0, message: "Same user — no merge needed" });
-  }
-
-  // 3. Transfer anonymous results to email user
-  const { data: updated, error: updateErr } = await supabase
-    .from("results")
-    .update({ user_id: emailUserId })
-    .eq("user_id", anonUserId)
-    .select("id");
-
-  if (updateErr) {
-    console.error("[MERGE] Error:", updateErr);
-    return res.status(500).json({ error: "Merge failed" });
-  }
-
-  // 4. Clear cookie
-  res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
-
-  return res.json({ merged: updated?.length || 0, message: "Results merged" });
 }
