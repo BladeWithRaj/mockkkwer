@@ -24,6 +24,8 @@ body {
   background: var(--bg-primary);
   min-height: 100vh;
   overflow-x: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -266,4 +268,30 @@ textarea::placeholder {
   html { font-size: 14px; }
   h1 { font-size: var(--text-2xl); }
   h2 { font-size: var(--text-xl); }
+}
+
+/* ── Language Toggle Button ── */
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.lang-toggle-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary);
+  color: var(--primary-light);
+  transform: scale(1.05);
+}
+.lang-toggle-btn:active {
+  transform: scale(0.95);
 }

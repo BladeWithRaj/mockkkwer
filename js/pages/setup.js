@@ -35,19 +35,19 @@ const SetupPage = {
     return `
       <div class="setup-page page-enter">
         <div class="setup-header">
-          <h1 class="animate-fadeInDown">Test Setup</h1>
+          <h1 class="animate-fadeInDown">${Lang.t('setup_title')}</h1>
           <p class="animate-fadeInDown stagger-1" style="color: var(--text-secondary); margin-top: var(--space-2);">
-            Configure your mock test
+            ${Lang.t('setup_subtitle')}
           </p>
         </div>
 
         <div class="setup-form">
           <!-- Subject -->
           <div class="setup-section animate-fadeInUp stagger-1">
-            <div class="setup-section-title">📚 Subject</div>
+            <div class="setup-section-title">${Lang.t('setup_subject')}</div>
             <div class="setup-chips" id="subject-chips">
               <button class="setup-chip ${this.config.subject === 'all' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('subject', 'all')">All Subjects</button>
+                      onclick="SetupPage.setConfig('subject', 'all')">${Lang.t('setup_all_subjects')}</button>
               ${subjects.map(s => `
                 <button class="setup-chip ${this.config.subject === s ? 'active' : ''}"
                         onclick="SetupPage.setConfig('subject', '${s}')">${Helpers.getSubjectIcon(s)} ${s}</button>
@@ -58,10 +58,10 @@ const SetupPage = {
           <!-- Exam -->
           ${exams.length > 0 ? `
           <div class="setup-section animate-fadeInUp stagger-2">
-            <div class="setup-section-title">🎯 Exam</div>
+            <div class="setup-section-title">${Lang.t('setup_exam')}</div>
             <div class="setup-chips" id="exam-chips">
               <button class="setup-chip ${this.config.exam === 'all' ? 'active' : ''}"
-                      onclick="SetupPage.setConfig('exam', 'all')">All Exams</button>
+                      onclick="SetupPage.setConfig('exam', 'all')">${Lang.t('setup_all_exams')}</button>
               ${exams.map(e => `
                 <button class="setup-chip ${this.config.exam === e ? 'active' : ''}"
                         onclick="SetupPage.setConfig('exam', '${e}')">${e}</button>
@@ -72,14 +72,14 @@ const SetupPage = {
 
           <!-- Number of Questions (Free Input) -->
           <div class="setup-section animate-fadeInUp stagger-3">
-            <div class="setup-section-title">📝 Number of Questions</div>
+            <div class="setup-section-title">${Lang.t('setup_questions')}</div>
             <div style="display: flex; align-items: center; gap: var(--space-3);">
               <input type="number" class="input" style="width: 120px; text-align: center; font-size: var(--text-lg); font-weight: var(--font-bold);"
                      value="${this.config.numQuestions}"
                      min="5" max="200" step="1" placeholder="e.g. 25"
                      onchange="SetupPage._setNumQuestions(this.value)"
                      id="num-questions-input">
-              <span style="font-size: var(--text-sm); color: var(--text-muted);">questions (5–200)</span>
+              <span style="font-size: var(--text-sm); color: var(--text-muted);">${Lang.t('setup_questions_hint')}</span>
             </div>
             <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3);">
               <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=10; SetupPage._setNumQuestions(10)">10</button>
@@ -91,7 +91,7 @@ const SetupPage = {
 
           <!-- Time Settings (Free Input) -->
           <div class="setup-section animate-fadeInUp stagger-4">
-            <div class="setup-section-title">⏱️ Time (minutes)</div>
+            <div class="setup-section-title">${Lang.t('setup_time')}</div>
             <div class="switch-wrapper" style="margin-bottom: var(--space-3);">
               <label class="switch">
                 <input type="checkbox" ${this.config.timeMode !== 'none' ? 'checked' : ''}
@@ -100,7 +100,7 @@ const SetupPage = {
                 <span class="switch-track"></span>
               </label>
               <span style="font-size: var(--text-sm); color: var(--text-secondary);">
-                ${this.config.timeMode !== 'none' ? 'Timer ON' : 'No Timer'}
+                ${this.config.timeMode !== 'none' ? Lang.t('setup_timer_on') : Lang.t('setup_no_timer')}
               </span>
             </div>
             ${this.config.timeMode !== 'none' ? `
@@ -110,7 +110,7 @@ const SetupPage = {
                        min="1" max="300" step="1" placeholder="e.g. 30"
                        onchange="SetupPage._setTime(this.value)"
                        id="time-minutes-input">
-                <span style="font-size: var(--text-sm); color: var(--text-muted);">minutes (1–300)</span>
+                <span style="font-size: var(--text-sm); color: var(--text-muted);">${Lang.t('setup_time_hint')}</span>
               </div>
               <div style="display: flex; gap: var(--space-2); margin-top: var(--space-3);">
                 <button class="setup-chip" onclick="document.getElementById('time-minutes-input').value=10; SetupPage._setTime(10)">10m</button>
@@ -123,7 +123,7 @@ const SetupPage = {
 
           <!-- Negative Marking -->
           <div class="setup-section animate-fadeInUp stagger-7">
-            <div class="setup-section-title">⚖️ Negative Marking</div>
+            <div class="setup-section-title">${Lang.t('setup_neg_marking')}</div>
             <div class="switch-wrapper">
               <label class="switch">
                 <input type="checkbox" ${this.config.negativeMarking ? 'checked' : ''}
@@ -132,12 +132,12 @@ const SetupPage = {
                 <span class="switch-track"></span>
               </label>
               <span style="font-size: var(--text-sm); color: var(--text-secondary);">
-                ${this.config.negativeMarking ? 'Enabled' : 'Disabled'}
+                ${this.config.negativeMarking ? Lang.t('setup_enabled') : Lang.t('setup_disabled')}
               </span>
             </div>
             ${this.config.negativeMarking ? `
               <div class="neg-mark-config">
-                <label class="input-label">Deduction per wrong answer:</label>
+                <label class="input-label">${Lang.t('setup_deduction')}</label>
                 <select class="select" style="width: auto;"
                         onchange="SetupPage.setConfig('negativeValue', parseFloat(this.value))"
                         id="neg-value-select">
@@ -157,17 +157,18 @@ const SetupPage = {
 
           <!-- Available Count Badge -->
           <div id="available-count-badge" style="text-align: center; margin-bottom: var(--space-3); font-size: var(--text-sm); color: var(--text-muted);">
-            Checking available questions...
+            ${Lang.t('setup_checking')}
+          </div>
           </div>
 
           <!-- Start Button -->
           <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 btn-glow"
                   onclick="SetupPage.startTest()" id="start-test-btn" disabled>
-            🚀 Start Test
+            ${Lang.t('setup_start')}
           </button>
 
           <button class="btn btn-ghost btn-block" onclick="App.navigate('home')" style="margin-top: var(--space-2);">
-            ← Back to Home
+            ${Lang.t('setup_back')}
           </button>
         </div>
       </div>
@@ -176,28 +177,28 @@ const SetupPage = {
 
   _renderSummary() {
     const timeText = this.config.timeMode === 'none'
-      ? 'No timer'
+      ? Lang.t('setup_no_timer')
       : `${Math.round((this.config.totalTime || this.config.numQuestions * 60) / 60)} min`;
 
     return `
       <div class="summary-row">
-        <span class="summary-label">Subject</span>
-        <span class="summary-value">${this.config.subject === 'all' ? 'All Subjects' : this.config.subject}</span>
+        <span class="summary-label">${Lang.t('setup_summary_subject')}</span>
+        <span class="summary-value">${this.config.subject === 'all' ? Lang.t('setup_all_subjects') : this.config.subject}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Exam</span>
-        <span class="summary-value">${this.config.exam === 'all' ? 'All Exams' : this.config.exam}</span>
+        <span class="summary-label">${Lang.t('setup_summary_exam')}</span>
+        <span class="summary-value">${this.config.exam === 'all' ? Lang.t('setup_all_exams') : this.config.exam}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Questions</span>
+        <span class="summary-label">${Lang.t('setup_summary_questions')}</span>
         <span class="summary-value">${this.config.numQuestions}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Time</span>
+        <span class="summary-label">${Lang.t('setup_summary_time')}</span>
         <span class="summary-value">${timeText}</span>
       </div>
       <div class="summary-row">
-        <span class="summary-label">Negative Marking</span>
+        <span class="summary-label">${Lang.t('setup_summary_neg')}</span>
         <span class="summary-value">${this.config.negativeMarking ? `-${this.config.negativeValue}` : 'OFF'}</span>
       </div>
     `;

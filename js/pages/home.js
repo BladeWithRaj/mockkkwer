@@ -10,10 +10,10 @@ const HomePage = {
       localStorage.setItem("variant", variant);
     }
     
-    // A/B Test Headline
+    // A/B Test Headline (bilingual)
     const headline = variant === "A" 
-      ? `Stop Guessing.<br><span class="gradient-text">Start Scoring.</span>`
-      : `Boost Your Score with<br><span class="gradient-text">Smart Practice</span>`;
+      ? Lang.t('hero_title_a')
+      : Lang.t('hero_title_b');
 
     return `
       <div class="page-enter">
@@ -21,7 +21,7 @@ const HomePage = {
         <section class="home-hero container text-center" style="padding-top: var(--space-16); padding-bottom: var(--space-12);">
           <div class="hero-badge animate-fadeInDown" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); padding: 6px 16px; border-radius: 20px; color: var(--primary-light); font-size: 14px; font-weight: 500; margin-bottom: 20px;">
             <span class="dot" style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e;"></span>
-            <span>Live Mock Tests</span>
+            <span>${Lang.t('hero_badge')}</span>
           </div>
 
           <h1 class="hero-title animate-fadeInUp stagger-1" style="font-size: clamp(40px, 8vw, 64px); line-height: 1.1; font-weight: 800; margin-bottom: 24px; letter-spacing: -0.02em;">
@@ -29,36 +29,36 @@ const HomePage = {
           </h1>
 
           <p class="hero-subtitle animate-fadeInUp stagger-2" style="font-size: clamp(16px, 4vw, 20px); color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; line-height: 1.6;">
-            Practice real exam-level mock tests. Track your performance. Improve every day.
+            ${Lang.t('hero_subtitle')}
           </p>
 
           <div class="hero-cta animate-fadeInUp stagger-3" style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
             <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
               <button class="btn btn-primary btn-lg pulse-glow" onclick="if(window.trackEvent) window.trackEvent('cta_click', {type: 'full_test', variant: localStorage.getItem('variant')}); App.navigate('setup');" style="font-size: 18px; padding: 16px 32px; border-radius: 12px; font-weight: 600; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); transition: transform 0.2s, box-shadow 0.2s;">
-                🚀 Start Full Test
+                ${Lang.t('cta_full_test')}
               </button>
               <button class="btn btn-secondary btn-lg" onclick="if(window.trackEvent) window.trackEvent('cta_click', {type: 'demo_test', variant: localStorage.getItem('variant')}); App.navigate('setup', {exam: 'All', mode: 'demo', limit: 5});" style="font-size: 18px; padding: 16px 32px; border-radius: 12px; font-weight: 600; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); transition: all 0.2s;">
-                ⚡ Try 2-Min Demo
+                ${Lang.t('cta_demo')}
               </button>
             </div>
             
             <div style="color: var(--text-muted); font-size: 13px; font-weight: 500; letter-spacing: 0.5px; display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px;">
-              <span>No timer pressure</span>
+              <span>${Lang.t('cta_no_pressure')}</span>
               <span style="opacity: 0.5">•</span>
-              <span>Skip anytime</span>
+              <span>${Lang.t('cta_skip')}</span>
               <span style="opacity: 0.5">•</span>
-              <span>Instant result</span>
+              <span>${Lang.t('cta_instant')}</span>
             </div>
 
             <!-- Session Hook (Injected dynamically) -->
             ${Storage.getCurrentTest() ? `
               <div style="margin-top: 10px; cursor: pointer; color: var(--primary-light); font-size: 15px; font-weight: 600; background: rgba(99,102,241,0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--primary);" onclick="App.navigate('test')">
-                Continue where you left off ⏱️ →
+                ${Lang.t('resume_test')}
               </div>
             ` : ''}
             
             <div style="margin-top: 24px; color: var(--text-secondary); font-size: 12px; animation: bounce 2s infinite; opacity: 0.7;">
-              ↓ Scroll to explore or start now
+              ${Lang.t('scroll_hint')}
             </div>
           </div>
         </section>
@@ -66,7 +66,7 @@ const HomePage = {
         <!-- SOCIAL PROOF -->
         <section class="container text-center" style="padding-bottom: var(--space-8);">
           <div class="animate-fadeInUp stagger-3" style="color: var(--text-muted); font-size: 14px; font-weight: 500; letter-spacing: 0.5px; border-top: 1px solid var(--border-light); border-bottom: 1px solid var(--border-light); padding: 12px 0;">
-            Used by students preparing for SSC, Railway & Banking exams
+            ${Lang.t('social_proof')}
           </div>
         </section>
 
@@ -75,7 +75,7 @@ const HomePage = {
           <div class="stats-row animate-fadeInUp stagger-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
             <div class="card glass-card" style="text-align: center; padding: 24px;">
               <div style="font-size: 32px; margin-bottom: 12px;">🛡️</div>
-              <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">Designed for SSC, Railway & Banking Exams</div>
+              <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">${Lang.t('trust_exam')}</div>
             </div>
             <div class="card glass-card" style="text-align: center; padding: 24px;">
               <div style="font-size: 32px; margin-bottom: 12px;">🎯</div>
