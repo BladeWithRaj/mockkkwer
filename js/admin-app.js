@@ -9,7 +9,6 @@ const AdminApp = {
   searchQuery: '',
   filterSubject: 'all',
   filterDifficulty: 'all',
-  filterExam: 'all',
 
   sections: ['dashboard', 'questions', 'add', 'bulk-upload', 'analytics'],
 
@@ -126,14 +125,10 @@ const AdminApp = {
 
     const subjectCounts = {};
     const difficultyCounts = { easy: 0, medium: 0, hard: 0 };
-    const examCounts = {};
 
     questions.forEach(q => {
       subjectCounts[q.subject] = (subjectCounts[q.subject] || 0) + 1;
       difficultyCounts[q.difficulty] = (difficultyCounts[q.difficulty] || 0) + 1;
-      (q.exam || []).forEach(e => {
-        examCounts[e] = (examCounts[e] || 0) + 1;
-      });
     });
 
     return `
@@ -205,18 +200,6 @@ const AdminApp = {
           </div>
         </div>
 
-        <!-- Exam Distribution -->
-        <div class="card animate-fadeInUp stagger-6">
-          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">Questions by Exam</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-3);">
-            ${Object.entries(examCounts).map(([exam, count]) => `
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4); background: var(--bg-glass); border-radius: var(--radius-md);">
-                <span style="font-size: var(--text-sm); font-weight: var(--font-medium);">${exam}</span>
-                <span class="chip chip-primary">${count}</span>
-              </div>
-            `).join('')}
-          </div>
-        </div>
       </div>
     `;
   },
@@ -256,7 +239,6 @@ const AdminApp = {
   renderQuestions() {
     let questions = [...(window.QUESTION_BANK || [])];
     const subjects = [...new Set(questions.map(q => q.subject))];
-    const exams = [...new Set(questions.flatMap(q => q.exam || []))];
 
     // Apply filters
     if (this.filterSubject !== 'all') {
@@ -265,12 +247,9 @@ const AdminApp = {
     if (this.filterDifficulty !== 'all') {
       questions = questions.filter(q => q.difficulty === this.filterDifficulty);
     }
-    if (this.filterExam !== 'all') {
-      questions = questions.filter(q => q.exam && q.exam.includes(this.filterExam));
-    }
     if (this.searchQuery) {
       const query = this.searchQuery.toLowerCase();
-      questions = questions.filter(q => q.question.toLowerCase().includes(query) || q.topic.toLowerCase().includes(query));
+      questions = questions.filter(q => q.question.toLowerCase().includes(query));
     }
 
     const labels = ['A', 'B', 'C', 'D'];
@@ -308,10 +287,6 @@ const AdminApp = {
             <option value="medium" ${this.filterDifficulty === 'medium' ? 'selected' : ''}>Medium</option>
             <option value="hard" ${this.filterDifficulty === 'hard' ? 'selected' : ''}>Hard</option>
           </select>
-          <select class="select" onchange="AdminApp.filterExam = this.value; AdminApp.render();" id="filter-exam">
-            <option value="all" ${this.filterExam === 'all' ? 'selected' : ''}>All Exams</option>
-            ${exams.map(e => `<option value="${e}" ${this.filterExam === e ? 'selected' : ''}>${e}</option>`).join('')}
-          </select>
         </div>
 
         <!-- Question List -->
@@ -332,10 +307,7 @@ const AdminApp = {
                 </div>
                 <div class="question-list-meta">
                   <span class="chip chip-primary">${q.subject}</span>
-                  <span class="chip">${q.topic}</span>
                   <span class="chip ${Helpers.getDifficultyClass(q.difficulty)}">${q.difficulty}</span>
-                  ${(q.exam || []).map(e => `<span class="chip">${e}</span>`).join('')}
-                  ${q.pyq ? `<span class="chip chip-warning">PYQ${q.year ? ' ' + q.year : ''}</span>` : ''}
                 </div>
               </div>
               <div class="question-list-actions">
@@ -407,8 +379,8 @@ const AdminApp = {
             <div class="input-group">
               <label class="input-label">Subject *</label>
               <select class="select" id="q-subject">
-                ${['Math', 'GK', 'Reasoning', 'English', 'Hindi'].map(s =>
-      `<option value="${s}" ${q.subject === s ? 'selected' : ''}>${s}</option>`
+                ${['math', 'gk', 'reasoning', 'english', 'hindi', 'science', 'polity', 'geography', 'history'].map(s =>
+      `<option value="${s}" ${q.subject === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
     ).join('')}
               </select>
             </div>
@@ -420,12 +392,6 @@ const AdminApp = {
                 <option value="hard" ${q.difficulty === 'hard' ? 'selected' : ''}>Hard</option>
               </select>
             </div>
-          </div>
-
-          <!-- Exam -->
-          <div class="input-group">
-            <label class="input-label">Exam</label>
-            <input type="text" class="input" id="q-exam" value="${(q.exam || []).join(', ')}" placeholder="SSC, Railway, Police">
           </div>
 
           <!-- Submit -->
@@ -462,31 +428,19 @@ const AdminApp = {
     const correct = this._selectedCorrect;
     const subject = document.getElementById('q-subject').value;
     const difficulty = document.getElementById('q-difficulty').value;
-    const examStr = document.getElementById('q-exam').value;
-    const exam = examStr ? examStr.split(',').map(e => e.trim()).filter(Boolean).join(',') : '';
 
     // Validate
     if (!question) { Helpers.showToast('Question text is required', 'error'); return; }
     if (options.some(o => !o)) { Helpers.showToast('All 4 options are required', 'error'); return; }
 
-    // Build DB row — correct_answer = actual option text
+    // Build DB row — new schema: options_en + correct_index
     const dbRow = {
-      question: question,
-      option_a: options[0],
-      option_b: options[1],
-      option_c: options[2],
-      option_d: options[3],
-      correct_answer: options[correct],
-      subject: subject,
-      exam: exam,
+      question_en: question,
+      options_en: options,
+      correct_index: correct,
+      subject: subject.toLowerCase(),
       difficulty: difficulty
     };
-
-    // Validate: correct_answer must match one option
-    if (!options.includes(dbRow.correct_answer)) {
-      Helpers.showToast('Correct answer must match an option', 'error');
-      return;
-    }
 
     // Save to DB
     const saveBtn = document.getElementById('save-question-btn');
@@ -581,19 +535,14 @@ const AdminApp = {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>question</td><td>✅</td><td>Question text</td><td>What is 2+2?</td></tr>
+                <tr><td>question</td><td>✅</td><td>Question text (EN)</td><td>What is 2+2?</td></tr>
                 <tr><td>option_a</td><td>✅</td><td>Option A text</td><td>3</td></tr>
                 <tr><td>option_b</td><td>✅</td><td>Option B text</td><td>4</td></tr>
                 <tr><td>option_c</td><td>✅</td><td>Option C text</td><td>5</td></tr>
                 <tr><td>option_d</td><td>✅</td><td>Option D text</td><td>6</td></tr>
                 <tr><td>correct</td><td>✅</td><td>Correct answer (A/B/C/D)</td><td>B</td></tr>
-                <tr><td>subject</td><td>✅</td><td>Subject name</td><td>Math</td></tr>
-                <tr><td>topic</td><td></td><td>Topic name</td><td>Arithmetic</td></tr>
+                <tr><td>subject</td><td>✅</td><td>Subject (lowercase)</td><td>math</td></tr>
                 <tr><td>difficulty</td><td></td><td>easy/medium/hard</td><td>easy</td></tr>
-                <tr><td>exam</td><td></td><td>Exam tags (semicolon sep)</td><td>SSC;Railway</td></tr>
-                <tr><td>explanation</td><td></td><td>Answer explanation</td><td>2+2=4</td></tr>
-                <tr><td>pyq</td><td></td><td>true/false</td><td>false</td></tr>
-                <tr><td>year</td><td></td><td>PYQ year</td><td>2023</td></tr>
               </tbody>
             </table>
           </div>
@@ -687,16 +636,12 @@ const AdminApp = {
   async confirmUpload() {
     if (this._pendingUpload.length === 0) return;
 
-    // Convert UI format → DB format for bulk insert
+    // Convert UI format → DB format for bulk insert (new schema)
     const dbRows = this._pendingUpload.map(q => ({
-      question: q.question,
-      option_a: q.options[0],
-      option_b: q.options[1],
-      option_c: q.options[2],
-      option_d: q.options[3],
-      correct_answer: q.options[q.correct],
-      subject: q.subject || 'General',
-      exam: (q.exam || []).join(','),
+      question_en: q.question,
+      options_en: q.options,
+      correct_index: q.correct,
+      subject: (q.subject || 'general').toLowerCase(),
       difficulty: q.difficulty || 'medium'
     }));
 
