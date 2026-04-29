@@ -215,28 +215,38 @@ const Helpers = {
    * Get color for subject
    */
   getSubjectColor(subject) {
+    const s = (subject || '').toLowerCase();
     const colors = {
-      'Math': '#3B82F6',
-      'GK': '#10B981',
-      'Reasoning': '#8B5CF6',
-      'English': '#F59E0B',
-      'Hindi': '#EF4444'
+      'math': '#3B82F6',
+      'gk': '#10B981',
+      'reasoning': '#8B5CF6',
+      'english': '#F59E0B',
+      'hindi': '#EF4444',
+      'science': '#06B6D4',
+      'polity': '#EC4899',
+      'geography': '#14B8A6',
+      'history': '#F97316'
     };
-    return colors[subject] || '#6B7280';
+    return colors[s] || '#6B7280';
   },
 
   /**
    * Get subject icon
    */
   getSubjectIcon(subject) {
+    const s = (subject || '').toLowerCase();
     const icons = {
-      'Math': '🔢',
-      'GK': '🌍',
-      'Reasoning': '🧩',
-      'English': '📝',
-      'Hindi': '📖'
+      'math': '🔢',
+      'gk': '🌍',
+      'reasoning': '🧩',
+      'english': '📝',
+      'hindi': '📖',
+      'science': '🔬',
+      'polity': '⚖️',
+      'geography': '🗺️',
+      'history': '📜'
     };
-    return icons[subject] || '📋';
+    return icons[s] || '📋';
   },
 
   /**

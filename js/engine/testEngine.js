@@ -192,28 +192,11 @@ const TestEngine = {
     // Calculate results
     const result = this.calculateResult();
 
+
     // ── SUPABASE SAVE SYSTEM ──
-    // Format strict JSON for topic_wise_accuracy as per PRD
-    const formattedTopics = {};
-    Object.entries(result.topicWise).forEach(([key, data]) => {
-      // Key can be just the subject or specific topic. Using subject for simplicity as per example: "Math": {"correct": 8, "wrong": 2}
-      const finalKey = data.subject || key;
-      if (!formattedTopics[finalKey]) {
-        formattedTopics[finalKey] = { correct: 0, wrong: 0 };
-      }
-      formattedTopics[finalKey].correct += data.correct;
-      formattedTopics[finalKey].wrong += data.wrong;
-    });
 
     if (window.saveResultToDB) {
-      window.saveResultToDB({
-        scorePercent: result.accuracy,
-        correct: result.correct,
-        wrong: result.wrong,
-        skipped: result.skipped,
-        timeTaken: result.timeTaken,
-        topicStats: formattedTopics
-      });
+      window.saveResultToDB(result);
     }
 
     // Save to local history as well for immediate UI access

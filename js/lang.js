@@ -26,11 +26,11 @@ const Lang = {
       // ── RACE GUARD: ensure questions array exists ──
       if (!TestEngine.state.questions || !TestEngine.state.questions.length) return;
 
-      // Swap display text for all questions from stored _raw bilingual data
+      // Swap display text for all questions using bilingual fields
       TestEngine.state.questions.forEach(q => {
-        if (q && q._raw) {
-          q.question = isHi ? q._raw.questionHI : q._raw.questionEN;
-          q.options = isHi ? [...q._raw.optionsHI] : [...q._raw.optionsEN];
+        if (q && q.questionEN) {
+          q.question = isHi ? q.questionHI : q.questionEN;
+          q.options = isHi ? [...q.optionsHI] : [...q.optionsEN];
           // correct index stays same — it's position-based, not text-based
         }
       });

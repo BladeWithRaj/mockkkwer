@@ -8,26 +8,43 @@ const SUPABASE_KEY = "sb_publishable_f9j2KF0lNdMVts6i4bFPzw_jXAvJaqV";
 // IMPORTANT: renamed to 'client' to avoid conflict with window.supabase
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── FETCH ──────────────────────────────────
+// ── FETCH (Direct Supabase — no API) ──────────
 
 async function fetchRandomQuestions(config = {}) {
   const { limit = 50, subjects = [], seenIds = [] } = config;
   try {
-    const resp = await fetch("/api/questions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ limit, subjects, seen_ids: seenIds })
-    });
-    
-    if (!resp.ok) {
-      const errData = await resp.json().catch(() => ({}));
-      throw new Error(errData.error || "Network error");
+    let query = client.from("questions").select("*").limit(limit);
+
+    // Subject filter (lowercase, skip if empty = all)
+    const cleanSubjects = subjects.map(s => String(s).trim().toLowerCase()).filter(Boolean);
+    if (cleanSubjects.length > 0) {
+      query = query.in("subject", cleanSubjects);
     }
-    
-    const result = await resp.json();
-    if (!result.success) throw new Error(result.error);
-    
-    return mapDBToUI(result.questions || []);
+
+    // Exclude already-seen questions
+    const safeSeenIds = Array.isArray(seenIds) ? seenIds.slice(-300) : [];
+    if (safeSeenIds.length > 0) {
+      query = query.not("id", "in", `(${safeSeenIds.join(",")})`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Supabase query error:", error);
+      return { error: error.message };
+    }
+
+    console.log("RAW DATA:", data?.length, "questions fetched");
+
+    let questions = data || [];
+
+    // Shuffle
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+
+    return mapDBToUI(questions);
   } catch (err) {
     console.error("fetchRandomQuestions Error:", err);
     return { error: err.message };
@@ -58,32 +75,33 @@ async function checkAdminRole(userId) {
   }
 }
 
-// ── MAP API RESPONSE → UI FORMAT ─────────────
-// API returns: { id, question_en, question_hi, options_en[], options_hi[], correct_index, subject }
+// ── MAP DB ROWS → UI FORMAT ───────────────────
 
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
 
   const isHi = typeof Lang !== 'undefined' && Lang.isHindi();
+  let skipped = 0;
 
-  return data.map(q => {
+  const mapped = data.map(q => {
     // ── GUARD ──
     if (!q || !q.id) {
       console.warn("⚠️ Skipping malformed question (no ID):", q);
+      skipped++;
       return null;
     }
 
-    // ── PARSE OPTIONS (handle string or array from API) ──
+    // ── PARSE OPTIONS (handle string or array from DB) ──
     let optionsEN = typeof q.options_en === "string" ? JSON.parse(q.options_en) : (q.options_en || []);
     let optionsHI = typeof q.options_hi === "string" ? JSON.parse(q.options_hi) : (q.options_hi || null);
 
-    // ── TYPE SAFETY: coerce each to string ──
+    // ── TYPE SAFETY ──
     optionsEN = Array.isArray(optionsEN) ? optionsEN.map(o => o != null ? String(o) : "") : [];
 
-    // ── VALIDATION: need at least 2 options ──
-    const filledEN = optionsEN.filter(o => o !== "").length;
-    if (filledEN < 2) {
-      console.error(`❌ Q${q.id}: only ${filledEN} options. Skipping.`);
+    // ── HARD GUARD: need at least 2 options + correct_index ──
+    if (optionsEN.filter(o => o !== "").length < 2 || q.correct_index == null) {
+      console.warn("⚠️ BAD QUESTION (skipped):", { id: q.id, options_en: q.options_en, correct_index: q.correct_index, subject: q.subject });
+      skipped++;
       return null;
     }
 
@@ -99,32 +117,38 @@ function mapDBToUI(data) {
     const questionHI = (q.question_hi || "").trim() || questionEN;
 
     if (!questionEN) {
-      console.error(`❌ Q${q.id}: empty question text. Skipping.`);
+      console.warn("⚠️ BAD QUESTION (no text):", { id: q.id });
+      skipped++;
       return null;
     }
 
-    // ── CORRECT INDEX (direct from API, no findIndex needed!) ──
+    // ── CORRECT INDEX ──
     let correctIdx = typeof q.correct_index === "number" ? q.correct_index : parseInt(q.correct_index, 10);
     if (isNaN(correctIdx) || correctIdx < 0 || correctIdx >= optionsEN.length) {
-      console.error(`❌ Q${q.id}: bad correct_index=${q.correct_index}. Defaulting 0.`);
+      console.warn("⚠️ BAD correct_index, defaulting to 0:", { id: q.id, correct_index: q.correct_index });
       correctIdx = 0;
     }
 
-    // ── DISPLAY ──
-    const questionText = isHi ? questionHI : questionEN;
-    const options = isHi ? [...optionsHI] : [...optionsEN];
-
     return {
       id: String(q.id),
-      question: questionText,
-      options: options,
+      question: isHi ? questionHI : questionEN,
+      options: isHi ? [...optionsHI] : [...optionsEN],
       correct: correctIdx,
       subject: (q.subject || "general").toLowerCase(),
       topic: (q.subject || "general").toLowerCase(),
       difficulty: (q.difficulty || "medium").toLowerCase(),
-      _raw: { questionEN, questionHI, optionsEN, optionsHI }
+      // Bilingual data for live language switching
+      questionEN,
+      questionHI,
+      optionsEN,
+      optionsHI
     };
   }).filter(Boolean);
+
+  // ── DEBUG SUMMARY ──
+  console.log(`📊 mapDBToUI: ${data.length} raw → ${mapped.length} valid (${skipped} skipped)`);
+
+  return mapped;
 }
 
 // ── ADD QUESTION (Admin → DB) ─────────────
@@ -210,19 +234,26 @@ async function saveResultToDB(result) {
       console.warn("Skipping submission: No username/identity found.");
       return;
     }
-    
+
+    // ── Guard: ensure questionResults exists ──
+    const questionResults = result.questionResults || [];
+    if (questionResults.length === 0) {
+      console.warn("Skipping submission: No questionResults in result object.");
+      return;
+    }
+
     // Format payload for secure API
     const payload = {
       testId,
-      questionIds: result.questionResults.map(qr => qr.question.id),
-      answers: result.questionResults.reduce((acc, qr) => {
-        if (qr.selectedAnswer !== null && qr.selectedAnswer !== undefined) {
+      questionIds: questionResults.map(qr => qr.question?.id).filter(Boolean),
+      answers: questionResults.reduce((acc, qr) => {
+        if (qr.question?.id && qr.selectedAnswer !== null && qr.selectedAnswer !== undefined) {
           acc[qr.question.id] = qr.selectedAnswer;
         }
         return acc;
       }, {}),
-      timeTaken: result.timeTaken,
-      isDaily: result.config.isDaily || false,
+      timeTaken: result.timeTaken || 0,
+      isDaily: (result.config && result.config.isDaily) || false,
       user_id,
       username
     };
@@ -255,33 +286,17 @@ async function saveResultToDB(result) {
       
       if (window.trackEvent) {
         window.trackEvent("test_submit", {
-          score: result.scorePercent || result.accuracy
+          score: result.accuracy || result.scorePercent || 0
         });
       }
     }
 
   } catch (err) {
-    console.error("🔥 Unexpected error:", err);
+    console.error("🔥 Unexpected error in saveResultToDB:", err);
   }
 }
 
-async function syncFallbackQueue() {
-  const queue = Storage.getFallbackQueue();
-  if (queue.length === 0) return;
-
-  console.log(`Attempting to sync ${queue.length} offline results...`);
-  const { data, error } = await client
-    .from("results")
-    .insert(queue)
-    .select();
-
-  if (error) {
-    console.error("Sync Failed:", error);
-  } else {
-    console.log("Sync Successful!", data);
-    Storage.clearFallbackQueue();
-  }
-}
+// syncFallbackQueue removed — dead code (never called)
 
 // ── SESSION STABILIZATION ─────────────────
 
@@ -375,7 +390,6 @@ window.deleteQuestionFromDB = deleteQuestionFromDB;
 window.bulkInsertQuestions = bulkInsertQuestions;
 window.saveResultToDB = saveResultToDB;
 window.getUserResults = getUserResults;
-window.syncFallbackQueue = syncFallbackQueue;
 window.initSession = initSession;
 window.subscribeToResults = subscribeToResults;
 window.supabaseClient = client;

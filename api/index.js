@@ -86,7 +86,6 @@ export default async function handler(req, res) {
   console.log(`[API] ${req.method} ${path}`);
 
   try {
-    if (path.includes("/questions"))       return await handleQuestions(req, res);
     if (path.includes("/submit"))          return await handleSubmit(req, res);
     if (path.includes("/track"))           return await handleTrack(req, res);
     if (path.includes("/analytics"))       return await handleAnalytics(req, res);
@@ -102,79 +101,7 @@ export default async function handler(req, res) {
   }
 }
 
-// ═══════════════════════════════════════════════
-// /api/questions — Fetch random questions
-// ═══════════════════════════════════════════════
-
-async function handleQuestions(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
-
-  try {
-    let { limit = 50, subjects = [], seen_ids = [] } = req.body || {};
-
-    limit = parseInt(limit, 10);
-    if (isNaN(limit) || limit < 1) limit = 10;
-    if (limit > 200) limit = 200;
-    if (!Array.isArray(seen_ids)) seen_ids = [];
-    if (seen_ids.length > 300) seen_ids = seen_ids.slice(-300);
-    if (!Array.isArray(subjects)) subjects = [];
-
-    // Normalize subjects to lowercase, filter empties
-    subjects = subjects.map(s => String(s).trim().toLowerCase()).filter(Boolean);
-
-    // Build query — no RPC, direct table query
-    let query = supabase.from("questions").select("*").limit(limit);
-
-    // Multi-subject filter (skip if empty = all subjects)
-    if (subjects.length > 0) {
-      query = query.in("subject", subjects);
-    }
-
-    // Exclude seen questions
-    if (seen_ids.length > 0) {
-      query = query.not("id", "in", `(${seen_ids.join(",")})`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[QUESTIONS] Query failed:", error);
-      return res.status(500).json({ error: "Failed to fetch questions: " + error.message });
-    }
-
-    let questions = data || [];
-
-    // Shuffle
-    for (let i = questions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [questions[i], questions[j]] = [questions[j], questions[i]];
-    }
-
-    // Format response — parse jsonb safely
-    const formatted = questions.map(q => {
-      const optionsEN = typeof q.options_en === "string" ? JSON.parse(q.options_en) : (q.options_en || []);
-      const optionsHI = typeof q.options_hi === "string" ? JSON.parse(q.options_hi) : (q.options_hi || null);
-
-      return {
-        id: q.id,
-        question_en: q.question_en || "",
-        question_hi: q.question_hi || "",
-        options_en: optionsEN,
-        options_hi: optionsHI,
-        correct_index: typeof q.correct_index === "number" ? q.correct_index : 0,
-        subject: q.subject || "general",
-        difficulty: q.difficulty || "medium"
-      };
-    });
-
-    return res.json({ success: true, questions: formatted });
-  } catch (err) {
-    console.error("[QUESTIONS] Crash:", err);
-    return res.status(500).json({ error: err.message });
-  }
-}
+// /api/questions — REMOVED (dead code, frontend uses direct Supabase queries)
 
 // ═══════════════════════════════════════════════
 // /api/submit — Submit test answers

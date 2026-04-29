@@ -40,10 +40,10 @@ const SetupPage = {
           <div class="setup-section animate-fadeInUp stagger-1">
             <div class="setup-section-title">${Lang.t('setup_subject')}</div>
             <div class="setup-chips" id="subject-chips">
-              <button class="setup-chip ${this.config.subjects.length === 0 ? 'active' : ''}"
+              <button class="setup-chip ${this.config.subjects.length === 0 ? 'active' : ''}" data-subject="all"
                       onclick="SetupPage._toggleSubject('all')">🎲 ${Lang.t('setup_all_subjects')}</button>
               ${subjects.map(s => `
-                <button class="setup-chip ${this.config.subjects.includes(s) ? 'active' : ''}"
+                <button class="setup-chip ${this.config.subjects.includes(s) ? 'active' : ''}" data-subject="${s}"
                         onclick="SetupPage._toggleSubject('${s}')">${Helpers.getSubjectIcon(s)} ${s.charAt(0).toUpperCase() + s.slice(1)}</button>
               `).join('')}
             </div>
@@ -174,7 +174,7 @@ const SetupPage = {
       </div>
       <div class="summary-row">
         <span class="summary-label">${Lang.t('setup_summary_neg')}</span>
-        <span class="summary-value">${this.config.negativeMarking ? \`-\${this.config.negativeValue}\` : 'OFF'}</span>
+        <span class="summary-value">${this.config.negativeMarking ? '-' + this.config.negativeValue : 'OFF'}</span>
       </div>
     `;
   },
@@ -253,20 +253,16 @@ const SetupPage = {
       }
     }
 
-    // ── SMOOTH: update chips in-place without full page re-render ──
+    // ── SMOOTH: update chips via data-subject attributes ──
     const chipsContainer = document.getElementById('subject-chips');
     if (chipsContainer) {
       const buttons = chipsContainer.querySelectorAll('.setup-chip');
       buttons.forEach(btn => {
-        const onclick = btn.getAttribute('onclick') || '';
-        if (onclick.includes("'all'")) {
+        const subj = btn.getAttribute('data-subject');
+        if (subj === 'all') {
           btn.classList.toggle('active', this.config.subjects.length === 0);
         } else {
-          // Extract subject name from onclick
-          const match = onclick.match(/'([^']+)'/);
-          if (match) {
-            btn.classList.toggle('active', this.config.subjects.includes(match[1]));
-          }
+          btn.classList.toggle('active', this.config.subjects.includes(subj));
         }
       });
     }
@@ -310,7 +306,7 @@ const SetupPage = {
         throw new Error('No questions found. Please check your database.');
       }
       if (fetchedQuestions.length < 5) {
-        throw new Error(\`Only \${fetchedQuestions.length} questions found — need at least 5.\`);
+        throw new Error('Only ' + fetchedQuestions.length + ' questions found — need at least 5.');
       }
 
       // 3. Save newly seen IDs
@@ -330,7 +326,7 @@ const SetupPage = {
         throw new Error(result.error);
       }
 
-      Helpers.showToast(\`Test started! \${result.questionCount} questions\`, 'success');
+      Helpers.showToast('Test started! ' + result.questionCount + ' questions', 'success');
       App.navigate('test');
 
     } catch (err) {
