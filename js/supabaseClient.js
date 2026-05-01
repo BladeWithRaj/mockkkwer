@@ -8,56 +8,75 @@ const SUPABASE_KEY = "sb_publishable_f9j2KF0lNdMVts6i4bFPzw_jXAvJaqV";
 // IMPORTANT: renamed to 'client' to avoid conflict with window.supabase
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ── FETCH (Direct Supabase — no API) ──────────
+// ── FETCH (Direct Supabase — ONLY source) ──────
 
 async function fetchRandomQuestions(config = {}) {
-  const { limit = 50, subjects = [], seenIds = [] } = config;
+  const { subjects = [], limit = 25 } = config;
+
   try {
-    let query = client.from("questions").select("*").limit(limit);
+    let query = client.from("questions").select("*");
 
-    // Subject filter (lowercase, skip if empty = all)
-    const cleanSubjects = subjects.map(s => String(s).trim().toLowerCase()).filter(Boolean);
-    if (cleanSubjects.length > 0) {
-      query = query.in("subject", cleanSubjects);
-    }
-
-    // Exclude already-seen questions
-    const safeSeenIds = Array.isArray(seenIds) ? seenIds.slice(-300) : [];
-    if (safeSeenIds.length > 0) {
-      query = query.not("id", "in", `(${safeSeenIds.join(",")})`);
+    // Subject filter — "all" or empty = no filter
+    if (subjects.includes("all") || subjects.length === 0) {
+      // no filter — fetch from all subjects
+    } else {
+      query = query.in("subject", subjects.map(s => s.toLowerCase()));
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error("Supabase query error:", error);
-      return { error: error.message };
+      console.error("DB ERROR:", error);
+      return [];
     }
 
-    console.log("RAW DATA:", data?.length, "questions fetched");
+    if (!data || data.length === 0) return [];
 
-    let questions = data || [];
+    // Lightweight dedupe — prefer unseen questions
+    const used = JSON.parse(localStorage.getItem("used_ids") || "[]");
+    const fresh = data.filter(q => !used.includes(q.id));
+    const base = fresh.length >= limit ? fresh : data;
 
-    // Shuffle
-    for (let i = questions.length - 1; i > 0; i--) {
+    // Shuffle (Fisher-Yates)
+    const shuffled = [...base];
+    for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [questions[i], questions[j]] = [questions[j], questions[i]];
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    return mapDBToUI(questions);
+    // Exact count
+    const selected = shuffled.slice(0, limit);
+
+    // Save used IDs (cap at 200)
+    const newUsed = [...used, ...selected.map(q => q.id)].slice(-200);
+    localStorage.setItem("used_ids", JSON.stringify(newUsed));
+
+    console.log("TOTAL DB:", data.length, "FRESH:", fresh.length, "SELECTED:", selected.length);
+
+    if (data.length < limit) {
+      console.warn("DB has fewer questions than requested:", data.length, "<", limit);
+    }
+
+    const mapped = mapDBToUI(selected);
+
+    if (mapped.length < selected.length) {
+      console.warn("Dropped", selected.length - mapped.length, "bad questions during mapping");
+    }
+
+    return mapped;
   } catch (err) {
-    console.error("fetchRandomQuestions Error:", err);
-    return { error: err.message };
+    console.error("fetchRandomQuestions CRASH:", err);
+    return [];
   }
 }
 
 async function fetchAdminQuestions(page = 1, searchQuery = '') {
   let query = client.from("questions").select("*");
   if (searchQuery) query = query.ilike('question_en', `%${searchQuery}%`);
-  
+
   // Hard limit to 1000 for simple admin UI (pagination later)
   query = query.range((page - 1) * 1000, page * 1000 - 1);
-  
+
   const { data, error } = await query;
   if (error) {
     console.error("Admin fetch error:", error);
@@ -75,80 +94,58 @@ async function checkAdminRole(userId) {
   }
 }
 
-// ── MAP DB ROWS → UI FORMAT ───────────────────
+// ── MAP DB → UI ──────────────────────────────
 
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
 
-  const isHi = typeof Lang !== 'undefined' && Lang.isHindi();
-  let skipped = 0;
+  const isHi = typeof Lang !== 'undefined' && Lang.current === "hi";
 
-  const mapped = data.map(q => {
-    // ── GUARD ──
-    if (!q || !q.id) {
-      console.warn("⚠️ Skipping malformed question (no ID):", q);
-      skipped++;
+  return data.map(q => {
+    if (!q || !q.id) return null;
+
+    let optionsEN, optionsHI;
+
+    try {
+      optionsEN = Array.isArray(q.options_en)
+        ? q.options_en
+        : JSON.parse(q.options_en || "[]");
+    } catch {
+      console.warn("BAD JSON options_en:", q.id);
       return null;
     }
 
-    // ── PARSE OPTIONS (handle string or array from DB) ──
-    let optionsEN = typeof q.options_en === "string" ? JSON.parse(q.options_en) : (q.options_en || []);
-    let optionsHI = typeof q.options_hi === "string" ? JSON.parse(q.options_hi) : (q.options_hi || null);
+    try {
+      optionsHI = Array.isArray(q.options_hi)
+        ? q.options_hi
+        : JSON.parse(q.options_hi || "[]");
+    } catch {
+      optionsHI = optionsEN;
+    }
 
-    // ── TYPE SAFETY ──
-    optionsEN = Array.isArray(optionsEN) ? optionsEN.map(o => o != null ? String(o) : "") : [];
+    if (!optionsHI || optionsHI.length === 0) optionsHI = optionsEN;
 
-    // ── HARD GUARD: need at least 2 options + correct_index ──
-    if (optionsEN.filter(o => o !== "").length < 2 || q.correct_index == null) {
-      console.warn("⚠️ BAD QUESTION (skipped):", { id: q.id, options_en: q.options_en, correct_index: q.correct_index, subject: q.subject });
-      skipped++;
+    if (optionsEN.length !== 4 || q.correct_index == null) {
+      console.warn("BAD QUESTION:", q.id, q.options_en, q.correct_index);
       return null;
-    }
-
-    // ── HINDI: per-option fallback to English ──
-    if (Array.isArray(optionsHI)) {
-      optionsHI = optionsHI.map((o, i) => (o != null && String(o).trim()) ? String(o) : optionsEN[i]);
-    } else {
-      optionsHI = [...optionsEN];
-    }
-
-    // ── QUESTION TEXT ──
-    const questionEN = (q.question_en || "").trim();
-    const questionHI = (q.question_hi || "").trim() || questionEN;
-
-    if (!questionEN) {
-      console.warn("⚠️ BAD QUESTION (no text):", { id: q.id });
-      skipped++;
-      return null;
-    }
-
-    // ── CORRECT INDEX ──
-    let correctIdx = typeof q.correct_index === "number" ? q.correct_index : parseInt(q.correct_index, 10);
-    if (isNaN(correctIdx) || correctIdx < 0 || correctIdx >= optionsEN.length) {
-      console.warn("⚠️ BAD correct_index, defaulting to 0:", { id: q.id, correct_index: q.correct_index });
-      correctIdx = 0;
     }
 
     return {
-      id: String(q.id),
-      question: isHi ? questionHI : questionEN,
-      options: isHi ? [...optionsHI] : [...optionsEN],
-      correct: correctIdx,
+      id: q.id,
       subject: (q.subject || "general").toLowerCase(),
-      topic: (q.subject || "general").toLowerCase(),
-      difficulty: (q.difficulty || "medium").toLowerCase(),
-      // Bilingual data for live language switching
-      questionEN,
-      questionHI,
+      correct: q.correct_index,
+
+      // Bilingual storage (for language toggle)
+      questionEN: q.question_en,
+      questionHI: q.question_hi || q.question_en,
       optionsEN,
-      optionsHI
+      optionsHI,
+
+      // Active display (changes on language toggle)
+      question: isHi ? (q.question_hi || q.question_en) : q.question_en,
+      options: isHi ? optionsHI : optionsEN
     };
   }).filter(Boolean);
-
-  // ── DEBUG SUMMARY ──
-  console.log(`📊 mapDBToUI: ${data.length} raw → ${mapped.length} valid (${skipped} skipped)`);
-
-  return mapped;
 }
 
 // ── ADD QUESTION (Admin → DB) ─────────────
@@ -283,7 +280,7 @@ async function saveResultToDB(result) {
       console.error("❌ Save failed:", data.error);
     } else {
       console.log("✅ Result saved securely:", data);
-      
+
       if (window.trackEvent) {
         window.trackEvent("test_submit", {
           score: result.accuracy || result.scorePercent || 0
@@ -336,7 +333,7 @@ async function getUserResults() {
       console.warn("Cannot fetch results: No authenticated user");
       return [];
     }
-    
+
     const userId = userData.user.id;
     const { data, error } = await fetchUserResultsAPI(userId);
 
@@ -366,14 +363,14 @@ async function subscribeToResults(callback) {
 
     resultsChannel = client
       .channel('results_realtime')
-      .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'results', filter: `user_id=eq.${userId}` }, 
-          (payload) => {
-             console.log("🔔 Real-time result inserted!", payload);
-             callback(payload);
-          })
+      .on('postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'results', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          console.log("🔔 Real-time result inserted!", payload);
+          callback(payload);
+        })
       .subscribe();
-      
+
     console.log("📡 Real-time subscription active for user:", userId);
   } catch (err) {
     console.error("Subscription Error:", err);

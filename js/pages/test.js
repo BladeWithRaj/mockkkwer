@@ -50,9 +50,6 @@ const TestPage = {
             <span class="test-info-item answered-badge">
               ✅ ${answeredCount}
             </span>
-            <span class="chip ${Helpers.getDifficultyClass(current.question.difficulty)}">
-              ${current.question.difficulty}
-            </span>
             <span class="chip chip-primary">${current.question.subject}</span>
           </div>
           ${!noTimer ? `
@@ -130,14 +127,12 @@ const TestPage = {
   _renderQuestion(current) {
     const q = current.question;
     const labels = ['A', 'B', 'C', 'D'];
-    const showTopic = q.topic && q.topic !== q.subject;
 
     return `
       <div class="question-header">
         <div class="question-number">${current.index + 1}</div>
         <div class="question-meta">
           <span class="chip chip-primary">${q.subject}</span>
-          ${showTopic ? `<span class="chip">${q.topic}</span>` : ''}
         </div>
       </div>
 
@@ -334,6 +329,48 @@ const TestPage = {
       const current = TestEngine.getCurrentQuestion();
       area.innerHTML = this._renderQuestion(current);
     }
+  },
+
+  // ── INSTANT language swap — pure DOM text patch, zero innerHTML ──
+  refreshLanguage() {
+    if (!TestEngine.state) return;
+    const idx = TestEngine.state.currentQuestion;
+    const q = TestEngine.state.questions[idx];
+    if (!q) return;
+
+    const selected = TestEngine.state.answers[q.id];
+
+    // 1. Question text — direct textContent swap
+    const qText = document.querySelector('.question-text');
+    if (qText) qText.textContent = q.question;
+
+    // 2. Option text + preserve selection state
+    const optBtns = document.querySelectorAll('.option-btn');
+    optBtns.forEach((btn, i) => {
+      const textEl = btn.querySelector('.option-text');
+      if (textEl && q.options[i] != null) textEl.textContent = q.options[i];
+      btn.classList.toggle('selected', i === selected);
+    });
+
+    // 3. Action button labels
+    const clearBtn = document.getElementById('clear-btn');
+    if (clearBtn) clearBtn.textContent = Lang.t('test_clear');
+    const reviewBtn = document.getElementById('review-btn');
+    if (reviewBtn) {
+      const isReview = TestEngine.state.markedForReview[idx];
+      reviewBtn.textContent = isReview ? Lang.t('test_marked') : Lang.t('test_mark_review');
+    }
+    const prevBtn = document.getElementById('prev-btn');
+    if (prevBtn) prevBtn.textContent = Lang.t('test_prev');
+    const nextBtn = document.getElementById('next-btn');
+    if (nextBtn) nextBtn.textContent = idx === TestEngine.state.questions.length - 1 ? Lang.t('submit') + ' →' : Lang.t('test_next');
+    const submitBtn = document.getElementById('submit-test-btn');
+    if (submitBtn) submitBtn.textContent = Lang.t('test_submit_btn');
+
+    // 4. Nav panel title
+    document.querySelectorAll('.nav-panel-title').forEach(el => {
+      el.textContent = Lang.t('test_questions_nav');
+    });
   },
 
   refreshNav() {

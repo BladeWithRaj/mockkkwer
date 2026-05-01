@@ -290,27 +290,15 @@ const SetupPage = {
           ? (this.config.totalTime || 600)
           : null;
 
-      // 1. Get seen IDs
-      const seenIds = Storage.getSeenQuestions();
-
-      // 2. Fetch random questions from API
-      // subjects=[] means ALL subjects (no filter applied in API)
+      // 1. Fetch questions (direct Supabase, no seenIds)
       const fetchedQuestions = await window.fetchRandomQuestions({
         limit: this.config.numQuestions,
-        subjects: this.config.subjects,
-        seenIds: seenIds
+        subjects: this.config.subjects
       });
 
-      if (fetchedQuestions.error) throw new Error(fetchedQuestions.error);
       if (!fetchedQuestions || fetchedQuestions.length === 0) {
-        throw new Error('No questions found. Please check your database.');
+        throw new Error('No questions found. Check database or subject filter.');
       }
-      if (fetchedQuestions.length < 5) {
-        throw new Error('Only ' + fetchedQuestions.length + ' questions found — need at least 5.');
-      }
-
-      // 3. Save newly seen IDs
-      Storage.addSeenQuestions(fetchedQuestions.map(q => q.id));
 
       console.log("CREATE TEST CALLED", fetchedQuestions.length, "questions");
 

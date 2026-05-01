@@ -11,44 +11,44 @@ const Lang = {
   isHindi() { return this.current === 'hi'; },
 
   toggle() {
-    const next = this.current === 'en' ? 'hi' : 'en';
-
-    // ── OPTIMIZATION: skip if already same language ──
-    if (next === this.current) return;
-
-    this.current = next;
+    // ── Flip language state (synchronous) ──
+    const before = this.current;
+    this.current = this.current === 'en' ? 'hi' : 'en';
     localStorage.setItem('lang', this.current);
+    const isHi = this.current === 'hi';
 
-    // During active test: swap question display text + re-render (no state loss)
-    if (window.TestEngine && TestEngine.state && TestEngine.state.isActive && !TestEngine.state.isSubmitted) {
-      const isHi = this.isHindi();
+    // ── Detect active test: check page + state presence ──
+    // NOTE: TestEngine/TestPage/App are const globals, NOT window properties
+    const onTestPage = window.location.hash.startsWith('#test');
+    const hasTestState = typeof TestEngine !== 'undefined' && TestEngine.state && TestEngine.state.questions && TestEngine.state.questions.length > 0;
+    const notSubmitted = hasTestState && !TestEngine.state.isSubmitted;
 
-      // ── RACE GUARD: ensure questions array exists ──
-      if (!TestEngine.state.questions || !TestEngine.state.questions.length) return;
-
-      // Swap display text for all questions using bilingual fields
+    if (onTestPage && hasTestState && notSubmitted) {
+      // 1. Update ALL question data in-place (synchronous)
       TestEngine.state.questions.forEach(q => {
         if (q && q.questionEN) {
-          q.question = isHi ? q.questionHI : q.questionEN;
-          q.options = isHi ? [...q.optionsHI] : [...q.optionsEN];
-          // correct index stays same — it's position-based, not text-based
+          q.question = isHi && q.questionHI ? q.questionHI : q.questionEN;
+          q.options  = isHi && q.optionsHI  ? [...q.optionsHI] : [...q.optionsEN];
         }
       });
 
-      // Re-render question area + nav (timer/answers untouched)
-      if (window.TestPage) {
-        if (TestPage.refreshQuestion) TestPage.refreshQuestion();
-        if (TestPage.refreshNav) TestPage.refreshNav();
+      // 2. Instant DOM patch — question text + options + labels (synchronous)
+      if (typeof TestPage !== 'undefined' && TestPage.refreshLanguage) {
+        TestPage.refreshLanguage();
       }
 
-      // Update header lang button text
-      const langBtn = document.querySelector('.lang-toggle-btn');
-      if (langBtn) langBtn.innerHTML = '🌐 ' + (isHi ? 'EN' : 'हिंदी');
+      // 3. Update ALL toggle buttons (synchronous)
+      document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
+        btn.innerHTML = '🌐 ' + (isHi ? 'EN' : 'हिंदी');
+      });
+
+      console.log(`🔄 Lang: ${before}→${this.current} (test path, instant patch)`);
       return;
     }
 
-    // All other pages: safe full re-render
-    if (window.App && App.handleRoute) {
+    // ── All other pages: full re-render ──
+    console.log(`🔄 Lang: ${before}→${this.current} (full re-render)`);
+    if (typeof App !== 'undefined' && App.handleRoute) {
       App.handleRoute();
     }
   },
@@ -329,3 +329,25 @@ const Lang = {
     dash_take_test: 'स्टैट्स देखने के लिए पहला टेस्ट दें'
   }
 };
+
+// ── BULLETPROOF: Document-level click delegation for lang toggle ──
+// Uses stopImmediatePropagation + timestamp guard to prevent double-fire
+let _lastToggleTime = 0;
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-toggle-btn');
+  if (!btn) return;
+
+  // Prevent double-fire: ignore clicks within 300ms of last toggle
+  const now = Date.now();
+  if (now - _lastToggleTime < 300) {
+    console.warn('🛑 Toggle blocked (double-fire guard)');
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    return;
+  }
+  _lastToggleTime = now;
+
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  Lang.toggle();
+}, true); // capture phase = fires FIRST, blocks everything else

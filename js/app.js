@@ -104,7 +104,7 @@ const App = {
           <button onclick="App.submitUsername()" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;">${Lang.t('start_practicing')}</button>
           
           <div style="margin-top: 16px;">
-            <button class="lang-toggle-btn" onclick="Lang.toggle()">🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}</button>
+            <button class="lang-toggle-btn">🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}</button>
           </div>
         </div>
       </div>
@@ -214,7 +214,7 @@ const App = {
               <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">${Lang.t('nav_dashboard')}</a>
               <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">${Lang.t('nav_leaderboard')}</a>
             `}
-            <button class="lang-toggle-btn" onclick="Lang.toggle()" title="Switch Language">
+            <button class="lang-toggle-btn" title="Switch Language">
               🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}
             </button>
           </nav>

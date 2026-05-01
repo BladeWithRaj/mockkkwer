@@ -202,17 +202,13 @@ const ResultPage = {
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Loading...'; }
 
     try {
-      // Fetch fresh questions from API with same filters
+      // Fetch fresh questions (no seenIds)
       const questions = await window.fetchRandomQuestions({
         limit: config.numQuestions || config.actualQuestions || 10,
-        subjects: config.subjects || [],
-        seenIds: Storage.getSeenQuestions()
+        subjects: config.subjects || []
       });
 
-      if (questions.error) throw new Error(questions.error);
       if (!questions || questions.length === 0) throw new Error('No questions found for these filters');
-
-      Storage.addSeenQuestions(questions.map(q => q.id));
 
       const result = TestEngine.createTest({
         questions,
