@@ -2694,13 +2694,13 @@
 .sub-exam-area {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
   opacity: 0;
   margin-top: 0;
 }
 
 .sub-exam-area.open {
-  max-height: 1000px;
+  max-height: 5000px;
   opacity: 1;
   margin-top: 20px;
 }

@@ -227,7 +227,7 @@ const HomePage = {
     if (!area) return;
 
     // Find category meta
-    const catMeta = { SSC: { icon: '📋', color: '#3B82F6' }, Railway: { icon: '🚂', color: '#10B981' }, Banking: { icon: '🏦', color: '#8B5CF6' }, State: { icon: '🏛️', color: '#F59E0B' } };
+    const catMeta = { SSC: { icon: '📋', color: '#3B82F6' }, Railway: { icon: '🚂', color: '#10B981' }, Banking: { icon: '🏦', color: '#8B5CF6' }, State: { icon: '🏛️', color: '#F59E0B' }, Defence: { icon: '⚔️', color: '#EF4444' }, Teaching: { icon: '📚', color: '#06B6D4' }, UPSC: { icon: '⚖️', color: '#D946EF' } };
     const meta = catMeta[catId] || { icon: '📋', color: '#3B82F6' };
 
     area.innerHTML = `
