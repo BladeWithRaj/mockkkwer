@@ -124,3 +124,44 @@
   --container-xl: 1200px;
   --header-height: 64px;
 }
+
+/* ── LIGHT THEME (Default) ── */
+[data-theme="light"] {
+  /* Backgrounds — warm white with clear separation */
+  --bg-primary: #EFF3F8;
+  --bg-secondary: #E2E8F0;
+  --bg-surface: #FFFFFF;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(255, 255, 255, 1);
+  --bg-glass: rgba(15, 23, 42, 0.04);
+  --bg-glass-hover: rgba(15, 23, 42, 0.07);
+
+  /* Borders — visible, clean */
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-light: rgba(15, 23, 42, 0.07);
+  --border-active: rgba(59, 130, 246, 0.5);
+
+  /* Text — high contrast for readability */
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-accent: #2563EB;
+
+  /* Semantic */
+  --success-bg: rgba(16, 185, 129, 0.1);
+  --warning-bg: rgba(245, 158, 11, 0.1);
+  --danger-bg: rgba(239, 68, 68, 0.1);
+  --info-bg: rgba(6, 182, 212, 0.1);
+
+  /* Shadows — premium multi-layered for real depth */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.04);
+  --shadow-glow-primary: 0 4px 14px rgba(59, 130, 246, 0.15);
+  --shadow-glow-success: 0 4px 14px rgba(16, 185, 129, 0.15);
+  --shadow-glow-danger: 0 4px 14px rgba(239, 68, 68, 0.15);
+
+  /* Accent — slightly deeper for light backgrounds */
+  --accent-glow: 0 4px 20px rgba(59, 130, 246, 0.18), 0 2px 8px rgba(139, 92, 246, 0.1);
+}

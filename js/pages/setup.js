@@ -20,6 +20,22 @@ const SetupPage = {
   },
 
   render(params = {}) {
+    // ── ALWAYS reset config to clean defaults first ──
+    // This prevents stale preset data from a previous visit
+    this.config = {
+      subjects: [],
+      numQuestions: 10,
+      timeMode: 'auto',
+      timePerQuestion: 60,
+      totalTime: null,
+      negativeMarking: false,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      examId: null,
+      examName: null,
+      isDaily: false
+    };
+
     // ── Auto-fill from exam preset ──
     if (params.preset) {
       const preset = ExamPresets.get(params.preset);

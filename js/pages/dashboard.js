@@ -1,17 +1,25 @@
 // ============================================
-// DASHBOARD PAGE V2 — Pro Analytics
-// Topic Heatmap, Progress Graph, Mistake
-// Patterns, Streak, all from DailySystem
-// + Supabase analytics
+// DASHBOARD PAGE v3 — Premium Design
+// Profile card, stat cards with micro-animations,
+// progress chart, topic heatmap, smart insights
 // ============================================
 
 const DashboardPage = {
   _isRendering: false,
 
-  async render() {
-    // Show loading state first since we fetch from Supabase
-    setTimeout(this._renderLoading.bind(this), 0);
+  render() {
+    // Return loading HTML synchronously
+    return `
+      <div class="dash-page page-enter">
+        <div class="dash-loading">
+          <div class="splash-spinner" style="width: 36px; height: 36px; border: 2px solid rgba(255,255,255,0.08); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <p>Loading your analytics...</p>
+        </div>
+      </div>
+    `;
+  },
 
+  async afterRender() {
     try {
       const stats = await Analytics.loadDashboardStats();
       this._renderContent(stats);
@@ -22,17 +30,17 @@ const DashboardPage = {
       }
     } catch (err) {
       console.error("Dashboard render error:", err);
-      const appEl = document.getElementById('app');
-      appEl.innerHTML = `
-        <div class="test-container" style="justify-content: center; align-items: center; min-height: 100vh;">
-          <div class="card" style="text-align: center;">
-            <div style="font-size: var(--text-4xl); margin-bottom: var(--space-4);">⚠️</div>
-            <h2 style="color: var(--danger); margin-bottom: var(--space-2);">Failed to load Dashboard</h2>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">${err.message}</p>
+      const container = document.querySelector('.dash-page');
+      if (container) {
+        container.innerHTML = `
+          <div class="dash-error">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+            <h2>Failed to load Dashboard</h2>
+            <p>${err.message}</p>
             <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
           </div>
-        </div>
-      `;
+        `;
+      }
     }
   },
 
@@ -40,10 +48,9 @@ const DashboardPage = {
     if (this._isRendering) return;
     this._isRendering = true;
     try {
-      console.log("♻️ Silent background refresh of dashboard...");
       const stats = await Analytics.loadDashboardStats(true);
-      if (document.getElementById('dashboard-trend-chart')) {
-         this._renderContent(stats);
+      if (document.querySelector('.dash-page')) {
+        this._renderContent(stats);
       }
     } catch (err) {
       console.error("Realtime refresh failed:", err);
@@ -52,265 +59,236 @@ const DashboardPage = {
     }
   },
 
-  _renderLoading() {
-    const appEl = document.getElementById('app');
-    appEl.innerHTML = `
-      <div class="test-container" style="min-height: 100vh; padding-top: var(--space-12);">
-        <header class="app-header">
-          <div class="logo" onclick="App.navigate('home')" style="cursor: pointer;">
-            <div class="logo-icon"></div>
-            <div class="logo-text">MockTestPro</div>
-          </div>
-        </header>
-        <div class="content-wrapper" style="max-width: 1000px; margin: 0 auto; width: 100%; text-align: center; margin-top: var(--space-12);">
-          <div class="spinner" style="margin: 0 auto var(--space-4);"></div>
-          <p style="color: var(--text-muted);">Loading your analytics...</p>
-        </div>
-      </div>
-    `;
-  },
-
   _renderContent(stats) {
-    const appEl = document.getElementById('app');
+    const container = document.querySelector('.dash-page');
+    if (!container) return;
 
     // Get DailySystem data
     const streak = typeof DailySystem !== 'undefined' ? DailySystem.getStreak() : { current: 0, best: 0 };
-    const goal = typeof DailySystem !== 'undefined' ? DailySystem.getDailyGoal() : { testsToday: 0, target: 3 };
+    const goal = typeof DailySystem !== 'undefined' ? DailySystem.getDailyGoal() : { testsToday: 0, target: 3, questionsToday: 0, accuracyToday: 0 };
     const heatmap = typeof DailySystem !== 'undefined' ? DailySystem.getTopicHeatmap() : [];
     const patterns = typeof DailySystem !== 'undefined' ? DailySystem.getMistakePatterns() : [];
     const recentProgress = typeof DailySystem !== 'undefined' ? DailySystem.getRecentProgress(7) : [];
+    const streakAlive = typeof DailySystem !== 'undefined' ? DailySystem.isStreakAlive() : false;
+
+    const username = Storage.getUsername() || 'Student';
+    const avatar = localStorage.getItem('mocktest_avatar') || 'default';
+    const avatarMap = {
+      default: '👤', boy1: '👦', boy2: '🧑', boy3: '👨',
+      girl1: '👧', girl2: '👩', girl3: '👱‍♀️',
+      ninja: '🥷', astronaut: '🧑‍🚀', robot: '🤖',
+      cat: '🐱', dog: '🐶', panda: '🐼', fox: '🦊'
+    };
+    const avatarEmoji = avatarMap[avatar] || '👤';
 
     if (!stats && recentProgress.length === 0) {
-      // Empty state
-      appEl.innerHTML = `
-        <div class="test-container" style="min-height: 100vh; padding-top: var(--space-12);">
-          <header class="app-header">
-            <div class="logo" onclick="App.navigate('home')" style="cursor: pointer;">
-              <div class="logo-icon"></div>
-              <div class="logo-text">MockTestPro</div>
-            </div>
-          </header>
-          <div class="content-wrapper" style="max-width: 1000px; margin: 0 auto; width: 100%; text-align: center; margin-top: var(--space-12);">
-            <div class="card animate-fadeInUp">
-              <div style="font-size: var(--text-4xl); margin-bottom: var(--space-4);">📊</div>
-              <h2 style="margin-bottom: var(--space-2);">No Tests Taken Yet</h2>
-              <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Take your first mock test to see your performance dashboard.</p>
-              <button class="btn btn-primary" onclick="App.navigate('setup')">Start First Test</button>
-            </div>
-          </div>
+      container.innerHTML = `
+        <div class="dash-empty animate-fadeInUp">
+          <div style="font-size: 72px; margin-bottom: 20px;">📊</div>
+          <h2>No Tests Taken Yet</h2>
+          <p>Take your first mock test to unlock your performance dashboard.</p>
+          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')" style="margin-top: 16px;">🚀 Start First Test</button>
         </div>
       `;
       return;
     }
 
-    // Compute trends
+    // Stats calculations
+    const totalTests = stats ? stats.totalTests : recentProgress.length;
+    const avgScore = stats ? stats.avgScore : (recentProgress.length > 0 ? Math.round(recentProgress.reduce((s, e) => s + e.accuracy, 0) / recentProgress.length) : 0);
+    const bestScore = stats ? stats.bestScore : (recentProgress.length > 0 ? Math.max(...recentProgress.map(e => e.accuracy)) : 0);
+    const weakArea = stats ? stats.weakArea : (heatmap.length > 0 ? heatmap[0].subject : '—');
+
+    // Improvement trend
     const impRate = stats ? stats.improvementRate : 0;
-    const trendIcon = impRate > 0 ? '↗️' : (impRate < 0 ? '↘️' : '→');
+    const trendIcon = impRate > 0 ? '📈' : (impRate < 0 ? '📉' : '➡️');
     const trendColor = impRate > 0 ? 'var(--success)' : (impRate < 0 ? 'var(--danger)' : 'var(--warning)');
-    const trendText = impRate > 0 ? `+${impRate}% in last 5 tests` : (impRate < 0 ? `${impRate}% in last 5 tests` : 'No recent change');
+    const trendText = impRate > 0 ? `+${impRate}%` : (impRate < 0 ? `${impRate}%` : '0%');
 
-    const html = `
-      <div class="test-container" style="min-height: 100vh; padding-top: var(--space-12);">
+    // Score grade
+    const getGrade = (score) => {
+      if (score >= 90) return { label: 'A+', color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' };
+      if (score >= 80) return { label: 'A', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' };
+      if (score >= 70) return { label: 'B+', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' };
+      if (score >= 60) return { label: 'B', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)' };
+      if (score >= 40) return { label: 'C', color: '#F97316', bg: 'rgba(249, 115, 22, 0.12)' };
+      return { label: 'D', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.12)' };
+    };
+    const grade = getGrade(avgScore);
 
-        <header class="app-header">
-          <div class="logo" onclick="App.navigate('home')" style="cursor: pointer;">
-            <div class="logo-icon"></div>
-            <div class="logo-text">MockTestPro</div>
+    // Goal progress %
+    const goalPct = Math.min(100, Math.round((goal.testsToday / goal.target) * 100));
+
+    container.innerHTML = `
+      <!-- Profile + Greeting -->
+      <div class="dash-profile animate-fadeInUp">
+        <div class="dash-profile-left">
+          <div class="dash-avatar">${avatarEmoji}</div>
+          <div class="dash-greeting">
+            <h2>Hey, ${username}! 👋</h2>
+            <p>${this._getGreeting()}</p>
           </div>
-          <div class="desktop-only" style="gap: var(--space-4);">
-            <button class="btn btn-outline" onclick="App.navigate('setup')">New Test</button>
+        </div>
+        <div class="dash-streak-badge ${streakAlive ? 'alive' : 'dead'}">
+          <span class="dash-streak-fire">${streakAlive ? '🔥' : '❄️'}</span>
+          <div>
+            <div class="dash-streak-num">${streak.current}</div>
+            <div class="dash-streak-label">day streak</div>
           </div>
-        </header>
-
-        <div class="content-wrapper animate-fadeInUp" style="max-width: 1000px; margin: 0 auto; width: 100%;">
-
-          <div style="margin-bottom: var(--space-6);">
-            <h1 style="font-size: var(--text-2xl); font-weight: var(--font-bold);">📊 Performance Dashboard</h1>
-          </div>
-
-          <!-- ROW 1: Streak + Quick Stats -->
-          <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
-
-            <!-- Streak Card -->
-            <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 140px; padding: var(--space-6);">
-              <div style="font-size: 36px; margin-bottom: 6px;">${streak.current > 0 ? '🔥' : '❄️'}</div>
-              <div style="font-size: 28px; font-weight: 800;">${streak.current}</div>
-              <div style="font-size: 11px; color: var(--text-muted);">day streak</div>
-              ${streak.best > 1 ? `<div style="font-size: 10px; color: var(--warning); margin-top: 4px;">Best: ${streak.best}🏆</div>` : ''}
-              <div style="font-size: 10px; color: var(--text-muted); margin-top: 6px;">${goal.testsToday}/${goal.target} today</div>
-            </div>
-
-            <!-- Quick Stats Grid -->
-            <div class="insights-grid">
-              <div class="insight-item">
-                <div class="insight-icon" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA;">📝</div>
-                <div>
-                  <div class="insight-label">Tests Done</div>
-                  <div class="insight-value">${stats ? stats.totalTests : recentProgress.length}</div>
-                </div>
-              </div>
-              <div class="insight-item">
-                <div class="insight-icon" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">🎯</div>
-                <div>
-                  <div class="insight-label">Avg Score</div>
-                  <div class="insight-value">${stats ? stats.avgScore : (recentProgress.length > 0 ? Math.round(recentProgress.reduce((s,e) => s + e.accuracy, 0) / recentProgress.length) : 0)}%</div>
-                </div>
-              </div>
-              <div class="insight-item">
-                <div class="insight-icon" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24;">🏆</div>
-                <div>
-                  <div class="insight-label">Best Score</div>
-                  <div class="insight-value">${stats ? stats.bestScore : (recentProgress.length > 0 ? Math.max(...recentProgress.map(e => e.accuracy)) : 0)}%</div>
-                </div>
-              </div>
-              <div class="insight-item">
-                <div class="insight-icon" style="background: rgba(239, 68, 68, 0.15); color: #F87171;">⚠️</div>
-                <div>
-                  <div class="insight-label">Weak Area</div>
-                  <div class="insight-value">${stats ? stats.weakArea : (heatmap.length > 0 ? heatmap[0].subject : 'N/A')}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ROW 2: Progress Chart -->
-          ${stats && stats.trendData && stats.trendData.length > 1 ? `
-          <div class="card" style="margin-bottom: var(--space-6);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
-              <h3 style="font-size: var(--text-lg);">📈 Accuracy Trend</h3>
-              <div style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: ${trendColor};">
-                ${trendIcon} ${trendText}
-              </div>
-            </div>
-            <div style="height: 250px; position: relative;">
-              <canvas id="dashboard-trend-chart" width="800" height="250" style="width: 100%; height: 100%; display: block;"></canvas>
-            </div>
-          </div>
-          ` : ''}
-
-          <!-- ROW 3: Topic Heatmap + Mistake Patterns -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-6);">
-
-            <!-- Topic Heatmap -->
-            <div class="card">
-              <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">🗺️ Topic Heatmap</h3>
-              ${heatmap.length > 0 ? `
-                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                  ${heatmap.map(t => `
-                    <div>
-                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <span style="font-size: var(--text-sm); font-weight: 600; text-transform: capitalize;">${t.subject}</span>
-                        <span style="font-size: var(--text-sm); font-weight: 700; color: ${t.accuracy >= 70 ? 'var(--success-light)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger-light)'};">
-                          ${t.accuracy}%
-                        </span>
-                      </div>
-                      <div style="height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden;">
-                        <div style="height: 100%; width: ${t.accuracy}%; border-radius: 4px; transition: width 0.6s ease;
-                          background: ${t.accuracy >= 70 ? 'var(--success)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)'};">
-                        </div>
-                      </div>
-                      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${t.correct}/${t.total} correct · ${t.tests} tests</div>
-                    </div>
-                  `).join('')}
-                </div>
-              ` : `
-                <p style="color: var(--text-muted); font-size: var(--text-sm);">Take some tests to see your topic breakdown.</p>
-              `}
-            </div>
-
-            <!-- Mistake Patterns -->
-            <div class="card">
-              <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">🧠 Mistake Patterns</h3>
-              ${patterns.length > 0 ? `
-                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                  ${patterns.map(p => `
-                    <div style="padding: var(--space-3); border-radius: var(--radius-md); border-left: 3px solid ${p.severity === 'high' ? 'var(--danger)' : p.severity === 'positive' ? 'var(--success)' : 'var(--warning)'}; background: ${p.severity === 'positive' ? 'rgba(16, 185, 129, 0.06)' : 'rgba(239, 68, 68, 0.04)'};">
-                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <span style="font-size: 16px;">${p.icon}</span>
-                        <span style="font-weight: 700; font-size: var(--text-sm);">${p.title}</span>
-                      </div>
-                      <div style="font-size: 12px; color: var(--text-muted);">${p.desc}</div>
-                    </div>
-                  `).join('')}
-                </div>
-              ` : `
-                <div style="padding: var(--space-4); text-align: center;">
-                  <p style="color: var(--text-muted); font-size: var(--text-sm);">Take 3+ tests to unlock pattern analysis.</p>
-                </div>
-              `}
-            </div>
-          </div>
-
-          <!-- ROW 4: Server-side Topic Accuracy (from Supabase) -->
-          ${stats && stats.topics && stats.topics.length > 0 ? `
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--space-6); margin-bottom: var(--space-6);">
-
-            <div class="card">
-              <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4);">📊 Topic Accuracy (Server)</h3>
-              <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                ${stats.topics.map(t => `
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: var(--bg-glass); border-radius: var(--radius-md);">
-                    <div>
-                      <div style="font-weight: var(--font-semibold);">${t.topic}</div>
-                      <div style="font-size: var(--text-xs); color: var(--text-muted);">${t.tests} tests</div>
-                    </div>
-                    <div style="text-align: right;">
-                      <div style="font-weight: var(--font-bold); color: ${t.accuracy >= 70 ? 'var(--success)' : (t.accuracy >= 50 ? 'var(--warning)' : 'var(--danger)')};">
-                        ${t.accuracy}% ${t.accuracy >= 70 ? '🟢' : (t.accuracy >= 50 ? '🟡' : '🔴')}
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-
-            <!-- Recommendations -->
-            <div class="card" style="background: linear-gradient(145deg, rgba(30,41,59,0.7), rgba(15,23,42,0.9)); border: 1px solid rgba(99,102,241,0.2);">
-              <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-4); color: #C4B5FD;">🎯 Smart Recommendations</h3>
-              <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-
-                ${stats.weakTopic ? `
-                <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
-                  <div style="font-size: 20px;">1️⃣</div>
-                  <div>
-                    <div style="font-weight: var(--font-semibold); margin-bottom: 2px;">Focus on ${stats.weakTopic.topic}</div>
-                    <div style="font-size: var(--text-sm); color: var(--text-muted);">Lowest accuracy: ${stats.weakTopic.accuracy}%</div>
-                  </div>
-                </div>
-                ` : ''}
-
-                ${stats.slowTopic && stats.slowTopic.avgTimePerQ > 50 ? `
-                <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
-                  <div style="font-size: 20px;">2️⃣</div>
-                  <div>
-                    <div style="font-weight: var(--font-semibold); margin-bottom: 2px;">Speed up in ${stats.slowTopic.topic}</div>
-                    <div style="font-size: var(--text-sm); color: var(--text-muted);">Taking ${stats.slowTopic.avgTimePerQ}s per question. Try to reduce this.</div>
-                  </div>
-                </div>
-                ` : ''}
-
-                <div style="display: flex; gap: var(--space-3); align-items: flex-start;">
-                  <div style="font-size: 20px;">3️⃣</div>
-                  <div>
-                    <div style="font-weight: var(--font-semibold); margin-bottom: 2px;">Maintain Consistency</div>
-                    <div style="font-size: var(--text-sm); color: var(--text-muted);">Current streak: ${streak.current} days. Target: 1 test daily.</div>
-                  </div>
-                </div>
-
-              </div>
-              <div style="margin-top: var(--space-5);">
-                <button class="btn btn-primary" style="width: 100%;" onclick="App.navigate('setup')">Start Practice Session</button>
-              </div>
-            </div>
-
-          </div>
-          ` : ''}
-
         </div>
       </div>
-    `;
 
-    appEl.innerHTML = html;
+      <!-- Quick Stats Cards -->
+      <div class="dash-stats-grid animate-fadeInUp stagger-1">
+        <div class="dash-stat-card">
+          <div class="dash-stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #60A5FA;">📝</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-value">${totalTests}</div>
+            <div class="dash-stat-label">Tests Done</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-icon" style="background: ${grade.bg}; color: ${grade.color};">${grade.label}</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-value">${avgScore}%</div>
+            <div class="dash-stat-label">Avg Score</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #FBBF24;">🏆</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-value">${bestScore}%</div>
+            <div class="dash-stat-label">Best Score</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #F87171;">⚠️</div>
+          <div class="dash-stat-info">
+            <div class="dash-stat-value" style="font-size: 14px; text-transform: capitalize;">${weakArea}</div>
+            <div class="dash-stat-label">Weak Area</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Progress + Trend Row -->
+      <div class="dash-row-2 animate-fadeInUp stagger-2">
+        <!-- Today's Goal -->
+        <div class="dash-today-card">
+          <div class="dash-today-header">
+            <span>📅 Today's Progress</span>
+            <span class="dash-today-pct">${goalPct}%</span>
+          </div>
+          <div class="dash-goal-bar-wrap">
+            <div class="dash-goal-bar" style="width: ${goalPct}%; background: ${goalPct >= 100 ? 'var(--success)' : 'var(--primary)'};"></div>
+          </div>
+          <div class="dash-today-stats">
+            <div class="dash-today-stat">
+              <span class="dash-ts-num">${goal.testsToday}</span>
+              <span class="dash-ts-label">/ ${goal.target} tests</span>
+            </div>
+            <div class="dash-today-stat">
+              <span class="dash-ts-num">${goal.questionsToday}</span>
+              <span class="dash-ts-label">questions</span>
+            </div>
+            <div class="dash-today-stat">
+              <span class="dash-ts-num">${goal.accuracyToday || 0}%</span>
+              <span class="dash-ts-label">accuracy</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trend Card -->
+        <div class="dash-trend-card">
+          <div class="dash-trend-header">
+            <span>${trendIcon} Performance Trend</span>
+            <span class="dash-trend-change" style="color: ${trendColor};">${trendText}</span>
+          </div>
+          ${stats && stats.trendData && stats.trendData.length > 1 ? `
+            <div class="dash-chart-wrap">
+              <canvas id="dashboard-trend-chart" width="800" height="200" style="width: 100%; height: 100%; display: block;"></canvas>
+            </div>
+          ` : `
+            <div class="dash-no-chart">
+              <p>Take 2+ tests to see your accuracy trend graph</p>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Topic Heatmap + Patterns Row -->
+      <div class="dash-row-3 animate-fadeInUp stagger-3">
+        <!-- Topic Heatmap -->
+        <div class="dash-heatmap-card">
+          <h3>🗺️ Topic Strength</h3>
+          ${heatmap.length > 0 ? `
+            <div class="dash-topics">
+              ${heatmap.map(t => {
+                const barColor = t.accuracy >= 70 ? '#10B981' : t.accuracy >= 40 ? '#F59E0B' : '#EF4444';
+                const emoji = t.accuracy >= 70 ? '🟢' : t.accuracy >= 40 ? '🟡' : '🔴';
+                return `
+                  <div class="dash-topic-row">
+                    <div class="dash-topic-head">
+                      <span class="dash-topic-name">${emoji} ${t.subject}</span>
+                      <span class="dash-topic-acc" style="color: ${barColor};">${t.accuracy}%</span>
+                    </div>
+                    <div class="dash-topic-bar-bg">
+                      <div class="dash-topic-bar" style="width: ${t.accuracy}%; background: ${barColor};"></div>
+                    </div>
+                    <div class="dash-topic-meta">${t.correct}/${t.total} correct · ${t.tests} tests</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div class="dash-empty-section">
+              <p>Take some tests to see topic breakdown</p>
+            </div>
+          `}
+        </div>
+
+        <!-- Mistake Patterns -->
+        <div class="dash-patterns-card">
+          <h3>🧠 Smart Insights</h3>
+          ${patterns.length > 0 ? `
+            <div class="dash-patterns">
+              ${patterns.map(p => {
+                const borderColor = p.severity === 'high' ? 'var(--danger)' : p.severity === 'positive' ? 'var(--success)' : 'var(--warning)';
+                const bgColor = p.severity === 'positive' ? 'rgba(16, 185, 129, 0.06)' : p.severity === 'high' ? 'rgba(239, 68, 68, 0.06)' : 'rgba(245, 158, 11, 0.06)';
+                return `
+                  <div class="dash-pattern-item" style="border-left-color: ${borderColor}; background: ${bgColor};">
+                    <div class="dash-pattern-head">
+                      <span>${p.icon}</span>
+                      <span class="dash-pattern-title">${p.title}</span>
+                    </div>
+                    <div class="dash-pattern-desc">${p.desc}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div class="dash-empty-section">
+              <p>Take 3+ tests to unlock pattern analysis</p>
+            </div>
+          `}
+
+          <!-- Quick Actions -->
+          <div class="dash-quick-actions">
+            <button class="btn btn-primary" onclick="App.navigate('setup')" style="width: 100%;">🚀 Start Practice</button>
+            <button class="btn btn-outline" onclick="App.navigate('leaderboard')" style="width: 100%;">🏆 Leaderboard</button>
+          </div>
+        </div>
+      </div>
+
+      ${streak.best > 1 ? `
+      <!-- Streak History -->
+      <div class="dash-streak-history animate-fadeInUp stagger-4">
+        <div class="dash-streak-best">
+          <span>🏅 Best Streak: <strong>${streak.best} days</strong></span>
+          <span style="color: var(--text-muted); font-size: 12px;">Current: ${streak.current} days</span>
+        </div>
+      </div>
+      ` : ''}
+    `;
 
     // Draw Chart
     const canvas = document.getElementById('dashboard-trend-chart');
@@ -321,8 +299,15 @@ const DashboardPage = {
       canvas.height = rect.height * dpr;
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
-
       Analytics.drawLineChart(canvas, stats.trendData, { centerText: '' });
     }
+  },
+
+  _getGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning! Ready for practice? ☀️';
+    if (hour < 17) return 'Good afternoon! Keep the momentum going 💪';
+    if (hour < 21) return 'Good evening! Perfect time for a test 🌙';
+    return 'Night owl mode! 🦉 Stay focused!';
   }
 };

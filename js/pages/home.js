@@ -29,7 +29,10 @@ const HomePage = {
       { id: 'SSC', icon: '📋', color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.25)' },
       { id: 'Railway', icon: '🚂', color: '#10B981', glow: 'rgba(16, 185, 129, 0.25)' },
       { id: 'Banking', icon: '🏦', color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.25)' },
-      { id: 'State', icon: '🏛️', color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.25)' }
+      { id: 'State', icon: '🏛️', color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.25)' },
+      { id: 'Defence', icon: '⚔️', color: '#EF4444', glow: 'rgba(239, 68, 68, 0.25)' },
+      { id: 'Teaching', icon: '📚', color: '#06B6D4', glow: 'rgba(6, 182, 212, 0.25)' },
+      { id: 'UPSC', icon: '⚖️', color: '#D946EF', glow: 'rgba(217, 70, 239, 0.25)' }
     ];
 
     return `

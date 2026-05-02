@@ -340,6 +340,13 @@ async function bulkInsertQuestions(questions) {
 // ── RESULTS (DB) ──────────────────────────
 
 async function saveResultToDB(result) {
+  // ── DOUBLE-SUBMIT GUARD ──
+  if (window.__submitted) {
+    console.warn("⚠️ Duplicate submit blocked");
+    return;
+  }
+  window.__submitted = true;
+
   try {
     const testId = crypto.randomUUID();
     const user_id = Storage.getUserId();
@@ -347,6 +354,7 @@ async function saveResultToDB(result) {
 
     if (!user_id || !username) {
       console.warn("Skipping submission: No username/identity found.");
+      window.__submitted = false;
       return;
     }
 
@@ -354,6 +362,7 @@ async function saveResultToDB(result) {
     const questionResults = result.questionResults || [];
     if (questionResults.length === 0) {
       console.warn("Skipping submission: No questionResults in result object.");
+      window.__submitted = false;
       return;
     }
 
@@ -398,18 +407,39 @@ async function saveResultToDB(result) {
 
     if (!resp.ok) {
       console.error("❌ Save failed:", data.error);
+      // Store in fallback queue for retry
+      Storage.addToFallbackQueue(payload);
     } else {
       console.log("✅ Result saved securely:", data);
+
+      // ── SYNC SERVER STREAK WITH CLIENT ──
+      if (data.streak && typeof DailySystem !== 'undefined') {
+        const currentStreak = DailySystem.getStreak();
+        if (data.streak > currentStreak.current) {
+          // Server has a higher streak — sync
+          localStorage.setItem(DailySystem.KEYS.STREAK, JSON.stringify({
+            current: data.streak,
+            best: Math.max(currentStreak.best, data.streak),
+            lastDate: DailySystem._todayKey()
+          }));
+        }
+      }
 
       if (window.trackEvent) {
         window.trackEvent("test_submit", {
           score: result.accuracy || result.scorePercent || 0
         });
       }
+
+      // Sync avatar to server on first submit
+      if (window.syncAvatarOnce) syncAvatarOnce();
     }
 
   } catch (err) {
     console.error("🔥 Unexpected error in saveResultToDB:", err);
+  } finally {
+    // Reset guard after 3s cooldown (prevents rapid re-submits but allows future tests)
+    setTimeout(() => { window.__submitted = false; }, 3000);
   }
 }
 
@@ -539,6 +569,36 @@ async function fetchLeaderboard() {
   }
 }
 
+// ── AVATAR UPDATE ─────────────────────────
+
+async function updateAvatar(avatar) {
+  const username = Storage.getUsername();
+  if (!username || !avatar) return;
+
+  try {
+    const resp = await fetch("/api/avatar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, avatar })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      localStorage.setItem('mocktest_avatar', avatar);
+      console.log("✅ Avatar updated:", avatar);
+    }
+  } catch (err) {
+    console.warn("Avatar update failed:", err);
+  }
+}
+
+// One-time avatar sync (called after first submit)
+async function syncAvatarOnce() {
+  if (localStorage.getItem('mocktest_avatar_synced')) return;
+  const avatar = localStorage.getItem('mocktest_avatar') || 'default';
+  await updateAvatar(avatar);
+  localStorage.setItem('mocktest_avatar_synced', 'true');
+}
+
 // ── MAKE GLOBAL ───────────────────────────
 window.fetchRandomQuestions = fetchRandomQuestions;
 window.fetchSectionWiseQuestions = fetchSectionWiseQuestions;
@@ -553,4 +613,7 @@ window.getUserResults = getUserResults;
 window.initSession = initSession;
 window.subscribeToResults = subscribeToResults;
 window.fetchLeaderboard = fetchLeaderboard;
+window.updateAvatar = updateAvatar;
+window.syncAvatarOnce = syncAvatarOnce;
 window.supabaseClient = client;
+

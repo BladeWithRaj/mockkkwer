@@ -2,6 +2,49 @@
 // APP — Router & Init (Async, DB-driven)
 // ============================================
 
+// ── THEME MANAGER ──
+const ThemeManager = {
+  STORAGE_KEY: 'mocktest_theme',
+
+  init() {
+    // Light is default — only switch to dark if explicitly saved
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved === 'dark') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  },
+
+  toggle() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if (isLight) {
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.setItem(this.STORAGE_KEY, 'dark');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem(this.STORAGE_KEY, 'light');
+    }
+    // Update toggle button icon
+    this.updateIcon();
+  },
+
+  isDark() {
+    return document.documentElement.getAttribute('data-theme') !== 'light';
+  },
+
+  updateIcon() {
+    const btns = document.querySelectorAll('.theme-toggle-btn');
+    btns.forEach(btn => {
+      btn.innerHTML = this.isDark() ? '🌙' : '☀️';
+      btn.title = this.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    });
+  }
+};
+
+// Apply theme ASAP (before DOM content loaded)
+ThemeManager.init();
+
 const App = {
   currentPage: null,
   lastResult: null,
@@ -92,25 +135,52 @@ const App = {
 
   showUsernamePrompt() {
     const appEl = document.getElementById('app');
+    const avatarOptions = [
+      { id: 'boy1', emoji: '👦' }, { id: 'boy2', emoji: '🧑' }, { id: 'boy3', emoji: '👨' },
+      { id: 'girl1', emoji: '👧' }, { id: 'girl2', emoji: '👩' }, { id: 'girl3', emoji: '👱‍♀️' },
+      { id: 'ninja', emoji: '🥷' }, { id: 'astronaut', emoji: '🧑‍🚀' }, { id: 'robot', emoji: '🤖' },
+      { id: 'cat', emoji: '🐱' }, { id: 'dog', emoji: '🐶' }, { id: 'panda', emoji: '🐼' }, { id: 'fox', emoji: '🦊' }
+    ];
+    
     appEl.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px;">
-        <div style="background: var(--bg-surface); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <div style="background: var(--bg-surface); padding: 40px; border-radius: 16px; border: 1px solid var(--border-light); width: 100%; max-width: 440px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
           <div style="font-size: 48px; margin-bottom: 20px;">👋</div>
           <h2 style="margin-bottom: 10px; color: var(--text-primary);">${Lang.t('welcome')}</h2>
-          <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px;">${Lang.t('enter_username')}</p>
+          <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">${Lang.t('enter_username')}</p>
           
           <input type="text" id="username-input" class="input" placeholder="${Lang.t('username_placeholder')}" maxlength="20" style="margin-bottom: 20px; text-align: center; font-size: 18px; font-weight: bold;">
           
+          <!-- Avatar Selection -->
+          <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Choose Avatar</p>
+          <div id="avatar-grid" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 24px;">
+            ${avatarOptions.map(a => `
+              <button class="avatar-pick-btn" data-avatar="${a.id}" onclick="App.selectAvatar('${a.id}')"
+                style="width: 44px; height: 44px; font-size: 24px; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-glass); cursor: pointer; transition: all 0.15s ease; display: flex; align-items: center; justify-content: center;">
+                ${a.emoji}
+              </button>
+            `).join('')}
+          </div>
+          
           <button onclick="App.submitUsername()" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 16px;">${Lang.t('start_practicing')}</button>
           
-          <div style="margin-top: 16px;">
+          <div style="margin-top: 16px; display: flex; gap: 8px; justify-content: center;">
+            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()">${ThemeManager.isDark() ? '🌙' : '☀️'}</button>
             <button class="lang-toggle-btn">🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}</button>
           </div>
         </div>
       </div>
     `;
     
+    // Auto-select first avatar
+    this._selectedAvatar = 'boy1';
     setTimeout(() => {
+      const firstBtn = document.querySelector('[data-avatar="boy1"]');
+      if (firstBtn) {
+        firstBtn.style.borderColor = 'var(--primary)';
+        firstBtn.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.3)';
+        firstBtn.style.transform = 'scale(1.1)';
+      }
       const input = document.getElementById('username-input');
       if (input) {
         input.addEventListener('keypress', (e) => {
@@ -121,18 +191,52 @@ const App = {
     }, 100);
   },
 
+  _selectedAvatar: 'boy1',
+
+  selectAvatar(avatarId) {
+    this._selectedAvatar = avatarId;
+    // Update UI
+    document.querySelectorAll('.avatar-pick-btn').forEach(btn => {
+      btn.style.borderColor = 'var(--border-color)';
+      btn.style.boxShadow = 'none';
+      btn.style.transform = 'scale(1)';
+    });
+    const activeBtn = document.querySelector(`[data-avatar="${avatarId}"]`);
+    if (activeBtn) {
+      activeBtn.style.borderColor = 'var(--primary)';
+      activeBtn.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.3)';
+      activeBtn.style.transform = 'scale(1.1)';
+    }
+  },
+
   submitUsername() {
     const input = document.getElementById('username-input');
     if (!input) return;
     const val = input.value.trim();
+
+    // Length check
     if (val.length < 3) {
       Helpers.showToast("Username must be at least 3 characters", "error");
+      return;
+    }
+    if (val.length > 20) {
+      Helpers.showToast("Username must be 20 characters or less", "error");
+      return;
+    }
+
+    // Special character filter — only alphanumeric, underscore, and Hindi chars allowed
+    const usernameRegex = /^[a-zA-Z0-9_\u0900-\u097F]+$/;
+    if (!usernameRegex.test(val)) {
+      Helpers.showToast("Only letters, numbers, underscore, and Hindi characters allowed", "error");
       return;
     }
     
     // Generate identity
     Storage.setUsername(val);
     Storage.getUserId(); // This auto-generates the UUID
+
+    // Save avatar default
+    localStorage.setItem('mocktest_avatar', this._selectedAvatar || 'default');
     
     // Resume routing
     window.addEventListener('hashchange', () => this.handleRoute());
@@ -214,6 +318,9 @@ const App = {
               <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">${Lang.t('nav_dashboard')}</a>
               <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">${Lang.t('nav_leaderboard')}</a>
             `}
+            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'}">
+              ${ThemeManager.isDark() ? '🌙' : '☀️'}
+            </button>
             <button class="lang-toggle-btn" title="Switch Language">
               🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}
             </button>

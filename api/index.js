@@ -90,6 +90,8 @@ export default async function handler(req, res) {
     if (path.includes("/track"))           return await handleTrack(req, res);
     if (path.includes("/analytics"))       return await handleAnalytics(req, res);
     if (path.includes("/leaderboard"))     return await handleLeaderboard(req, res);
+    if (path.includes("/avatar"))          return await handleAvatar(req, res);
+    if (path.includes("/profile"))         return await handleProfile(req, res);
     if (path.includes("/set-anon-cookie")) return handleSetAnonCookie(req, res);
     if (path.includes("/clear-anon-cookie")) return handleClearAnonCookie(req, res);
     if (path.includes("/merge-anonymous")) return await handleMergeAnonymous(req, res);
@@ -165,11 +167,27 @@ async function handleSubmit(req, res) {
     // Score
     const result = calculateResult(dbQuestions, answers);
 
-    // Upsert user
-    await supabase.from("users_light").upsert(
-      { id: user_id, username },
-      { onConflict: "id" }
-    ).catch(() => {});
+    // Upsert user (with total_tests, total_score increment)
+    const { data: existingUser } = await supabase
+      .from("users_light")
+      .select("id, total_tests, total_score")
+      .eq("id", user_id)
+      .single();
+
+    if (!existingUser) {
+      await supabase.from("users_light").insert([{
+        id: user_id,
+        username,
+        total_tests: 1,
+        total_score: result.scorePercent
+      }]).catch(() => {});
+    } else {
+      await supabase.from("users_light").update({
+        username,
+        total_tests: (existingUser.total_tests || 0) + 1,
+        total_score: (existingUser.total_score || 0) + result.scorePercent
+      }).eq("id", user_id).catch(() => {});
+    }
 
     // Insert result
     const test_id = testId || (Date.now().toString(36) + Math.random().toString(36).slice(2));
@@ -191,7 +209,37 @@ async function handleSubmit(req, res) {
       return res.status(500).json({ error: "Insert failed: " + insErr.message });
     }
 
-    return res.json({ success: true, test_id, result });
+    // ── SERVER-SIDE STREAK UPDATE ──
+    let streakData = null;
+    try {
+      const { data } = await supabase.rpc("update_user_streak", { p_user_id: user_id });
+      streakData = data?.[0] || null;
+      if (streakData?.is_new_day) {
+        console.log(`[STREAK] ${username}: Day ${streakData.new_streak}`);
+      }
+    } catch (e) {
+      console.warn("[STREAK] RPC failed (non-critical):", e.message);
+    }
+
+    // ── DAILY STATS UPSERT ──
+    try {
+      await supabase.rpc("upsert_daily_stats", {
+        p_user_id: user_id,
+        p_score: result.scorePercent,
+        p_total_questions: dbQuestions.length,
+        p_correct: result.correct,
+        p_time_taken: timeTaken
+      });
+    } catch (e) {
+      console.warn("[DAILY STATS] RPC failed (non-critical):", e.message);
+    }
+
+    return res.json({
+      success: true,
+      test_id,
+      result,
+      streak: streakData?.new_streak || 0
+    });
   } catch (err) {
     console.error("[SUBMIT] Crash:", err);
     return res.status(500).json({ error: err.message });
@@ -266,32 +314,133 @@ async function handleAnalytics(req, res) {
 }
 
 // ═══════════════════════════════════════════════
-// /api/leaderboard — Top users
+// /api/leaderboard — Top users (v2: daily/weekly/alltime)
 // ═══════════════════════════════════════════════
 
 async function handleLeaderboard(req, res) {
   try {
-    const { data, error } = await supabase.rpc("get_leaderboard_lite");
+    // Parse mode from query string: /api/leaderboard?mode=daily
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const mode = url.searchParams.get("mode") || "alltime";
+
+    // Try enhanced RPC first
+    const { data, error } = await supabase.rpc("get_leaderboard_v2", {
+      p_mode: mode,
+      p_limit: 50
+    });
 
     if (error) {
-      // Fallback: simple query
-      console.warn("[LEADERBOARD] RPC failed:", error.message);
-      const { data: fallback, error: fbErr } = await supabase
-        .from("results")
-        .select("username, score_percent")
-        .order("score_percent", { ascending: false })
-        .limit(20);
+      // Fallback to v1 RPC
+      console.warn("[LEADERBOARD] v2 RPC failed, trying v1:", error.message);
+      const { data: v1data, error: v1err } = await supabase.rpc("get_leaderboard_lite");
 
-      if (fbErr) return res.status(500).json({ error: fbErr.message });
+      if (v1err) {
+        // Final fallback: raw query
+        const { data: fallback, error: fbErr } = await supabase
+          .from("results")
+          .select("username, score_percent")
+          .order("score_percent", { ascending: false })
+          .limit(20);
 
-      const ranked = (fallback || []).map((r, i) => ({ ...r, rank: i + 1 }));
-      return res.json({ success: true, leaderboard: ranked });
+        if (fbErr) return res.status(500).json({ error: fbErr.message });
+
+        const ranked = (fallback || []).map((r, i) => ({
+          ...r, rank: i + 1, best_score: r.score_percent,
+          total_tests: 1, streak: 0, avatar: 'default'
+        }));
+        return res.json({ success: true, leaderboard: ranked, mode });
+      }
+
+      const ranked = (v1data || []).map((r, i) => ({
+        ...r, rank: i + 1, streak: 0, avatar: 'default'
+      }));
+      return res.json({ success: true, leaderboard: ranked, mode });
     }
 
     const ranked = (data || []).map((r, i) => ({ ...r, rank: i + 1 }));
-    return res.json({ success: true, leaderboard: ranked });
+    return res.json({ success: true, leaderboard: ranked, mode });
   } catch (err) {
     console.error("[LEADERBOARD] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/avatar — Update user avatar
+// ═══════════════════════════════════════════════
+
+async function handleAvatar(req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  try {
+    const { username, avatar } = req.body || {};
+    if (!username || !avatar) {
+      return res.status(400).json({ error: "username and avatar required" });
+    }
+
+    const validAvatars = [
+      'default', 'boy1', 'boy2', 'boy3', 'girl1', 'girl2', 'girl3',
+      'ninja', 'astronaut', 'robot', 'cat', 'dog', 'panda', 'fox'
+    ];
+
+    if (!validAvatars.includes(avatar)) {
+      return res.status(400).json({ error: "Invalid avatar" });
+    }
+
+    const { error } = await supabase
+      .from("users_light")
+      .update({ avatar })
+      .eq("username", username);
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json({ success: true, avatar });
+  } catch (err) {
+    console.error("[AVATAR] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/profile — Get user profile with rank
+// ═══════════════════════════════════════════════
+
+async function handleProfile(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const username = url.searchParams.get("username");
+
+    if (!username) {
+      return res.status(400).json({ error: "username required" });
+    }
+
+    const { data, error } = await supabase.rpc("get_user_profile", {
+      p_username: username
+    });
+
+    if (error) {
+      // Fallback: basic query
+      console.warn("[PROFILE] RPC failed:", error.message);
+      const { data: user } = await supabase
+        .from("users_light")
+        .select("*")
+        .eq("username", username)
+        .single();
+
+      return res.json({
+        success: true,
+        profile: user || { username, streak: 0, avatar: 'default' }
+      });
+    }
+
+    return res.json({
+      success: true,
+      profile: data?.[0] || { username, streak: 0, avatar: 'default' }
+    });
+  } catch (err) {
+    console.error("[PROFILE] Crash:", err);
     return res.status(500).json({ error: err.message });
   }
 }

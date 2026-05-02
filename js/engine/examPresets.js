@@ -95,6 +95,65 @@ const ExamPresets = {
       description: 'SSC CPO pattern: 200 questions, 2 hours, -0.25 marking'
     },
 
+    'ssc-gd': {
+      id: 'ssc-gd',
+      name: 'SSC GD',
+      fullName: 'GD Constable',
+      category: 'SSC',
+      icon: '💂',
+      totalQuestions: 80,
+      totalTime: 60 * 60,
+      negativeMarking: true,
+      negativeValue: 0.50,
+      marksPerQuestion: 2,
+      sections: [
+        { name: 'Mathematics', subject: 'math', questions: 20 },
+        { name: 'Reasoning', subject: 'reasoning', questions: 20 },
+        { name: 'English/Hindi', subject: 'english', questions: 20 },
+        { name: 'General Awareness', subject: 'gk', questions: 20 }
+      ],
+      description: 'SSC GD Constable: 80 questions, 60 min, -0.50 marking'
+    },
+
+    'ssc-steno': {
+      id: 'ssc-steno',
+      name: 'SSC Steno',
+      fullName: 'Stenographer Grade C & D',
+      category: 'SSC',
+      icon: '⌨️',
+      totalQuestions: 200,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 50 },
+        { name: 'General Awareness', subject: 'gk', questions: 50 },
+        { name: 'English Language', subject: 'english', questions: 100 }
+      ],
+      description: 'SSC Steno: 200 questions, 2 hours, -0.25 marking'
+    },
+
+    'ssc-je': {
+      id: 'ssc-je',
+      name: 'SSC JE',
+      fullName: 'Junior Engineer (Paper 1)',
+      category: 'SSC',
+      icon: '🔩',
+      totalQuestions: 200,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 50 },
+        { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 50 },
+        { name: 'General Awareness', subject: 'gk', questions: 50 },
+        { name: 'English Language', subject: 'english', questions: 50 }
+      ],
+      description: 'SSC JE Paper-1: 200 questions, 2 hours, -0.25 marking'
+    },
+
     // ────────────────────────────────────
     //  RAILWAY
     // ────────────────────────────────────
@@ -155,6 +214,45 @@ const ExamPresets = {
         { name: 'General Awareness', subject: 'gk', questions: 10 }
       ],
       description: 'RRB ALP CBT-1: 75 questions, 60 min, -1/3 marking'
+    },
+
+    'rrb-je': {
+      id: 'rrb-je',
+      name: 'RRB JE',
+      fullName: 'Junior Engineer (CBT-1)',
+      category: 'Railway',
+      icon: '🔧',
+      totalQuestions: 100,
+      totalTime: 90 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Mathematics', subject: 'math', questions: 30 },
+        { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 25 },
+        { name: 'General Awareness', subject: 'gk', questions: 15 },
+        { name: 'General Science', subject: 'science', questions: 30 }
+      ],
+      description: 'RRB JE CBT-1: 100 questions, 90 min, -1/3 marking'
+    },
+
+    'rpf-constable': {
+      id: 'rpf-constable',
+      name: 'RPF Constable',
+      fullName: 'Railway Protection Force',
+      category: 'Railway',
+      icon: '🛡️',
+      totalQuestions: 120,
+      totalTime: 90 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Arithmetic', subject: 'math', questions: 35 },
+        { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 35 },
+        { name: 'General Awareness', subject: 'gk', questions: 50 }
+      ],
+      description: 'RPF Constable: 120 questions, 90 min, -1/3 marking'
     },
 
     // ────────────────────────────────────
@@ -236,6 +334,43 @@ const ExamPresets = {
       description: 'SBI Clerk Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
+    'rbi-assistant': {
+      id: 'rbi-assistant',
+      name: 'RBI Assistant',
+      fullName: 'Reserve Bank Assistant (Prelims)',
+      category: 'Banking',
+      icon: '🏦',
+      totalQuestions: 100,
+      totalTime: 60 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Numerical Ability', subject: 'math', questions: 35 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
+        { name: 'English Language', subject: 'english', questions: 30 }
+      ],
+      description: 'RBI Assistant Prelims: 100 questions, 60 min, -0.25 marking'
+    },
+
+    'ibps-rrb': {
+      id: 'ibps-rrb',
+      name: 'IBPS RRB',
+      fullName: 'Regional Rural Bank Officer (Prelims)',
+      category: 'Banking',
+      icon: '🌾',
+      totalQuestions: 80,
+      totalTime: 45 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 40 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 40 }
+      ],
+      description: 'IBPS RRB Officer Prelims: 80 questions, 45 min, -0.25 marking'
+    },
+
     // ────────────────────────────────────
     //  STATE EXAMS
     // ────────────────────────────────────
@@ -297,6 +432,251 @@ const ExamPresets = {
         { name: 'General Knowledge', subject: 'gk', questions: 25 }
       ],
       description: 'MP Patwari: 100 questions, 2 hours, no negative marking'
+    },
+
+    'raj-police': {
+      id: 'raj-police',
+      name: 'Raj Police',
+      fullName: 'Rajasthan Police Constable',
+      category: 'State',
+      icon: '🏜️',
+      totalQuestions: 150,
+      totalTime: 120 * 60,
+      negativeMarking: false,
+      negativeValue: 0,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Reasoning', subject: 'reasoning', questions: 30 },
+        { name: 'Mathematics', subject: 'math', questions: 30 },
+        { name: 'Hindi', subject: 'hindi', questions: 30 },
+        { name: 'GK & Current Affairs', subject: 'gk', questions: 30 },
+        { name: 'Science', subject: 'science', questions: 30 }
+      ],
+      description: 'Raj Police: 150 questions, 2 hours, no negative marking'
+    },
+
+    'upsssc-pet': {
+      id: 'upsssc-pet',
+      name: 'UPSSSC PET',
+      fullName: 'UP Preliminary Eligibility Test',
+      category: 'State',
+      icon: '📋',
+      totalQuestions: 100,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Hindi', subject: 'hindi', questions: 15 },
+        { name: 'Mathematics', subject: 'math', questions: 15 },
+        { name: 'Reasoning', subject: 'reasoning', questions: 15 },
+        { name: 'General Awareness', subject: 'gk', questions: 15 },
+        { name: 'Science', subject: 'science', questions: 15 },
+        { name: 'English', subject: 'english', questions: 10 },
+        { name: 'History & Polity', subject: 'polity', questions: 15 }
+      ],
+      description: 'UPSSSC PET: 100 questions, 2 hours, -0.25 marking'
+    },
+
+    // ────────────────────────────────────
+    //  DEFENCE
+    // ────────────────────────────────────
+    'cds': {
+      id: 'cds',
+      name: 'CDS',
+      fullName: 'Combined Defence Services (GK)',
+      category: 'Defence',
+      icon: '⚔️',
+      totalQuestions: 120,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'General Knowledge', subject: 'gk', questions: 120 }
+      ],
+      description: 'CDS GK Paper: 120 questions, 2 hours, -1/3 marking'
+    },
+
+    'nda': {
+      id: 'nda',
+      name: 'NDA',
+      fullName: 'National Defence Academy (GAT)',
+      category: 'Defence',
+      icon: '🎖️',
+      totalQuestions: 150,
+      totalTime: 150 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Mathematics', subject: 'math', questions: 30 },
+        { name: 'General Science', subject: 'science', questions: 25 },
+        { name: 'History', subject: 'history', questions: 25 },
+        { name: 'Geography', subject: 'geography', questions: 20 },
+        { name: 'Polity', subject: 'polity', questions: 20 },
+        { name: 'English', subject: 'english', questions: 30 }
+      ],
+      description: 'NDA GAT: 150 questions, 2.5 hours, -1/3 marking'
+    },
+
+    'afcat': {
+      id: 'afcat',
+      name: 'AFCAT',
+      fullName: 'Air Force Common Admission Test',
+      category: 'Defence',
+      icon: '✈️',
+      totalQuestions: 100,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 3,
+      sections: [
+        { name: 'General Awareness', subject: 'gk', questions: 25 },
+        { name: 'Verbal Ability', subject: 'english', questions: 25 },
+        { name: 'Numerical Ability', subject: 'math', questions: 25 },
+        { name: 'Reasoning & Military Aptitude', subject: 'reasoning', questions: 25 }
+      ],
+      description: 'AFCAT: 100 questions, 2 hours, -1/3 marking'
+    },
+
+    // ────────────────────────────────────
+    //  TEACHING
+    // ────────────────────────────────────
+    'ctet': {
+      id: 'ctet',
+      name: 'CTET',
+      fullName: 'Central Teacher Eligibility (Paper 1)',
+      category: 'Teaching',
+      icon: '📚',
+      totalQuestions: 150,
+      totalTime: 150 * 60,
+      negativeMarking: false,
+      negativeValue: 0,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Child Development & Pedagogy', subject: 'reasoning', questions: 30 },
+        { name: 'Hindi Language', subject: 'hindi', questions: 30 },
+        { name: 'English Language', subject: 'english', questions: 30 },
+        { name: 'Mathematics', subject: 'math', questions: 30 },
+        { name: 'Environmental Studies', subject: 'science', questions: 30 }
+      ],
+      description: 'CTET Paper-1: 150 questions, 2.5 hours, no negative'
+    },
+
+    'dsssb-tgt': {
+      id: 'dsssb-tgt',
+      name: 'DSSSB TGT',
+      fullName: 'Delhi TGT (Tier 1)',
+      category: 'Teaching',
+      icon: '🎓',
+      totalQuestions: 200,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Mental Ability & Reasoning', subject: 'reasoning', questions: 40 },
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 40 },
+        { name: 'General Awareness', subject: 'gk', questions: 40 },
+        { name: 'English Language', subject: 'english', questions: 40 },
+        { name: 'Hindi Language', subject: 'hindi', questions: 40 }
+      ],
+      description: 'DSSSB TGT Tier-1: 200 questions, 2 hours, -0.25 marking'
+    },
+
+    'super-tet': {
+      id: 'super-tet',
+      name: 'SUPER TET',
+      fullName: 'UP Super TET',
+      category: 'Teaching',
+      icon: '🏫',
+      totalQuestions: 150,
+      totalTime: 150 * 60,
+      negativeMarking: false,
+      negativeValue: 0,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'Hindi', subject: 'hindi', questions: 20 },
+        { name: 'Mathematics', subject: 'math', questions: 20 },
+        { name: 'Science', subject: 'science', questions: 15 },
+        { name: 'General Knowledge', subject: 'gk', questions: 30 },
+        { name: 'Reasoning', subject: 'reasoning', questions: 15 },
+        { name: 'English', subject: 'english', questions: 15 },
+        { name: 'Child Psychology', subject: 'reasoning', questions: 20 },
+        { name: 'Social Studies', subject: 'history', questions: 15 }
+      ],
+      description: 'UP Super TET: 150 questions, 2.5 hours, no negative'
+    },
+
+    // ────────────────────────────────────
+    //  UPSC / PSC
+    // ────────────────────────────────────
+    'upsc-prelims': {
+      id: 'upsc-prelims',
+      name: 'UPSC Prelims',
+      fullName: 'Civil Services Prelims (GS Paper 1)',
+      category: 'UPSC',
+      icon: '🏛️',
+      totalQuestions: 100,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 2,
+      sections: [
+        { name: 'History & Culture', subject: 'history', questions: 15 },
+        { name: 'Geography', subject: 'geography', questions: 15 },
+        { name: 'Polity & Governance', subject: 'polity', questions: 15 },
+        { name: 'Economy', subject: 'gk', questions: 15 },
+        { name: 'Science & Technology', subject: 'science', questions: 15 },
+        { name: 'Environment & Ecology', subject: 'science', questions: 10 },
+        { name: 'Current Affairs', subject: 'gk', questions: 15 }
+      ],
+      description: 'UPSC Prelims GS-1: 100 questions, 2 hours, -1/3 marking'
+    },
+
+    'uppsc-prelims': {
+      id: 'uppsc-prelims',
+      name: 'UPPSC Prelims',
+      fullName: 'UP PCS Prelims (GS Paper 1)',
+      category: 'UPSC',
+      icon: '📜',
+      totalQuestions: 150,
+      totalTime: 120 * 60,
+      negativeMarking: true,
+      negativeValue: 0.33,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'History', subject: 'history', questions: 25 },
+        { name: 'Geography', subject: 'geography', questions: 20 },
+        { name: 'Polity', subject: 'polity', questions: 25 },
+        { name: 'Science', subject: 'science', questions: 20 },
+        { name: 'Economy & GK', subject: 'gk', questions: 30 },
+        { name: 'Current Affairs', subject: 'gk', questions: 30 }
+      ],
+      description: 'UPPSC GS-1: 150 questions, 2 hours, -1/3 marking'
+    },
+
+    'bpsc-prelims': {
+      id: 'bpsc-prelims',
+      name: 'BPSC Prelims',
+      fullName: 'Bihar PCS Prelims (GS)',
+      category: 'UPSC',
+      icon: '⚖️',
+      totalQuestions: 150,
+      totalTime: 120 * 60,
+      negativeMarking: false,
+      negativeValue: 0,
+      marksPerQuestion: 1,
+      sections: [
+        { name: 'History', subject: 'history', questions: 25 },
+        { name: 'Geography', subject: 'geography', questions: 25 },
+        { name: 'Polity', subject: 'polity', questions: 25 },
+        { name: 'Science', subject: 'science', questions: 25 },
+        { name: 'General Knowledge', subject: 'gk', questions: 25 },
+        { name: 'Current Affairs', subject: 'gk', questions: 25 }
+      ],
+      description: 'BPSC Prelims: 150 questions, 2 hours, no negative marking'
     },
 
     // ────────────────────────────────────
