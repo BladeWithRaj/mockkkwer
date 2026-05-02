@@ -1,7 +1,7 @@
 // ============================================
-// RESULT PAGE — Full UX Upgrade
-// Retry same/new, insights, performance bands,
-// strong/weak areas, animated stats
+// RESULT PAGE — Game Changer Analysis
+// Weak topics, time wasted, easy mistakes,
+// speed analysis, subject radar
 // ============================================
 
 const ResultPage = {
@@ -24,11 +24,11 @@ const ResultPage = {
     const offset = circumference - (result.accuracy / 100) * circumference;
 
     // Performance band
-    let band, bandClass, bandEmoji;
-    if (result.accuracy >= 80) { band = 'Excellent!'; bandClass = 'excellent'; bandEmoji = '🏆'; }
-    else if (result.accuracy >= 60) { band = 'Good Effort!'; bandClass = 'good'; bandEmoji = '👍'; }
-    else if (result.accuracy >= 40) { band = 'Keep Going!'; bandClass = 'average'; bandEmoji = '💪'; }
-    else { band = 'Needs Practice'; bandClass = 'weak'; bandEmoji = '📚'; }
+    let band, bandClass, bandEmoji, bandMsg;
+    if (result.accuracy >= 80) { band = 'Excellent!'; bandClass = 'excellent'; bandEmoji = '🏆'; bandMsg = 'You\'re exam ready!'; }
+    else if (result.accuracy >= 60) { band = 'Good Effort!'; bandClass = 'good'; bandEmoji = '👍'; bandMsg = 'Almost there, keep pushing!'; }
+    else if (result.accuracy >= 40) { band = 'Keep Going!'; bandClass = 'average'; bandEmoji = '💪'; bandMsg = 'Focus on weak areas below'; }
+    else { band = 'Needs Practice'; bandClass = 'weak'; bandEmoji = '📚'; bandMsg = 'Daily practice will help a lot'; }
 
     // Strong/weak subjects
     const subjectEntries = Object.entries(result.subjectWise);
@@ -44,17 +44,20 @@ const ResultPage = {
     const scoreColor = result.accuracy >= 70 ? 'var(--success)' :
                        result.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
 
+    // === SMART INSIGHTS ===
+    const insights = this._calculateInsights(result);
+
     return `
       <div class="result-page page-enter">
-        <!-- Header with performance band -->
+        <!-- Performance Band -->
         <div class="result-header animate-fadeInDown">
           <div class="result-band ${bandClass}">
             <span class="result-band-emoji">${bandEmoji}</span>
-            <span class="result-band-text">${band}</span>
+            <div>
+              <span class="result-band-text">${band}</span>
+              <span class="result-band-msg">${bandMsg}</span>
+            </div>
           </div>
-          <p style="color: var(--text-secondary); margin-top: var(--space-2);">
-            Here's your performance breakdown
-          </p>
         </div>
 
         <!-- Score Card -->
@@ -83,7 +86,7 @@ const ResultPage = {
             </div>
           </div>
 
-          <!-- Accuracy % -->
+          <!-- Accuracy -->
           <div style="text-align: center; margin-top: var(--space-4);">
             <div style="font-size: var(--text-3xl); font-weight: var(--font-extrabold); color: ${scoreColor};" id="accuracy-value">0</div>
             <div style="font-size: var(--text-sm); color: var(--text-muted);">Accuracy</div>
@@ -118,11 +121,106 @@ const ResultPage = {
           ` : ''}
         </div>
 
+        <!-- 🔥 SMART INSIGHTS — Game Changer Section -->
+        <div class="insights-section animate-fadeInUp stagger-2">
+          <h3 class="insight-section-title">🧠 Smart Insights</h3>
+
+          <div class="insights-cards-grid">
+            <!-- Speed Analysis -->
+            <div class="insight-card speed-card">
+              <div class="insight-card-icon">⚡</div>
+              <div class="insight-card-body">
+                <div class="insight-card-label">Avg Speed</div>
+                <div class="insight-card-value">${insights.avgSpeed}s <span class="insight-sub">per question</span></div>
+                <div class="insight-card-verdict ${insights.speedVerdict.cls}">${insights.speedVerdict.text}</div>
+              </div>
+            </div>
+
+            <!-- Accuracy Rate -->
+            <div class="insight-card accuracy-card">
+              <div class="insight-card-icon">🎯</div>
+              <div class="insight-card-body">
+                <div class="insight-card-label">Attempt Rate</div>
+                <div class="insight-card-value">${insights.attemptRate}%</div>
+                <div class="insight-card-verdict ${insights.attemptVerdict.cls}">${insights.attemptVerdict.text}</div>
+              </div>
+            </div>
+
+            <!-- Time Wasted -->
+            <div class="insight-card timewaste-card">
+              <div class="insight-card-icon">⏰</div>
+              <div class="insight-card-body">
+                <div class="insight-card-label">Time Wasted</div>
+                <div class="insight-card-value">${insights.timeWasted} <span class="insight-sub">on wrong answers</span></div>
+                <div class="insight-card-verdict ${insights.timeWasteVerdict.cls}">${insights.timeWasteVerdict.text}</div>
+              </div>
+            </div>
+
+            <!-- Easy Mistakes -->
+            <div class="insight-card mistake-card">
+              <div class="insight-card-icon">😤</div>
+              <div class="insight-card-body">
+                <div class="insight-card-label">Easy Mistakes</div>
+                <div class="insight-card-value">${insights.easyMistakes} <span class="insight-sub">questions</span></div>
+                <div class="insight-card-verdict ${insights.easyMistakeVerdict.cls}">${insights.easyMistakeVerdict.text}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weak Topics -->
+        ${insights.weakTopics.length > 0 ? `
+        <div class="weak-section animate-fadeInUp stagger-3">
+          <h3 class="insight-section-title">⚠️ Weak Topics — Focus Here</h3>
+          <div class="weak-topics-grid">
+            ${insights.weakTopics.map(wt => `
+              <div class="weak-topic-card">
+                <div class="weak-topic-left">
+                  <span class="weak-topic-icon">${Helpers.getSubjectIcon(wt.subject)}</span>
+                  <div>
+                    <div class="weak-topic-name">${wt.name}</div>
+                    <div class="weak-topic-detail">${wt.correct}/${wt.total} correct</div>
+                  </div>
+                </div>
+                <div class="weak-topic-right">
+                  <div class="weak-topic-acc" style="color: var(--danger);">${wt.accuracy}%</div>
+                  <div class="weak-topic-bar">
+                    <div class="weak-topic-bar-fill" style="width: ${wt.accuracy}%; background: var(--danger);"></div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Time Wasted Questions -->
+        ${insights.slowestQuestions.length > 0 ? `
+        <div class="timewaste-section animate-fadeInUp stagger-4">
+          <h3 class="insight-section-title">🐌 Slowest Questions — Time Wasted</h3>
+          <div class="slow-questions-list">
+            ${insights.slowestQuestions.map((sq, i) => `
+              <div class="slow-question-item">
+                <div class="slow-q-rank">#${i + 1}</div>
+                <div class="slow-q-info">
+                  <div class="slow-q-text">${(sq.question.question || '').substring(0, 80)}...</div>
+                  <div class="slow-q-meta">
+                    <span class="chip ${sq.isCorrect ? 'chip-success' : sq.isSkipped ? '' : 'chip-danger'}">${sq.isCorrect ? '✓ Correct' : sq.isSkipped ? '⊘ Skipped' : '✗ Wrong'}</span>
+                    <span class="chip chip-primary">${sq.question.subject}</span>
+                  </div>
+                </div>
+                <div class="slow-q-time">${sq.timeSpent}s</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        ` : ''}
+
         <!-- Strong / Weak Areas -->
         ${subjectEntries.length > 0 ? `
-        <div class="animate-fadeInUp stagger-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-6);">
+        <div class="animate-fadeInUp stagger-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-6);">
           ${strongArea ? `
-          <div class="card" style="padding: var(--space-4); border-left: 3px solid var(--success);">
+          <div class="card strength-card" style="padding: var(--space-4); border-left: 3px solid var(--success);">
             <div style="font-size: 20px; margin-bottom: var(--space-2);">💪</div>
             <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Strongest</div>
             <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${strongArea.name}</div>
@@ -130,7 +228,7 @@ const ResultPage = {
           </div>
           ` : ''}
           ${weakArea && weakArea.name !== (strongArea && strongArea.name) ? `
-          <div class="card" style="padding: var(--space-4); border-left: 3px solid var(--danger);">
+          <div class="card weakness-card" style="padding: var(--space-4); border-left: 3px solid var(--danger);">
             <div style="font-size: 20px; margin-bottom: var(--space-2);">⚠️</div>
             <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Weakest</div>
             <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${weakArea.name}</div>
@@ -142,7 +240,7 @@ const ResultPage = {
 
         <!-- Subject-wise Breakdown -->
         ${subjectEntries.length > 0 ? `
-        <div class="card animate-fadeInUp stagger-3" style="margin-top: var(--space-6);">
+        <div class="card animate-fadeInUp stagger-5" style="margin-top: var(--space-6);">
           <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">📊 Subject-wise Breakdown</h3>
           <div style="display: flex; flex-direction: column; gap: var(--space-4);">
             ${subjectEntries.map(([subject, data]) => {
@@ -165,14 +263,14 @@ const ResultPage = {
         ` : ''}
 
         <!-- View Analysis Button -->
-        <div class="animate-fadeInUp stagger-4" style="margin-top: var(--space-6);">
+        <div class="animate-fadeInUp stagger-6" style="margin-top: var(--space-6);">
           <button class="btn btn-secondary btn-lg btn-block" onclick="App.navigate('analysis')" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary-light); border: 1px solid rgba(139, 92, 246, 0.3);">
             ${Lang.t('result_analysis')}
           </button>
         </div>
 
         <!-- Actions -->
-        <div class="result-actions animate-fadeInUp stagger-5">
+        <div class="result-actions animate-fadeInUp stagger-7">
           <div style="display: flex; gap: var(--space-3); width: 100%;">
             <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
               ${Lang.t('result_retry')}
@@ -189,6 +287,70 @@ const ResultPage = {
     `;
   },
 
+  // === SMART INSIGHTS CALCULATOR ===
+  _calculateInsights(result) {
+    const qr = result.questionResults || [];
+    const total = qr.length;
+
+    // Average speed
+    const totalTimeSpent = qr.reduce((sum, q) => sum + (q.timeSpent || 0), 0);
+    const avgSpeed = total > 0 ? Math.round(totalTimeSpent / total) : 0;
+
+    // Speed verdict
+    let speedVerdict;
+    if (avgSpeed <= 30) speedVerdict = { text: 'Great speed! ⚡', cls: 'verdict-good' };
+    else if (avgSpeed <= 60) speedVerdict = { text: 'Good pace 👍', cls: 'verdict-ok' };
+    else if (avgSpeed <= 90) speedVerdict = { text: 'A bit slow — practice more', cls: 'verdict-warn' };
+    else speedVerdict = { text: 'Too slow — work on speed', cls: 'verdict-bad' };
+
+    // Attempt rate
+    const attempted = total - result.skipped;
+    const attemptRate = total > 0 ? Math.round((attempted / total) * 100) : 0;
+    let attemptVerdict;
+    if (attemptRate >= 90) attemptVerdict = { text: 'Great coverage! 🎯', cls: 'verdict-good' };
+    else if (attemptRate >= 70) attemptVerdict = { text: 'Good, attempt more', cls: 'verdict-ok' };
+    else attemptVerdict = { text: 'Too many skipped ⚠️', cls: 'verdict-warn' };
+
+    // Time wasted on wrong answers
+    const wrongQuestions = qr.filter(q => !q.isCorrect && !q.isSkipped);
+    const timeOnWrong = wrongQuestions.reduce((sum, q) => sum + (q.timeSpent || 0), 0);
+    const timeWasted = Helpers.formatDuration(timeOnWrong);
+    let timeWasteVerdict;
+    const wasteRatio = totalTimeSpent > 0 ? timeOnWrong / totalTimeSpent : 0;
+    if (wasteRatio <= 0.2) timeWasteVerdict = { text: 'Efficient! ✅', cls: 'verdict-good' };
+    else if (wasteRatio <= 0.4) timeWasteVerdict = { text: 'Some waste — review', cls: 'verdict-ok' };
+    else timeWasteVerdict = { text: 'Too much time lost! 🔥', cls: 'verdict-bad' };
+
+    // Easy mistakes (answered wrong but spent < 30 seconds — likely careless)
+    const easyMistakes = wrongQuestions.filter(q => (q.timeSpent || 0) < 30).length;
+    let easyMistakeVerdict;
+    if (easyMistakes === 0) easyMistakeVerdict = { text: 'No careless errors! 🎉', cls: 'verdict-good' };
+    else if (easyMistakes <= 3) easyMistakeVerdict = { text: 'A few — read carefully', cls: 'verdict-ok' };
+    else easyMistakeVerdict = { text: 'Too many! Slow down 🛑', cls: 'verdict-bad' };
+
+    // Weak topics
+    const weakTopics = (result.weakTopics || []).slice(0, 5);
+
+    // Slowest questions (top 5 by time spent)
+    const slowestQuestions = [...qr]
+      .filter(q => q.timeSpent > 0)
+      .sort((a, b) => b.timeSpent - a.timeSpent)
+      .slice(0, 5);
+
+    return {
+      avgSpeed,
+      speedVerdict,
+      attemptRate,
+      attemptVerdict,
+      timeWasted,
+      timeWasteVerdict,
+      easyMistakes,
+      easyMistakeVerdict,
+      weakTopics,
+      slowestQuestions
+    };
+  },
+
   // Retry with same config (fetch fresh questions from API)
   async retrySameTest() {
     const config = App.lastTestConfig;
@@ -202,7 +364,6 @@ const ResultPage = {
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Loading...'; }
 
     try {
-      // Fetch fresh questions (no seenIds)
       const questions = await window.fetchRandomQuestions({
         limit: config.numQuestions || config.actualQuestions || 10,
         subjects: config.subjects || []
@@ -249,7 +410,6 @@ const ResultPage = {
       if (scoreEl) Helpers.animateCounter(scoreEl, result.totalMarks, 1200);
       if (accuracyEl) {
         Helpers.animateCounter(accuracyEl, result.accuracy, 1200);
-        // Append % after animation
         setTimeout(() => { if (accuracyEl) accuracyEl.textContent = result.accuracy + '%'; }, 1300);
       }
       if (correctEl) Helpers.animateCounter(correctEl, result.correct, 800);
@@ -265,4 +425,3 @@ const ResultPage = {
     }, 600);
   }
 };
-

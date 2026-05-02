@@ -1,7 +1,7 @@
 // ============================================
-// TEST SETUP PAGE — Full UX Upgrade
-// Smooth chip toggle, no count badge,
-// instant start, no PYQ
+// TEST SETUP PAGE V2 — Preset-Driven
+// When preset is passed, auto-fill everything
+// Shows exam pattern clearly before starting
 // ============================================
 
 const SetupPage = {
@@ -12,31 +12,54 @@ const SetupPage = {
     timePerQuestion: 60,
     totalTime: null,
     negativeMarking: false,
-    negativeValue: 0.25
+    negativeValue: 0.25,
+    marksPerQuestion: 1,
+    examId: null,
+    examName: null,
+    isDaily: false
   },
 
   render(params = {}) {
+    // ── Auto-fill from exam preset ──
+    if (params.preset) {
+      const preset = ExamPresets.get(params.preset);
+      if (preset) {
+        this.config.examId = preset.id;
+        this.config.examName = preset.name;
+        this.config.numQuestions = preset.totalQuestions;
+        this.config.totalTime = preset.totalTime;
+        this.config.timeMode = 'manual';
+        this.config.negativeMarking = preset.negativeMarking;
+        this.config.negativeValue = preset.negativeValue;
+        this.config.marksPerQuestion = preset.marksPerQuestion || 1;
+        this.config.subjects = ExamPresets.getSubjects(preset.id);
+        this.config.isDaily = params.daily === '1';
+      }
+    }
 
-    // Pre-fill from URL params
-    if (params.subject) {
+    // Legacy param support
+    if (params.subject && !params.preset) {
       this.config.subjects = [params.subject.toLowerCase()];
     }
-    if (params.limit) this.config.numQuestions = parseInt(params.limit, 10);
+    if (params.limit && !params.preset) this.config.numQuestions = parseInt(params.limit, 10);
 
-    // Available subjects (lowercase)
     const subjects = ['math', 'gk', 'reasoning', 'english', 'hindi', 'science', 'polity', 'geography', 'history'];
+    const preset = this.config.examId ? ExamPresets.get(this.config.examId) : null;
 
     return `
       <div class="setup-page page-enter">
         <div class="setup-header">
-          <h1 class="animate-fadeInDown">${Lang.t('setup_title')}</h1>
+          <h1 class="animate-fadeInDown">${preset ? preset.icon + ' ' + preset.name : Lang.t('setup_title')}</h1>
           <p class="animate-fadeInDown stagger-1" style="color: var(--text-secondary); margin-top: var(--space-2);">
-            ${Lang.t('setup_subtitle')}
+            ${preset ? preset.description : Lang.t('setup_subtitle')}
           </p>
         </div>
 
+        ${preset ? this._renderPresetInfo(preset) : ''}
+
         <div class="setup-form">
-          <!-- Subject (Multi-Select Chips) -->
+          ${!preset ? `
+          <!-- Subject (Multi-Select Chips) — only for custom tests -->
           <div class="setup-section animate-fadeInUp stagger-1">
             <div class="setup-section-title">${Lang.t('setup_subject')}</div>
             <div class="setup-chips" id="subject-chips">
@@ -48,8 +71,10 @@ const SetupPage = {
               `).join('')}
             </div>
           </div>
+          ` : ''}
 
-          <!-- Number of Questions (Free Input) -->
+          ${!preset ? `
+          <!-- Number of Questions -->
           <div class="setup-section animate-fadeInUp stagger-3">
             <div class="setup-section-title">${Lang.t('setup_questions')}</div>
             <div style="display: flex; align-items: center; gap: var(--space-3);">
@@ -67,8 +92,10 @@ const SetupPage = {
               <button class="setup-chip" onclick="document.getElementById('num-questions-input').value=100; SetupPage._setNumQuestions(100)">100</button>
             </div>
           </div>
+          ` : ''}
 
-          <!-- Time Settings (Free Input) -->
+          ${!preset ? `
+          <!-- Time Settings -->
           <div class="setup-section animate-fadeInUp stagger-4">
             <div class="setup-section-title">${Lang.t('setup_time')}</div>
             <div class="switch-wrapper" style="margin-bottom: var(--space-3);">
@@ -99,7 +126,9 @@ const SetupPage = {
               </div>
             ` : ''}
           </div>
+          ` : ''}
 
+          ${!preset ? `
           <!-- Negative Marking -->
           <div class="setup-section animate-fadeInUp stagger-7">
             <div class="setup-section-title">${Lang.t('setup_neg_marking')}</div>
@@ -128,6 +157,7 @@ const SetupPage = {
               </div>
             ` : ''}
           </div>
+          ` : ''}
 
           <!-- Summary -->
           <div class="setup-summary animate-fadeInUp stagger-8" id="setup-summary">
@@ -136,16 +166,49 @@ const SetupPage = {
 
           </div>
 
-          <!-- Start Button (always enabled — validation happens on click) -->
-          <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8 btn-glow"
-                  onclick="SetupPage.startTest()" id="start-test-btn">
-            🚀 ${Lang.t('setup_start')}
+          <!-- Start Button -->
+          <button class="btn btn-primary btn-lg btn-block animate-fadeInUp stagger-8"
+                  onclick="SetupPage.startTest()" id="start-test-btn"
+                  style="font-size: 17px; padding: 16px;">
+            🚀 ${preset ? 'Start ' + preset.name + ' Test' : Lang.t('setup_start')}
           </button>
 
           <button class="btn btn-ghost btn-block" onclick="App.navigate('home')" style="margin-top: var(--space-2);">
             ${Lang.t('setup_back')}
           </button>
         </div>
+      </div>
+    `;
+  },
+
+  /** Render preset exam info card (shows exact pattern) */
+  _renderPresetInfo(preset) {
+    return `
+      <div class="preset-info-card animate-fadeInUp stagger-1">
+        <div class="preset-info-header">
+          <div class="preset-info-badge">${preset.category}</div>
+          <div class="preset-info-pattern">
+            <span class="pi-tag">${preset.totalQuestions} Questions</span>
+            <span class="pi-tag">${ExamPresets.formatTime(preset.totalTime)}</span>
+            <span class="pi-tag ${preset.negativeMarking ? 'neg' : ''}">${ExamPresets.formatNeg(preset)}</span>
+            ${preset.marksPerQuestion > 1 ? `<span class="pi-tag">+${preset.marksPerQuestion}/correct</span>` : ''}
+          </div>
+        </div>
+
+        <div class="preset-sections-list">
+          <div class="preset-sections-title">Sections</div>
+          ${preset.sections.map(s => `
+            <div class="preset-section-row">
+              <span class="preset-section-icon">${Helpers.getSubjectIcon(s.subject)}</span>
+              <span class="preset-section-name">${s.name}</span>
+              <span class="preset-section-count">${s.questions}Q</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: var(--space-3); text-align: center;">
+          ⚡ Exact ${preset.name} exam pattern — Timer strict, marking enforced
+        </p>
       </div>
     `;
   },
@@ -179,7 +242,7 @@ const SetupPage = {
     `;
   },
 
-  // ── Free input handlers (no full re-render to avoid focus loss) ──
+  // ── Input handlers ──
 
   _setNumQuestions(val) {
     const num = parseInt(val, 10);
@@ -193,14 +256,12 @@ const SetupPage = {
     }
     this.config.numQuestions = num;
 
-    // If timer is on and was auto, update time to match
     if (this.config.timeMode === 'auto') {
       this.config.totalTime = num * 60;
       const timeInput = document.getElementById('time-minutes-input');
       if (timeInput) timeInput.value = num;
     }
 
-    // Update summary without full re-render
     const summary = document.getElementById('setup-summary');
     if (summary) summary.innerHTML = this._renderSummary();
   },
@@ -218,7 +279,6 @@ const SetupPage = {
     this.config.timeMode = 'manual';
     this.config.totalTime = mins * 60;
 
-    // Update summary
     const summary = document.getElementById('setup-summary');
     if (summary) summary.innerHTML = this._renderSummary();
   },
@@ -231,7 +291,6 @@ const SetupPage = {
       this.config.timeMode = 'none';
       this.config.totalTime = 99999;
     }
-    // Full re-render needed to show/hide time input
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
   },
 
@@ -240,7 +299,6 @@ const SetupPage = {
     document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
   },
 
-  // ── Multi-select subject toggle (SMOOTH — no API call, just DOM update) ──
   _toggleSubject(subject) {
     if (subject === 'all') {
       this.config.subjects = [];
@@ -253,7 +311,6 @@ const SetupPage = {
       }
     }
 
-    // ── SMOOTH: update chips via data-subject attributes ──
     const chipsContainer = document.getElementById('subject-chips');
     if (chipsContainer) {
       const buttons = chipsContainer.querySelectorAll('.setup-chip');
@@ -267,7 +324,6 @@ const SetupPage = {
       });
     }
 
-    // Update summary
     const summary = document.getElementById('setup-summary');
     if (summary) summary.innerHTML = this._renderSummary();
   },
@@ -275,10 +331,9 @@ const SetupPage = {
   async startTest() {
     const startBtn = document.getElementById('start-test-btn');
     if (!startBtn) return;
-    
+
     const originalText = startBtn.innerHTML;
-    
-    // Add loading state
+
     startBtn.disabled = true;
     startBtn.innerHTML = '<span class="splash-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px;"></span> Loading...';
 
@@ -290,19 +345,30 @@ const SetupPage = {
           ? (this.config.totalTime || 600)
           : null;
 
-      // 1. Fetch questions (direct Supabase, no seenIds)
-      const fetchedQuestions = await window.fetchRandomQuestions({
-        limit: this.config.numQuestions,
-        subjects: this.config.subjects
-      });
+      // Fetch questions — section-wise for presets, random for custom
+      const preset = this.config.examId ? ExamPresets.get(this.config.examId) : null;
+      let fetchedQuestions;
+
+      if (preset && preset.sections && preset.sections.length > 0 && window.fetchSectionWiseQuestions) {
+        // Section-wise fetch: exact exam pattern
+        fetchedQuestions = await window.fetchSectionWiseQuestions({
+          sections: preset.sections,
+          totalQuestions: this.config.numQuestions,
+          subjects: this.config.subjects
+        });
+      } else {
+        // Regular random fetch
+        fetchedQuestions = await window.fetchRandomQuestions({
+          limit: this.config.numQuestions,
+          subjects: this.config.subjects
+        });
+      }
 
       if (!fetchedQuestions || fetchedQuestions.length === 0) {
         throw new Error('No questions found. Check database or subject filter.');
       }
 
-      console.log("CREATE TEST CALLED", fetchedQuestions.length, "questions");
-
-      // 4. Create test
+      // Create test
       const result = TestEngine.createTest({
         ...this.config,
         questions: fetchedQuestions,

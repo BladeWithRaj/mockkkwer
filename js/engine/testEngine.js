@@ -31,7 +31,7 @@ const TestEngine = {
     } else {
       // ── Normal Mode ──
       selected = questions;
-      
+
       if (!selected || selected.length === 0) {
         return { error: 'No questions found for the selected filters.' };
       }
@@ -192,6 +192,14 @@ const TestEngine = {
     // Calculate results
     const result = this.calculateResult();
 
+    // ── RETENTION SYSTEM ──
+    if (typeof DailySystem !== 'undefined') {
+      DailySystem.recordProgress(result);
+      // Mark daily if this was a daily challenge
+      if (this.state.config && this.state.config.isDaily) {
+        DailySystem.markDailyDone();
+      }
+    }
 
     // ── SUPABASE SAVE SYSTEM ──
 
