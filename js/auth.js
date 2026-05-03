@@ -1,6 +1,6 @@
 // ============================================
 // AUTH MODULE — Clerk Authentication
-// Sign-in, Sign-up, Session Management
+// Clean, simple, no hacks
 // ============================================
 
 const Auth = {
@@ -8,56 +8,50 @@ const Auth = {
   _ready: false,
 
   /**
-   * Initialize Clerk authentication.
-   * - Loads Clerk SDK
-   * - If no user → opens sign-in modal and waits
-   * - If user exists → syncs user data to local storage
-   * Returns a promise that resolves when user is authenticated.
+   * Poll until window.Clerk exists (async CDN script)
    */
-  async init() {
-    try {
-      if (!window.Clerk) {
-        throw new Error("Clerk SDK not loaded. Check index.html script tag.");
-      }
-
-      await window.Clerk.load({
-        appearance: window.CONFIG?.CLERK_APPEARANCE || {}
-      });
-
-      if (window.Clerk.user) {
-        this._onUserReady();
-        return;
-      }
-
-      // No user — show sign-in and wait for completion
-      return new Promise((resolve) => {
-        const unsub = window.Clerk.addListener(({ user }) => {
-          if (user) {
-            this._onUserReady();
-            resolve();
-          }
-        });
-
-        // Store unsubscribe for cleanup
-        this._listenerUnsub = unsub;
-
-        // Open Clerk sign-in modal
-        window.Clerk.openSignIn({
-          afterSignInUrl: window.location.href,
-          afterSignUpUrl: window.location.href
-        });
-      });
-
-    } catch (err) {
-      console.error("❌ Auth init error:", err);
-      throw err;
+  async _waitForClerk() {
+    while (!window.Clerk) {
+      await new Promise(r => setTimeout(r, 50));
     }
+    return window.Clerk;
   },
 
   /**
-   * Called when Clerk user is ready.
-   * Syncs user data to localStorage for backward compatibility.
+   * Init:
+   * 1. Wait for Clerk CDN
+   * 2. Clerk.load()
+   * 3. If user → ready
+   * 4. If no user → openSignIn, listen for login
    */
+  async init() {
+    const Clerk = await this._waitForClerk();
+
+    await Clerk.load();
+
+    console.log("✅ Clerk loaded. user:", Clerk.user?.id || "none");
+
+    if (Clerk.user) {
+      this._onUserReady();
+      return;
+    }
+
+    // No user — open sign-in popup and wait
+    console.log("🔐 Opening sign-in...");
+    Clerk.openSignIn();
+
+    // Wait for user to sign in
+    return new Promise((resolve) => {
+      Clerk.addListener(({ user }) => {
+        if (user) {
+          console.log("🎉 Signed in:", user.id);
+          this._onUserReady();
+          resolve();
+        }
+      });
+    });
+  },
+
   _onUserReady() {
     const u = window.Clerk.user;
     if (!u) return;
@@ -66,78 +60,55 @@ const Auth = {
       clerkId: u.id,
       name: u.fullName || u.username || u.firstName || "User",
       email: u.primaryEmailAddress?.emailAddress || null,
-      avatar: u.imageUrl || null,
-      firstName: u.firstName || "",
-      lastName: u.lastName || ""
+      avatar: u.imageUrl || null
     };
     this._ready = true;
 
-    // Backward-compatible: sync to Storage keys used throughout the app
-    Storage.setUsername(this._currentUser.name);
+    // Sync to localStorage for backward compat
+    if (typeof Storage !== 'undefined' && Storage.setUsername) {
+      Storage.setUsername(this._currentUser.name);
+    }
     localStorage.setItem("mocktest_user_id", this._currentUser.clerkId);
 
-    console.log("✅ Clerk user ready:", this._currentUser.name, this._currentUser.clerkId);
+    console.log("✅ User ready:", this._currentUser.name);
   },
 
-  // ── Public API ──────────────────────────────
+  // ── Public API ──
 
-  /** Is the user fully authenticated? */
   isAuthenticated() {
     return this._ready && !!window.Clerk?.user;
   },
 
-  /** Get current user info object */
   getUser() {
     return this._currentUser;
   },
 
-  /** Get Clerk session JWT for API calls */
   async getSessionToken() {
     try {
       if (!window.Clerk?.session) return null;
       return await window.Clerk.session.getToken();
-    } catch (err) {
-      console.warn("Could not get session token:", err);
+    } catch (e) {
       return null;
     }
   },
 
-  /** Sign out and reload */
   async signOut() {
-    try {
-      await window.Clerk.signOut();
-    } catch (err) {
-      console.warn("Sign out error:", err);
-    }
+    try { await window.Clerk.signOut(); } catch (e) {}
     this._currentUser = null;
     this._ready = false;
-
-    // Clear all local state
-    Storage.clearAll();
-    localStorage.removeItem("mocktest_avatar");
-    localStorage.removeItem("mocktest_avatar_synced");
-    localStorage.removeItem("used_ids");
-    localStorage.removeItem("variant");
-
+    if (typeof Storage !== 'undefined' && Storage.clearAll) Storage.clearAll();
     window.location.reload();
   },
 
-  /** Open Clerk user profile modal */
   openProfile() {
-    if (window.Clerk?.openUserProfile) {
-      window.Clerk.openUserProfile();
-    }
+    if (window.Clerk?.openUserProfile) window.Clerk.openUserProfile();
   },
 
-  // ── Legacy Compatibility ────────────────────
-  // These methods existed in the old Supabase auth module.
-  // Kept as stubs so nothing breaks.
-
+  // Legacy stubs
   isVerified() { return this.isAuthenticated(); },
   isAnonymous() { return !this.isAuthenticated(); },
   shouldShowUpgradePrompt() { return false; },
   dismissUpgradePrompt() {}
 };
 
-// Make globally accessible
 window.Auth = Auth;
