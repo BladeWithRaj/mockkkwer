@@ -1,281 +1,143 @@
 // ============================================
-// AUTH MODULE — Email Sign-up, Sign-in,
-// Anonymous Upgrade, Merge, Session Management
+// AUTH MODULE — Clerk Authentication
+// Sign-in, Sign-up, Session Management
 // ============================================
 
 const Auth = {
-  // ── State ──────────────────────────────────
   _currentUser: null,
-  _upgradePromptDismissed: false,
-  _authListener: null,
+  _ready: false,
 
   /**
-   * Initialize session.
-   * - If no session → create anonymous
-   * - If anonymous session → store token in http-only cookie
-   * - If email session → auto-merge any leftover anonymous data
-   * - Setup onAuthStateChange for auto token refresh
+   * Initialize Clerk authentication.
+   * - Loads Clerk SDK
+   * - If no user → opens sign-in modal and waits
+   * - If user exists → syncs user data to local storage
+   * Returns a promise that resolves when user is authenticated.
    */
   async init() {
     try {
-      const { data: { session } } = await client.auth.getSession();
-
-      if (!session) {
-        // No session at all → create anonymous
-        console.log("🔑 Creating anonymous session...");
-        const { data, error } = await client.auth.signInAnonymously();
-        if (error) throw error;
-        this._currentUser = data.user;
-        await this._storeAnonCookie(data.session.access_token);
-        console.log("✅ Anonymous session created:", data.user.id);
-      } else if (!session.user.email) {
-        // Anonymous session exists → ensure cookie is set
-        this._currentUser = session.user;
-        await this._storeAnonCookie(session.access_token);
-        console.log("✅ Anonymous session resumed:", session.user.id);
-      } else {
-        // Email session → try auto-merge
-        this._currentUser = session.user;
-        console.log("✅ Email session active:", session.user.email);
-        await this._tryAutoMerge();
+      if (!window.Clerk) {
+        throw new Error("Clerk SDK not loaded. Check index.html script tag.");
       }
 
-      this._upgradePromptDismissed = localStorage.getItem("upgradePromptDismissed") === "true";
+      await window.Clerk.load({
+        appearance: window.CONFIG?.CLERK_APPEARANCE || {}
+      });
 
-      // ── Setup Auth State Listener ──────────
-      // Handles: token refresh, session expiry, sign-in/sign-out from other tabs
-      this._setupAuthListener();
-
-    } catch (err) {
-      console.error("Auth init error:", err);
-    }
-  },
-
-  /**
-   * Listen for auth state changes — keeps session alive, handles expiry
-   */
-  _setupAuthListener() {
-    if (this._authListener) return; // Already listening
-
-    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
-      console.log(`🔔 Auth event: ${event}`);
-
-      switch (event) {
-        case 'SIGNED_IN':
-          this._currentUser = session?.user || null;
-          break;
-
-        case 'TOKEN_REFRESHED':
-          // Supabase auto-refreshed the JWT — update our reference
-          this._currentUser = session?.user || null;
-          console.log('🔄 Token refreshed successfully');
-          break;
-
-        case 'SIGNED_OUT':
-          this._currentUser = null;
-          console.log('👋 User signed out');
-          break;
-
-        case 'USER_UPDATED':
-          this._currentUser = session?.user || null;
-          break;
-
-        default:
-          break;
-      }
-    });
-
-    this._authListener = subscription;
-  },
-
-  /**
-   * Sign up with email + password
-   * After successful signup, auto-merges anonymous data
-   */
-  async signUp(email, password) {
-    try {
-      const { data, error } = await client.auth.signUp({ email, password });
-      if (error) throw error;
-
-      this._currentUser = data.user;
-      console.log("✅ Signed up:", email);
-
-      // Auto-merge anonymous data
-      await this._tryAutoMerge();
-
-      return { success: true, user: data.user };
-    } catch (err) {
-      console.error("Sign-up error:", err);
-      return { success: false, error: err.message };
-    }
-  },
-
-  /**
-   * Sign in with email + password
-   * After successful sign-in, auto-merges anonymous data from THIS device
-   */
-  async signIn(email, password) {
-    try {
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      this._currentUser = data.user;
-      console.log("✅ Signed in:", email);
-
-      // Auto-merge anonymous data
-      await this._tryAutoMerge();
-
-      return { success: true, user: data.user };
-    } catch (err) {
-      console.error("Sign-in error:", err);
-      return { success: false, error: err.message };
-    }
-  },
-
-  /**
-   * Sign out — clears session AND all local state.
-   * Prevents data leakage between accounts.
-   */
-  async signOut() {
-    try {
-      const wasVerified = this.isVerified();
-      await client.auth.signOut();
-
-      // ── Clear ALL local state ──
-      Storage.clearCurrentTest();
-      Storage.clearHistory();
-      localStorage.removeItem('mocktest_username');
-      localStorage.removeItem('mocktest_user_id');
-      localStorage.removeItem('mocktest_seen_questions');
-      localStorage.removeItem('upgradePromptDismissed');
-      this._upgradePromptDismissed = false;
-
-      if (wasVerified) {
-        // Don't create anonymous — user should re-login
-        this._currentUser = null;
-        console.log("✅ Signed out (email user) — all state cleared, no anonymous fallback");
-      } else {
-        // Was already anonymous — create fresh anonymous session
-        const { data } = await client.auth.signInAnonymously();
-        this._currentUser = data?.user || null;
-        if (data?.session) {
-          await this._storeAnonCookie(data.session.access_token);
-        }
-        console.log("✅ Signed out → new anonymous session");
+      if (window.Clerk.user) {
+        this._onUserReady();
+        return;
       }
 
-      // Redirect to home
-      window.location.hash = 'home';
-      if (window.App) App.navigate('home');
+      // No user — show sign-in and wait for completion
+      return new Promise((resolve) => {
+        const unsub = window.Clerk.addListener(({ user }) => {
+          if (user) {
+            this._onUserReady();
+            resolve();
+          }
+        });
 
-      return { success: true };
+        // Store unsubscribe for cleanup
+        this._listenerUnsub = unsub;
+
+        // Open Clerk sign-in modal
+        window.Clerk.openSignIn({
+          afterSignInUrl: window.location.href,
+          afterSignUpUrl: window.location.href
+        });
+      });
+
     } catch (err) {
-      console.error("Sign-out error:", err);
-      return { success: false, error: err.message };
+      console.error("❌ Auth init error:", err);
+      throw err;
     }
   },
 
-  // ── Helpers ────────────────────────────────
+  /**
+   * Called when Clerk user is ready.
+   * Syncs user data to localStorage for backward compatibility.
+   */
+  _onUserReady() {
+    const u = window.Clerk.user;
+    if (!u) return;
 
-  /** Is the current user verified (has email)? */
-  isVerified() {
-    return !!(this._currentUser && this._currentUser.email);
+    this._currentUser = {
+      clerkId: u.id,
+      name: u.fullName || u.username || u.firstName || "User",
+      email: u.primaryEmailAddress?.emailAddress || null,
+      avatar: u.imageUrl || null,
+      firstName: u.firstName || "",
+      lastName: u.lastName || ""
+    };
+    this._ready = true;
+
+    // Backward-compatible: sync to Storage keys used throughout the app
+    Storage.setUsername(this._currentUser.name);
+    localStorage.setItem("mocktest_user_id", this._currentUser.clerkId);
+
+    console.log("✅ Clerk user ready:", this._currentUser.name, this._currentUser.clerkId);
   },
 
-  /** Is the current user anonymous? */
-  isAnonymous() {
-    return !!(this._currentUser && !this._currentUser.email);
+  // ── Public API ──────────────────────────────
+
+  /** Is the user fully authenticated? */
+  isAuthenticated() {
+    return this._ready && !!window.Clerk?.user;
   },
 
-  /** Get current user object */
+  /** Get current user info object */
   getUser() {
     return this._currentUser;
   },
 
-  /**
-   * Get current session token for API calls.
-   * Returns null if no active session.
-   */
+  /** Get Clerk session JWT for API calls */
   async getSessionToken() {
     try {
-      const { data: { session } } = await client.auth.getSession();
-      return session?.access_token || null;
+      if (!window.Clerk?.session) return null;
+      return await window.Clerk.session.getToken();
     } catch (err) {
       console.warn("Could not get session token:", err);
       return null;
     }
   },
 
-  /** Should we show the upgrade prompt? */
-  shouldShowUpgradePrompt() {
-    return this.isAnonymous() && !this._upgradePromptDismissed;
-  },
-
-  /** Dismiss the upgrade prompt */
-  dismissUpgradePrompt() {
-    this._upgradePromptDismissed = true;
-    localStorage.setItem("upgradePromptDismissed", "true");
-  },
-
-  /**
-   * Store the anonymous JWT in an http-only cookie via the API.
-   * The cookie is invisible to JS — only the server can read it.
-   */
-  async _storeAnonCookie(token) {
+  /** Sign out and reload */
+  async signOut() {
     try {
-      await fetch("/api/set-anon-cookie", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token })
-      });
+      await window.Clerk.signOut();
     } catch (err) {
-      console.warn("Could not store anon cookie:", err);
+      console.warn("Sign out error:", err);
+    }
+    this._currentUser = null;
+    this._ready = false;
+
+    // Clear all local state
+    Storage.clearAll();
+    localStorage.removeItem("mocktest_avatar");
+    localStorage.removeItem("mocktest_avatar_synced");
+    localStorage.removeItem("used_ids");
+    localStorage.removeItem("variant");
+
+    window.location.reload();
+  },
+
+  /** Open Clerk user profile modal */
+  openProfile() {
+    if (window.Clerk?.openUserProfile) {
+      window.Clerk.openUserProfile();
     }
   },
 
-  /**
-   * Auto-merge: called after sign-up or sign-in.
-   * The merge endpoint reads the cookie — we just need to pass
-   * the current (email) user's token in the Authorization header.
-   */
-  async _tryAutoMerge() {
-    try {
-      const { data: { session } } = await client.auth.getSession();
-      if (!session || !session.user.email) return;
+  // ── Legacy Compatibility ────────────────────
+  // These methods existed in the old Supabase auth module.
+  // Kept as stubs so nothing breaks.
 
-      const resp = await fetch("/api/merge-anonymous", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`
-        },
-        credentials: "include" // sends the anon_token cookie
-      });
-
-      const result = await resp.json();
-
-      if (result.merged > 0) {
-        console.log(`🔄 Merged ${result.merged} anonymous result(s) into your account`);
-        if (window.Helpers) {
-          Helpers.showToast(`✅ ${result.merged} previous test(s) linked to your account!`, "success");
-        }
-      } else {
-        console.log("ℹ️ Merge:", result.message);
-      }
-
-      // Clear the cookie (server already does it, but belt-and-suspenders)
-      await fetch("/api/clear-anon-cookie", {
-        method: "POST",
-        credentials: "include"
-      });
-
-    } catch (err) {
-      console.warn("Auto-merge failed (non-critical):", err);
-    }
-  }
+  isVerified() { return this.isAuthenticated(); },
+  isAnonymous() { return !this.isAuthenticated(); },
+  shouldShowUpgradePrompt() { return false; },
+  dismissUpgradePrompt() {}
 };
 
 // Make globally accessible
 window.Auth = Auth;
-

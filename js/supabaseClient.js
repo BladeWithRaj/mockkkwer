@@ -386,15 +386,15 @@ async function saveResultToDB(result) {
 
     console.log("📤 Sending data to secure API:", payload);
 
-    // Get auth token from Supabase session for secure API call
+    // Get auth token from Clerk for secure API call
     const headers = { "Content-Type": "application/json" };
     try {
-      const { data: sessionData } = await client.auth.getSession();
-      if (sessionData?.session?.access_token) {
-        headers["Authorization"] = `Bearer ${sessionData.session.access_token}`;
+      const clerkToken = await Auth.getSessionToken();
+      if (clerkToken) {
+        headers["Authorization"] = `Bearer ${clerkToken}`;
       }
     } catch (authErr) {
-      console.warn("Could not get auth token, submitting without:", authErr);
+      console.warn("Could not get Clerk token, submitting without:", authErr);
     }
 
     const resp = await fetch("/api/submit", {
@@ -445,20 +445,11 @@ async function saveResultToDB(result) {
 
 // syncFallbackQueue removed — dead code (never called)
 
-// ── SESSION STABILIZATION ─────────────────
+// ── SESSION STABILIZATION (Legacy — no-op with Clerk) ──
 
 async function initSession() {
-  try {
-    const { data: sessionData } = await client.auth.getSession();
-    if (!sessionData.session) {
-      console.log("Initializing new anonymous session...");
-      await client.auth.signInAnonymously();
-    } else {
-      console.log("Session stabilized:", sessionData.session.user.id);
-    }
-  } catch (err) {
-    console.error("Session init error:", err);
-  }
+  // Clerk handles sessions now. This is kept for backward compatibility.
+  console.log("initSession: no-op (Clerk handles auth)");
 }
 
 
@@ -478,13 +469,13 @@ async function fetchUserResultsAPI(userId) {
 
 async function getUserResults() {
   try {
-    const { data: userData } = await client.auth.getUser();
-    if (!userData || !userData.user) {
+    const user = Auth.getUser();
+    if (!user || !user.clerkId) {
       console.warn("Cannot fetch results: No authenticated user");
       return [];
     }
 
-    const userId = userData.user.id;
+    const userId = user.clerkId;
     const { data, error } = await fetchUserResultsAPI(userId);
 
     if (error) {
@@ -507,9 +498,9 @@ async function subscribeToResults(callback) {
   if (resultsChannel) return; // Singleton: Already subscribed
 
   try {
-    const { data: userData } = await client.auth.getUser();
-    if (!userData || !userData.user) return;
-    const userId = userData.user.id;
+    const user = Auth.getUser();
+    if (!user || !user.clerkId) return;
+    const userId = user.clerkId;
 
     resultsChannel = client
       .channel('results_realtime')

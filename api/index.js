@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════
 
 import { createClient } from "@supabase/supabase-js";
+import { verifyToken } from "@clerk/backend";
 
 // ── Supabase Admin (service role) ─────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -92,9 +93,6 @@ export default async function handler(req, res) {
     if (path.includes("/leaderboard"))     return await handleLeaderboard(req, res);
     if (path.includes("/avatar"))          return await handleAvatar(req, res);
     if (path.includes("/profile"))         return await handleProfile(req, res);
-    if (path.includes("/set-anon-cookie")) return handleSetAnonCookie(req, res);
-    if (path.includes("/clear-anon-cookie")) return handleClearAnonCookie(req, res);
-    if (path.includes("/merge-anonymous")) return await handleMergeAnonymous(req, res);
 
     return res.status(404).json({ error: "Route not found", path });
   } catch (err) {
@@ -117,29 +115,33 @@ async function handleSubmit(req, res) {
   try {
     const { questionIds, answers, timeTaken, testId, isDaily, username } = req.body || {};
 
-    // Auth: try JWT first, fallback to client user_id
-    let user_id = null;
+    // 🔐 Verify Clerk session token (MANDATORY for write endpoints)
     const authHeader = req.headers.authorization || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
 
-    if (token && SUPABASE_ANON_KEY) {
-      try {
-        const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const { data, error } = await authClient.auth.getUser(token);
-        if (!error && data?.user) user_id = data.user.id;
-      } catch (e) {
-        console.warn("[SUBMIT] JWT check failed:", e.message);
-      }
+    if (!token) {
+      return res.status(401).json({ error: "No authentication token" });
     }
 
-    if (!user_id) {
-      user_id = req.body?.user_id;
-      if (!user_id) {
-        return res.status(401).json({ error: "No user_id or valid token" });
-      }
+    let clerkId = null;
+    try {
+      const payload = await verifyToken(token, {
+        secretKey: process.env.CLERK_SECRET_KEY
+      });
+      clerkId = payload.sub;
+    } catch (verifyErr) {
+      console.warn("[SUBMIT] Clerk token verification failed:", verifyErr.message);
+      return res.status(401).json({ error: "Invalid or expired session" });
     }
 
-    if (!username) return res.status(400).json({ error: "username required" });
+    if (!clerkId) {
+      return res.status(401).json({ error: "Could not extract user identity" });
+    }
+
+    // Use clerk_id as the user_id
+    const user_id = clerkId;
+    const displayName = username || "User";
+
     if (!Array.isArray(questionIds) || questionIds.length === 0) {
       return res.status(400).json({ error: "questionIds required" });
     }
@@ -167,7 +169,7 @@ async function handleSubmit(req, res) {
     // Score
     const result = calculateResult(dbQuestions, answers);
 
-    // Upsert user (with total_tests, total_score increment)
+    // Upsert user (lookup by id = clerk_id)
     const { data: existingUser } = await supabase
       .from("users_light")
       .select("id, total_tests, total_score")
@@ -177,13 +179,15 @@ async function handleSubmit(req, res) {
     if (!existingUser) {
       await supabase.from("users_light").insert([{
         id: user_id,
-        username,
+        clerk_id: clerkId,
+        username: displayName,
         total_tests: 1,
         total_score: result.scorePercent
       }]).catch(() => {});
     } else {
       await supabase.from("users_light").update({
-        username,
+        username: displayName,
+        clerk_id: clerkId,
         total_tests: (existingUser.total_tests || 0) + 1,
         total_score: (existingUser.total_score || 0) + result.scorePercent
       }).eq("id", user_id).catch(() => {});
@@ -192,7 +196,7 @@ async function handleSubmit(req, res) {
     // Insert result
     const test_id = testId || (Date.now().toString(36) + Math.random().toString(36).slice(2));
     const { error: insErr } = await supabase.from("results").insert([{
-      user_id, username, test_id,
+      user_id, username: displayName, test_id,
       score_percent: result.scorePercent,
       correct: result.correct,
       wrong: result.wrong,
@@ -215,7 +219,7 @@ async function handleSubmit(req, res) {
       const { data } = await supabase.rpc("update_user_streak", { p_user_id: user_id });
       streakData = data?.[0] || null;
       if (streakData?.is_new_day) {
-        console.log(`[STREAK] ${username}: Day ${streakData.new_streak}`);
+        console.log(`[STREAK] ${displayName}: Day ${streakData.new_streak}`);
       }
     } catch (e) {
       console.warn("[STREAK] RPC failed (non-critical):", e.message);
@@ -446,72 +450,6 @@ async function handleProfile(req, res) {
 }
 
 // ═══════════════════════════════════════════════
-// /api/set-anon-cookie
+// Anonymous cookie/merge endpoints REMOVED
+// (No longer needed — Clerk handles all auth)
 // ═══════════════════════════════════════════════
-
-function handleSetAnonCookie(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  try {
-    const { token } = req.body || {};
-    if (!token) return res.status(400).json({ error: "Token required" });
-    res.setHeader("Set-Cookie", `anon_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`);
-    return res.json({ success: true });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-}
-
-// ═══════════════════════════════════════════════
-// /api/clear-anon-cookie
-// ═══════════════════════════════════════════════
-
-function handleClearAnonCookie(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-  res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
-  return res.json({ success: true });
-}
-
-// ═══════════════════════════════════════════════
-// /api/merge-anonymous
-// ═══════════════════════════════════════════════
-
-async function handleMergeAnonymous(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
-
-  try {
-    const authHeader = req.headers.authorization || "";
-    const emailToken = authHeader.replace(/^Bearer\s+/i, "");
-    if (!emailToken || !SUPABASE_ANON_KEY) {
-      return res.json({ merged: 0, message: "No token" });
-    }
-
-    const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: emailUser } = await authClient.auth.getUser(emailToken);
-    if (!emailUser?.user?.email) {
-      return res.json({ merged: 0, message: "No email session" });
-    }
-
-    const cookies = req.headers.cookie || "";
-    const match = cookies.match(/anon_token=([^;]+)/);
-    if (!match) return res.json({ merged: 0, message: "No anon cookie" });
-
-    const { data: anonUser } = await authClient.auth.getUser(match[1]);
-    if (!anonUser?.user) return res.json({ merged: 0, message: "Bad anon token" });
-
-    if (anonUser.user.id === emailUser.user.id) {
-      return res.json({ merged: 0, message: "Same user" });
-    }
-
-    const { data: updated } = await supabase
-      .from("results")
-      .update({ user_id: emailUser.user.id })
-      .eq("user_id", anonUser.user.id)
-      .select("id");
-
-    res.setHeader("Set-Cookie", "anon_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0");
-    return res.json({ merged: updated?.length || 0 });
-  } catch (err) {
-    console.error("[MERGE] Crash:", err);
-    return res.json({ merged: 0, message: err.message });
-  }
-}
