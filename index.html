@@ -6,12 +6,22 @@
   <meta name="description" content="Free Mock Test Platform for SSC, Railway, Police & Competitive Exams. Practice with 55+ questions, timer, negative marking, and detailed analysis.">
   <meta name="keywords" content="mock test, SSC, Railway, Police, competitive exam, practice test, quiz, online test">
   <meta name="author" content="MockTestPro">
-  <meta name="theme-color" content="#EFF3F8">
+  <meta name="theme-color" content="#6366F1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MockTestPro">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="MockTestPro">
+  <meta name="msapplication-TileColor" content="#6366F1">
 
   <title>MockTestPro — Free Mock Tests for SSC, Railway & More</title>
 
-  <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Icons -->
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
   <!-- CSS -->
   <link rel="stylesheet" href="css/variables.css?v=20260502i">
@@ -119,6 +129,29 @@
       clearInterval(_splashCheck);
       hideSplash();
     }, 5000);
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => {
+            console.log('[PWA] Service Worker registered:', reg.scope);
+            // Check for updates every 30 minutes
+            setInterval(() => reg.update(), 30 * 60 * 1000);
+          })
+          .catch(err => console.warn('[PWA] SW registration failed:', err));
+      });
+
+      // Handle SW update — notify user
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        console.log('[PWA] New version available, reloading...');
+      });
+    }
   </script>
 </body>
 </html>
