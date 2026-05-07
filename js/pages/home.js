@@ -77,6 +77,7 @@ const HomePage = {
                 <div class="streak-label">${streakAlive ? 'streak alive!' : 'streak broken'}</div>
               </div>
               ${streak.best > 1 ? `<div class="streak-best">Best: ${streak.best}🏆</div>` : ''}
+
             </div>
 
             <!-- Daily Challenge -->
@@ -138,6 +139,13 @@ const HomePage = {
         <section class="container quick-modes-section animate-fadeInUp">
           <h2 class="section-title-compact">⚡ Quick Practice</h2>
           <div class="quick-modes-grid">
+            <div class="quick-mode-card" onclick="App.navigate('battle')" style="border-color: rgba(239, 68, 68, 0.3); background: linear-gradient(135deg, rgba(239, 68, 68, 0.06), transparent);">
+              <span class="qm-icon">⚔️</span>
+              <div class="qm-info">
+                <div class="qm-title">Rival Battle</div>
+                <div class="qm-sub">Challenge AI rivals · Instant feedback</div>
+              </div>
+            </div>
             <div class="quick-mode-card" onclick="HomePage.startQuickMode('quick-10')">
               <span class="qm-icon">⚡</span>
               <div class="qm-info">

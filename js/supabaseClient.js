@@ -377,6 +377,8 @@ async function saveResultToDB(result) {
         return acc;
       }, {}),
       timeTaken: result.timeTaken || 0,
+      totalTime: (result.config && result.config.totalTime) || 99999,
+      maxCombo: (typeof Gamification !== 'undefined' && Gamification.getCombo) ? Gamification.getCombo().max : 0,
       isDaily: (result.config && result.config.isDaily) || false,
       user_id,
       username,
@@ -389,12 +391,14 @@ async function saveResultToDB(result) {
     // Get auth token from Clerk for secure API call
     const headers = { "Content-Type": "application/json" };
     try {
+      console.log("🔑 Getting Clerk token...");
       const clerkToken = await Auth.getSessionToken();
+      console.log("🔑 Token:", clerkToken ? "YES (" + clerkToken.length + " chars)" : "NULL");
       if (clerkToken) {
         headers["Authorization"] = `Bearer ${clerkToken}`;
       }
     } catch (authErr) {
-      console.warn("Could not get Clerk token, submitting without:", authErr);
+      console.error("❌ Could not get Clerk token:", authErr);
     }
 
     const resp = await fetch("/api/submit", {
@@ -412,17 +416,26 @@ async function saveResultToDB(result) {
     } else {
       console.log("✅ Result saved securely:", data);
 
+      // ── PROCESS SERVER-SIDE GAMIFICATION ──
+      // Backend is the SINGLE SOURCE OF TRUTH for coins/XP/rewards
+      if (data.gamification && typeof Gamification !== 'undefined') {
+        const gamResult = Gamification.processTestCompletion(data);
+        // Store gamification data on the result for the result page
+        if (gamResult) {
+          result._gamification = gamResult;
+        }
+      }
+
       // ── SYNC SERVER STREAK WITH CLIENT ──
       if (data.streak && typeof DailySystem !== 'undefined') {
+        const serverStreak = data.streak.streak || data.streak;
+        const serverBest = data.streak.best || 0;
         const currentStreak = DailySystem.getStreak();
-        if (data.streak > currentStreak.current) {
-          // Server has a higher streak — sync
-          localStorage.setItem(DailySystem.KEYS.STREAK, JSON.stringify({
-            current: data.streak,
-            best: Math.max(currentStreak.best, data.streak),
-            lastDate: DailySystem._todayKey()
-          }));
-        }
+        localStorage.setItem(DailySystem.KEYS.STREAK, JSON.stringify({
+          current: typeof serverStreak === 'number' ? serverStreak : currentStreak.current,
+          best: Math.max(currentStreak.best, serverBest),
+          lastDate: DailySystem._todayKey()
+        }));
       }
 
       if (window.trackEvent) {

@@ -63,6 +63,9 @@ const TestEngine = {
     // Save state for resume
     Storage.saveCurrentTest(this.state);
 
+    // Reset gamification combo tracker
+    if (window.Gamification) Gamification.resetCombo();
+
     if (window.trackEvent) {
       window.trackEvent("test_start", {
         mode: isDaily ? "daily" : "full"
@@ -202,7 +205,8 @@ const TestEngine = {
     }
 
     // ── SUPABASE SAVE SYSTEM ──
-
+    // Gamification rewards are processed inside saveResultToDB
+    // after receiving server response (backend is source of truth)
     if (window.saveResultToDB) {
       window.saveResultToDB(result);
     }

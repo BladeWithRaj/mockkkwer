@@ -121,6 +121,9 @@ const ResultPage = {
           ` : ''}
         </div>
 
+        <!-- 💰 GAMIFICATION REWARDS SUMMARY -->
+        ${this._renderRewardsSummary(result)}
+
         <!-- 🔥 SMART INSIGHTS — Game Changer Section -->
         <div class="insights-section animate-fadeInUp stagger-2">
           <h3 class="insight-section-title">🧠 Smart Insights</h3>
@@ -349,6 +352,47 @@ const ResultPage = {
       weakTopics,
       slowestQuestions
     };
+  },
+
+  _renderRewardsSummary(result) {
+    const gam = result._gamification;
+    if (!gam || !window.Gamification) return '';
+
+    return `
+      <div class="rewards-summary animate-fadeInUp stagger-1">
+        <div class="rewards-summary-title">🎁 Rewards Earned</div>
+        ${gam.rewards.map(r => `
+          <div class="reward-line">
+            <div class="reward-line-left">
+              <span>${r.icon}</span>
+              <span>${r.label}</span>
+            </div>
+            <div class="reward-line-right">
+              <span class="reward-coins-badge">+${r.coins} 💰</span>
+              <span class="reward-xp-badge">+${r.xp} XP</span>
+            </div>
+          </div>
+        `).join('')}
+        <div class="rewards-total">
+          <span>Total Earned</span>
+          <div style="display:flex;gap:var(--space-4);">
+            <span class="rewards-total-coins">+${gam.totalCoins} 💰</span>
+            <span class="rewards-total-xp">+${gam.totalXP} XP</span>
+          </div>
+        </div>
+        ${gam.combo >= 5 ? `
+          <div style="margin-top:var(--space-3);text-align:center;font-size:var(--text-sm);color:var(--text-secondary);">
+            🔥 Best Combo: ${gam.combo}x in a row!
+          </div>
+        ` : ''}
+        <div style="margin-top:var(--space-3);text-align:center;">
+          <span class="xp-level-badge">${gam.level.icon || '⭐'} ${gam.level.title} — Tier ${gam.level.level}/5</span>
+          <div class="xp-bar-wrap" style="margin-top:var(--space-2);width:100%;">
+            <div class="xp-bar-fill" style="width:${gam.level.progress}%"></div>
+          </div>
+        </div>
+      </div>
+    `;
   },
 
   // Retry with same config (fetch fresh questions from API)

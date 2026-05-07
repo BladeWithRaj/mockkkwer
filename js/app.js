@@ -61,7 +61,9 @@ const App = {
     analysis: AnalysisPage,
     dashboard: DashboardPage,
     leaderboard: LeaderboardPage,
-    analytics: AnalyticsPage
+    analytics: AnalyticsPage,
+    profile: ProfilePage,
+    battle: BattlePage
   },
 
   async init() {
@@ -86,6 +88,11 @@ const App = {
       this.questionsLoaded = true;
 
       console.log("App ready — user:", Auth.getUser()?.name);
+
+      // Gamification: load profile from server (v2 — no client-side login bonus)
+      if (window.Gamification && Gamification.loadProfileFromServer) {
+        Gamification.loadProfileFromServer();
+      }
 
       // Check for in-progress test to resume
       this._tryResumeTest();
@@ -197,6 +204,10 @@ const App = {
       ? `<img src="${userAvatar}" alt="avatar" class="header-user-img" />`
       : `<span class="header-user-emoji">👤</span>`;
 
+    // Gamification data for header
+    const coins = window.Gamification ? Gamification.getCoins() : 0;
+    const level = window.Gamification && Gamification.getTier ? Gamification.getTier() : { level: 1, title: 'Beginner', icon: '🌱', progress: 0 };
+
     return `
       <header class="header">
         <div class="header-inner">
@@ -211,6 +222,21 @@ const App = {
               <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">${Lang.t('nav_dashboard')}</a>
               <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">${Lang.t('nav_leaderboard')}</a>
             `}
+
+            <!-- Coins Display -->
+            ${!isTest ? `
+            <div class="coin-display" onclick="App.navigate('profile')" title="Your Coins">
+              <span class="coin-display-icon">💰</span>
+              <span class="coin-display-value">${coins}</span>
+            </div>
+            <div class="xp-display" title="${level.title} — Tier ${level.level}/5">
+              <span class="xp-level-badge">${level.icon || '🌱'} ${level.level}</span>
+              <div class="xp-bar-wrap">
+                <div class="xp-bar-fill" style="width:${level.progress}%"></div>
+              </div>
+            </div>
+            ` : ''}
+
             <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'}">
               ${ThemeManager.isDark() ? '🌙' : '☀️'}
             </button>
@@ -233,8 +259,8 @@ const App = {
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
-                <button class="dropdown-item" onclick="Auth.openProfile()">
-                  👤 Profile
+                <button class="dropdown-item" onclick="App.navigate('profile')">
+                  👤 Profile & Rewards
                 </button>
                 <button class="dropdown-item dropdown-signout" onclick="Auth.signOut()">
                   🚪 Sign Out

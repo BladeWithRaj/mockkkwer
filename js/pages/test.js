@@ -276,6 +276,9 @@ const TestPage = {
     this.refreshNav();
     this._updateProgress();
 
+    // Gamification: track combo for correct answers (approximate)
+    this._trackAnswerForGamification(index);
+
     // Release lock after animation frame
     requestAnimationFrame(() => {
       this._isProcessing = false;
@@ -405,6 +408,77 @@ const TestPage = {
       else if (pct >= 50) bar.classList.add('active');
     }
   },
+
+  // ── GAMIFICATION: Combo + Motivation ──
+  _trackAnswerForGamification(selectedIndex) {
+    if (!window.Gamification || !TestEngine.state) return;
+
+    const q = TestEngine.state.questions[TestEngine.state.currentQuestion];
+    if (!q) return;
+
+    if (selectedIndex === q.correct) {
+      const combo = Gamification.registerCorrect();
+      if (combo >= 3) this._showComboIndicator(combo);
+    } else {
+      Gamification.registerWrong();
+    }
+
+    // Check motivation milestones
+    const answered = Object.keys(TestEngine.state.answers).length;
+    const total = TestEngine.state.questions.length;
+    const correctSoFar = this._countCorrectSoFar();
+    const comboData = Gamification.getCombo();
+
+    const motivation = Gamification.getMotivation({
+      questionsAnswered: answered,
+      totalQuestions: total,
+      correctSoFar,
+      combo: comboData.current
+    });
+
+    if (motivation && !this._lastMotivation) {
+      this._showMotivationToast(motivation);
+      this._lastMotivation = true;
+      setTimeout(() => { this._lastMotivation = false; }, 8000);
+    }
+  },
+
+  _countCorrectSoFar() {
+    if (!TestEngine.state) return 0;
+    let correct = 0;
+    TestEngine.state.questions.forEach(q => {
+      const ans = TestEngine.state.answers[q.id];
+      if (ans !== undefined && ans === q.correct) correct++;
+    });
+    return correct;
+  },
+
+  _showComboIndicator(combo) {
+    // Remove old
+    const old = document.querySelector('.combo-indicator');
+    if (old) old.remove();
+
+    const el = document.createElement('div');
+    el.className = 'combo-indicator' + (combo >= 10 ? ' epic' : '');
+    el.innerHTML = `🔥 ${combo}x Combo!`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 2000);
+  },
+
+  _showMotivationToast(motivation) {
+    const old = document.querySelector('.motivation-toast');
+    if (old) old.remove();
+
+    const el = document.createElement('div');
+    el.className = 'motivation-toast';
+    el.innerHTML = `${motivation.emoji} ${motivation.msg}`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 3000);
+  },
+
+  _lastMotivation: false,
 
   toggleMobileNav() {
     const sheet = document.getElementById('mobile-nav-sheet');

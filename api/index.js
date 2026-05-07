@@ -92,7 +92,11 @@ export default async function handler(req, res) {
     if (path.includes("/analytics"))       return await handleAnalytics(req, res);
     if (path.includes("/leaderboard"))     return await handleLeaderboard(req, res);
     if (path.includes("/avatar"))          return await handleAvatar(req, res);
+    if (path.includes("/profile-summary")) return await handleProfileSummary(req, res);
     if (path.includes("/profile"))         return await handleProfile(req, res);
+    if (path.includes("/streak"))          return await handleStreak(req, res);
+    if (path.includes("/wallet"))          return await handleWallet(req, res);
+    if (path.includes("/rewards"))         return await handleRewards(req, res);
 
     return res.status(404).json({ error: "Route not found", path });
   } catch (err) {
@@ -113,13 +117,17 @@ async function handleSubmit(req, res) {
   }
 
   try {
+    console.log("---- SUBMIT HIT ----");
     const { questionIds, answers, timeTaken, testId, isDaily, username } = req.body || {};
+    console.log("BODY keys:", Object.keys(req.body || {}));
 
-    // 🔐 Verify Clerk session token (MANDATORY for write endpoints)
+    // 🔐 Verify Clerk session token
     const authHeader = req.headers.authorization || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
+    console.log("TOKEN present:", !!token, "length:", token.length);
 
     if (!token) {
+      console.log("❌ NO TOKEN");
       return res.status(401).json({ error: "No authentication token" });
     }
 
@@ -129,9 +137,11 @@ async function handleSubmit(req, res) {
         secretKey: process.env.CLERK_SECRET_KEY
       });
       clerkId = payload.sub;
+      console.log("✅ CLERK ID:", clerkId);
     } catch (verifyErr) {
-      console.warn("[SUBMIT] Clerk token verification failed:", verifyErr.message);
-      return res.status(401).json({ error: "Invalid or expired session" });
+      console.error("❌ VERIFY FAILED:", verifyErr.message);
+      console.error("SECRET_KEY set:", !!process.env.CLERK_SECRET_KEY);
+      return res.status(401).json({ error: "Invalid or expired session", detail: verifyErr.message });
     }
 
     if (!clerkId) {
@@ -170,27 +180,42 @@ async function handleSubmit(req, res) {
     const result = calculateResult(dbQuestions, answers);
 
     // Upsert user (lookup by id = clerk_id)
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: lookupErr } = await supabase
       .from("users_light")
       .select("id, total_tests, total_score")
       .eq("id", user_id)
       .single();
 
+    console.log("DB LOOKUP:", existingUser ? "FOUND" : "NOT FOUND", lookupErr?.message || "");
+
     if (!existingUser) {
-      await supabase.from("users_light").insert([{
+      console.log("CREATING USER:", user_id, displayName);
+      const { data: newUser, error: insertErr } = await supabase.from("users_light").insert([{
         id: user_id,
         clerk_id: clerkId,
         username: displayName,
         total_tests: 1,
         total_score: result.scorePercent
-      }]).catch(() => {});
+      }]).select().single();
+
+      if (insertErr) {
+        console.error("❌ USER INSERT ERROR:", insertErr.message, insertErr.code, insertErr.details);
+      } else {
+        console.log("✅ USER CREATED:", newUser?.id);
+      }
     } else {
-      await supabase.from("users_light").update({
+      const { error: updateErr } = await supabase.from("users_light").update({
         username: displayName,
         clerk_id: clerkId,
         total_tests: (existingUser.total_tests || 0) + 1,
         total_score: (existingUser.total_score || 0) + result.scorePercent
-      }).eq("id", user_id).catch(() => {});
+      }).eq("id", user_id);
+
+      if (updateErr) {
+        console.error("❌ USER UPDATE ERROR:", updateErr.message);
+      } else {
+        console.log("✅ USER UPDATED");
+      }
     }
 
     // Insert result
@@ -213,13 +238,13 @@ async function handleSubmit(req, res) {
       return res.status(500).json({ error: "Insert failed: " + insErr.message });
     }
 
-    // ── SERVER-SIDE STREAK UPDATE ──
+    // ── SERVER-SIDE STREAK UPDATE (with grace day) ──
     let streakData = null;
     try {
-      const { data } = await supabase.rpc("update_user_streak", { p_user_id: user_id });
-      streakData = data?.[0] || null;
-      if (streakData?.is_new_day) {
-        console.log(`[STREAK] ${displayName}: Day ${streakData.new_streak}`);
+      const { data } = await supabase.rpc("update_streak_with_grace", { p_user_id: user_id });
+      streakData = data || null;
+      if (streakData) {
+        console.log(`[STREAK] ${displayName}: Day ${streakData.streak}${streakData.graceUsed ? ' (grace day used!)' : ''}`);
       }
     } catch (e) {
       console.warn("[STREAK] RPC failed (non-critical):", e.message);
@@ -238,11 +263,34 @@ async function handleSubmit(req, res) {
       console.warn("[DAILY STATS] RPC failed (non-critical):", e.message);
     }
 
+    // ── SERVER-SIDE GAMIFICATION REWARDS ──
+    // Backend is the SINGLE SOURCE OF TRUTH for coins/XP/rewards
+    let gamification = null;
+    try {
+      const totalTime = req.body.totalTime || 99999;
+      const speedRatio = totalTime < 99999 ? timeTaken / totalTime : 1;
+      const maxCombo = req.body.maxCombo || 0;
+
+      const { data: gamData } = await supabase.rpc("process_test_rewards", {
+        p_user_id: user_id,
+        p_accuracy: result.scorePercent,
+        p_speed_ratio: speedRatio,
+        p_max_combo: maxCombo,
+        p_correct: result.correct,
+        p_is_daily: !!isDaily
+      });
+      gamification = gamData || null;
+      console.log(`[GAMIFICATION] +${gamification?.totalCoins || 0} coins, +${gamification?.totalXP || 0} XP`);
+    } catch (e) {
+      console.warn("[GAMIFICATION] RPC failed (non-critical):", e.message);
+    }
+
     return res.json({
       success: true,
       test_id,
       result,
-      streak: streakData?.new_streak || 0
+      streak: streakData || { streak: 0, best: 0, graceUsed: false, graceDays: 0 },
+      gamification
     });
   } catch (err) {
     console.error("[SUBMIT] Crash:", err);
@@ -450,6 +498,146 @@ async function handleProfile(req, res) {
 }
 
 // ═══════════════════════════════════════════════
-// Anonymous cookie/merge endpoints REMOVED
-// (No longer needed — Clerk handles all auth)
+// /api/streak — Get/update streak
 // ═══════════════════════════════════════════════
+
+async function handleStreak(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const userId = url.searchParams.get("user_id");
+
+    if (!userId) return res.status(400).json({ error: "user_id required" });
+
+    const { data, error } = await supabase
+      .from("user_streaks")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return res.status(500).json({ error: error.message });
+    }
+
+    return res.json({
+      success: true,
+      streak: data || { current_streak: 0, best_streak: 0, streak_freeze: 0 }
+    });
+  } catch (err) {
+    console.error("[STREAK] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/wallet — Get user wallet / coins
+// ═══════════════════════════════════════════════
+
+async function handleWallet(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const userId = url.searchParams.get("user_id");
+
+    if (!userId) return res.status(400).json({ error: "user_id required" });
+
+    const { data: wallet, error } = await supabase
+      .from("user_wallets")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Get recent transactions
+    const { data: transactions } = await supabase
+      .from("coin_transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    return res.json({
+      success: true,
+      wallet: wallet || { coins: 0, total_earned: 0 },
+      transactions: transactions || []
+    });
+  } catch (err) {
+    console.error("[WALLET] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/rewards — Get user rewards
+// ═══════════════════════════════════════════════
+
+async function handleRewards(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const userId = url.searchParams.get("user_id");
+
+    if (!userId) return res.status(400).json({ error: "user_id required" });
+
+    const { data, error } = await supabase
+      .from("user_rewards")
+      .select("*")
+      .eq("user_id", userId);
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    return res.json({
+      success: true,
+      rewards: data || []
+    });
+  } catch (err) {
+    console.error("[REWARDS] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/profile-summary — UNIFIED profile endpoint
+// Single call returns wallet + streak + badges +
+// stats + subject analytics + trends
+// ═══════════════════════════════════════════════
+
+async function handleProfileSummary(req, res) {
+  try {
+    // Verify auth
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+
+    if (!token) return res.status(401).json({ error: "No auth token" });
+
+    let userId = null;
+    try {
+      const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+      userId = payload.sub;
+    } catch (e) {
+      return res.status(401).json({ error: "Invalid session" });
+    }
+
+    // Single RPC call for everything
+    const { data, error } = await supabase.rpc("get_profile_summary", { p_user_id: userId });
+
+    if (error) {
+      console.warn("[PROFILE-SUMMARY] RPC failed:", error.message);
+      // Fallback: return basic data
+      return res.json({
+        success: true,
+        wallet: { coins: 0, totalEarned: 0, xp: 0, tier: 1 },
+        streak: { current: 0, best: 0, graceDays: 0 },
+        badges: [],
+        stats: { totalTests: 0, avgScore: 0, bestScore: 0 },
+        subjects: [],
+        trends: []
+      });
+    }
+
+    return res.json({ success: true, ...data });
+  } catch (err) {
+    console.error("[PROFILE-SUMMARY] Crash:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
