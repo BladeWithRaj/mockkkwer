@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Sitemap: https://mockkkwer.com/sitemap.xml
+
+# Allow all crawlers to index exam pages
+User-agent: Googlebot
+Allow: /ssc/
+Allow: /railway/
+Allow: /banking/
+Allow: /upsc/
+Allow: /exams/
+
+# Block internal SPA routes from indexing
+Disallow: /api/

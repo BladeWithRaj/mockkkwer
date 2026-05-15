@@ -10,13 +10,10 @@ const ProfilePage = {
   render() {
     const user = Auth.getUser();
     const data = Gamification.getProfileData();
-    const userName = user?.name || Storage.getUsername() || 'User';
-    const userAvatar = user?.avatar || null;
+    const userName = user?.username || user?.name || Storage.getUsername() || 'User';
     const tier = data.level;
 
-    const avatarHTML = userAvatar
-      ? `<img src="${userAvatar}" alt="avatar" />`
-      : `👤`;
+    const avatarHTML = '👤';
 
     return `
       <div class="profile-page container page-enter">

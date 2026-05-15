@@ -79,10 +79,14 @@ const Gamification = {
   async loadProfileFromServer() {
     try {
       const user = Auth.getUser();
-      if (!user?.token) return;
+      if (!user?.id) return;
 
       const resp = await fetch('/api/profile-summary', {
-        headers: { 'Authorization': `Bearer ${user.token}` }
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': user.id,
+          'X-Username': user.username || ''
+        }
       });
 
       if (!resp.ok) return;

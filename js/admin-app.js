@@ -16,6 +16,9 @@ const AdminApp = {
     // Role-based Auth Check
     if (window.Auth) {
       await window.Auth.init();
+      if (!Auth.isAuthenticated()) {
+        await Auth.showUsernameModal();
+      }
       const user = window.Auth.getUser();
       if (!window.Auth.isVerified() || !user) {
         window.location.href = "index.html";

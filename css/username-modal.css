@@ -1,0 +1,308 @@
+/* ============================================
+ * USERNAME MODAL — Premium Auth UI
+ * No Clerk. No OTP. Instant identity.
+ * ============================================ */
+
+/* ── Backdrop ── */
+.username-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  padding: 20px;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+}
+
+.username-modal.visible {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Card ── */
+.username-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 32px 32px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(99, 102, 241, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transform: translateY(40px) scale(0.95);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
+
+.username-modal.visible .username-card {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Light mode card */
+[data-theme="light"] .username-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.12),
+    0 0 60px rgba(99, 102, 241, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ── Brand Section ── */
+.username-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.username-brand-icon {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
+  animation: brandPulse 2s ease-in-out infinite;
+}
+
+@keyframes brandPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.username-brand-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.username-brand-title span {
+  background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .username-brand-title {
+  color: #1e293b;
+}
+
+/* ── Subtitle ── */
+.username-subtitle {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0 0 28px;
+  font-weight: 400;
+}
+
+[data-theme="light"] .username-subtitle {
+  color: #64748b;
+}
+
+/* ── Input ── */
+.username-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.username-input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6366f1;
+  font-size: 18px;
+  font-weight: 700;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.username-input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f1f5f9;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  box-sizing: border-box;
+}
+
+.username-input::placeholder {
+  color: rgba(148, 163, 184, 0.5);
+  font-weight: 400;
+}
+
+.username-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="light"] .username-input {
+  background: white;
+  color: #1e293b;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .username-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="light"] .username-input::placeholder {
+  color: rgba(100, 116, 139, 0.5);
+}
+
+/* ── Status Messages ── */
+.username-status {
+  min-height: 22px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 4px;
+  margin-bottom: 16px;
+  transition: color 0.2s ease;
+}
+
+.username-status:empty {
+  margin-bottom: 16px;
+}
+
+.username-status.checking {
+  color: #94a3b8;
+}
+
+.username-status.available {
+  color: #10B981;
+}
+
+.username-status.taken {
+  color: #F59E0B;
+}
+
+.username-status.error {
+  color: #EF4444;
+}
+
+.username-login-link {
+  color: #818cf8;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.username-login-link:hover {
+  color: #6366f1;
+}
+
+/* ── Continue Button ── */
+.username-continue-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.username-continue-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.username-continue-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.username-continue-btn:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.username-continue-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.username-continue-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Button Loader ── */
+.username-btn-loader {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Rules Text ── */
+.username-rules {
+  text-align: center;
+  color: rgba(148, 163, 184, 0.5);
+  font-size: 11px;
+  margin-top: 16px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="light"] .username-rules {
+  color: rgba(100, 116, 139, 0.5);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .username-card {
+    padding: 32px 24px 24px;
+    border-radius: 20px;
+  }
+
+  .username-brand-icon {
+    font-size: 28px;
+  }
+
+  .username-brand-title {
+    font-size: 24px;
+  }
+
+  .username-input {
+    font-size: 15px;
+    padding: 12px 14px 12px 40px;
+  }
+
+  .username-continue-btn {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}

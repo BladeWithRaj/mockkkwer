@@ -2,6 +2,11 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" }
   ],
+  "rewrites": [
+    { "source": "/exam", "destination": "/index.html" },
+    { "source": "/exam/(.*)", "destination": "/index.html" },
+    { "source": "/result", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/sw.js",
@@ -15,6 +20,12 @@
       "source": "/manifest.json",
       "headers": [
         { "key": "Content-Type", "value": "application/manifest+json" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml" }
       ]
     }
   ]

@@ -337,7 +337,7 @@ async function bulkInsertQuestions(questions) {
   return { success: true, data };
 }
 
-// ── RESULTS (DB) ──────────────────────────
+// ── RESULTS (Direct Supabase → test_attempts) ──────────────────────────
 
 async function saveResultToDB(result) {
   // ── DOUBLE-SUBMIT GUARD ──
@@ -348,12 +348,9 @@ async function saveResultToDB(result) {
   window.__submitted = true;
 
   try {
-    const testId = crypto.randomUUID();
-    const user_id = Storage.getUserId();
-    const username = Storage.getUsername();
-
-    if (!user_id || !username) {
-      console.warn("Skipping submission: No username/identity found.");
+    const user = Auth.getUser();
+    if (!user || !user.id) {
+      console.warn("Skipping submission: No user session.");
       window.__submitted = false;
       return;
     }
@@ -361,117 +358,124 @@ async function saveResultToDB(result) {
     // ── Guard: ensure questionResults exists ──
     const questionResults = result.questionResults || [];
     if (questionResults.length === 0) {
-      console.warn("Skipping submission: No questionResults in result object.");
+      console.warn("Skipping submission: No questionResults.");
       window.__submitted = false;
       return;
     }
 
-    // Format payload for secure API
-    const payload = {
-      testId,
-      questionIds: questionResults.map(qr => qr.question?.id).filter(Boolean),
-      answers: questionResults.reduce((acc, qr) => {
-        if (qr.question?.id && qr.selectedAnswer !== null && qr.selectedAnswer !== undefined) {
-          acc[qr.question.id] = qr.selectedAnswer;
-        }
-        return acc;
-      }, {}),
-      timeTaken: result.timeTaken || 0,
-      totalTime: (result.config && result.config.totalTime) || 99999,
-      maxCombo: (typeof Gamification !== 'undefined' && Gamification.getCombo) ? Gamification.getCombo().max : 0,
-      isDaily: (result.config && result.config.isDaily) || false,
-      user_id,
-      username,
-      examId: (result.config && result.config.examId) || null,
-      examName: (result.config && result.config.examName) || null
+    // ── Calculate attempt metrics ──
+    const totalQuestions = result.totalQuestions || questionResults.length;
+    const attempted = totalQuestions - (result.skipped || 0);
+    const accuracy = result.accuracy || 0;
+    const score = result.totalMarks || 0;
+    const correctCount = result.correct || 0;
+    const wrongCount = result.wrong || 0;
+    const timeTaken = result.timeTaken || 0;
+
+    // Weak topics → JSON array of subject names
+    const weakTopics = (result.weakTopics || [])
+      .map(wt => wt.subject || wt.name)
+      .filter(Boolean);
+
+    // Exam type from config
+    const examType = (result.config && result.config.examName)
+      || (result.config && result.config.examId)
+      || 'Custom Test';
+
+    // Current streak
+    const currentStreak = (typeof DailySystem !== 'undefined')
+      ? (DailySystem.getStreak().current || 0)
+      : 0;
+
+    // ── INSERT into test_attempts ──
+    const row = {
+      user_id: user.id,
+      exam_type: examType,
+      total_questions: totalQuestions,
+      attempted,
+      correct_count: correctCount,
+      wrong_count: wrongCount,
+      score,
+      accuracy,
+      time_taken: timeTaken,
+      weak_topics: weakTopics,
+      coins_earned: 0,
+      streak_at_time: currentStreak
     };
 
-    console.log("📤 Sending data to secure API:", payload);
+    console.log("📤 Saving attempt to test_attempts:", row);
 
-    // Get auth token from Clerk for secure API call
-    const headers = { "Content-Type": "application/json" };
-    try {
-      console.log("🔑 Getting Clerk token...");
-      const clerkToken = await Auth.getSessionToken();
-      console.log("🔑 Token:", clerkToken ? "YES (" + clerkToken.length + " chars)" : "NULL");
-      if (clerkToken) {
-        headers["Authorization"] = `Bearer ${clerkToken}`;
-      }
-    } catch (authErr) {
-      console.error("❌ Could not get Clerk token:", authErr);
-    }
+    const { data, error } = await client
+      .from("test_attempts")
+      .insert(row)
+      .select()
+      .single();
 
-    const resp = await fetch("/api/submit", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload)
-    });
-
-    const data = await resp.json();
-
-    if (!resp.ok) {
-      console.error("❌ Save failed:", data.error);
-      // Store in fallback queue for retry
-      Storage.addToFallbackQueue(payload);
+    if (error) {
+      console.error("❌ Attempt save failed:", error);
+      // Fallback: save to local queue for retry
+      Storage.addToFallbackQueue(row);
     } else {
-      console.log("✅ Result saved securely:", data);
+      console.log("✅ Attempt saved:", data.id);
 
-      // ── PROCESS SERVER-SIDE GAMIFICATION ──
-      // Backend is the SINGLE SOURCE OF TRUTH for coins/XP/rewards
-      if (data.gamification && typeof Gamification !== 'undefined') {
-        const gamResult = Gamification.processTestCompletion(data);
-        // Store gamification data on the result for the result page
-        if (gamResult) {
-          result._gamification = gamResult;
+      // ── UPDATE USER STATS ──
+      try {
+        // Increment tests_given on users table
+        const { error: updateErr } = await client
+          .from("users")
+          .update({
+            tests_given: (user.tests_given || 0) + 1,
+            streak: currentStreak
+          })
+          .eq("id", user.id);
+
+        if (updateErr) {
+          console.warn("User stats update failed:", updateErr.message);
+        } else {
+          // Update local session
+          const session = Auth._getSession();
+          if (session) {
+            session.tests_given = (session.tests_given || 0) + 1;
+            session.streak = currentStreak;
+            Auth._saveSession(session);
+          }
         }
+      } catch (updateCrash) {
+        console.warn("User stats update crash:", updateCrash);
       }
 
-      // ── SYNC SERVER STREAK WITH CLIENT ──
-      if (data.streak && typeof DailySystem !== 'undefined') {
-        const serverStreak = data.streak.streak || data.streak;
-        const serverBest = data.streak.best || 0;
-        const currentStreak = DailySystem.getStreak();
-        localStorage.setItem(DailySystem.KEYS.STREAK, JSON.stringify({
-          current: typeof serverStreak === 'number' ? serverStreak : currentStreak.current,
-          best: Math.max(currentStreak.best, serverBest),
-          lastDate: DailySystem._todayKey()
-        }));
-      }
-
+      // Track event
       if (window.trackEvent) {
         window.trackEvent("test_submit", {
-          score: result.accuracy || result.scorePercent || 0
+          score: accuracy
         });
       }
-
-      // Sync avatar to server on first submit
-      if (window.syncAvatarOnce) syncAvatarOnce();
     }
 
   } catch (err) {
     console.error("🔥 Unexpected error in saveResultToDB:", err);
   } finally {
-    // Reset guard after 3s cooldown (prevents rapid re-submits but allows future tests)
+    // Reset guard after 3s cooldown
     setTimeout(() => { window.__submitted = false; }, 3000);
   }
 }
 
 // syncFallbackQueue removed — dead code (never called)
 
-// ── SESSION STABILIZATION (Legacy — no-op with Clerk) ──
+// ── SESSION STABILIZATION (Legacy — no-op with username auth) ──
 
 async function initSession() {
-  // Clerk handles sessions now. This is kept for backward compatibility.
-  console.log("initSession: no-op (Clerk handles auth)");
+  // Username auth uses localStorage session. This is kept for backward compatibility.
+  console.log("initSession: no-op (username auth handles sessions)");
 }
 
 
 
-// ── API WRAPPER (Pre-Backend) ─────────────
+// ── API WRAPPER (Direct Supabase → test_attempts) ─────────────
 
 async function fetchUserResultsAPI(userId) {
   return await client
-    .from("results")
+    .from("test_attempts")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -483,12 +487,12 @@ async function fetchUserResultsAPI(userId) {
 async function getUserResults() {
   try {
     const user = Auth.getUser();
-    if (!user || !user.clerkId) {
+    if (!user || !user.id) {
       console.warn("Cannot fetch results: No authenticated user");
       return [];
     }
 
-    const userId = user.clerkId;
+    const userId = user.id;
     const { data, error } = await fetchUserResultsAPI(userId);
 
     if (error) {
@@ -512,13 +516,13 @@ async function subscribeToResults(callback) {
 
   try {
     const user = Auth.getUser();
-    if (!user || !user.clerkId) return;
-    const userId = user.clerkId;
+    if (!user || !user.id) return;
+    const userId = user.id;
 
     resultsChannel = client
-      .channel('results_realtime')
+      .channel('attempts_realtime')
       .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'results', filter: `user_id=eq.${userId}` },
+        { event: 'INSERT', schema: 'public', table: 'test_attempts', filter: `user_id=eq.${userId}` },
         (payload) => {
           console.log("🔔 Real-time result inserted!", payload);
           callback(payload);
@@ -531,38 +535,97 @@ async function subscribeToResults(callback) {
   }
 }
 
-// ── LEADERBOARD (Direct Supabase) ─────────
+// ── LEADERBOARD (Direct Supabase — test_attempts + users) ─────────
 
-async function fetchLeaderboard() {
+async function fetchLeaderboard(mode = 'alltime') {
   try {
-    const { data, error } = await client
-      .from("results")
-      .select("user_id, username, score_percent")
-      .order("score_percent", { ascending: false })
-      .limit(200);
+    // Build time filter
+    let timeFilter = null;
+    const now = new Date();
 
-    if (error) {
-      console.error("Leaderboard fetch error:", error);
+    if (mode === 'daily') {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      timeFilter = today.toISOString();
+    } else if (mode === 'weekly') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      timeFilter = weekAgo.toISOString();
+    }
+
+    // Query test_attempts
+    let query = client
+      .from("test_attempts")
+      .select("user_id, score, accuracy, time_taken, total_questions, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (timeFilter) {
+      query = query.gte("created_at", timeFilter);
+    }
+
+    const { data: attempts, error: attErr } = await query;
+
+    if (attErr) {
+      console.error("Leaderboard attempts fetch error:", attErr);
       return [];
     }
 
-    if (!data || data.length === 0) return [];
+    if (!attempts || attempts.length === 0) return [];
+
+    // Get unique user IDs
+    const userIds = [...new Set(attempts.map(a => a.user_id))].filter(Boolean);
+    if (userIds.length === 0) return [];
+
+    // Fetch usernames
+    const { data: users, error: usrErr } = await client
+      .from("users")
+      .select("id, username, streak")
+      .in("id", userIds);
+
+    if (usrErr) {
+      console.error("Leaderboard users fetch error:", usrErr);
+      return [];
+    }
+
+    const userMap = {};
+    (users || []).forEach(u => {
+      userMap[u.id] = { username: u.username, streak: u.streak || 0 };
+    });
 
     // Aggregate: best score per user
     const userBest = {};
-    data.forEach(row => {
-      const key = row.username || row.user_id;
-      if (!userBest[key] || row.score_percent > userBest[key].best_score) {
+    attempts.forEach(row => {
+      const userInfo = userMap[row.user_id];
+      if (!userInfo) return;
+
+      const key = row.user_id;
+      const score = row.accuracy || 0;
+
+      if (!userBest[key] || score > userBest[key].best_score) {
         userBest[key] = {
-          username: row.username || 'Anonymous',
-          best_score: row.score_percent
+          user_id: row.user_id,
+          username: userInfo.username || 'Anonymous',
+          best_score: score,
+          best_raw_score: row.score || 0,
+          best_time: row.time_taken || 0,
+          total_questions: row.total_questions || 0,
+          streak: userInfo.streak || 0,
+          total_tests: 0,
+          avatar: 'default'
         };
       }
+
+      // Count total tests
+      if (!userBest[key].total_tests) userBest[key].total_tests = 0;
+      userBest[key].total_tests++;
     });
 
-    // Sort and rank
+    // Sort: best accuracy → best raw score → fastest time
     const sorted = Object.values(userBest)
-      .sort((a, b) => b.best_score - a.best_score)
+      .sort((a, b) => {
+        if (b.best_score !== a.best_score) return b.best_score - a.best_score;
+        if (b.best_raw_score !== a.best_raw_score) return b.best_raw_score - a.best_raw_score;
+        return a.best_time - b.best_time;
+      })
       .slice(0, 50)
       .map((user, idx) => ({ ...user, rank: idx + 1 }));
 

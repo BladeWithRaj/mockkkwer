@@ -1,0 +1,299 @@
+/* ============================================
+   IN-EXAM UI — SaaS-Level Test Experience
+   Board color theming, timer states,
+   question palette, section tabs
+   ============================================ */
+
+/* ── Board Color Theming for In-Exam ── */
+[data-exam-board="ssc"]     { --exam-color: #3B82F6; --exam-glow: rgba(59,130,246,0.25); }
+[data-exam-board="railway"] { --exam-color: #10B981; --exam-glow: rgba(16,185,129,0.25); }
+[data-exam-board="upsc"]    { --exam-color: #D946EF; --exam-glow: rgba(217,70,239,0.25); }
+[data-exam-board="banking"] { --exam-color: #8B5CF6; --exam-glow: rgba(139,92,246,0.25); }
+[data-exam-board="defence"] { --exam-color: #EF4444; --exam-glow: rgba(239,68,68,0.25); }
+[data-exam-board="teaching"]{ --exam-color: #06B6D4; --exam-glow: rgba(6,182,212,0.25); }
+[data-exam-board="state"]   { --exam-color: #F59E0B; --exam-glow: rgba(245,158,11,0.25); }
+
+/* ── Enhanced Timer States ── */
+.timer-display {
+  transition: all 0.3s ease;
+}
+.timer-display.timer-normal {
+  color: var(--success);
+}
+.timer-display.timer-warning {
+  color: #F59E0B;
+  animation: timerPulse 2s ease-in-out infinite;
+}
+.timer-display.timer-critical {
+  color: #EF4444;
+  animation: timerPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+/* ── Question Status Colors (palette) ── */
+.nav-btn.q-answered {
+  background: #22C55E !important;
+  color: white !important;
+  border-color: #22C55E !important;
+}
+.nav-btn.q-review {
+  background: #F59E0B !important;
+  color: white !important;
+  border-color: #F59E0B !important;
+}
+.nav-btn.q-current {
+  background: var(--exam-color, var(--primary)) !important;
+  color: white !important;
+  border-color: var(--exam-color, var(--primary)) !important;
+  box-shadow: 0 0 12px var(--exam-glow, rgba(99,102,241,0.3));
+}
+.nav-btn.q-skipped {
+  background: #EF4444 !important;
+  color: white !important;
+}
+.nav-btn.q-not-visited {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text-secondary);
+}
+
+/* ── Section Tabs ── */
+.exam-section-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-glass);
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.exam-section-tabs::-webkit-scrollbar { display: none; }
+
+.exam-section-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.exam-section-tab:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+}
+.exam-section-tab.active {
+  background: var(--exam-color, var(--primary));
+  color: white;
+}
+.exam-section-tab-count {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* ── Enhanced Question Text (Hindi support) ── */
+.question-text-enhanced {
+  font-family: 'Noto Sans Devanagari', 'Georgia', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+
+.option-text-enhanced {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* ── Option with board color selection ── */
+.option-btn.selected-board {
+  border-color: var(--exam-color, var(--primary)) !important;
+  background: rgba(var(--exam-color-rgb, 99, 102, 241), 0.08) !important;
+}
+
+/* ── Submit Confirmation Modal (Enhanced) ── */
+.submit-modal-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.submit-modal-stat {
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+.submit-modal-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+}
+.submit-modal-stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.submit-modal-stat.answered { background: rgba(34, 197, 94, 0.1); }
+.submit-modal-stat.answered .submit-modal-stat-value { color: #22C55E; }
+.submit-modal-stat.unanswered { background: rgba(239, 68, 68, 0.1); }
+.submit-modal-stat.unanswered .submit-modal-stat-value { color: #EF4444; }
+.submit-modal-stat.review { background: rgba(245, 158, 11, 0.1); }
+.submit-modal-stat.review .submit-modal-stat-value { color: #F59E0B; }
+
+/* ── Auto-submit countdown ── */
+.auto-submit-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.auto-submit-card {
+  background: var(--bg-surface, #111a2e);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  animation: fadeInUp 0.3s ease;
+}
+.auto-submit-countdown {
+  font-size: 64px;
+  font-weight: 800;
+  color: #EF4444;
+  animation: timerPulse 1s ease-in-out infinite;
+}
+.auto-submit-text {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+}
+
+/* ── Exam Badge in Top Bar ── */
+.exam-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--exam-color, var(--primary));
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Progress bar with board color ── */
+.test-progress-bar.board-themed {
+  background: linear-gradient(90deg, var(--exam-color, var(--primary)), var(--exam-glow, rgba(99,102,241,0.5))) !important;
+}
+
+/* ── Keyboard shortcut hints ── */
+.keyboard-hint {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-glass);
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+@media (min-width: 1024px) {
+  .keyboard-hint { display: block; }
+}
+
+/* ── Fullscreen mode ── */
+.test-page:-webkit-full-screen .test-topbar { top: 0; }
+.test-page:fullscreen .test-topbar { top: 0; }
+
+/* ── Section tabs positioning ── */
+.exam-section-tabs {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 53px);
+  z-index: 45;
+  margin: 0;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary, #0a1628);
+}
+
+:fullscreen .exam-section-tabs {
+  top: 53px;
+}
+
+/* ── Board-colored option when selected ── */
+[data-exam-board] .option-btn.selected {
+  border-color: var(--exam-color) !important;
+  background: color-mix(in srgb, var(--exam-color) 8%, transparent) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--exam-color) 20%, transparent),
+              0 4px 16px color-mix(in srgb, var(--exam-color) 12%, transparent) !important;
+}
+[data-exam-board] .option-btn.selected .option-label {
+  background: var(--exam-color) !important;
+  border-color: var(--exam-color) !important;
+  color: white !important;
+}
+
+/* ── Board-colored question number ── */
+[data-exam-board] .question-number {
+  background: var(--exam-color) !important;
+}
+
+/* ── Board-colored nav current ── */
+[data-exam-board] .nav-btn.current {
+  background: var(--exam-color) !important;
+  border-color: var(--exam-color) !important;
+  box-shadow: 0 0 12px var(--exam-glow, rgba(99,102,241,0.3)) !important;
+}
+
+/* ── Board-colored submit button area ── */
+[data-exam-board] .btn-primary {
+  background: var(--exam-color);
+}
+
+/* ── Mobile bottom sheet improvements ── */
+@media (max-width: 640px) {
+  .mobile-nav-sheet-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  
+  .nav-grid {
+    grid-template-columns: repeat(8, 1fr) !important;
+    gap: 6px !important;
+  }
+  
+  .nav-btn {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 12px !important;
+  }
+
+  .exam-section-tabs {
+    padding: 4px 8px;
+    gap: 2px;
+  }
+  .exam-section-tab {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}

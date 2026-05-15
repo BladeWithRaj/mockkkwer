@@ -1,7 +1,6 @@
 {
   "type": "module",
   "dependencies": {
-    "@clerk/backend": "^1.20.0",
     "@supabase/supabase-js": "^2.39.0"
   }
 }

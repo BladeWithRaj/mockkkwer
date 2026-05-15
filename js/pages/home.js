@@ -26,13 +26,13 @@ const HomePage = {
 
     // Exam categories from presets
     const categories = [
-      { id: 'SSC', icon: '📋', color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.25)' },
-      { id: 'Railway', icon: '🚂', color: '#10B981', glow: 'rgba(16, 185, 129, 0.25)' },
-      { id: 'Banking', icon: '🏦', color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.25)' },
-      { id: 'State', icon: '🏛️', color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.25)' },
-      { id: 'Defence', icon: '⚔️', color: '#EF4444', glow: 'rgba(239, 68, 68, 0.25)' },
-      { id: 'Teaching', icon: '📚', color: '#06B6D4', glow: 'rgba(6, 182, 212, 0.25)' },
-      { id: 'UPSC', icon: '⚖️', color: '#D946EF', glow: 'rgba(217, 70, 239, 0.25)' }
+      { id: 'SSC', icon: '📋', color: '#3B82F6', glow: 'rgba(59, 130, 246, 0.25)', url: '/ssc/' },
+      { id: 'Railway', icon: '🚂', color: '#10B981', glow: 'rgba(16, 185, 129, 0.25)', url: '/railway/' },
+      { id: 'Banking', icon: '🏦', color: '#8B5CF6', glow: 'rgba(139, 92, 246, 0.25)', url: '/banking/' },
+      { id: 'State', icon: '🏛️', color: '#F59E0B', glow: 'rgba(245, 158, 11, 0.25)', url: null },
+      { id: 'Defence', icon: '⚔️', color: '#EF4444', glow: 'rgba(239, 68, 68, 0.25)', url: null },
+      { id: 'Teaching', icon: '📚', color: '#06B6D4', glow: 'rgba(6, 182, 212, 0.25)', url: null },
+      { id: 'UPSC', icon: '⚖️', color: '#D946EF', glow: 'rgba(217, 70, 239, 0.25)', url: '/upsc/' }
     ];
 
     return `
@@ -198,6 +198,7 @@ const HomePage = {
         <div class="cat-info">
           <h3 class="cat-name">${cat.id}</h3>
           <span class="cat-count">${presets.length} exams</span>
+          ${cat.url ? `<a href="${cat.url}" class="cat-details-link" onclick="event.stopPropagation();" style="font-size:11px;color:var(--cat-color);font-weight:600;margin-top:4px;display:inline-block;">View Details →</a>` : ''}
         </div>
         <div class="cat-arrow">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

@@ -75,34 +75,15 @@ const LeaderboardPage = {
     `;
 
     try {
-      let leaderboard = [];
       const mode = this._currentMode;
+      let leaderboard = [];
 
-      // Try API first (uses v2 RPC with mode support)
-      try {
-        const resp = await fetch(`/api/leaderboard?mode=${mode}`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.success) leaderboard = data.leaderboard || [];
-        }
-      } catch (apiErr) {
-        console.warn("API leaderboard failed, trying direct Supabase:", apiErr.message);
-      }
-
-      // Fallback to direct Supabase fetch if API failed
-      if (leaderboard.length === 0 && window.fetchLeaderboard) {
+      // Direct Supabase fetch (test_attempts + users)
+      if (window.fetchLeaderboard) {
         try {
-          const fallbackData = await window.fetchLeaderboard();
-          if (fallbackData && fallbackData.length > 0) {
-            leaderboard = fallbackData.map(u => ({
-              ...u,
-              total_tests: u.total_tests || 1,
-              streak: u.streak || 0,
-              avatar: u.avatar || 'default'
-            }));
-          }
-        } catch (fbErr) {
-          console.warn("Direct Supabase leaderboard also failed:", fbErr.message);
+          leaderboard = await window.fetchLeaderboard(mode);
+        } catch (err) {
+          console.error("Leaderboard fetch failed:", err.message);
         }
       }
 
@@ -119,7 +100,8 @@ const LeaderboardPage = {
         return;
       }
 
-      const myUsername = Storage.getUsername();
+      const user = Auth.getUser();
+      const myUsername = user?.username || Storage.getUsername();
       const myEntry = leaderboard.find(u => u.username === myUsername);
 
       let html = '';

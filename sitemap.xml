@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url><loc>https://mockkkwer.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+
+  <!-- All Exams Directory -->
+  <url><loc>https://mockkkwer.com/exams/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+
+  <!-- SSC -->
+  <url><loc>https://mockkkwer.com/ssc/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://mockkkwer.com/ssc/cgl/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mockkkwer.com/ssc/chsl/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mockkkwer.com/ssc/mts/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mockkkwer.com/ssc/cpo/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mockkkwer.com/ssc/gd/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+
+  <!-- Railway -->
+  <url><loc>https://mockkkwer.com/railway/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+
+  <!-- Banking -->
+  <url><loc>https://mockkkwer.com/banking/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+
+  <!-- UPSC -->
+  <url><loc>https://mockkkwer.com/upsc/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+</urlset>

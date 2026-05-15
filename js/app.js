@@ -73,14 +73,20 @@ const App = {
     appEl.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px;">
         <div class="splash-spinner" style="width: 48px; height: 48px; border: 3px solid var(--bg-glass, rgba(255,255,255,0.1)); border-top-color: var(--primary, #6366f1); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Signing in...</p>
+        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Loading...</p>
       </div>
     `;
 
     try {
-      // Authenticate via Clerk
+      // Check for existing session
       if (window.Auth) {
         await window.Auth.init();
+      }
+
+      // If no session — show username modal and wait
+      if (!Auth.isAuthenticated()) {
+        const user = await Auth.showUsernameModal();
+        console.log("🎉 Welcome,", user.username);
       }
 
       // No full DB fetch on startup for scalability
@@ -97,7 +103,7 @@ const App = {
       // Check for in-progress test to resume
       this._tryResumeTest();
 
-      // Start routing (no username prompt needed — Clerk handles identity)
+      // Start routing
       window.addEventListener('hashchange', () => this.handleRoute());
       this.handleRoute();
 
@@ -132,7 +138,6 @@ const App = {
     }
   },
 
-  // Username prompt removed — Clerk handles identity now
 
   handleRoute() {
     const hash = window.location.hash.slice(1) || 'home';
@@ -196,13 +201,10 @@ const App = {
   _renderHeader(activePage) {
     const isTest = activePage === 'test';
     const user = Auth.getUser();
-    const userName = user?.name || Storage.getUsername() || 'User';
-    const userAvatar = user?.avatar || null;
+    const userName = user?.name || user?.username || Storage.getUsername() || 'User';
 
-    // Avatar HTML: use Clerk image if available, else emoji
-    const avatarHTML = userAvatar
-      ? `<img src="${userAvatar}" alt="avatar" class="header-user-img" />`
-      : `<span class="header-user-emoji">👤</span>`;
+    // Avatar: emoji-based (no Clerk image)
+    const avatarHTML = `<span class="header-user-emoji">👤</span>`;
 
     // Gamification data for header
     const coins = window.Gamification ? Gamification.getCoins() : 0;
@@ -255,7 +257,6 @@ const App = {
                   ${avatarHTML}
                   <div>
                     <div class="dropdown-name">${userName}</div>
-                    <div class="dropdown-email">${user?.email || ''}</div>
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>

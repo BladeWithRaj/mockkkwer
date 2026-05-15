@@ -18,6 +18,7 @@ const PRECACHE_URLS = [
   '/css/pages.css',
   '/css/gamification.css',
   '/css/battle.css',
+  '/css/username-modal.css',
   '/js/config.js',
   '/js/supabaseClient.js',
   '/js/auth.js',
@@ -87,9 +88,8 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip Clerk, Supabase realtime, and external CDNs from caching
-  if (url.hostname.includes('clerk') ||
-      url.hostname.includes('supabase') ||
+  // Skip Supabase realtime and external CDNs from caching
+  if (url.hostname.includes('supabase') ||
       url.hostname.includes('cdn.jsdelivr.net')) {
     return; // Let browser handle these normally
   }

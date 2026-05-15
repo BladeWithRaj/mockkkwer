@@ -1,13 +1,46 @@
 // ============================================
-// TEST PAGE — Full UX Upgrade
-// Progress bar, % timer, slide animation,
-// mobile bottom sheet, clean question states
+// TEST PAGE — CBT Exam Simulation UI
+// Board theming, section tabs, fullscreen,
+// enhanced timer, keyboard A/B/C/D
 // ============================================
 
 const TestPage = {
   timerInterval: null,
   _isProcessing: false,
   _lastWarningShown: false,
+  _activeSection: null, // null = all sections
+  _isFullscreen: false,
+
+  // Board color mapping
+  _boardMap: {
+    'SSC': { key: 'ssc', color: '#3B82F6', label: 'SSC' },
+    'Railway': { key: 'railway', color: '#10B981', label: 'Railway' },
+    'Banking': { key: 'banking', color: '#8B5CF6', label: 'Banking' },
+    'UPSC': { key: 'upsc', color: '#D946EF', label: 'UPSC' },
+    'Defence': { key: 'defence', color: '#EF4444', label: 'Defence' },
+    'Teaching': { key: 'teaching', color: '#06B6D4', label: 'Teaching' },
+    'State': { key: 'state', color: '#F59E0B', label: 'State' }
+  },
+
+  _getBoard() {
+    if (!TestEngine.state?.config?.examId) return null;
+    const preset = ExamPresets.get(TestEngine.state.config.examId);
+    if (!preset) return null;
+    return this._boardMap[preset.category] || null;
+  },
+
+  _getSections() {
+    if (!TestEngine.state?.config?.examId) return [];
+    const preset = ExamPresets.get(TestEngine.state.config.examId);
+    if (!preset?.sections) return [];
+    return preset.sections;
+  },
+
+  _getExamName() {
+    if (!TestEngine.state?.config?.examId) return '';
+    const preset = ExamPresets.get(TestEngine.state.config.examId);
+    return preset ? preset.name : '';
+  },
 
   render() {
     if (!TestEngine.state) {
@@ -28,40 +61,67 @@ const TestPage = {
     const noTimer = TestEngine.state.totalTime >= 99999;
     const progressPercent = ((current.index + 1) / current.total) * 100;
     const answeredCount = Object.keys(TestEngine.state.answers).length;
+    const board = this._getBoard();
+    const sections = this._getSections();
+    const examName = this._getExamName();
 
     // Progress bar color based on completion
     let progressClass = '';
     if (progressPercent >= 80) progressClass = 'intense';
     else if (progressPercent >= 50) progressClass = 'active';
 
+    // Board-themed progress
+    const boardClass = board ? 'board-themed' : '';
+
     return `
-      <div class="test-page">
+      <div class="test-page" ${board ? `data-exam-board="${board.key}"` : ''}>
         <!-- Progress Bar -->
         <div class="test-progress-wrap">
-          <div class="test-progress-bar ${progressClass}" style="width: ${progressPercent}%" id="test-progress-bar"></div>
+          <div class="test-progress-bar ${progressClass} ${boardClass}" style="width: ${progressPercent}%" id="test-progress-bar"></div>
         </div>
 
         <!-- Top Bar -->
         <div class="test-topbar">
           <div class="test-info">
+            ${examName ? `<span class="exam-badge" style="${board ? 'background:'+board.color : ''}">${examName}</span>` : ''}
             <span class="test-info-item">
               Q <strong>${current.index + 1}/${current.total}</strong>
             </span>
             <span class="test-info-item answered-badge">
               ✅ ${answeredCount}
             </span>
-            <span class="chip chip-primary">${current.question.subject}</span>
           </div>
-          ${!noTimer ? `
-            <div class="timer-display" id="timer-display">
-              <span class="timer-icon">⏱️</span>
-              <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
-            </div>
-          ` : ''}
-          <button class="btn btn-danger btn-sm" onclick="TestPage.confirmSubmit()" id="submit-test-btn">
-            ${Lang.t('test_submit_btn')}
-          </button>
+          <div style="display:flex;align-items:center;gap:var(--space-2);">
+            ${!noTimer ? `
+              <div class="timer-display" id="timer-display">
+                <span class="timer-icon">⏱️</span>
+                <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
+              </div>
+            ` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="TestPage.toggleFullscreen()" id="fullscreen-btn" title="Fullscreen (F11)">
+              🖥️
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="TestPage.confirmSubmit()" id="submit-test-btn">
+              ${Lang.t('test_submit_btn')}
+            </button>
+          </div>
         </div>
+
+        <!-- Section Tabs -->
+        ${sections.length > 1 ? `
+        <div class="exam-section-tabs" id="section-tabs">
+          <button class="exam-section-tab ${!this._activeSection ? 'active' : ''}" onclick="TestPage.filterSection(null)">
+            All
+            <span class="exam-section-tab-count">${current.total}</span>
+          </button>
+          ${sections.map(s => `
+            <button class="exam-section-tab ${this._activeSection === s.subject ? 'active' : ''}" onclick="TestPage.filterSection('${s.subject}')">
+              ${s.name}
+              <span class="exam-section-tab-count">${s.questions}</span>
+            </button>
+          `).join('')}
+        </div>
+        ` : ''}
 
         <!-- Test Body -->
         <div class="test-body">
@@ -176,17 +236,24 @@ const TestPage = {
   afterRender() {
     this.startTimer();
 
-    // Keyboard shortcuts
+    // Apply board color as CSS variable
+    const board = this._getBoard();
+    if (board) {
+      document.documentElement.style.setProperty('--exam-color', board.color);
+    }
+
+    // Keyboard shortcuts (1-4, A-D, arrows, R, F11)
     this._keyHandler = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       switch(e.key) {
-        case '1': this.selectOption(0); break;
-        case '2': this.selectOption(1); break;
-        case '3': this.selectOption(2); break;
-        case '4': this.selectOption(3); break;
+        case '1': case 'a': case 'A': this.selectOption(0); break;
+        case '2': case 'b': case 'B': this.selectOption(1); break;
+        case '3': case 'c': case 'C': this.selectOption(2); break;
+        case '4': case 'd': case 'D': this.selectOption(3); break;
         case 'ArrowLeft': this.prev(); break;
         case 'ArrowRight': this.next(); break;
         case 'r': case 'R': this.toggleReview(); break;
+        case 'F11': e.preventDefault(); this.toggleFullscreen(); break;
       }
     };
     document.addEventListener('keydown', this._keyHandler);
@@ -200,6 +267,14 @@ const TestPage = {
     if (this._keyHandler) {
       document.removeEventListener('keydown', this._keyHandler);
     }
+    // Reset board color
+    document.documentElement.style.removeProperty('--exam-color');
+    // Exit fullscreen
+    if (this._isFullscreen && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    this._isFullscreen = false;
+    this._activeSection = null;
   },
 
   // ── Swipe support ──
@@ -324,6 +399,34 @@ const TestPage = {
     this.refreshQuestion();
     this.refreshNav();
     this._updateProgress();
+  },
+
+  // ── Section filter ──
+  filterSection(subject) {
+    this._activeSection = subject;
+    // Update tab UI
+    document.querySelectorAll('.exam-section-tab').forEach(tab => tab.classList.remove('active'));
+    event?.target?.classList.add('active');
+    // Jump to first question of that section
+    if (subject && TestEngine.state) {
+      const idx = TestEngine.state.questions.findIndex(q => q.subject === subject);
+      if (idx >= 0) this.goTo(idx);
+    }
+    this.refreshNav();
+  },
+
+  // ── Fullscreen toggle ──
+  toggleFullscreen() {
+    if (!document.fullscreenEnabled) return;
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        this._isFullscreen = true;
+      }).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => {
+        this._isFullscreen = false;
+      }).catch(() => {});
+    }
   },
 
   refreshQuestion(direction) {
