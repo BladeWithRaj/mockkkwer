@@ -1,268 +1,225 @@
 // ═══════════════════════════════════════════════
-// ADMIN AUTH MIDDLEWARE — Server-side session verification
-// CSRF + IP Rate Limiting + Brute-force protection
+// ADMIN AUTH — TOTP Authenticator + Bearer Token
+// No cookies. No passwords. No CSRF. No sessions table.
+// 
+// Flow: Authenticator 6-digit code → verify → token → localStorage
 // ═══════════════════════════════════════════════
 
-import bcrypt from "bcryptjs";
+import { authenticator } from "otplib";
+import * as QRCode from "qrcode";
 import crypto from "crypto";
 
-// ── Constants ──
-const MAX_FAILED_ATTEMPTS = 3;
-const BAN_DURATION_HOURS = 1;
-const SESSION_DURATION_HOURS = 24;  // 24h session lifetime
-const BCRYPT_ROUNDS = 12;
-const IP_RATE_WINDOW_MS = 60 * 1000; // 1 minute window
-const IP_RATE_MAX_REQUESTS = 10;     // max 10 login attempts per IP per minute
+const TOKEN_EXPIRY_HOURS = 72; // 3 days
+const APP_NAME = "MockTestPro Admin";
 
-// ── IP Rate Limiter (in-memory sliding window) ──
+// ── In-memory rate limiter ──
 const ipBuckets = {};
+const IP_WINDOW_MS = 60_000;
+const IP_MAX = 5;
 
-function checkIPRateLimit(ip) {
-  if (!ip || ip === 'unknown') return true;
+function checkIPRate(ip) {
+  if (!ip || ip === "unknown") return true;
   const now = Date.now();
   if (!ipBuckets[ip]) ipBuckets[ip] = [];
-  // Remove entries outside window
-  ipBuckets[ip] = ipBuckets[ip].filter(ts => now - ts < IP_RATE_WINDOW_MS);
-  if (ipBuckets[ip].length >= IP_RATE_MAX_REQUESTS) return false;
+  ipBuckets[ip] = ipBuckets[ip].filter(ts => now - ts < IP_WINDOW_MS);
+  if (ipBuckets[ip].length >= IP_MAX) return false;
   ipBuckets[ip].push(now);
-  // Housekeeping: cleanup old IPs every 100 calls
   if (Object.keys(ipBuckets).length > 200) {
     for (const k of Object.keys(ipBuckets)) {
-      if (!ipBuckets[k].length || now - ipBuckets[k][0] > IP_RATE_WINDOW_MS * 5) delete ipBuckets[k];
+      if (!ipBuckets[k].length || now - ipBuckets[k][0] > IP_WINDOW_MS * 5) delete ipBuckets[k];
     }
   }
   return true;
 }
 
-// ── CSRF Token Generator ──
-function generateCSRFToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
 /**
- * Verify admin login credentials against database.
- * Handles: password verification, brute-force protection, ban logic.
- * Returns: { success, token?, error?, retryAfter? }
+ * TOTP Setup — generates secret + QR code for first-time setup.
+ * Called once, then admin scans QR in Google Authenticator.
  */
-export async function verifyAdminLogin(supabase, { username, password, ip, userAgent }) {
-  if (!username || !password) {
-    return { success: false, error: "Username and password required" };
-  }
-
-  const normalizedUsername = username.toLowerCase().trim();
-
-  // ── 1. Lookup admin user ──
-  const { data: admin, error: lookupErr } = await supabase
-    .from("admin_users")
-    .select("id, username, password_hash, failed_attempts, banned_until")
-    .eq("username", normalizedUsername)
+export async function setupTOTP(supabase, adminId) {
+  // Check if already set up
+  const { data: existing } = await supabase
+    .from("admin_totp")
+    .select("id, setup_complete")
+    .eq("admin_id", adminId)
     .single();
 
-  if (lookupErr || !admin) {
-    // Log failed attempt (user not found)
-    await logLoginAttempt(supabase, normalizedUsername, false, ip, userAgent, "user_not_found");
-    // Return generic error (don't reveal if user exists)
-    return { success: false, error: "Invalid credentials" };
+  if (existing?.setup_complete) {
+    return { success: false, error: "TOTP already configured. Use reset flow." };
   }
 
-  // ── 2. Check ban status ──
-  if (admin.banned_until) {
-    const bannedUntil = new Date(admin.banned_until);
-    const now = new Date();
+  const secret = authenticator.generateSecret();
 
-    if (bannedUntil > now) {
-      const retryAfterMs = bannedUntil.getTime() - now.getTime();
-      const retryAfterMinutes = Math.ceil(retryAfterMs / 60000);
-
-      await logLoginAttempt(supabase, normalizedUsername, false, ip, userAgent, "banned");
-
-      return {
-        success: false,
-        error: `Too many failed attempts. Try again in ${retryAfterMinutes} minute(s).`,
-        retryAfter: retryAfterMinutes,
-        banned: true
-      };
-    }
-
-    // Ban expired — reset
-    await supabase
-      .from("admin_users")
-      .update({ failed_attempts: 0, banned_until: null })
-      .eq("id", admin.id);
-  }
-
-  // ── 3. Verify password (bcrypt) ──
-  let passwordValid = false;
-  try {
-    passwordValid = await bcrypt.compare(password, admin.password_hash);
-  } catch (err) {
-    console.error("[ADMIN AUTH] bcrypt error:", err.message);
-    return { success: false, error: "Authentication error" };
-  }
-
-  if (!passwordValid) {
-    // Increment failed attempts
-    const newAttempts = (admin.failed_attempts || 0) + 1;
-    const updateData = { failed_attempts: newAttempts };
-
-    // Ban if threshold reached
-    if (newAttempts >= MAX_FAILED_ATTEMPTS) {
-      const banUntil = new Date(Date.now() + BAN_DURATION_HOURS * 60 * 60 * 1000);
-      updateData.banned_until = banUntil.toISOString();
-
-      await supabase
-        .from("admin_users")
-        .update(updateData)
-        .eq("id", admin.id);
-
-      await logLoginAttempt(supabase, normalizedUsername, false, ip, userAgent, "max_attempts_banned");
-
-      return {
-        success: false,
-        error: `Too many failed attempts. Account locked for ${BAN_DURATION_HOURS} hour(s).`,
-        retryAfter: BAN_DURATION_HOURS * 60,
-        banned: true,
-        attemptsRemaining: 0
-      };
-    }
-
-    await supabase
-      .from("admin_users")
-      .update(updateData)
-      .eq("id", admin.id);
-
-    await logLoginAttempt(supabase, normalizedUsername, false, ip, userAgent, "invalid_password");
-
-    return {
-      success: false,
-      error: "Invalid credentials",
-      attemptsRemaining: MAX_FAILED_ATTEMPTS - newAttempts
-    };
-  }
-
-  // ── 4. IP Rate Limit check ──
-  if (!checkIPRateLimit(ip)) {
-    await logLoginAttempt(supabase, normalizedUsername, false, ip, userAgent, "ip_rate_limited");
-    return { success: false, error: "Too many requests from this IP. Try again in 1 minute.", banned: true, retryAfter: 1 };
-  }
-
-  // ── 5. Password valid — create session + CSRF token ──
-  const sessionToken = crypto.randomBytes(48).toString("hex");
-  const csrfToken = generateCSRFToken();
-  const expiresAt = new Date(Date.now() + SESSION_DURATION_HOURS * 60 * 60 * 1000);
-
-  // Reset failed attempts + update last login
-  await supabase
+  // Get admin username for QR label
+  const { data: admin } = await supabase
     .from("admin_users")
-    .update({
-      failed_attempts: 0,
-      banned_until: null,
-      last_login: new Date().toISOString(),
-      last_ip: ip || null
-    })
-    .eq("id", admin.id);
+    .select("username")
+    .eq("id", adminId)
+    .single();
 
-  // Create session with CSRF token
-  const { error: sessionErr } = await supabase
-    .from("admin_sessions")
-    .insert({
-      admin_id: admin.id,
-      token: sessionToken,
-      csrf_token: csrfToken,
-      ip_address: ip || null,
-      user_agent: userAgent || null,
-      expires_at: expiresAt.toISOString()
-    });
+  const otpauthUrl = authenticator.keyuri(
+    admin?.username || "admin",
+    APP_NAME,
+    secret
+  );
 
-  if (sessionErr) {
-    console.error("[ADMIN AUTH] Session create error:", sessionErr.message);
-    return { success: false, error: "Session creation failed" };
-  }
+  // Generate QR code as data URL
+  const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
 
-  // Log success
-  await logLoginAttempt(supabase, normalizedUsername, true, ip, userAgent, "success");
+  // Upsert secret (not yet verified)
+  await supabase.from("admin_totp").upsert({
+    admin_id: adminId,
+    secret,
+    enabled: true,
+    setup_complete: false
+  }, { onConflict: "admin_id" });
 
   return {
     success: true,
-    token: sessionToken,
-    csrfToken,
-    expiresAt: expiresAt.toISOString(),
-    username: admin.username
+    secret, // Show as backup code
+    qrCode: qrDataUrl,
+    otpauthUrl
   };
 }
 
 /**
- * Verify an existing admin session token.
- * Returns: { valid: true, admin } or { valid: false }
+ * Verify TOTP setup — admin enters first code to confirm setup.
  */
-export async function verifyAdminSession(supabase, token, csrfToken = null, requireCSRF = false) {
+export async function verifyTOTPSetup(supabase, adminId, code) {
+  const { data: totp } = await supabase
+    .from("admin_totp")
+    .select("secret")
+    .eq("admin_id", adminId)
+    .eq("setup_complete", false)
+    .single();
+
+  if (!totp) return { success: false, error: "No pending setup found" };
+
+  const isValid = authenticator.check(code, totp.secret);
+  if (!isValid) return { success: false, error: "Invalid code. Try again." };
+
+  // Mark setup complete
+  await supabase.from("admin_totp")
+    .update({ setup_complete: true })
+    .eq("admin_id", adminId);
+
+  return { success: true };
+}
+
+/**
+ * Verify TOTP code for login.
+ * Returns { success, token, username, error }
+ */
+export async function verifyTOTPLogin(supabase, code, ip, userAgent) {
+  if (!code || code.length !== 6) {
+    return { success: false, error: "Enter 6-digit code from Authenticator" };
+  }
+
+  // Rate limit
+  if (!checkIPRate(ip)) {
+    await logAttempt(supabase, "admin", false, ip, userAgent, "ip_rate_limited");
+    return { success: false, error: "Too many attempts. Wait 1 minute.", banned: true, retryAfter: 1 };
+  }
+
+  // Get admin (single-admin system — first row)
+  const { data: admin, error: lookupErr } = await supabase
+    .from("admin_users")
+    .select("id, username, failed_attempts, banned_until")
+    .limit(1)
+    .single();
+
+  if (lookupErr || !admin) {
+    return { success: false, error: "System not configured" };
+  }
+
+  // Check ban
+  if (admin.banned_until && new Date(admin.banned_until) > new Date()) {
+    const retryMin = Math.ceil((new Date(admin.banned_until) - new Date()) / 60000);
+    await logAttempt(supabase, admin.username, false, ip, userAgent, "banned");
+    return { success: false, error: `Locked. Retry in ${retryMin} min.`, banned: true, retryAfter: retryMin };
+  }
+
+  // Get TOTP secret
+  const { data: totp } = await supabase
+    .from("admin_totp")
+    .select("secret, setup_complete")
+    .eq("admin_id", admin.id)
+    .eq("enabled", true)
+    .single();
+
+  if (!totp || !totp.setup_complete) {
+    return { success: false, error: "TOTP not set up. Visit setup page first.", needsSetup: true };
+  }
+
+  // Verify TOTP
+  const isValid = authenticator.check(code, totp.secret);
+
+  if (!isValid) {
+    const attempts = (admin.failed_attempts || 0) + 1;
+    const update = { failed_attempts: attempts };
+    if (attempts >= 5) {
+      update.banned_until = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    }
+    await supabase.from("admin_users").update(update).eq("id", admin.id);
+    await logAttempt(supabase, admin.username, false, ip, userAgent, "wrong_totp");
+    return {
+      success: false,
+      error: attempts >= 5 ? "Too many fails. Locked for 1 hour." : "Invalid code",
+      attemptsRemaining: Math.max(0, 5 - attempts),
+      banned: attempts >= 5
+    };
+  }
+
+  // TOTP valid → generate token
+  const token = crypto.randomBytes(48).toString("hex");
+  const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_HOURS * 3600000).toISOString();
+
+  await supabase.from("admin_users").update({
+    failed_attempts: 0, banned_until: null,
+    session_token: token, session_expires: expiresAt,
+    last_login: new Date().toISOString(), last_ip: ip || null
+  }).eq("id", admin.id);
+
+  await logAttempt(supabase, admin.username, true, ip, userAgent, "totp_success");
+
+  return { success: true, token, username: admin.username, expiresAt };
+}
+
+/**
+ * Verify admin token from Authorization header.
+ */
+export async function verifyAdminToken(supabase, token) {
   if (!token) return { valid: false };
 
-  const { data: session, error } = await supabase
-    .from("admin_sessions")
-    .select("id, admin_id, csrf_token, expires_at")
-    .eq("token", token)
-    .single();
-
-  if (error || !session) return { valid: false };
-
-  // Check expiry
-  if (new Date(session.expires_at) < new Date()) {
-    await supabase.from("admin_sessions").delete().eq("id", session.id);
-    return { valid: false, expired: true };
-  }
-
-  // CSRF validation for mutating requests
-  if (requireCSRF && csrfToken !== session.csrf_token) {
-    return { valid: false, csrfMismatch: true };
-  }
-
-  // Get admin details
-  const { data: admin } = await supabase
+  const { data: admin, error } = await supabase
     .from("admin_users")
-    .select("id, username")
-    .eq("id", session.admin_id)
+    .select("id, username, session_token, session_expires")
+    .eq("session_token", token)
     .single();
 
-  if (!admin) return { valid: false };
+  if (error || !admin) return { valid: false };
+  if (new Date(admin.session_expires) < new Date()) return { valid: false, expired: true };
 
-  return { valid: true, admin, sessionId: session.id, csrfToken: session.csrf_token };
+  return { valid: true, admin: { id: admin.id, username: admin.username } };
 }
 
 /**
- * Destroy an admin session (logout).
+ * Logout — clear token.
  */
-export async function destroyAdminSession(supabase, token) {
-  if (!token) return false;
-
-  const { error } = await supabase
-    .from("admin_sessions")
-    .delete()
-    .eq("token", token);
-
-  return !error;
+export async function adminLogout(supabase, token) {
+  if (!token) return;
+  await supabase.from("admin_users")
+    .update({ session_token: null, session_expires: null })
+    .eq("session_token", token);
 }
 
 /**
- * Hash a password using bcrypt.
+ * Log login attempt.
  */
-export async function hashPassword(password) {
-  return bcrypt.hash(password, BCRYPT_ROUNDS);
-}
-
-/**
- * Log a login attempt for audit trail.
- */
-async function logLoginAttempt(supabase, username, success, ip, userAgent, reason) {
+async function logAttempt(supabase, username, success, ip, userAgent, reason) {
   try {
     await supabase.from("admin_login_log").insert({
-      username,
-      success,
-      ip_address: ip || null,
-      user_agent: userAgent || null,
-      reason
+      username, success, ip_address: ip || null, user_agent: userAgent || null, reason
     });
-  } catch (err) {
-    console.warn("[ADMIN AUTH] Failed to log login attempt:", err.message);
-  }
+  } catch (e) { console.warn("[AUTH] Log failed:", e.message); }
 }

@@ -1,437 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- NO indexing — this is a private system -->
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
   <title>System Access</title>
-
-  <!-- Minimal CSS — self-contained, no external dependencies -->
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
-      --bg: #07080C;
-      --bg-card: #0D0F15;
-      --bg-input: #111319;
-      --border: rgba(255, 255, 255, 0.06);
-      --border-focus: rgba(99, 102, 241, 0.5);
-      --text-primary: #E2E8F0;
-      --text-secondary: #64748B;
-      --text-muted: #475569;
-      --danger: #e84848;
-      --danger-bg: rgba(239, 68, 68, 0.08);
-      --danger-border: rgba(239, 68, 68, 0.2);
-      --success: #10B981;
-      --accent: #6366F1;
-      --accent-glow: rgba(99, 102, 241, 0.15);
-      --warning: #F59E0B;
-      --warning-bg: rgba(245, 158, 11, 0.08);
+      --bg: #07080C; --bg-card: #0D0F15; --bg-input: #111319;
+      --border: rgba(255,255,255,0.06); --border-focus: rgba(99,102,241,0.5);
+      --text-primary: #E2E8F0; --text-secondary: #64748B; --text-muted: #475569;
+      --danger: #e84848; --danger-bg: rgba(239,68,68,0.08); --danger-border: rgba(239,68,68,0.2);
+      --success: #10B981; --accent: #6366F1; --accent-glow: rgba(99,102,241,0.15);
+      --warning: #F59E0B; --warning-bg: rgba(245,158,11,0.08);
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      position: relative;
-    }
-
-    /* Subtle grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background:
-        linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
-
-    /* Ambient glow */
-    body::after {
-      content: '';
-      position: fixed;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
-      pointer-events: none;
-      animation: ambientPulse 8s ease-in-out infinite;
-    }
-
-    @keyframes ambientPulse {
-
-      0%,
-      100% {
-        opacity: 0.5;
-      }
-
-      50% {
-        opacity: 1;
-      }
-    }
-
-    .login-container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 400px;
-      padding: 24px;
-    }
-
-    .login-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px 32px;
-      position: relative;
-      overflow: hidden;
-      backdrop-filter: blur(20px);
-    }
-
-    /* Top accent line */
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 32px;
-      right: 32px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: 0.4;
-    }
-
-    .login-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .login-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.15);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 20px;
-    }
-
-    .login-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .login-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 6px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .field-group {
-      margin-bottom: 20px;
-    }
-
-    .field-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .field-input {
-      width: 100%;
-      padding: 12px 16px;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 14px;
-      font-family: 'JetBrains Mono', monospace;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-
-    .field-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
-
-    .field-input::placeholder {
-      color: var(--text-muted);
-      opacity: 0.5;
-    }
-
-    .field-input:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 12px 24px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-      letter-spacing: 0.5px;
-    }
-
-    .login-btn:hover:not(:disabled) {
-      background: #5558E3;
-      box-shadow: 0 4px 20px var(--accent-glow);
-      transform: translateY(-1px);
-    }
-
-    .login-btn:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    .login-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .login-btn.loading {
-      color: transparent;
-    }
-
-    .login-btn.loading::after {
-      content: '';
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      top: 50%;
-      left: 50%;
-      margin: -9px 0 0 -9px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: btnSpin 0.6s linear infinite;
-    }
-
-    @keyframes btnSpin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Status messages */
-    .status-message {
-      margin-top: 16px;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      display: none;
-      align-items: center;
-      gap: 8px;
-      line-height: 1.5;
-    }
-
-    .status-message.visible {
-      display: flex;
-    }
-
-    .status-message.error {
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
-      color: var(--danger);
-    }
-
-    .status-message.warning {
-      background: var(--warning-bg);
-      border: 1px solid rgba(245, 158, 11, 0.2);
-      color: var(--warning);
-    }
-
-    .status-message.success {
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(16, 185, 129, 0.2);
-      color: var(--success);
-    }
-
-    /* Ban countdown */
-    .ban-timer {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--danger);
-      text-align: center;
-      padding: 24px;
-      background: var(--danger-bg);
-      border: 1px solid var(--danger-border);
-      border-radius: 12px;
-      margin-top: 16px;
-      display: none;
-    }
-
-    .ban-timer.visible {
-      display: block;
-    }
-
-    .ban-timer-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* Footer */
-    .login-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 11px;
-      color: var(--text-muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Shake animation */
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      20% {
-        transform: translateX(-8px);
-      }
-
-      40% {
-        transform: translateX(8px);
-      }
-
-      60% {
-        transform: translateX(-4px);
-      }
-
-      80% {
-        transform: translateX(4px);
-      }
-    }
-
-    .shake {
-      animation: shake 0.4s ease-in-out;
-    }
-
-    /* Fade in */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .login-card {
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    /* Mobile */
-    @media (max-width: 480px) {
-      .login-card {
-        padding: 32px 24px;
-      }
-
-      .login-container {
-        padding: 16px;
-      }
-    }
+    body { background: var(--bg); color: var(--text-primary); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+    body::before { content: ''; position: fixed; inset: 0; background: linear-gradient(rgba(99,102,241,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.02) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; }
+    body::after { content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 50%, rgba(99,102,241,0.03) 0%, transparent 50%); pointer-events: none; animation: ambientPulse 8s ease-in-out infinite; }
+    @keyframes ambientPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .login-container { position: relative; z-index: 1; width: 100%; max-width: 400px; padding: 24px; }
+    .login-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 40px 32px; position: relative; overflow: hidden; backdrop-filter: blur(20px); animation: fadeIn 0.5s ease-out; }
+    .login-card::before { content: ''; position: absolute; top: 0; left: 32px; right: 32px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.4; }
+    .login-header { text-align: center; margin-bottom: 32px; }
+    .login-icon { width: 48px; height: 48px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 20px; }
+    .login-title { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--text-secondary); letter-spacing: 2px; text-transform: uppercase; }
+    .login-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+    .field-group { margin-bottom: 20px; }
+    .field-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; }
+    .field-input { width: 100%; padding: 14px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 28px; font-family: 'JetBrains Mono', monospace; text-align: center; letter-spacing: 12px; transition: all 0.2s ease; outline: none; }
+    .field-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .field-input::placeholder { color: var(--text-muted); opacity: 0.3; font-size: 16px; letter-spacing: 4px; }
+    .field-input:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-btn { width: 100%; padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s ease; position: relative; overflow: hidden; letter-spacing: 0.5px; }
+    .login-btn:hover:not(:disabled) { background: #5558E3; box-shadow: 0 4px 20px var(--accent-glow); transform: translateY(-1px); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .login-btn.loading { color: transparent; }
+    .login-btn.loading::after { content: ''; position: absolute; width: 18px; height: 18px; top: 50%; left: 50%; margin: -9px 0 0 -9px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: btnSpin 0.6s linear infinite; }
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+    .status-message { margin-top: 16px; padding: 10px 14px; border-radius: 8px; font-size: 12px; font-family: 'JetBrains Mono', monospace; display: none; align-items: center; gap: 8px; line-height: 1.5; }
+    .status-message.visible { display: flex; }
+    .status-message.error { background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger); }
+    .status-message.warning { background: var(--warning-bg); border: 1px solid rgba(245,158,11,0.2); color: var(--warning); }
+    .status-message.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--success); }
+    .ban-timer { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 600; color: var(--danger); text-align: center; padding: 24px; background: var(--danger-bg); border: 1px solid var(--danger-border); border-radius: 12px; margin-top: 16px; display: none; }
+    .ban-timer.visible { display: block; }
+    .ban-timer-label { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .login-footer { text-align: center; margin-top: 24px; font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+    .setup-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+    .shake { animation: shake 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* Setup panel */
+    .setup-panel { display: none; }
+    .setup-panel.visible { display: block; }
+    .qr-img { display: block; margin: 16px auto; border-radius: 12px; background: #fff; padding: 12px; max-width: 220px; }
+    .secret-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); text-align: center; padding: 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; margin: 12px 0; word-break: break-all; letter-spacing: 2px; }
+    @media (max-width: 480px) { .login-card { padding: 32px 24px; } .login-container { padding: 16px; } }
   </style>
 </head>
-
 <body>
   <div class="login-container">
     <div class="login-card" id="loginCard">
-      <div class="login-header">
-        <div class="login-icon">🔒</div>
-        <div class="login-title">System Access</div>
-        <div class="login-subtitle">authorized personnel only</div>
-      </div>
-
-      <form id="loginForm" autocomplete="off">
-        <div class="field-group">
-          <label class="field-label" for="adminUsername">Identifier</label>
-          <input type="text" id="adminUsername" class="field-input" placeholder="username" autocomplete="off"
-            spellcheck="false" required />
+      <!-- LOGIN VIEW -->
+      <div id="loginView">
+        <div class="login-header">
+          <div class="login-icon">🔐</div>
+          <div class="login-title">System Access</div>
+          <div class="login-subtitle">enter authenticator code</div>
         </div>
-
-        <div class="field-group">
-          <label class="field-label" for="adminPassword">Passphrase</label>
-          <input type="password" id="adminPassword" class="field-input" placeholder="••••••••••••" autocomplete="off"
-            required />
+        <form id="loginForm" autocomplete="off">
+          <div class="field-group">
+            <label class="field-label" for="totpCode">6-digit code</label>
+            <input type="text" id="totpCode" class="field-input" placeholder="000000" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required />
+          </div>
+          <button type="submit" class="login-btn" id="loginBtn">AUTHENTICATE</button>
+        </form>
+        <div class="status-message" id="statusMessage"><span id="statusIcon"></span><span id="statusText"></span></div>
+        <div class="ban-timer" id="banTimer"><div class="ban-timer-label">Locked — Retry In</div><div id="banCountdown">--:--</div></div>
+        <div class="login-footer">
+          <span class="setup-link" id="setupLink" style="display:none;" onclick="showSetup()">first time? setup authenticator</span>
         </div>
-
-        <button type="submit" class="login-btn" id="loginBtn">
-          AUTHENTICATE
-        </button>
-      </form>
-
-      <div class="status-message" id="statusMessage">
-        <span id="statusIcon"></span>
-        <span id="statusText"></span>
       </div>
 
-      <div class="ban-timer" id="banTimer">
-        <div class="ban-timer-label">Account Locked — Retry In</div>
-        <div id="banCountdown">--:--</div>
-      </div>
-
-      <div class="login-footer">
-        session expires after 24 hours
+      <!-- SETUP VIEW -->
+      <div id="setupView" class="setup-panel">
+        <div class="login-header">
+          <div class="login-icon">📱</div>
+          <div class="login-title">Authenticator Setup</div>
+          <div class="login-subtitle">scan QR in Google Authenticator</div>
+        </div>
+        <div id="setupContent"><div class="login-btn loading" style="height:48px;"></div></div>
+        <div class="login-footer" style="margin-top:16px;">
+          <span class="setup-link" onclick="showLogin()">← back to login</span>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // ═══════════════════════════════════════════════
-    // ADMIN LOGIN — Zero client-side secrets
-    // All verification happens on the server
-    // ═══════════════════════════════════════════════
-
     const form = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('adminUsername');
-    const passwordInput = document.getElementById('adminPassword');
+    const codeInput = document.getElementById('totpCode');
     const loginBtn = document.getElementById('loginBtn');
     const loginCard = document.getElementById('loginCard');
     const statusEl = document.getElementById('statusMessage');
@@ -439,145 +110,141 @@
     const statusText = document.getElementById('statusText');
     const banTimerEl = document.getElementById('banTimer');
     const banCountdown = document.getElementById('banCountdown');
+    let banEndTime = null, banInterval = null;
 
-    let banEndTime = null;
-    let banInterval = null;
-
-    // ── Check if already authenticated ──
+    // Check if already authenticated
     (async () => {
-      try {
-        const resp = await fetch('/api/admin-verify', { credentials: 'include' });
-        const data = await resp.json();
-        if (data.valid) {
-          window.location.href = '/admin/dashboard/';
-        }
-      } catch (e) {
-        // Not authenticated — stay on login
+      const token = localStorage.getItem('admin_token');
+      if (token) {
+        try {
+          const r = await fetch('/api/admin-verify', { headers: { 'Authorization': 'Bearer ' + token } });
+          const d = await r.json();
+          if (d.valid) { window.location.href = '/admin/dashboard/'; return; }
+        } catch(e) {}
       }
+      // Check if TOTP needs setup — show link only if not configured
+      try {
+        const r = await fetch('/api/totp-setup');
+        const d = await r.json();
+        if (d.success) document.getElementById('setupLink').style.display = 'inline';
+      } catch(e) {}
     })();
 
-    // ── Form Submit ──
+    // Auto-format: only digits, auto-submit on 6 chars
+    codeInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+      if (e.target.value.length === 6) form.dispatchEvent(new Event('submit'));
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const code = codeInput.value.trim();
+      if (code.length !== 6) { showStatus('error', '⚠', 'Enter 6-digit code'); return; }
 
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-
-      if (!username || !password) {
-        showStatus('error', '⚠', 'Both fields required');
-        return;
-      }
-
-      // Disable form
-      setLoading(true);
-      hideStatus();
-      hideBanTimer();
+      setLoading(true); hideStatus(); hideBanTimer();
 
       try {
-        const resp = await fetch('/api/admin-login', {
+        const r = await fetch('/api/admin-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ code })
         });
+        const d = await r.json();
 
-        const data = await resp.json();
-
-        if (data.success) {
+        if (d.success) {
+          localStorage.setItem('admin_token', d.token);
+          localStorage.setItem('admin_user', d.username);
           showStatus('success', '✓', 'Access granted. Redirecting...');
-          setTimeout(() => {
-            window.location.href = '/admin/dashboard/';
-          }, 800);
+          setTimeout(() => { window.location.href = '/admin/dashboard/'; }, 600);
           return;
         }
 
-        // ── Handle errors ──
-        if (data.banned) {
-          showStatus('error', '🔒', data.error);
-          startBanTimer(data.retryAfter || 60);
-          loginCard.classList.add('shake');
-          setTimeout(() => loginCard.classList.remove('shake'), 500);
-        } else if (data.attemptsRemaining !== undefined) {
-          showStatus('warning', '⚠', `${data.error} (${data.attemptsRemaining} attempt${data.attemptsRemaining !== 1 ? 's' : ''} remaining)`);
-          loginCard.classList.add('shake');
-          setTimeout(() => loginCard.classList.remove('shake'), 500);
-        } else {
-          showStatus('error', '✗', data.error || 'Authentication failed');
-        }
+        if (d.needsSetup) { showSetup(); return; }
+        if (d.banned) { showStatus('error', '🔒', d.error); startBanTimer(d.retryAfter || 60); }
+        else if (d.attemptsRemaining !== undefined) { showStatus('warning', '⚠', `${d.error} (${d.attemptsRemaining} left)`); }
+        else { showStatus('error', '✗', d.error || 'Invalid code'); }
 
-        passwordInput.value = '';
-        passwordInput.focus();
-      } catch (err) {
-        showStatus('error', '✗', 'Connection error. Try again.');
-      } finally {
-        setLoading(false);
-      }
+        loginCard.classList.add('shake'); setTimeout(() => loginCard.classList.remove('shake'), 500);
+        codeInput.value = ''; codeInput.focus();
+      } catch (err) { showStatus('error', '✗', 'Connection error'); }
+      finally { setLoading(false); }
     });
+
+    // ── Setup Flow ──
+    async function showSetup() {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('setupView').classList.add('visible');
+      const el = document.getElementById('setupContent');
+      el.innerHTML = '<div class="login-btn loading" style="height:48px;"></div>';
+
+      try {
+        const r = await fetch('/api/totp-setup');
+        const d = await r.json();
+        if (!d.success) { el.innerHTML = `<div class="status-message visible error"><span>✗</span><span>${d.error}</span></div>`; return; }
+
+        el.innerHTML = `
+          <img class="qr-img" src="${d.qrCode}" alt="Scan this QR code" />
+          <div style="text-align:center;font-size:12px;color:var(--text-muted);margin:8px 0;">Backup secret (save it!):</div>
+          <div class="secret-code">${d.secret}</div>
+          <div style="margin-top:16px;">
+            <label class="field-label" for="verifyCode">Enter code to verify setup</label>
+            <input type="text" id="verifyCode" class="field-input" placeholder="000000" inputmode="numeric" maxlength="6" style="margin-bottom:12px;" />
+            <button class="login-btn" id="verifyBtn" onclick="verifySetup()">VERIFY & ACTIVATE</button>
+          </div>
+          <div class="status-message" id="setupStatus" style="margin-top:12px;"></div>`;
+        document.getElementById('verifyCode').focus();
+      } catch(e) { el.innerHTML = '<div class="status-message visible error"><span>✗</span><span>Connection error</span></div>'; }
+    }
+
+    async function verifySetup() {
+      const code = document.getElementById('verifyCode').value.replace(/\D/g, '');
+      if (code.length !== 6) return;
+      const btn = document.getElementById('verifyBtn');
+      btn.disabled = true; btn.classList.add('loading');
+      const ss = document.getElementById('setupStatus');
+
+      try {
+        const r = await fetch('/api/totp-setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const d = await r.json();
+        if (d.success) {
+          ss.className = 'status-message visible success';
+          ss.innerHTML = '<span>✓</span><span>Authenticator verified! Redirecting to login...</span>';
+          setTimeout(() => showLogin(), 1500);
+        } else {
+          ss.className = 'status-message visible error';
+          ss.innerHTML = `<span>✗</span><span>${d.error}</span>`;
+          btn.disabled = false; btn.classList.remove('loading');
+        }
+      } catch(e) { ss.className = 'status-message visible error'; ss.innerHTML = '<span>✗</span><span>Error</span>'; btn.disabled = false; btn.classList.remove('loading'); }
+    }
+
+    function showLogin() {
+      document.getElementById('loginView').style.display = 'block';
+      document.getElementById('setupView').classList.remove('visible');
+      hideStatus();
+      codeInput.value = ''; codeInput.focus();
+    }
 
     // ── UI Helpers ──
-    function setLoading(loading) {
-      loginBtn.disabled = loading;
-      loginBtn.classList.toggle('loading', loading);
-      usernameInput.disabled = loading;
-      passwordInput.disabled = loading;
-    }
-
-    function showStatus(type, icon, message) {
-      statusEl.className = `status-message visible ${type}`;
-      statusIcon.textContent = icon;
-      statusText.textContent = message;
-    }
-
-    function hideStatus() {
-      statusEl.className = 'status-message';
-    }
-
-    function startBanTimer(minutes) {
-      banEndTime = Date.now() + minutes * 60 * 1000;
-      banTimerEl.classList.add('visible');
-
-      // Disable inputs during ban
-      usernameInput.disabled = true;
-      passwordInput.disabled = true;
-      loginBtn.disabled = true;
-
+    function setLoading(l) { loginBtn.disabled = l; loginBtn.classList.toggle('loading', l); codeInput.disabled = l; }
+    function showStatus(type, icon, msg) { statusEl.className = `status-message visible ${type}`; statusIcon.textContent = icon; statusText.textContent = msg; }
+    function hideStatus() { statusEl.className = 'status-message'; }
+    function startBanTimer(min) {
+      banEndTime = Date.now() + min * 60000; banTimerEl.classList.add('visible');
+      codeInput.disabled = true; loginBtn.disabled = true;
       clearInterval(banInterval);
       banInterval = setInterval(() => {
-        const remaining = Math.max(0, banEndTime - Date.now());
-        if (remaining <= 0) {
-          clearInterval(banInterval);
-          hideBanTimer();
-          usernameInput.disabled = false;
-          passwordInput.disabled = false;
-          loginBtn.disabled = false;
-          showStatus('success', '🔓', 'You can try again now.');
-          return;
-        }
-
-        const mins = Math.floor(remaining / 60000);
-        const secs = Math.floor((remaining % 60000) / 1000);
-        banCountdown.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        const rem = Math.max(0, banEndTime - Date.now());
+        if (rem <= 0) { clearInterval(banInterval); hideBanTimer(); codeInput.disabled = false; loginBtn.disabled = false; showStatus('success', '🔓', 'Try again now.'); return; }
+        banCountdown.textContent = `${String(Math.floor(rem/60000)).padStart(2,'0')}:${String(Math.floor((rem%60000)/1000)).padStart(2,'0')}`;
       }, 1000);
     }
-
-    function hideBanTimer() {
-      banTimerEl.classList.remove('visible');
-      clearInterval(banInterval);
-    }
-
-    // ── Keyboard shortcut — quick focus ──
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        usernameInput.value = '';
-        passwordInput.value = '';
-        hideStatus();
-        hideBanTimer();
-      }
-    });
-
-    // Focus username on load
-    setTimeout(() => usernameInput.focus(), 100);
+    function hideBanTimer() { banTimerEl.classList.remove('visible'); clearInterval(banInterval); }
+    setTimeout(() => codeInput.focus(), 100);
   </script>
 </body>
-
 </html>

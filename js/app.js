@@ -94,6 +94,11 @@ const App = {
       window.QUESTION_BANK = [];
       this.questionsLoaded = true;
 
+      // Load exam configs from API (replaces hardcoded presets)
+      if (window.ExamPresets && ExamPresets.load) {
+        await ExamPresets.load();
+      }
+
       console.log("App ready — user:", Auth.getUser()?.name);
 
       // Gamification: load profile from server (v2 — no client-side login bonus)

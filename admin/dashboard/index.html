@@ -32,7 +32,9 @@
       <div class="tab" data-tab="questions" onclick="switchTab('questions')">📋 Questions</div>
       <div class="tab" data-tab="add" onclick="switchTab('add')">➕ Add Question</div>
       <div class="tab" data-tab="import" onclick="switchTab('import')">📥 Bulk Import</div>
+      <div class="tab" data-tab="exams" onclick="switchTab('exams')">🎯 Exams</div>
       <div class="tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
+      <div class="tab" data-tab="activity" onclick="switchTab('activity')">📜 Activity</div>
       <div class="tab" data-tab="security" onclick="switchTab('security')">🛡️ Security</div>
     </div>
 
@@ -44,21 +46,23 @@
   // ADMIN CONSOLE — Content Operating System
   // ═══════════════════════════════════════
 
-  let adminUser = null, csrfToken = null, currentTab = 'dashboard';
+  let adminUser = null, currentTab = 'dashboard';
   let qPage = 1, qSearch = '', qSubject = '';
+  const ADMIN_TOKEN = localStorage.getItem('admin_token');
 
-  // ── Auth Guard ──
+  // ── Auth Guard (Bearer token from localStorage) ──
   (async () => {
+    if (!ADMIN_TOKEN) { window.location.href = '/secure-admin-login/'; return; }
     try {
-      const r = await fetch('/api/admin-verify', { credentials: 'include' });
+      const r = await fetch('/api/admin-verify', { headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } });
       const d = await r.json();
       if (!d.valid) throw 0;
-      adminUser = d; csrfToken = d.csrfToken;
+      adminUser = d;
       document.getElementById('adminName').textContent = d.username;
       document.getElementById('authGuard').style.display = 'none';
       document.getElementById('adminShell').style.display = 'block';
       loadTab('dashboard');
-    } catch(e) { window.location.href = '/secure-admin-login/'; }
+    } catch(e) { localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; }
   })();
 
   function switchTab(t) {
@@ -76,24 +80,25 @@
         case 'questions': await renderQuestions(el); break;
         case 'add': renderAddQuestion(el); break;
         case 'import': renderBulkImport(el); break;
+        case 'exams': await renderExams(el); break;
         case 'users': await renderUsers(el); break;
+        case 'activity': await renderActivity(el); break;
         case 'security': renderSecurity(el); break;
       }
     } catch(e) { el.innerHTML = `<div class="empty">❌ ${e.message}</div>`; }
   }
 
-  // ── API Helper ──
+  // ── API Helper (Bearer token, no cookies/CSRF) ──
   async function adminAPI(action, body = null) {
-    const opts = { credentials: 'include' };
+    const opts = { headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } };
     let url = `/api/admin-data?action=${action}`;
     if (body) {
       opts.method = 'POST';
-      opts.headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken || '' };
+      opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
     const r = await fetch(url, opts);
-    if (r.status === 401) { window.location.href = '/secure-admin-login/'; throw new Error('Session expired'); }
-    if (r.status === 403) throw new Error('CSRF validation failed — reload page');
+    if (r.status === 401) { localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; throw new Error('Session expired'); }
     const d = await r.json();
     if (!d.success && d.error) throw new Error(d.error);
     return d;
@@ -387,13 +392,283 @@
     btn.disabled = true; btn.textContent = '⏳ Importing...';
     try {
       const d = await adminAPI('bulk-import', { questions: window._pendingImport });
-      showToast(`✅ ${d.imported} questions imported!`,'success');
-      window._pendingImport = [];
-      switchTab('questions');
+      const msg = `✅ Imported: ${d.imported} | Rejected: ${d.rejected || 0} | Duplicates: ${d.duplicates || 0}`;
+      showToast(msg, 'success');
+      if (d.duplicates > 0 || d.rejected > 0) {
+        document.getElementById('importPreview').innerHTML = `<div class="sec-card">
+          <div class="sec-title">📊 Import Report</div>
+          <div style="display:flex;gap:12px;margin-bottom:8px;">
+            <span class="chip-s chip-diff-easy">✅ Imported: ${d.imported}</span>
+            <span class="chip-s chip-diff-hard">❌ Rejected: ${d.rejected || 0}</span>
+            <span class="chip-s chip-diff-medium">🔁 Duplicates: ${d.duplicates || 0}</span>
+          </div>
+          ${(d.duplicateItems||[]).length ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Duplicate samples: ${d.duplicateItems.join('; ')}</div>` : ''}
+        </div>`;
+      } else {
+        window._pendingImport = [];
+        switchTab('questions');
+      }
     } catch(e) { showToast(e.message,'error'); btn.disabled = false; btn.textContent = '✅ Import'; }
   }
 
   // ═══════════════ USERS ═══════════════
+  // ═══════════════ EXAM CONFIGS ═══════════════
+  async function renderExams(el) {
+    const d = await adminAPI('all-exams');
+    const exams = d.exams || [];
+    const boards = [...new Set(exams.map(e => e.board || e.category))];
+    const statusColors = { draft: '#f59e0b', published: '#10b981', archived: '#6b7280', disabled: '#ef4444' };
+    const statusIcons = { draft: '📝', published: '🟢', archived: '📦', disabled: '🔴' };
+
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">🎯 Exam Configurations (${exams.length})</div>
+        <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tool-btn" onclick="renderAddExam()">➕ Add New Exam</button>
+          <button class="tool-btn" onclick="backfillHashes()" style="background:var(--surface-alt,#2a2a3e);">🔄 Backfill Q-Hashes</button>
+        </div>
+        ${boards.map(board => `
+          <div style="margin-bottom:16px;">
+            <div style="font-weight:600;color:var(--text-primary);margin-bottom:8px;font-size:14px;">📁 ${board}</div>
+            ${exams.filter(e => (e.board || e.category) === board).map(exam => `
+              <div class="q-row" style="padding:12px;">
+                <div class="q-body" style="flex:1;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:18px;">${exam.icon || '📝'}</span>
+                    <div>
+                      <div class="q-text" style="font-size:14px;">${exam.exam_name || exam.exam || '(unnamed)'}</div>
+                      <div style="font-size:12px;color:var(--text-muted);">${exam.full_name || ''}</div>
+                    </div>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;background:${statusColors[exam.status]||'#6b7280'};margin-left:8px;">${statusIcons[exam.status]||''} ${(exam.status||'draft').toUpperCase()}</span>
+                    ${exam.schema_version ? `<span style="font-size:11px;color:var(--text-muted);">v${exam.schema_version}</span>` : ''}
+                  </div>
+                  <div class="q-meta" style="margin-top:6px;">
+                    <span class="chip-s chip-subj">${exam.total_questions}Q</span>
+                    <span class="chip-s chip-board">${exam.duration_minutes}min</span>
+                    <span class="chip-s ${exam.negative_marking > 0 ? 'chip-diff-hard' : 'chip-diff-easy'}">${exam.negative_marking > 0 ? '-'+exam.negative_marking : 'No neg'}</span>
+                    <span class="chip-s chip-topic">${exam.renderer_type}</span>
+                    <span class="chip-s">${(exam.sections || []).length} sections</span>
+                  </div>
+                </div>
+                <div class="q-actions" style="display:flex;gap:4px;flex-wrap:wrap;">
+                  ${exam.status === 'draft' ? `<button class="act-btn" onclick="publishExam('${exam.slug}')" title="Publish" style="background:#10b981;color:#fff;">🚀</button>` : ''}
+                  ${exam.status === 'published' ? `<button class="act-btn" onclick="unpublishExam('${exam.slug}')" title="Unpublish" style="background:#f59e0b;color:#fff;">⏸️</button>` : ''}
+                  <button class="act-btn" onclick="renderEditExam('${exam.slug}')" title="Edit">✏️</button>
+                  <button class="act-btn" onclick="duplicateExam('${exam.slug}')" title="Duplicate">📋</button>
+                  ${exam.status !== 'archived' ? `<button class="act-btn" onclick="archiveExam('${exam.slug}')" title="Archive">📦</button>` : ''}
+                  <button class="act-btn" onclick="showVersions('${exam.slug}')" title="History">🕐</button>
+                  ${exam.status !== 'published' ? `<button class="act-btn danger" onclick="deleteExam(${exam.id}, '${(exam.exam_name||'').replace(/'/g,"\\'")}')" title="Delete">🗑️</button>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>`;
+  }
+
+  function renderAddExam(editData = null) {
+    const el = document.getElementById('adminContent');
+    const e = editData || { slug:'', board:'SSC', exam_name:'', full_name:'', renderer_type:'ssc', icon:'📝', duration_minutes:60, total_questions:100, marks_per_question:2, negative_marking:0, category:'SSC', sections:[], section_locking:false, section_timers:false, calculator_allowed:false, palette_type:'default', keyboard_nav:false, description:'', sort_order:0, is_active:true };
+    const isEdit = !!editData;
+    const sections = e.sections || [];
+    window._examSections = [...sections];
+
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">${isEdit ? '✏️ Edit' : '➕ Add'} Exam Config ${isEdit ? '#'+e.slug : ''}</div>
+        <form id="examForm" onsubmit="return false;">
+          <div class="form-grid">
+            <div class="form-group"><label>Slug *</label><input type="text" id="ex_slug" value="${e.slug}" placeholder="ssc-cgl" ${isEdit?'readonly':'required'}></div>
+            <div class="form-group"><label>Exam Name *</label><input type="text" id="ex_name" value="${e.exam_name}" required></div>
+            <div class="form-group"><label>Full Name</label><input type="text" id="ex_full" value="${e.full_name||''}"></div>
+            <div class="form-group"><label>Board/Category *</label>
+              <select id="ex_board">${['SSC','Railway','Banking','UPSC','Teaching','Defence','State','Quick','Daily'].map(b=>'<option value="'+b+'" '+(e.board===b?'selected':'')+'>'+b+'</option>').join('')}</select>
+            </div>
+            <div class="form-group"><label>Icon</label><input type="text" id="ex_icon" value="${e.icon||'📝'}"></div>
+            <div class="form-group"><label>Renderer</label>
+              <select id="ex_renderer">${['ssc','railway','banking','upsc'].map(r=>'<option value="'+r+'" '+(e.renderer_type===r?'selected':'')+'>'+r+'</option>').join('')}</select>
+            </div>
+            <div class="form-group"><label>Duration (min)</label><input type="number" id="ex_dur" value="${e.duration_minutes}"></div>
+            <div class="form-group"><label>Total Questions</label><input type="number" id="ex_total" value="${e.total_questions}"></div>
+            <div class="form-group"><label>Marks/Question</label><input type="number" id="ex_marks" value="${e.marks_per_question}" step="0.25"></div>
+            <div class="form-group"><label>Negative Marking</label><input type="number" id="ex_neg" value="${e.negative_marking}" step="0.01"></div>
+            <div class="form-group"><label>Sort Order</label><input type="number" id="ex_sort" value="${e.sort_order||0}"></div>
+            <div class="form-group full"><label>Description</label><textarea id="ex_desc" rows="2">${e.description||''}</textarea></div>
+            <div class="form-group"><label><input type="checkbox" id="ex_lock" ${e.section_locking?'checked':''}> Section Locking</label></div>
+            <div class="form-group"><label><input type="checkbox" id="ex_timers" ${e.section_timers?'checked':''}> Section Timers</label></div>
+            <div class="form-group"><label><input type="checkbox" id="ex_calc" ${e.calculator_allowed?'checked':''}> Calculator</label></div>
+            <div class="form-group"><label><input type="checkbox" id="ex_active" ${e.is_active!==false?'checked':''}> Active</label></div>
+          </div>
+          <div class="sec-card" style="margin-top:12px;">
+            <div class="sec-title">📑 Sections</div>
+            <div id="sectionsList"></div>
+            <button type="button" class="tool-btn" onclick="addExamSection()" style="margin-top:8px;">+ Add Section</button>
+          </div>
+          <div class="form-actions" style="margin-top:12px;">
+            <button type="button" class="save-btn" onclick="saveExam(${isEdit?"'"+e.slug+"'":'null'})">${isEdit?'💾 Update':'➕ Create'} Exam</button>
+            <button type="button" class="cancel-btn" onclick="switchTab('exams')">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+    renderSectionsList();
+  }
+
+  function renderSectionsList() {
+    const el = document.getElementById('sectionsList');
+    if(!el) return;
+    el.innerHTML = (window._examSections||[]).map((s,i) => `
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+        <input type="text" value="${s.name||''}" placeholder="Section name" style="flex:2;" onchange="window._examSections[${i}].name=this.value">
+        <input type="text" value="${s.subject||''}" placeholder="subject" style="flex:1;" onchange="window._examSections[${i}].subject=this.value">
+        <input type="number" value="${s.questions||0}" placeholder="Qty" style="width:60px;" onchange="window._examSections[${i}].questions=parseInt(this.value)">
+        <input type="number" value="${s.sectionTime||''}" placeholder="Time(s)" style="width:80px;" onchange="window._examSections[${i}].sectionTime=parseInt(this.value)||undefined">
+        <button class="act-btn danger" onclick="window._examSections.splice(${i},1);renderSectionsList()">✗</button>
+      </div>`).join('') || '<div class="empty" style="padding:8px;">No sections added</div>';
+  }
+  window.renderSectionsList = renderSectionsList;
+
+  function addExamSection() {
+    if(!window._examSections) window._examSections = [];
+    window._examSections.push({ name:'', subject:'', questions:25 });
+    renderSectionsList();
+  }
+  window.addExamSection = addExamSection;
+
+  async function renderEditExam(slug) {
+    const r = await fetch(`/api/exams?slug=${slug}`, { credentials:'include' });
+    const d = await r.json();
+    if (d.exam) renderAddExam(d.exam);
+    else showToast('Exam not found','error');
+  }
+  window.renderEditExam = renderEditExam;
+  window.renderAddExam = renderAddExam;
+
+  // ── Client-Side Exam Config Validator (mirrors server-side) ──
+  const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+  const VALID_RENDERERS = ['ssc','railway','banking','upsc'];
+  const VALID_BOARDS = ['SSC','Railway','Banking','UPSC','Teaching','Defence','State','Quick','Daily'];
+  const VALID_PALETTES = ['default','ibps','paper'];
+  const VALID_SUBJECTS = ['math','reasoning','english','hindi','gk','science','history','geography','polity','all'];
+
+  function validateExamClient(config, isUpdate) {
+    const errors = [];
+
+    // Slug
+    if (!isUpdate) {
+      if (!config.slug) errors.push('Slug is required');
+      else if (!SLUG_RE.test(config.slug)) errors.push('Slug must be kebab-case (a-z, 0-9, hyphens). Got: "' + config.slug + '"');
+      else if (config.slug.length < 2 || config.slug.length > 50) errors.push('Slug must be 2-50 characters');
+    }
+
+    // Exam name
+    if (!config.exam_name || config.exam_name.length < 2) errors.push('Exam name required (min 2 chars)');
+
+    // Renderer
+    if (config.renderer_type && !VALID_RENDERERS.includes(config.renderer_type))
+      errors.push('Renderer must be: ' + VALID_RENDERERS.join(', ') + '. Got: "' + config.renderer_type + '"');
+
+    // Board
+    if (config.board && !VALID_BOARDS.includes(config.board))
+      errors.push('Board must be: ' + VALID_BOARDS.join(', ') + '. Got: "' + config.board + '"');
+
+    // Duration
+    const dur = Number(config.duration_minutes);
+    if (isNaN(dur) || dur <= 0 || dur > 600) errors.push('Duration must be 1-600 minutes');
+
+    // Total questions
+    const tq = Number(config.total_questions);
+    if (isNaN(tq) || tq <= 0 || tq > 1000) errors.push('Total questions must be 1-1000');
+
+    // Marks per question
+    const mpq = Number(config.marks_per_question);
+    if (isNaN(mpq) || mpq <= 0 || mpq > 10) errors.push('Marks/question must be 0.25-10');
+
+    // Negative marking
+    const neg = Number(config.negative_marking);
+    if (isNaN(neg) || neg < 0 || neg > 5) errors.push('Negative marking must be 0-5');
+
+    // Sections
+    const secs = config.sections || [];
+    if (secs.length === 0 && !isUpdate) errors.push('At least 1 section required');
+    let secTotal = 0;
+    secs.forEach((s, i) => {
+      if (!s.name || !s.name.trim()) errors.push(`Section ${i+1}: name is required`);
+      if (!s.subject) errors.push(`Section ${i+1}: subject is required`);
+      else if (!VALID_SUBJECTS.includes(s.subject.toLowerCase())) errors.push(`Section ${i+1}: invalid subject "${s.subject}"`);
+      const sq = Number(s.questions);
+      if (isNaN(sq) || sq <= 0) errors.push(`Section ${i+1}: questions must be > 0`);
+      else secTotal += sq;
+      if (s.sectionTime !== undefined && s.sectionTime !== null && s.sectionTime !== '') {
+        const st = Number(s.sectionTime);
+        if (isNaN(st) || st <= 0) errors.push(`Section ${i+1}: sectionTime must be > 0 seconds`);
+      }
+    });
+
+    // Cross-validation: section totals must match total_questions
+    if (secs.length > 0 && secTotal > 0 && !isNaN(tq) && tq > 0 && secTotal !== tq) {
+      errors.push(`Section questions total (${secTotal}) ≠ total_questions (${tq})`);
+    }
+
+    // Icon sanity
+    if (config.icon && config.icon.length > 10) errors.push('Icon too long (max 10 chars)');
+
+    return errors;
+  }
+
+  async function saveExam(editSlug) {
+    const payload = {
+      slug: document.getElementById('ex_slug').value.trim(),
+      board: document.getElementById('ex_board').value,
+      exam_name: document.getElementById('ex_name').value.trim(),
+      full_name: document.getElementById('ex_full').value.trim() || null,
+      renderer_type: document.getElementById('ex_renderer').value,
+      icon: document.getElementById('ex_icon').value.trim() || '📝',
+      duration_minutes: parseInt(document.getElementById('ex_dur').value) || 60,
+      total_questions: parseInt(document.getElementById('ex_total').value) || 100,
+      marks_per_question: parseFloat(document.getElementById('ex_marks').value) || 1,
+      negative_marking: parseFloat(document.getElementById('ex_neg').value) || 0,
+      category: document.getElementById('ex_board').value,
+      description: document.getElementById('ex_desc').value.trim() || null,
+      sort_order: parseInt(document.getElementById('ex_sort').value) || 0,
+      sections: (window._examSections||[]).filter(s => s.name && s.subject),
+      section_locking: document.getElementById('ex_lock').checked,
+      section_timers: document.getElementById('ex_timers').checked,
+      calculator_allowed: document.getElementById('ex_calc').checked,
+      is_active: document.getElementById('ex_active').checked
+    };
+
+    // ── Client-side validation ──
+    const validationErrors = validateExamClient(payload, !!editSlug);
+    if (validationErrors.length > 0) {
+      showToast('⚠️ ' + validationErrors[0], 'error');
+      // Show all errors if multiple
+      if (validationErrors.length > 1) {
+        setTimeout(() => showToast(`${validationErrors.length} total validation errors`, 'error'), 500);
+      }
+      console.warn('[Exam Validator]', validationErrors);
+      return;
+    }
+
+    try {
+      const action = editSlug ? 'update-exam' : 'create-exam';
+      if (editSlug) payload.slug = editSlug;
+      await adminAPI(action, payload);
+      showToast(editSlug ? 'Exam updated!' : 'Exam created!', 'success');
+      switchTab('exams');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  window.saveExam = saveExam;
+
+  async function deleteExam(id, name) {
+    if (!confirm(`Delete exam "${name}" permanently?`)) return;
+    try {
+      await adminAPI('delete-exam', { id });
+      showToast('Exam deleted','success');
+      switchTab('exams');
+    } catch(e) { showToast(e.message,'error'); }
+  }
+  window.deleteExam = deleteExam;
+
   async function renderUsers(el) {
     const d = await adminAPI('users');
     el.innerHTML = `<div class="sec-card"><div class="sec-title">👥 Users (${(d.users||[]).length})</div>
@@ -425,9 +700,83 @@
         </tbody></table></div>`;
   }
 
+  // ═══════════════ GOVERNANCE ACTIONS ═══════════════
+  async function publishExam(slug) {
+    if (!confirm(`Publish "${slug}" to production?`)) return;
+    try { await adminAPI('publish-exam', { slug }); showToast('🚀 Exam published!','success'); switchTab('exams'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.publishExam = publishExam;
+
+  async function unpublishExam(slug) {
+    if (!confirm(`Unpublish "${slug}"? It will be removed from frontend.`)) return;
+    try { await adminAPI('unpublish-exam', { slug }); showToast('⏸️ Exam unpublished','success'); switchTab('exams'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.unpublishExam = unpublishExam;
+
+  async function archiveExam(slug) {
+    if (!confirm(`Archive "${slug}"?`)) return;
+    try { await adminAPI('archive-exam', { slug }); showToast('📦 Exam archived','success'); switchTab('exams'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.archiveExam = archiveExam;
+
+  async function duplicateExam(slug) {
+    try { const d = await adminAPI('duplicate-exam', { slug }); showToast(`📋 Cloned as ${d.exam?.slug}`,'success'); switchTab('exams'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.duplicateExam = duplicateExam;
+
+  async function showVersions(slug) {
+    const el = document.getElementById('adminContent');
+    el.innerHTML = '<div class="loading"><span class="guard-spin"></span> Loading versions...</div>';
+    const d = await adminAPI('exam-versions&slug=' + slug);
+    const vers = d.versions || [];
+    el.innerHTML = `<div class="sec-card"><div class="sec-title">🕐 Version History — ${slug} (${vers.length} versions)</div>
+      ${vers.length === 0 ? '<div class="empty">No versions yet. Publish to create first version.</div>' :
+        vers.map(v => `<div class="q-row" style="padding:10px;"><div class="q-body"><div class="q-text" style="font-size:13px;">v${v.version_number} — ${v.change_summary || 'Published'}</div><div class="q-meta"><span class="chip-s chip-subj">${new Date(v.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span><span class="chip-s chip-board">${v.created_by||'admin'}</span></div></div>
+        <div class="q-actions"><button class="act-btn" onclick="rollbackExam('${slug}',${v.version_number})" title="Rollback">⏪</button></div></div>`).join('')}
+      <button class="cancel-btn" style="margin-top:12px;" onclick="switchTab('exams')">← Back</button></div>`;
+  }
+  window.showVersions = showVersions;
+
+  async function rollbackExam(slug, version) {
+    if (!confirm(`Rollback "${slug}" to v${version}? Current config will become a draft.`)) return;
+    try { await adminAPI('rollback-exam', { slug, version }); showToast(`⏪ Rolled back to v${version}`,'success'); switchTab('exams'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.rollbackExam = rollbackExam;
+
+  async function backfillHashes() {
+    if (!confirm('Backfill question hashes for duplicate detection? This processes all existing questions.')) return;
+    try { const d = await adminAPI('backfill-hashes', {}); showToast(`✅ Updated: ${d.updated}, Duplicates found: ${d.duplicates}`,'success'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.backfillHashes = backfillHashes;
+
+  // ═══════════════ ACTIVITY TAB ═══════════════
+  async function renderActivity(el) {
+    const d = await adminAPI('audit-logs');
+    const logs = d.logs || [];
+    const actionColors = { create:'#10b981', update:'#3b82f6', delete:'#ef4444', publish:'#8b5cf6', unpublish:'#f59e0b', archive:'#6b7280', import:'#06b6d4', rollback:'#ec4899', duplicate:'#14b8a6' };
+    el.innerHTML = `<div class="sec-card"><div class="sec-title">📜 Platform Activity (${logs.length} recent)</div>
+      ${logs.length === 0 ? '<div class="empty">No activity recorded yet</div>' :
+        logs.map(l => `<div class="q-row" style="padding:8px 12px;border-left:3px solid ${actionColors[l.action]||'#6b7280'};">
+          <div class="q-body"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span style="font-weight:600;font-size:12px;padding:2px 6px;border-radius:3px;background:${actionColors[l.action]||'#6b7280'};color:#fff;">${l.action.toUpperCase()}</span>
+            <span style="font-size:13px;color:var(--text-primary);">${l.entity_type} <span class="mono" style="color:var(--text-muted);">${l.entity_id||''}</span></span>
+            <span style="font-size:11px;color:var(--text-muted);">by <strong>${l.admin_username}</strong></span>
+            <span style="font-size:11px;color:var(--text-muted);">${new Date(l.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+          </div></div></div>`).join('')}
+    </div>`;
+  }
+
   // ═══════════════ HELPERS ═══════════════
   async function adminLogout() {
-    try { await fetch('/api/admin-logout', { method:'POST', credentials:'include' }); } catch(e){}
+    try { await fetch('/api/admin-logout', { method:'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } }); } catch(e){}
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
     window.location.href = '/secure-admin-login/';
   }
 

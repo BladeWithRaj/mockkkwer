@@ -6,26 +6,80 @@
 const HomePage = {
   _expandedCategory: null,
 
-  // Board registry with design tokens
-  _boards: [
-    { id: 'SSC', icon: '📋', color: '#2563EB', label: 'SSC', exams: 'CGL · CHSL · MTS · GD · CPO', url: '#board?id=SSC' },
-    { id: 'Railway', icon: '🚂', color: '#059669', label: 'Railway', exams: 'NTPC · Group D · ALP · JE', url: '#board?id=Railway' },
-    { id: 'Banking', icon: '🏦', color: '#7C3AED', label: 'Banking', exams: 'IBPS PO · Clerk · SBI · RBI', url: '#board?id=Banking' },
-    { id: 'UPSC', icon: '⚖️', color: '#9333EA', label: 'UPSC', exams: 'Prelims · CAPF · EPFO', url: '#board?id=UPSC' },
-    { id: 'Teaching', icon: '📚', color: '#0891B2', label: 'Teaching', exams: 'CTET · DSSSB · SUPER TET', url: '#board?id=Teaching' },
-    { id: 'Defence', icon: '🛡️', color: '#DC2626', label: 'Defence', exams: 'CDS · AFCAT · NDA', url: '#board?id=Defence' },
-    { id: 'State', icon: '🏛️', color: '#D97706', label: 'State Exams', exams: 'UP PCS · BPSC · MPPSC · RAS', url: '#board?id=State' }
-  ],
+  // ── Board design tokens (fallback for styling) ──
+  _boardDesignTokens: {
+    'SSC':      { color: '#2563EB', label: 'SSC' },
+    'Railway':  { color: '#059669', label: 'Railway' },
+    'Banking':  { color: '#7C3AED', label: 'Banking' },
+    'UPSC':     { color: '#9333EA', label: 'UPSC' },
+    'Teaching': { color: '#0891B2', label: 'Teaching' },
+    'Defence':  { color: '#DC2626', label: 'Defence' },
+    'State':    { color: '#D97706', label: 'State Exams' },
+    'Quick':    { color: '#F59E0B', label: 'Quick Modes' },
+    'Daily':    { color: '#EF4444', label: 'Daily' }
+  },
 
-  // Popular exams for trending section
-  _popularExams: [
-    { id: 'ssc-cgl', name: 'SSC CGL', meta: '100Q · 60 min · Latest Pattern' },
-    { id: 'rrb-ntpc', name: 'RRB NTPC', meta: '100Q · 90 min · CBT-1 Pattern' },
-    { id: 'ibps-po', name: 'IBPS PO', meta: '100Q · 60 min · Prelims' },
-    { id: 'ssc-chsl', name: 'SSC CHSL', meta: '100Q · 60 min · Tier-1' },
-    { id: 'rrb-group-d', name: 'RRB Group D', meta: '100Q · 90 min · CBT' },
-    { id: 'sbi-clerk', name: 'SBI Clerk', meta: '100Q · 60 min · Prelims' }
-  ],
+  // Default color palette for unknown boards
+  _fallbackColors: ['#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6', '#06B6D4', '#84CC16'],
+
+  /**
+   * Generate board cards dynamically from ExamPresets (DB data).
+   * New boards added via admin auto-appear here.
+   */
+  _getBoards() {
+    const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
+    const boardMap = {};
+
+    // Group exams by category (which maps to board)
+    for (const preset of allPresets) {
+      const cat = preset.category || 'Other';
+      // Skip utility modes from board grid
+      if (cat === 'Quick' || cat === 'Daily') continue;
+
+      if (!boardMap[cat]) {
+        boardMap[cat] = { id: cat, exams: [], icons: new Set() };
+      }
+      boardMap[cat].exams.push(preset);
+      if (preset.icon && preset.icon !== '📝') boardMap[cat].icons.add(preset.icon);
+    }
+
+    // Convert to array with design tokens
+    let colorIdx = 0;
+    return Object.values(boardMap).map(board => {
+      const tokens = this._boardDesignTokens[board.id] || {};
+      const examNames = board.exams
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+        .slice(0, 5)
+        .map(e => e.name.replace(board.id + ' ', '').replace('RRB ', '').replace('RPF ', ''))
+        .join(' · ');
+      const firstIcon = board.exams[0]?.icon || '📝';
+
+      return {
+        id: board.id,
+        icon: [...board.icons][0] || firstIcon,
+        color: tokens.color || this._fallbackColors[colorIdx++ % this._fallbackColors.length],
+        label: tokens.label || board.id,
+        exams: examNames,
+        count: board.exams.length
+      };
+    });
+  },
+
+  /**
+   * Generate popular exams dynamically from ExamPresets.
+   * Shows first 6 exams sorted by sort_order (most important first).
+   */
+  _getPopularExams() {
+    const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
+    return allPresets
+      .filter(p => p.category !== 'Quick' && p.category !== 'Daily')
+      .slice(0, 6)
+      .map(p => ({
+        id: p.id,
+        name: p.name,
+        meta: `${p.totalQuestions}Q · ${Math.round(p.totalTime / 60)} min · ${p.negativeMarking ? '-' + p.negativeValue + ' marking' : 'No negative'}`
+      }));
+  },
 
   render() {
     const streak = DailySystem.getStreak();
@@ -94,16 +148,13 @@ const HomePage = {
           </div>
         </div>
 
-        <!-- ═══ BOARD GRID ═══ -->
+        <!-- ═══ BOARD GRID (DB-driven) ═══ -->
         <section class="hp-section" id="board-section">
           <h2 class="hp-section-title">🎯 Choose Your Board</h2>
           <p class="hp-section-sub">Select your exam category to start practicing</p>
 
           <div class="hp-board-grid">
-            ${this._boards.map((board, i) => {
-      const presets = ExamPresets.getByCategory(board.id);
-      const count = presets ? presets.length : 0;
-      return `
+            ${this._getBoards().map((board, i) => `
                 <div class="hp-board-card"
                      style="--board-color: ${board.color}; animation: hp-fadeUp 0.5s ${0.05 * i}s ease both;"
                      onclick="App.navigate('board', {id: '${board.id}'})"
@@ -112,7 +163,7 @@ const HomePage = {
                   <div class="hp-board-name">${board.label}</div>
                   <div class="hp-board-exams">${board.exams}</div>
                   <div class="hp-board-bottom">
-                    <span class="hp-board-count">${count} Exams</span>
+                    <span class="hp-board-count">${board.count} Exams</span>
                     <span class="hp-board-arrow">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -120,8 +171,7 @@ const HomePage = {
                     </span>
                   </div>
                 </div>
-              `;
-    }).join('')}
+            `).join('')}
           </div>
         </section>
 
@@ -187,13 +237,13 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══ POPULAR EXAMS ═══ -->
+        <!-- ═══ POPULAR EXAMS (DB-driven) ═══ -->
         <section class="hp-section">
           <h2 class="hp-section-title">🔥 Popular Exams</h2>
           <p class="hp-section-sub">Most attempted mock tests this week</p>
 
           <div class="hp-popular-list">
-            ${this._popularExams.slice(0, 6).map((exam, i) => `
+            ${this._getPopularExams().map((exam, i) => `
               <div class="hp-popular-card" onclick="HomePage.startPresetExam('${exam.id}')" id="popular-${exam.id}">
                 <div class="hp-popular-rank">${i + 1}</div>
                 <div class="hp-popular-info">

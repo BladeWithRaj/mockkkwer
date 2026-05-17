@@ -1,66 +1,68 @@
 // ============================================
-// AUTH MODULE — Username Identity System
-// No Clerk. No OTP. Instant entry.
-// Supabase users table + localStorage session
+// AUTH MODULE — Session-Based Identity System
+// Backend httpOnly cookie = source of truth.
+// No spoofable localStorage-only identity.
 // ============================================
 
 const Auth = {
   _currentUser: null,
   _ready: false,
 
-  // ── Session Manager ──
-
-  _saveSession(user) {
-    localStorage.setItem("mock_user", JSON.stringify(user));
-  },
-
-  _getSession() {
-    try {
-      const data = localStorage.getItem("mock_user");
-      if (!data) return null;
-      return JSON.parse(data);
-    } catch {
-      return null;
-    }
-  },
-
-  _clearSession() {
-    localStorage.removeItem("mock_user");
-  },
-
-  // ── Init ──
+  // ── Init — Check if user has active session ──
 
   async init() {
-    const session = this._getSession();
+    try {
+      const resp = await fetch('/api/user-verify', { credentials: 'include' });
+      const data = await resp.json();
 
-    if (session && session.username) {
-      this._currentUser = {
-        id: session.id,
-        username: session.username,
-        name: session.username,
-        coins: session.coins || 0,
-        streak: session.streak || 0,
-        tests_given: session.tests_given || 0,
-        created_at: session.created_at
-      };
-      this._ready = true;
+      if (data.valid && data.user) {
+        this._currentUser = {
+          id: data.user.id,
+          username: data.user.username,
+          name: data.user.username
+        };
+        this._ready = true;
 
-      // Sync to Storage for backward compat
-      if (typeof Storage !== 'undefined' && Storage.setUsername) {
-        Storage.setUsername(this._currentUser.username);
+        // Sync to localStorage for renderers (display name only)
+        localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
+        localStorage.setItem("mocktest_user_id", this._currentUser.id);
+
+        if (typeof Storage !== 'undefined' && Storage.setUsername) {
+          Storage.setUsername(this._currentUser.username);
+        }
+
+        console.log("✅ Session verified:", this._currentUser.username);
+        return;
       }
-      localStorage.setItem("mocktest_user_id", this._currentUser.id);
+    } catch (e) {
+      console.warn("Session verify failed:", e.message);
+    }
 
-      console.log("✅ User session restored:", this._currentUser.username);
+    // No valid session — try local cache for offline display
+    const cached = this._getLocalCache();
+    if (cached) {
+      this._currentUser = cached;
+      this._ready = true;
+      console.log("⚠️ Using cached identity (no active session):", cached.username);
       return;
     }
 
-    // No session — show username modal
+    // No session, no cache — show username modal
     console.log("🔐 No session. Username modal will be triggered by App.");
     this._ready = false;
   },
 
-  // ── Username Check (availability) ──
+  // ── Local cache (display only, NOT for auth) ──
+
+  _getLocalCache() {
+    try {
+      const data = localStorage.getItem("mock_user");
+      if (!data) return null;
+      return JSON.parse(data);
+    } catch { return null; }
+  },
+
+  // ── Check username availability (direct Supabase) ──
 
   async checkUsername(username) {
     try {
@@ -69,7 +71,6 @@ const Auth = {
         .select("id")
         .eq("username", username.toLowerCase())
         .maybeSingle();
-
       return !!data;
     } catch (err) {
       console.error("checkUsername error:", err);
@@ -77,94 +78,77 @@ const Auth = {
     }
   },
 
-  // ── Create User ──
+  // ── Create User (via backend — gets session cookie) ──
 
   async createUser(username) {
-    const normalized = username.toLowerCase().trim();
-
-    const exists = await this.checkUsername(normalized);
-    if (exists) {
-      return { success: false, message: "Username already taken" };
-    }
-
     try {
-      const { data, error } = await window.supabaseClient
-        .from("users")
-        .insert({ username: normalized })
-        .select()
-        .single();
+      const resp = await fetch('/api/user-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, action: 'create' })
+      });
 
-      if (error) {
-        console.error("createUser error:", error);
-        return { success: false, message: error.message };
+      const data = await resp.json();
+      if (!data.success) {
+        return { success: false, message: data.error || 'Creation failed' };
       }
 
-      // Save session
-      this._saveSession(data);
-
-      // Set current user
+      // Session cookie set by backend — store display data locally
       this._currentUser = {
-        id: data.id,
-        username: data.username,
-        name: data.username,
-        coins: data.coins || 0,
-        streak: data.streak || 0,
-        tests_given: data.tests_given || 0,
-        created_at: data.created_at
+        id: data.user.id,
+        username: data.user.username,
+        name: data.user.username
       };
       this._ready = true;
 
-      // Sync to Storage for backward compat
-      if (typeof Storage !== 'undefined' && Storage.setUsername) {
-        Storage.setUsername(data.username);
-      }
-      localStorage.setItem("mocktest_user_id", data.id);
+      localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
+      localStorage.setItem("mocktest_user_id", data.user.id);
 
-      console.log("✅ User created:", data.username);
-      return { success: true, user: data };
+      if (typeof Storage !== 'undefined' && Storage.setUsername) {
+        Storage.setUsername(data.user.username);
+      }
+
+      console.log("✅ User created + session set:", data.user.username);
+      return { success: true, user: data.user };
     } catch (err) {
       console.error("createUser crash:", err);
       return { success: false, message: "Something went wrong" };
     }
   },
 
-  // ── Login existing user ──
+  // ── Login existing user (via backend — gets session cookie) ──
 
   async loginUser(username) {
-    const normalized = username.toLowerCase().trim();
-
     try {
-      const { data, error } = await window.supabaseClient
-        .from("users")
-        .select("*")
-        .eq("username", normalized)
-        .single();
+      const resp = await fetch('/api/user-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, action: 'login' })
+      });
 
-      if (error || !data) {
-        return { success: false, message: "User not found" };
+      const data = await resp.json();
+      if (!data.success) {
+        return { success: false, message: data.error || 'Login failed' };
       }
 
-      // Save session
-      this._saveSession(data);
-
       this._currentUser = {
-        id: data.id,
-        username: data.username,
-        name: data.username,
-        coins: data.coins || 0,
-        streak: data.streak || 0,
-        tests_given: data.tests_given || 0,
-        created_at: data.created_at
+        id: data.user.id,
+        username: data.user.username,
+        name: data.user.username
       };
       this._ready = true;
 
-      if (typeof Storage !== 'undefined' && Storage.setUsername) {
-        Storage.setUsername(data.username);
-      }
-      localStorage.setItem("mocktest_user_id", data.id);
+      localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
+      localStorage.setItem("mocktest_user_id", data.user.id);
 
-      console.log("✅ User logged in:", data.username);
-      return { success: true, user: data };
+      if (typeof Storage !== 'undefined' && Storage.setUsername) {
+        Storage.setUsername(data.user.username);
+      }
+
+      console.log("✅ User logged in + session set:", data.user.username);
+      return { success: true, user: data.user };
     } catch (err) {
       console.error("loginUser crash:", err);
       return { success: false, message: "Something went wrong" };
@@ -175,7 +159,6 @@ const Auth = {
 
   showUsernameModal() {
     return new Promise((resolve) => {
-      // Remove any existing modal
       const existing = document.querySelector('.username-modal');
       if (existing) existing.remove();
 
@@ -197,15 +180,8 @@ const Auth = {
 
           <div class="username-input-wrap">
             <div class="username-input-icon">@</div>
-            <input
-              type="text"
-              id="usernameInput"
-              class="username-input"
-              placeholder="raj_ntpc"
-              maxlength="20"
-              autocomplete="off"
-              autofocus
-            />
+            <input type="text" id="usernameInput" class="username-input"
+              placeholder="raj_ntpc" maxlength="20" autocomplete="off" autofocus />
           </div>
 
           <div id="usernameStatus" class="username-status"></div>
@@ -221,11 +197,7 @@ const Auth = {
         </div>
       `;
       document.body.appendChild(modal);
-
-      // Animate in
-      requestAnimationFrame(() => {
-        modal.classList.add('visible');
-      });
+      requestAnimationFrame(() => modal.classList.add('visible'));
 
       const input = document.getElementById('usernameInput');
       const btn = document.getElementById('continueBtn');
@@ -237,14 +209,12 @@ const Auth = {
       let lastChecked = '';
       let isAvailable = false;
 
-      // Focus input
       setTimeout(() => input.focus(), 300);
 
-      // Live username check with debounce
+      // Live username check
       input.addEventListener('input', () => {
         const val = input.value.trim();
 
-        // Validate format
         if (!val || val.length < 3) {
           status.className = 'username-status';
           status.textContent = '';
@@ -261,7 +231,6 @@ const Auth = {
           return;
         }
 
-        // Debounced availability check
         status.className = 'username-status checking';
         status.textContent = 'Checking...';
         btn.disabled = true;
@@ -272,8 +241,6 @@ const Auth = {
           lastChecked = val;
 
           const taken = await this.checkUsername(val);
-          
-          // Only update if input hasn't changed
           if (input.value.trim() !== val) return;
 
           if (taken) {
@@ -282,7 +249,6 @@ const Auth = {
             btn.disabled = true;
             isAvailable = false;
 
-            // Add login link handler
             const loginLink = document.getElementById('loginLink');
             if (loginLink) {
               loginLink.onclick = async (e) => {
@@ -290,7 +256,6 @@ const Auth = {
                 btn.disabled = true;
                 btnText.textContent = 'Logging in...';
                 btnLoader.style.display = '';
-
                 const result = await this.loginUser(val);
                 if (result.success) {
                   modal.classList.remove('visible');
@@ -313,17 +278,12 @@ const Auth = {
         }, 400);
       });
 
-      // Enter key support
       input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !btn.disabled) {
-          btn.click();
-        }
+        if (e.key === 'Enter' && !btn.disabled) btn.click();
       });
 
-      // Continue button
       btn.onclick = async () => {
         const username = input.value.trim();
-
         if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
           status.className = 'username-status error';
           status.textContent = '3-20 chars. Letters/numbers/underscore only.';
@@ -337,11 +297,9 @@ const Auth = {
         const result = await this.createUser(username);
 
         if (!result.success) {
-          // If already taken, offer login
-          if (result.message === 'Username already taken') {
+          if (result.message === 'Username already taken' || result.message?.includes('already')) {
             status.className = 'username-status taken';
             status.innerHTML = '❌ Already taken — <span class="username-login-link" id="loginLink2">Login instead?</span>';
-            
             const loginLink = document.getElementById('loginLink2');
             if (loginLink) {
               loginLink.onclick = async () => {
@@ -365,33 +323,22 @@ const Auth = {
           return;
         }
 
-        // Success — close modal
         modal.classList.remove('visible');
-        setTimeout(() => {
-          modal.remove();
-          resolve(result.user);
-        }, 300);
+        setTimeout(() => { modal.remove(); resolve(result.user); }, 300);
       };
     });
   },
 
-  // ── Public API (backward compatible) ──
+  // ── Public API ──
 
-  isAuthenticated() {
-    return this._ready && !!this._currentUser;
-  },
-
-  getUser() {
-    return this._currentUser;
-  },
-
-  async getSessionToken() {
-    // No Clerk tokens anymore — return null
-    return null;
-  },
+  isAuthenticated() { return this._ready && !!this._currentUser; },
+  getUser() { return this._currentUser; },
+  async getSessionToken() { return null; }, // Cookie-based, no manual token needed
 
   async signOut() {
-    this._clearSession();
+    try {
+      await fetch('/api/user-logout', { method: 'POST', credentials: 'include' });
+    } catch (e) { /* best effort */ }
     this._currentUser = null;
     this._ready = false;
     if (typeof Storage !== 'undefined' && Storage.clearAll) Storage.clearAll();
@@ -401,12 +348,10 @@ const Auth = {
   },
 
   openProfile() {
-    if (window.App && App.navigate) {
-      App.navigate('profile');
-    }
+    if (window.App && App.navigate) App.navigate('profile');
   },
 
-  // Legacy stubs (backward compat)
+  // Legacy stubs
   isVerified() { return this.isAuthenticated(); },
   isAnonymous() { return !this.isAuthenticated(); },
   shouldShowUpgradePrompt() { return false; },
