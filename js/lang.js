@@ -1,15 +1,118 @@
 // ============================================
 // LANG MODULE — Bilingual EN/HI Support
 // Simple key-value dictionary + toggle
+// + In-exam question language (en/hi/bilingual)
 // ============================================
 
 const Lang = {
   current: localStorage.getItem('lang') || 'en',
 
+  // ── Question Language Mode ──
+  // 'en' = English only | 'hi' = Hindi only | 'bilingual' = Both stacked
+  questionLang: localStorage.getItem('question-language') || 'en',
+
   // ── Core Methods ──
   get() { return this.current; },
   isHindi() { return this.current === 'hi'; },
 
+  // ── Get question language ──
+  getQuestionLang() { return this.questionLang; },
+  isQuestionHindi() { return this.questionLang === 'hi'; },
+  isQuestionBilingual() { return this.questionLang === 'bilingual'; },
+
+  // ── Set question language (in-exam use) ──
+  setQuestionLang(mode) {
+    if (!['en', 'hi', 'bilingual'].includes(mode)) return;
+    this.questionLang = mode;
+    localStorage.setItem('question-language', mode);
+
+    // If in active test, re-render question content only (no timer/answer/palette impact)
+    const onTestPage = window.location.hash.startsWith('#test');
+    const hasTestState = typeof TestEngine !== 'undefined' && TestEngine.state && TestEngine.state.questions && TestEngine.state.questions.length > 0;
+    const notSubmitted = hasTestState && !TestEngine.state.isSubmitted;
+
+    if (onTestPage && hasTestState && notSubmitted) {
+      this._refreshQuestionContent();
+    }
+
+    // Update all question-lang toggle buttons
+    document.querySelectorAll('.qlang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === mode);
+    });
+
+    console.log(`🌐 Question language → ${mode}`);
+  },
+
+  // ── Refresh ONLY question text + options in current renderer ──
+  _refreshQuestionContent() {
+    if (!TestEngine.state) return;
+    const idx = TestEngine.state.currentQuestion;
+    const q = TestEngine.state.questions[idx];
+    if (!q) return;
+
+    const mode = this.questionLang;
+    const selected = TestEngine.state.answers[q.id];
+
+    // Build question HTML based on mode
+    let questionHTML = '';
+    if (mode === 'bilingual') {
+      questionHTML = `<div class="qlang-en">${q.questionEN || q.question}</div>
+                      <hr class="qlang-divider">
+                      <div class="qlang-hi">${q.questionHI || q.questionEN || q.question}</div>`;
+    } else if (mode === 'hi') {
+      questionHTML = q.questionHI || q.questionEN || q.question;
+    } else {
+      questionHTML = q.questionEN || q.question;
+    }
+
+    // Get options for current mode
+    const options = mode === 'hi' ? (q.optionsHI || q.optionsEN || q.options) : (q.optionsEN || q.options);
+    const optionsHI = q.optionsHI || q.optionsEN || q.options;
+    const optionsEN = q.optionsEN || q.options;
+
+    // ── Renderer-aware DOM patching ──
+    // Try renderer-specific selectors first, then fallback to generic
+
+    // 1. Question text
+    const qSelectors = ['.ssc-question-text', '.rrb-question-text', '.ibps-question-text', '.upsc-question-text', '.question-text'];
+    for (const sel of qSelectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        el.innerHTML = questionHTML;
+        break;
+      }
+    }
+
+    // 2. Options — renderer-specific labels
+    const optContainers = [
+      { sel: '.ssc-option', textSel: '.ssc-option-text' },
+      { sel: '.rrb-option', textSel: '.rrb-option-text' },
+      { sel: '.ibps-option', textSel: '.ibps-option-text' },
+      { sel: '.upsc-option', textSel: '.upsc-option-text' },
+      { sel: '.option-btn', textSel: '.option-text' }
+    ];
+
+    for (const { sel, textSel } of optContainers) {
+      const optEls = document.querySelectorAll(sel);
+      if (optEls.length > 0) {
+        optEls.forEach((optEl, i) => {
+          const textEl = optEl.querySelector(textSel);
+          if (textEl) {
+            if (mode === 'bilingual') {
+              textEl.innerHTML = `<span class="qlang-en">${optionsEN[i] || ''}</span><span class="qlang-hi" style="display:block;color:var(--text-secondary);font-size:0.9em;margin-top:2px;">${optionsHI[i] || ''}</span>`;
+            } else if (mode === 'hi') {
+              textEl.textContent = optionsHI[i] || optionsEN[i] || '';
+            } else {
+              textEl.textContent = optionsEN[i] || '';
+            }
+          }
+        });
+        break;
+      }
+    }
+  },
+
+  // ── UI toggle — site-wide language ──
   toggle() {
     // ── Flip language state (synchronous) ──
     const before = this.current;
@@ -37,6 +140,9 @@ const Lang = {
         TestPage.refreshLanguage();
       }
 
+      // Also refresh via question language system
+      this._refreshQuestionContent();
+
       // 3. Update ALL toggle buttons (synchronous)
       document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
         btn.innerHTML = '🌐 ' + (isHi ? 'EN' : 'हिंदी');
@@ -57,6 +163,37 @@ const Lang = {
   t(key) {
     const dict = this.current === 'hi' ? this._hi : this._en;
     return dict[key] || this._en[key] || key;
+  },
+
+  // ── Render question language toggle UI (for renderers) ──
+  renderQuestionLangToggle() {
+    const mode = this.questionLang;
+    return `
+      <div class="qlang-toggle" id="qlang-toggle">
+        <span class="qlang-label">View in:</span>
+        <button class="qlang-btn ${mode === 'en' ? 'active' : ''}" data-lang="en"
+                onclick="Lang.setQuestionLang('en')">English</button>
+        <button class="qlang-btn ${mode === 'hi' ? 'active' : ''}" data-lang="hi"
+                onclick="Lang.setQuestionLang('hi')">हिंदी</button>
+        <button class="qlang-btn ${mode === 'bilingual' ? 'active' : ''}" data-lang="bilingual"
+                onclick="Lang.setQuestionLang('bilingual')">Both</button>
+      </div>
+    `;
+  },
+
+  // ── Compact mobile version ──
+  renderQuestionLangToggleMobile() {
+    const mode = this.questionLang;
+    return `
+      <div class="qlang-toggle qlang-toggle-mobile" id="qlang-toggle-mobile">
+        <button class="qlang-btn-mini ${mode === 'en' ? 'active' : ''}" data-lang="en"
+                onclick="Lang.setQuestionLang('en')">EN</button>
+        <button class="qlang-btn-mini ${mode === 'hi' ? 'active' : ''}" data-lang="hi"
+                onclick="Lang.setQuestionLang('hi')">HI</button>
+        <button class="qlang-btn-mini ${mode === 'bilingual' ? 'active' : ''}" data-lang="bilingual"
+                onclick="Lang.setQuestionLang('bilingual')">BI</button>
+      </div>
+    `;
   },
 
   // ═══════════════════════════════════════

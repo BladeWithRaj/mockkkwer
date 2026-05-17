@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v1';
-const STATIC_CACHE = 'mtp-static-v1';
-const API_CACHE = 'mtp-api-v1';
+const CACHE_NAME = 'mtp-v10';
+const STATIC_CACHE = 'mtp-static-v10';
+const API_CACHE = 'mtp-api-v10';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -19,6 +19,8 @@ const PRECACHE_URLS = [
   '/css/gamification.css',
   '/css/battle.css',
   '/css/username-modal.css',
+  '/css/in-exam.css',
+  '/css/cbt.css',
   '/js/config.js',
   '/js/supabaseClient.js',
   '/js/auth.js',
@@ -34,8 +36,26 @@ const PRECACHE_URLS = [
   '/js/engine/analytics.js',
   '/js/lang.js',
   '/js/pages/home.js',
+  '/js/pages/boardPage.js',
+  '/css/homepage.css',
   '/js/pages/setup.js',
+  '/js/engine/examProctor.js',
+  '/js/renderers/RendererBase.js',
+  '/js/renderers/RendererRouter.js',
+  '/js/renderers/SSCRenderer.js',
+  '/js/renderers/RailwayRenderer.js',
+  '/js/renderers/BankingRenderer.js',
+  '/js/renderers/UPSCRenderer.js',
+  '/js/renderers/RivalBattleRenderer.js',
+  '/js/engine/cbtRenderer.js',
   '/js/pages/test.js',
+  '/css/renderers/ssc.css',
+  '/css/renderers/railway.css',
+  '/css/renderers/banking.css',
+  '/css/renderers/upsc.css',
+  '/css/qlang.css',
+  '/css/mobile.css',
+  '/js/engine/progressEngine.js',
   '/js/pages/result.js',
   '/js/pages/analysis.js',
   '/js/pages/dashboard.js',
@@ -90,7 +110,7 @@ self.addEventListener('fetch', (event) => {
 
   // Skip Supabase realtime and external CDNs from caching
   if (url.hostname.includes('supabase') ||
-      url.hostname.includes('cdn.jsdelivr.net')) {
+    url.hostname.includes('cdn.jsdelivr.net')) {
     return; // Let browser handle these normally
   }
 

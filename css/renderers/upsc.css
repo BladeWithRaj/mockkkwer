@@ -1,0 +1,684 @@
+/* ============================================
+   UPSC RENDERER CSS — Paper Simulation
+   Reading-focused, minimal, institutional.
+   Serif typography for comprehension passages.
+   Clean answer sheet palette.
+   ============================================ */
+
+.upsc-mode {
+  --upsc-brown: #3E2723;
+  --upsc-cream: #FFF8E1;
+  --upsc-surface: #FFFDF5;
+  --upsc-bg: #F5F0E8;
+  --upsc-border: #D7CCC8;
+  --upsc-text: #212121;
+  --upsc-text-muted: #795548;
+  --upsc-green: #2E7D32;
+  --upsc-red: #C62828;
+  --upsc-blue: #1565C0;
+  --upsc-purple: #6A1B9A;
+  --upsc-grey: #9E9E9E;
+  background: var(--upsc-bg) !important;
+  color: var(--upsc-text) !important;
+  font-family: 'Georgia', 'Times New Roman', serif !important;
+  font-size: 15px;
+  min-height: 100vh;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Header ── */
+.upsc-header {
+  background: var(--upsc-brown);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid #1B0F0A;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upsc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.upsc-emblem {
+  font-size: 18px;
+}
+
+.upsc-logo {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.upsc-exam-name,
+.upsc-exam-label {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.upsc-timer {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 3px;
+  font-family: 'Consolas', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.upsc-timer.warning {
+  color: #FFD54F;
+}
+
+.upsc-timer.danger {
+  color: #EF9A9A;
+  animation: sscBlink 1s infinite;
+}
+
+.upsc-submit-btn {
+  background: var(--upsc-cream);
+  color: var(--upsc-brown);
+  border: none;
+  padding: 6px 16px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ── Body ── */
+.upsc-body {
+  display: flex;
+  height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+/* ── Question Panel ── */
+.upsc-question-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.upsc-q-number-bar {
+  background: var(--upsc-surface);
+  border-bottom: 1px solid var(--upsc-border);
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+}
+
+.upsc-q-num {
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--upsc-brown);
+}
+
+.upsc-q-subject {
+  color: var(--upsc-text-muted);
+  font-size: 12px;
+}
+
+.upsc-q-marks {
+  margin-left: auto;
+  color: var(--upsc-text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Question Content — paper-like reading area */
+.upsc-question-content {
+  flex: 1;
+  padding: 28px 32px;
+  background: var(--upsc-surface);
+  margin: 10px 16px;
+  border: 1px solid var(--upsc-border);
+  overflow-y: auto;
+  /* Paper texture feel */
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.02);
+}
+
+.upsc-question-text {
+  font-size: 16px;
+  line-height: 1.9;
+  margin-bottom: 24px;
+  color: var(--upsc-text);
+  -webkit-user-select: text;
+  user-select: text;
+  /* Reading-optimized typography */
+  text-align: justify;
+  hyphens: auto;
+  max-width: 650px;
+}
+
+/* Options — clean, minimal like OMR sheet choices */
+.upsc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 650px;
+}
+
+.upsc-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-bottom: 1px dotted var(--upsc-border);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1.7;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+}
+
+.upsc-option:last-child {
+  border-bottom-color: transparent;
+}
+
+.upsc-option:hover {
+  background: rgba(21, 101, 192, 0.04);
+  border-color: rgba(21, 101, 192, 0.15);
+}
+
+.upsc-option.selected {
+  background: rgba(21, 101, 192, 0.06);
+  border-color: var(--upsc-blue);
+  border-style: solid;
+}
+
+.upsc-option-label {
+  font-weight: 600;
+  color: var(--upsc-text-muted);
+  min-width: 24px;
+  flex-shrink: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-option.selected .upsc-option-label {
+  color: var(--upsc-blue);
+}
+
+.upsc-option-text {
+  flex: 1;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ── Action Bar ── */
+.upsc-action-bar {
+  background: var(--upsc-surface);
+  border-top: 1px solid var(--upsc-border);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-btn {
+  padding: 7px 16px;
+  border-radius: 3px;
+  border: 1px solid var(--upsc-border);
+  background: var(--upsc-surface);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--upsc-text);
+}
+
+.upsc-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.upsc-btn-clear {
+  color: var(--upsc-red);
+  border-color: var(--upsc-red);
+}
+
+.upsc-btn-review {
+  color: var(--upsc-purple);
+  border-color: var(--upsc-purple);
+}
+
+.upsc-btn-review.active {
+  background: #F3E5F5;
+}
+
+.upsc-btn-prev {}
+
+.upsc-btn-next {
+  background: var(--upsc-brown);
+  color: white;
+  border-color: var(--upsc-brown);
+}
+
+/* ── Palette — Answer Sheet style ── */
+.upsc-palette {
+  width: 260px;
+  background: var(--upsc-surface);
+  border-left: 1px solid var(--upsc-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.upsc-palette-header {
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  color: white;
+  background: var(--upsc-brown);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-palette-stats {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--upsc-text-muted);
+  border-bottom: 1px solid var(--upsc-border);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-stat-sep {
+  margin: 0 4px;
+}
+
+.upsc-q-grid {
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  flex: 1;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.upsc-q-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--upsc-border);
+  border-radius: 50%;
+  background: #FAFAF0;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--upsc-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: all 0.15s ease;
+}
+
+.upsc-q-btn.current {
+  border: 2px solid var(--upsc-blue);
+  color: var(--upsc-blue);
+  font-weight: 800;
+}
+
+.upsc-q-btn.answered {
+  background: var(--upsc-green);
+  color: white;
+  border-color: var(--upsc-green);
+}
+
+.upsc-q-btn.not-answered {
+  background: var(--upsc-red);
+  color: white;
+  border-color: var(--upsc-red);
+}
+
+.upsc-q-btn.review {
+  background: var(--upsc-purple);
+  color: white;
+  border-color: var(--upsc-purple);
+}
+
+/* Section Anchors */
+.upsc-section-anchors {
+  padding: 10px 14px;
+  border-top: 1px solid var(--upsc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.upsc-anchor-btn {
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--upsc-border);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--upsc-text-muted);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-anchor-btn:hover {
+  background: var(--upsc-cream);
+  border-color: var(--upsc-brown);
+}
+
+/* ── Instructions ── */
+.upsc-instructions {
+  max-width: 780px;
+  margin: 20px auto;
+  background: var(--upsc-surface);
+  border: 1px solid var(--upsc-border);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.04);
+}
+
+.upsc-instructions-header {
+  background: var(--upsc-brown);
+  color: white;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-instructions-body {
+  padding: 24px 28px;
+  font-size: 14px;
+  line-height: 1.8;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.upsc-booklet-info {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--upsc-cream);
+  border: 1px solid var(--upsc-border);
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+}
+
+.upsc-inst-divider {
+  height: 1px;
+  background: var(--upsc-border);
+  margin: 16px 0;
+}
+
+.upsc-inst-list {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.upsc-inst-list li {
+  margin-bottom: 10px;
+  text-align: justify;
+}
+
+.upsc-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 12px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--upsc-brown);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-inst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-inst-table th,
+.upsc-inst-table td {
+  padding: 8px 14px;
+  border: 1px solid var(--upsc-border);
+  text-align: left;
+}
+
+.upsc-inst-table th {
+  background: var(--upsc-cream);
+  font-weight: 700;
+}
+
+.upsc-total-row {
+  background: var(--upsc-cream);
+}
+
+.upsc-instructions-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--upsc-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-agree-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.upsc-agree-wrap input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.upsc-begin-btn {
+  background: var(--upsc-brown);
+  color: white;
+  border: none;
+  padding: 9px 24px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.upsc-begin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Submit Modal — UPSC Paper style ── */
+.upsc-submit-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.50);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.upsc-submit-modal {
+  background: var(--upsc-surface);
+  width: 620px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  border: 1px solid var(--upsc-border);
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+.upsc-submit-modal-header {
+  background: var(--upsc-brown);
+  color: white;
+  padding: 14px 24px;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 4px 4px 0 0;
+  letter-spacing: 0.3px;
+}
+.upsc-submit-modal-body {
+  padding: 24px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.upsc-submit-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin-bottom: 16px;
+}
+.upsc-submit-table th, .upsc-submit-table td {
+  padding: 8px 14px; border: 1px solid var(--upsc-border);
+  text-align: center;
+}
+.upsc-submit-table th {
+  background: var(--upsc-cream);
+  font-weight: 700; font-size: 12px;
+  color: var(--upsc-brown);
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.upsc-submit-total { background: var(--upsc-cream); font-weight: 700; }
+.upsc-cell-green { color: var(--upsc-green); font-weight: 700; }
+.upsc-cell-red { color: var(--upsc-red); font-weight: 700; }
+.upsc-cell-purple { color: var(--upsc-purple); font-weight: 700; }
+.upsc-submit-warning {
+  padding: 12px 16px;
+  background: #FFF8E1;
+  border: 1px solid #FFE082;
+  border-radius: 4px;
+  color: var(--upsc-brown);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.upsc-submit-warning-orange {
+  background: #FFF3E0; border-color: #FFCC80; color: #E65100;
+}
+.upsc-submit-modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--upsc-border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.upsc-submit-modal-footer .upsc-btn {
+  padding: 8px 18px;
+  border-radius: 3px;
+  border: 1px solid var(--upsc-border);
+  background: var(--upsc-surface);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: var(--upsc-text);
+}
+.upsc-submit-modal-footer .upsc-btn:hover { background: var(--upsc-cream); }
+.upsc-btn-confirm {
+  background: var(--upsc-brown) !important;
+  color: white !important;
+  border-color: var(--upsc-brown) !important;
+}
+.upsc-btn-confirm:hover { background: #1B0F0A !important; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .upsc-body {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .upsc-palette {
+    width: 100%;
+    border-left: none;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+  }
+
+  .upsc-palette.open {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .upsc-mobile-toggle {
+    display: flex !important;
+    position: fixed;
+    bottom: 56px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--upsc-brown);
+    color: white;
+    border: none;
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+
+  .upsc-mobile-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--upsc-surface);
+    border-top: 1px solid var(--upsc-border);
+    padding: 6px 12px;
+    z-index: 50;
+    gap: 6px;
+  }
+
+  .upsc-mobile-bar .upsc-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .upsc-question-content {
+    margin: 6px 8px;
+    padding: 16px;
+  }
+
+  .upsc-question-text {
+    font-size: 15px;
+    line-height: 1.8;
+  }
+
+  .upsc-booklet-info {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (min-width: 769px) {
+  .upsc-mobile-toggle {
+    display: none !important;
+  }
+
+  .upsc-mobile-bar {
+    display: none !important;
+  }
+}

@@ -56,6 +56,24 @@ const TestPage = {
       `;
     }
 
+    // ── Board-specific renderer delegation ──
+    const activeRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+    if (activeRenderer && typeof activeRenderer.renderTest === 'function') {
+      // RivalBattleRenderer returns null → fall through to default UI
+      if (activeRenderer.isShowingInstructions && activeRenderer.isShowingInstructions()) {
+        const instrHTML = activeRenderer.renderInstructions();
+        if (instrHTML) return instrHTML;
+      } else {
+        const testHTML = activeRenderer.renderTest();
+        if (testHTML) return testHTML;
+      }
+    }
+    // Legacy fallback: old CBTRenderer
+    if (typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT()) {
+      if (CBTRenderer.isShowingInstructions()) return CBTRenderer.renderInstructions();
+      return CBTRenderer.renderTest();
+    }
+
     const current = TestEngine.getCurrentQuestion();
     const navStatus = TestEngine.getNavStatus();
     const noTimer = TestEngine.state.totalTime >= 99999;
@@ -275,6 +293,9 @@ const TestPage = {
     }
     this._isFullscreen = false;
     this._activeSection = null;
+    // Reset renderer state
+    if (typeof RendererBase !== 'undefined') RendererBase.resetState();
+    else if (typeof CBTRenderer !== 'undefined') CBTRenderer.resetState();
   },
 
   // ── Swipe support ──
@@ -311,6 +332,14 @@ const TestPage = {
       const timerDisplay = document.getElementById('timer-display');
       if (timerEl) {
         timerEl.textContent = Helpers.formatTime(result);
+      }
+
+      // Board-specific timer update
+      const _timerRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+      if (_timerRenderer && _timerRenderer.updateTimer) {
+        _timerRenderer.updateTimer(result, TestEngine.state.totalTime);
+      } else if (typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT()) {
+        CBTRenderer.updateTimer(result, TestEngine.state.totalTime);
       }
 
       if (timerDisplay) {
@@ -430,6 +459,16 @@ const TestPage = {
   },
 
   refreshQuestion(direction) {
+    // Board-specific renderer delegation
+    const _qRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+    if (_qRenderer && _qRenderer.refreshQuestion && !(_qRenderer.isShowingInstructions && _qRenderer.isShowingInstructions())) {
+      _qRenderer.refreshQuestion();
+      return;
+    }
+    if (typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT() && !CBTRenderer.isShowingInstructions()) {
+      CBTRenderer.refreshQuestion();
+      return;
+    }
     const area = document.getElementById('question-area');
     if (area) {
       const current = TestEngine.getCurrentQuestion();
@@ -480,6 +519,16 @@ const TestPage = {
   },
 
   refreshNav() {
+    // Board-specific renderer delegation
+    const _navRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+    if (_navRenderer && _navRenderer.refreshNav && !(_navRenderer.isShowingInstructions && _navRenderer.isShowingInstructions())) {
+      _navRenderer.refreshNav();
+      return;
+    }
+    if (typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT() && !CBTRenderer.isShowingInstructions()) {
+      CBTRenderer.refreshNav();
+      return;
+    }
     // Desktop nav
     const grid = document.getElementById('nav-grid');
     if (grid) {
@@ -513,8 +562,17 @@ const TestPage = {
   },
 
   // ── GAMIFICATION: Combo + Motivation ──
+  // ONLY in Rival Battle mode. Mock tests stay clean/realistic.
   _trackAnswerForGamification(selectedIndex) {
     if (!window.Gamification || !TestEngine.state) return;
+
+    // ── MODE CHECK: Only arcade effects in Rival Battle mode ──
+    const _gamRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+    const allowsCombo = _gamRenderer && typeof _gamRenderer.allowsCombo === 'function' && _gamRenderer.allowsCombo();
+    const isRivalBattle = allowsCombo || TestEngine.state.config?.mode === 'rival-battle' || window._currentTestMode === 'rival-battle';
+
+    // Only show combos/motivation in rival battle
+    if (!isRivalBattle) return;
 
     const q = TestEngine.state.questions[TestEngine.state.currentQuestion];
     if (!q) return;
@@ -633,6 +691,8 @@ const TestPage = {
   submitTest() {
     const modal = document.getElementById('submit-modal');
     if (modal) modal.remove();
+    const cbtModal = document.getElementById('cbt-submit-modal');
+    if (cbtModal) cbtModal.remove();
     const timeoutModal = document.getElementById('timeout-modal');
     if (timeoutModal) timeoutModal.remove();
     const warningModal = document.getElementById('timer-warning-modal');
@@ -640,6 +700,8 @@ const TestPage = {
 
     this.stopTimer();
     this._lastWarningShown = false;
+    // Stop proctoring
+    if (typeof ExamProctor !== 'undefined') ExamProctor.stop();
 
     // Store config for retry
     if (TestEngine.state) {

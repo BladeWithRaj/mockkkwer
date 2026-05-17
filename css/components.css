@@ -25,9 +25,13 @@
   inset: 0;
   opacity: 0;
   transition: opacity var(--transition-fast);
+  z-index: 0;
 }
 
 .btn:hover::before { opacity: 1; }
+
+/* Ensure button text is always above the ::before overlay */
+.btn > * { position: relative; z-index: 1; }
 
 .btn-primary {
   background: var(--accent-gradient);

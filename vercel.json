@@ -1,11 +1,8 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": true,
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/index.js" }
-  ],
-  "rewrites": [
-    { "source": "/exam", "destination": "/index.html" },
-    { "source": "/exam/(.*)", "destination": "/index.html" },
-    { "source": "/result", "destination": "/index.html" }
   ],
   "headers": [
     {

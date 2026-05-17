@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="hi-en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Free Mock Test Platform for SSC, Railway, Police & Competitive Exams. Practice with 55+ questions, timer, negative marking, and detailed analysis.">
+  <meta name="description"
+    content="Free Mock Test Platform for SSC, Railway, Police & Competitive Exams. Practice with 55+ questions, timer, negative marking, and detailed analysis.">
   <meta name="keywords" content="mock test, SSC, Railway, Police, competitive exam, practice test, quiz, online test">
   <meta name="author" content="MockTestPro">
   <meta name="theme-color" content="#6366F1">
@@ -32,6 +34,17 @@
   <link rel="stylesheet" href="css/battle.css?v=20260507">
   <link rel="stylesheet" href="css/username-modal.css?v=20260514">
   <link rel="stylesheet" href="css/in-exam.css?v=20260515">
+  <link rel="stylesheet" href="css/cbt.css?v=20260515">
+  <!-- Board-specific renderer CSS -->
+  <link rel="stylesheet" href="css/renderers/ssc.css?v=20260517b">
+  <link rel="stylesheet" href="css/renderers/railway.css?v=20260517">
+  <link rel="stylesheet" href="css/renderers/banking.css?v=20260517b">
+  <link rel="stylesheet" href="css/renderers/upsc.css?v=20260517b">
+  <link rel="stylesheet" href="css/homepage.css?v=20260516">
+  <!-- Question language toggle -->
+  <link rel="stylesheet" href="css/qlang.css?v=20260517">
+  <!-- Mobile overhaul — loads LAST to override desktop -->
+  <link rel="stylesheet" href="css/mobile.css?v=20260517d">
 
   <style>
     .splash-loader {
@@ -44,10 +57,12 @@
       z-index: 9999;
       transition: opacity 0.4s ease, visibility 0.4s ease;
     }
+
     .splash-loader.hidden {
       opacity: 0;
       visibility: hidden;
     }
+
     .splash-spinner {
       width: 48px;
       height: 48px;
@@ -56,11 +71,15 @@
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
+
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
+
 <body>
   <!-- Splash loader -->
   <div class="splash-loader" id="splash">
@@ -80,16 +99,29 @@
   <script src="js/utils/helpers.js?v=20260503"></script>
   <script src="js/utils/storage.js?v=20260503"></script>
   <script src="js/engine/testEngine.js?v=20260503"></script>
-  <script src="js/engine/examPresets.js?v=20260503"></script>
+  <script src="js/engine/examPresets.js?v=20260517"></script>
   <script src="js/engine/daily.js?v=20260503"></script>
   <script src="js/engine/gamification.js?v=20260507"></script>
   <script src="js/utils/tracker.js?v=20260503"></script>
   <script src="js/engine/analytics.js?v=20260503"></script>
   <script src="js/lang.js?v=20260503"></script>
-  <script src="js/pages/home.js?v=20260503"></script>
-  <script src="js/pages/setup.js?v=20260503"></script>
-  <script src="js/pages/test.js?v=20260503"></script>
-  <script src="js/pages/result.js?v=20260503"></script>
+  <script src="js/pages/home.js?v=20260516"></script>
+  <script src="js/pages/boardPage.js?v=20260516"></script>
+  <script src="js/pages/setup.js?v=20260516b"></script>
+  <script src="js/engine/examProctor.js?v=20260516"></script>
+  <!-- Board-specific renderers (load before test.js) -->
+  <script src="js/renderers/RendererBase.js?v=20260517"></script>
+  <script src="js/renderers/RendererRouter.js?v=20260517"></script>
+  <script src="js/renderers/SSCRenderer.js?v=20260517"></script>
+  <script src="js/renderers/RailwayRenderer.js?v=20260517"></script>
+  <script src="js/renderers/BankingRenderer.js?v=20260517"></script>
+  <script src="js/renderers/UPSCRenderer.js?v=20260517"></script>
+  <script src="js/renderers/RivalBattleRenderer.js?v=20260516"></script>
+  <!-- [DEPRECATED] Legacy CBT renderer — will be removed once all boards have dedicated renderers -->
+  <script src="js/engine/cbtRenderer.js?v=20260515b"></script>
+  <script src="js/pages/test.js?v=20260515d"></script>
+  <script src="js/engine/progressEngine.js?v=20260515"></script>
+  <script src="js/pages/result.js?v=20260515"></script>
   <script src="js/pages/analysis.js?v=20260503"></script>
   <script src="js/pages/dashboard.js?v=20260503"></script>
   <script src="js/pages/leaderboard.js?v=20260503"></script>
@@ -148,4 +180,5 @@
     }
   </script>
 </body>
+
 </html>

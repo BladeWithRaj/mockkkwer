@@ -1,0 +1,203 @@
+/* ============================================
+   QUESTION LANGUAGE TOGGLE — In-Exam Bilingual
+   EN | HI | Both (Bilingual) toggle
+   Works inside all renderers (SSC/Railway/Banking/UPSC)
+   ============================================ */
+
+/* ── Toggle Bar ── */
+.qlang-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f0f4f8;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.qlang-label {
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.qlang-btn {
+  padding: 4px 14px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.qlang-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.qlang-btn.active {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* ── Mobile compact version ── */
+.qlang-toggle-mobile {
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.qlang-btn-mini {
+  padding: 3px 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.qlang-btn-mini.active {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+
+/* ── Bilingual Display Styles ── */
+.qlang-en {
+  font-size: 1em;
+  color: inherit;
+  line-height: 1.6;
+}
+
+.qlang-hi {
+  font-size: 0.95em;
+  color: #6b7280;
+  line-height: 1.6;
+  font-style: normal;
+}
+
+.qlang-divider {
+  border: none;
+  border-top: 1px dashed #d1d5db;
+  margin: 8px 0;
+}
+
+/* ── Dark theme adjustments ── */
+[data-theme="dark"] .qlang-toggle {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .qlang-label {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .qlang-btn {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .qlang-btn:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+[data-theme="dark"] .qlang-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+[data-theme="dark"] .qlang-btn-mini {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .qlang-btn-mini.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+[data-theme="dark"] .qlang-hi {
+  color: #9ca3af;
+}
+
+[data-theme="dark"] .qlang-divider {
+  border-top-color: #374151;
+}
+
+/* ── Renderer-specific overrides ── */
+
+/* SSC — fits into the blue government style */
+.ssc-mode .qlang-toggle {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.ssc-mode .qlang-btn.active {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
+/* Railway — green accent */
+.rrb-mode .qlang-toggle {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.rrb-mode .qlang-btn.active {
+  background: #047857;
+  border-color: #047857;
+}
+
+/* Banking — purple accent */
+.ibps-mode .qlang-toggle {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+}
+
+.ibps-mode .qlang-btn.active {
+  background: #6d28d9;
+  border-color: #6d28d9;
+}
+
+/* UPSC — muted, institutional */
+.upsc-mode .qlang-toggle {
+  background: #fafaf9;
+  border-color: #e7e5e4;
+}
+
+.upsc-mode .qlang-btn.active {
+  background: #44403c;
+  border-color: #44403c;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .qlang-toggle {
+    padding: 4px 8px;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .qlang-label {
+    font-size: 11px;
+  }
+
+  .qlang-btn {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+}

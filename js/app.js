@@ -55,6 +55,7 @@ const App = {
 
   pages: {
     home: HomePage,
+    board: BoardPage,
     setup: SetupPage,
     test: TestPage,
     result: ResultPage,
@@ -176,7 +177,10 @@ const App = {
     // Error boundary: wrap render in try-catch
     try {
       const html = pageModule.render(params);
-      appEl.innerHTML = this._renderHeader(page) + html;
+      // Board-specific renderer: skip SPA header — renderers have their own system bar
+      const isBoardMode = page === 'test' && typeof RendererRouter !== 'undefined' && RendererRouter.shouldUseBoardRenderer();
+      const isLegacyCBT = page === 'test' && typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT();
+      appEl.innerHTML = (isBoardMode || isLegacyCBT) ? html : (this._renderHeader(page) + html);
     } catch (renderErr) {
       console.error(`[ERROR BOUNDARY] Page "${page}" render crashed:`, renderErr);
       appEl.innerHTML = this._renderHeader(page) + this._renderCrash(page, renderErr);

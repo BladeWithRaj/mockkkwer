@@ -1,0 +1,1458 @@
+/* ============================================
+   MOBILE-FIRST OVERHAUL — MockTestPro
+   Fixes: header overflow, timer, buttons,
+   palette, submit modal, touch targets
+   ============================================ */
+
+/* ── Global Mobile Foundation ── */
+@media (max-width: 768px) {
+
+  html,
+  body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  #app {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* ═══════════════════════════════════════
+     APP HEADER — Mobile
+     ═══════════════════════════════════════ */
+  .header {
+    height: auto !important;
+    min-height: 44px;
+  }
+
+  .header-inner {
+    padding: 0 10px !important;
+    gap: 6px;
+  }
+
+  .header-logo {
+    font-size: 14px !important;
+    gap: 6px !important;
+    flex-shrink: 0;
+  }
+
+  .header-logo .logo-icon {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+
+  .header-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+    gap: 2px !important;
+  }
+
+  .header-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide main nav links on mobile — too many items */
+  .header-nav>a {
+    display: none !important;
+  }
+
+  /* Hide coin/XP on mobile header */
+  .coin-display,
+  .xp-display {
+    display: none !important;
+  }
+
+  .header-actions {
+    gap: 4px !important;
+    flex-shrink: 0;
+  }
+
+  .header-actions .lang-toggle-btn,
+  .header-nav .lang-toggle-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .header-actions .theme-toggle-btn,
+  .header-nav .theme-toggle-btn {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+  }
+
+  .header-user-name {
+    display: none !important;
+  }
+
+  /* ═══════════════════════════════════════
+     SSC RENDERER — Mobile
+     ═══════════════════════════════════════ */
+
+  /* Header: compact single row */
+  .ssc-header {
+    padding: 6px 10px !important;
+    gap: 6px;
+    flex-wrap: nowrap !important;
+    min-height: 44px;
+  }
+
+  .ssc-header-left {
+    flex: 1;
+    min-width: 0;
+    gap: 6px !important;
+    overflow: hidden;
+  }
+
+  .ssc-header-logo {
+    gap: 6px !important;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ssc-logo-icon {
+    display: none !important;
+  }
+
+  .ssc-logo-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ssc-org-name {
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+
+  .ssc-exam-subtitle {
+    font-size: 10px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }
+
+  .ssc-exam-label {
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  .ssc-candidate-sm {
+    display: none !important;
+  }
+
+  .ssc-header-right {
+    gap: 6px !important;
+    flex-shrink: 0;
+  }
+
+  .ssc-header-center {
+    display: none !important;
+  }
+
+  /* Timer: force horizontal, hide label */
+  .ssc-timer-wrap {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+
+  .ssc-timer-label {
+    display: none !important;
+  }
+
+  .ssc-timer {
+    font-size: 14px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* Submit button in header */
+  .ssc-submit-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  /* Violation badge */
+  .ssc-violation-badge {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Profile photo */
+  .ssc-profile-photo {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+  }
+
+  /* Section tabs: horizontal scroll */
+  .ssc-section-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+  }
+
+  .ssc-section-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ssc-section-tab {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+
+  /* Question info bar */
+  .ssc-question-info {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* Question content: full width */
+  .ssc-question-content {
+    margin: 4px 8px !important;
+    padding: 14px 12px !important;
+  }
+
+  .ssc-question-text {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+
+  /* Options: touch-friendly */
+  .ssc-option {
+    padding: 12px !important;
+    font-size: 14px !important;
+    min-height: 48px;
+    gap: 10px !important;
+  }
+
+  .ssc-radio {
+    width: 20px !important;
+    height: 20px !important;
+    flex-shrink: 0;
+  }
+
+  .ssc-option-text {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Action bar: larger buttons */
+  .ssc-action-bar {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+    flex-wrap: wrap;
+  }
+
+  .ssc-action-left,
+  .ssc-action-right {
+    gap: 4px !important;
+  }
+
+  .ssc-btn {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+    min-height: 40px;
+  }
+
+  .ssc-btn-next {
+    min-width: 90px;
+  }
+
+  /* Body layout */
+  .ssc-body {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: calc(100vh - 44px);
+  }
+
+  /* Palette: bottom sheet style */
+  .ssc-palette {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 2px solid var(--ssc-blue);
+    position: fixed;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    z-index: 90;
+    background: white;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .ssc-palette.open {
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .ssc-q-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+    padding: 8px 10px !important;
+  }
+
+  .ssc-q-btn {
+    font-size: 11px !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .ssc-legend {
+    padding: 6px 10px !important;
+    font-size: 10px !important;
+    gap: 4px !important;
+  }
+
+  .ssc-legend-dot {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 9px !important;
+  }
+
+  /* Mobile toggle FAB */
+  .ssc-mobile-toggle {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 58px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--ssc-blue);
+    color: white;
+    border: none;
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+    z-index: 95;
+  }
+
+  /* Mobile bottom bar */
+  .ssc-mobile-bar {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #E0E0E0;
+    padding: 6px 8px;
+    z-index: 95;
+    gap: 4px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  .ssc-mobile-bar .ssc-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px !important;
+    font-size: 12px !important;
+    min-height: 44px;
+  }
+
+  /* Question panel fills screen */
+  .ssc-question-panel {
+    padding-bottom: 60px !important;
+  }
+
+  /* ═══════════════════════════════════════
+     SSC SUBMIT MODAL — Mobile
+     ═══════════════════════════════════════ */
+  .ssc-submit-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .ssc-submit-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    max-height: 90vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    margin: 0 !important;
+  }
+
+  .ssc-submit-modal-header {
+    padding: 14px 16px !important;
+    font-size: 14px !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .ssc-submit-modal-body {
+    padding: 12px !important;
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .ssc-submit-table {
+    font-size: 11px !important;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ssc-submit-table th,
+  .ssc-submit-table td {
+    padding: 6px 8px !important;
+    white-space: nowrap;
+  }
+
+  .ssc-submit-modal-footer {
+    padding: 12px 16px !important;
+    gap: 8px !important;
+  }
+
+  .ssc-submit-modal-footer .ssc-btn {
+    min-height: 48px !important;
+    font-size: 14px !important;
+    flex: 1;
+  }
+
+  .ssc-btn-submit-confirm {
+    min-height: 48px !important;
+    font-size: 14px !important;
+  }
+
+  /* ═══════════════════════════════════════
+     SSC INSTRUCTIONS — Mobile
+     ═══════════════════════════════════════ */
+  .ssc-instructions {
+    margin: 8px !important;
+  }
+
+  .ssc-instructions-body {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .ssc-instructions-footer {
+    flex-direction: column !important;
+    gap: 10px;
+    padding: 12px !important;
+  }
+
+  .ssc-begin-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+
+
+  /* ═══════════════════════════════════════
+     RAILWAY RENDERER — Mobile
+     ═══════════════════════════════════════ */
+  .rrb-header {
+    padding: 6px 10px !important;
+    min-height: 44px;
+  }
+
+  .rrb-header-left {
+    min-width: 0;
+    gap: 6px !important;
+  }
+
+  .rrb-logo,
+  .rrb-logo-sm {
+    font-size: 14px !important;
+  }
+
+  .rrb-exam-label {
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
+
+  .rrb-candidate-sm {
+    display: none !important;
+  }
+
+  .rrb-timer {
+    font-size: 14px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .rrb-submit-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .rrb-section-bar {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .rrb-section-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rrb-section-tab {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+
+  .rrb-body {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .rrb-question-content {
+    margin: 4px 8px !important;
+    padding: 14px 12px !important;
+  }
+
+  .rrb-question-text {
+    font-size: 15px !important;
+  }
+
+  .rrb-option {
+    padding: 12px !important;
+    min-height: 48px;
+    font-size: 14px !important;
+  }
+
+  .rrb-radio {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .rrb-action-bar {
+    padding: 8px 10px !important;
+  }
+
+  .rrb-btn {
+    padding: 8px 10px !important;
+    min-height: 40px;
+    font-size: 12px !important;
+  }
+
+  .rrb-palette {
+    width: 100% !important;
+    border-left: none !important;
+    position: fixed;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+    z-index: 90;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .rrb-palette.open {
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .rrb-q-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .rrb-q-btn {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 11px !important;
+  }
+
+  .rrb-question-panel {
+    padding-bottom: 60px !important;
+  }
+
+  /* Railway submit modal mobile */
+  .rrb-submit-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .rrb-submit-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+  }
+
+  .rrb-submit-modal-header {
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .rrb-submit-table {
+    font-size: 11px !important;
+    display: block;
+    overflow-x: auto;
+  }
+
+  .rrb-submit-modal-footer .rrb-btn {
+    min-height: 48px !important;
+    flex: 1;
+  }
+
+  /* Railway instructions mobile */
+  .rrb-instructions {
+    margin: 8px !important;
+  }
+
+  .rrb-instructions-footer {
+    flex-direction: column !important;
+    gap: 10px;
+  }
+
+  .rrb-begin-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+
+  /* ═══════════════════════════════════════
+     BANKING RENDERER — Mobile
+     ═══════════════════════════════════════ */
+  .ibps-header {
+    padding: 6px 10px !important;
+    min-height: 44px;
+  }
+
+  .ibps-header-left {
+    min-width: 0;
+    gap: 6px !important;
+  }
+
+  .ibps-logo-sm {
+    font-size: 14px !important;
+  }
+
+  .ibps-exam-label {
+    font-size: 11px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
+
+  .ibps-candidate-sm {
+    display: none !important;
+  }
+
+  .ibps-timer {
+    font-size: 14px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .ibps-submit-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .ibps-section-bar {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ibps-section-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ibps-section-tab {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+
+  .ibps-body {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .ibps-question-content {
+    margin: 4px 8px !important;
+    padding: 14px 12px !important;
+  }
+
+  .ibps-question-text {
+    font-size: 15px !important;
+  }
+
+  .ibps-option {
+    padding: 12px !important;
+    min-height: 48px;
+    font-size: 14px !important;
+  }
+
+  .ibps-action-bar {
+    padding: 8px 10px !important;
+  }
+
+  .ibps-btn {
+    padding: 8px 10px !important;
+    min-height: 40px;
+    font-size: 12px !important;
+  }
+
+  .ibps-palette {
+    width: 100% !important;
+    border-left: none !important;
+    position: fixed;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+    z-index: 90;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .ibps-palette.open {
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .ibps-q-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .ibps-question-panel {
+    padding-bottom: 60px !important;
+  }
+
+  .ibps-kbd-hint {
+    display: none !important;
+  }
+
+  /* Banking submit modal mobile */
+  .ibps-submit-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .ibps-submit-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+  }
+
+  .ibps-submit-modal-header {
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .ibps-submit-table {
+    font-size: 11px !important;
+    display: block;
+    overflow-x: auto;
+  }
+
+  .ibps-submit-modal-footer .ibps-btn {
+    min-height: 48px !important;
+    flex: 1;
+  }
+
+  /* Banking instructions mobile */
+  .ibps-instructions {
+    margin: 8px !important;
+  }
+
+  .ibps-instructions-footer {
+    flex-direction: column !important;
+    gap: 10px;
+  }
+
+  .ibps-begin-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+  }
+
+  /* Calculator on mobile */
+  .ibps-calculator {
+    position: fixed !important;
+    bottom: 56px;
+    right: 8px;
+    z-index: 100;
+    width: 260px !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2) !important;
+  }
+
+
+  /* ═══════════════════════════════════════
+     UPSC RENDERER — Mobile
+     ═══════════════════════════════════════ */
+  .upsc-header {
+    padding: 6px 10px !important;
+    min-height: 44px;
+    font-size: 12px !important;
+  }
+
+  .upsc-header-left {
+    min-width: 0;
+    gap: 6px !important;
+  }
+
+  .upsc-emblem {
+    font-size: 14px !important;
+  }
+
+  .upsc-logo {
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+  }
+
+  .upsc-exam-label {
+    display: none !important;
+  }
+
+  .upsc-timer {
+    font-size: 14px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .upsc-submit-btn {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  .upsc-body {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  .upsc-q-number-bar {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+
+  .upsc-question-content {
+    margin: 4px 8px !important;
+    padding: 16px 14px !important;
+  }
+
+  .upsc-question-text {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    max-width: 100% !important;
+  }
+
+  .upsc-options {
+    max-width: 100% !important;
+  }
+
+  .upsc-option {
+    padding: 12px !important;
+    min-height: 48px;
+    font-size: 15px !important;
+  }
+
+  .upsc-action-bar {
+    padding: 8px 10px !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .upsc-btn {
+    padding: 8px 12px !important;
+    min-height: 40px;
+    font-size: 12px !important;
+  }
+
+  .upsc-palette {
+    width: 100% !important;
+    border-left: none !important;
+    position: fixed;
+    bottom: 52px;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+    z-index: 90;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .upsc-palette.open {
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .upsc-q-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .upsc-q-btn {
+    min-width: 36px;
+    min-height: 36px;
+    font-size: 11px !important;
+  }
+
+  .upsc-section-anchors {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 4px !important;
+    padding: 6px 10px !important;
+  }
+
+  .upsc-anchor-btn {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .upsc-question-panel {
+    padding-bottom: 60px !important;
+  }
+
+  /* UPSC submit modal mobile */
+  .upsc-submit-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .upsc-submit-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+  }
+
+  .upsc-submit-modal-header {
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .upsc-submit-modal-body {
+    padding: 14px !important;
+  }
+
+  .upsc-submit-table {
+    font-size: 11px !important;
+    display: block;
+    overflow-x: auto;
+  }
+
+  .upsc-submit-table th,
+  .upsc-submit-table td {
+    padding: 6px 8px !important;
+  }
+
+  .upsc-submit-modal-footer .upsc-btn {
+    min-height: 48px !important;
+    flex: 1;
+  }
+
+  /* UPSC instructions mobile */
+  .upsc-instructions {
+    margin: 8px !important;
+  }
+
+  .upsc-instructions-body {
+    padding: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .upsc-booklet-info {
+    flex-direction: column !important;
+    gap: 4px;
+    font-size: 12px !important;
+  }
+
+  .upsc-instructions-footer {
+    flex-direction: column !important;
+    gap: 10px;
+    padding: 12px !important;
+  }
+
+  .upsc-begin-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+
+
+  /* ═══════════════════════════════════════
+     HOMEPAGE — Mobile
+     ═══════════════════════════════════════ */
+  .hp-hero {
+    padding: 40px 16px 20px !important;
+  }
+
+  .hp-hero h1 {
+    font-size: 24px !important;
+  }
+
+  .hp-hero-sub {
+    font-size: 14px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .hp-hero-ctas {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .hp-btn-primary,
+  .hp-btn-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px !important;
+    min-height: 48px;
+  }
+
+  .hp-stats-strip {
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+
+  .hp-stat-num {
+    font-size: 18px !important;
+  }
+
+  .hp-section {
+    padding: 0 12px !important;
+  }
+
+  .hp-section-title {
+    font-size: 18px !important;
+  }
+
+  /* Board cards: single column */
+  .hp-board-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .hp-board-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 14px 16px !important;
+    min-height: 64px;
+  }
+
+  .hp-board-icon {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+  }
+
+  .hp-board-exams {
+    display: none;
+  }
+
+  .hp-board-bottom {
+    margin-top: 0 !important;
+    margin-left: auto;
+  }
+
+  /* Daily row */
+  .hp-daily-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .hp-daily-card {
+    padding: 16px !important;
+  }
+
+  .hp-daily-go {
+    min-height: 44px;
+  }
+
+  /* Progress */
+  .hp-progress-row {
+    gap: 8px !important;
+  }
+
+  .hp-progress-card {
+    padding: 12px 8px !important;
+  }
+
+  .hp-progress-value {
+    font-size: 20px !important;
+  }
+
+  .hp-progress-label {
+    font-size: 11px !important;
+  }
+
+  /* Popular exams */
+  .hp-popular-list {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hp-popular-card {
+    padding: 14px !important;
+    min-height: 56px;
+  }
+
+  .hp-popular-start {
+    min-height: 40px;
+  }
+
+  /* Quick modes */
+  .hp-quick-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hp-quick-card {
+    min-height: 56px;
+  }
+
+  /* Trust grid */
+  .hp-trust-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Board page */
+  .bp-exam-grid {
+    grid-template-columns: 1fr !important;
+    padding: 0 12px 80px !important;
+  }
+
+  .bp-exam-card {
+    padding: 16px !important;
+  }
+
+  .bp-exam-start {
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+
+  /* Footer padding for fixed bottom bar */
+  .hp-footer {
+    padding-bottom: 80px !important;
+  }
+
+
+  /* ═══════════════════════════════════════
+     SETUP PAGE — Mobile
+     ═══════════════════════════════════════ */
+  .setup-card {
+    margin: 8px !important;
+    padding: 16px !important;
+  }
+
+  .setup-sections-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .setup-start-btn {
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+
+  /* ═══════════════════════════════════════
+     LEGACY CBT RENDERER — Mobile
+     Still active as fallback for SSC/Railway
+     ═══════════════════════════════════════ */
+  .cbt-mode {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+
+  /* Header: prevent wrapping */
+  .cbt-header {
+    padding: 6px 10px !important;
+    flex-wrap: nowrap !important;
+    min-height: 44px;
+    gap: 6px;
+  }
+
+  .cbt-header-left {
+    flex: 1;
+    min-width: 0;
+    gap: 6px !important;
+    overflow: hidden;
+  }
+
+  .cbt-exam-name {
+    font-size: 12px !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+  }
+
+  .cbt-candidate {
+    display: none !important;
+  }
+
+  .cbt-header-center {
+    display: none !important;
+  }
+
+  .cbt-header-right {
+    flex-shrink: 0;
+    gap: 6px !important;
+  }
+
+  /* Timer: MUST stay horizontal */
+  .cbt-header .cbt-timer-wrap,
+  [id="cbt-timer"],
+  .cbt-timer {
+    white-space: nowrap !important;
+    font-size: 14px !important;
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 3px 8px !important;
+    min-width: auto;
+  }
+
+  /* Profile photo compact */
+  .cbt-profile-photo {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 12px !important;
+  }
+
+  /* Section tabs: scrollable */
+  .cbt-section-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap !important;
+    display: flex !important;
+  }
+
+  .cbt-section-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cbt-section-tab,
+  .cbt-section-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* Question info bar */
+  .cbt-question-info {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* Body: vertical stack */
+  .cbt-body,
+  .cbt-content {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+  /* Question area */
+  .cbt-question-area,
+  .cbt-question-panel {
+    padding-bottom: 56px !important;
+  }
+
+  .cbt-question-content {
+    margin: 4px 8px !important;
+    padding: 14px 12px !important;
+  }
+
+  .cbt-question-text {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+
+  /* Options: touch-friendly */
+  .cbt-option {
+    padding: 12px !important;
+    min-height: 48px;
+    font-size: 14px !important;
+    gap: 10px !important;
+  }
+
+  .cbt-radio {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* Action buttons */
+  .cbt-action-bar,
+  .cbt-actions {
+    padding: 8px 10px !important;
+    flex-wrap: wrap;
+    gap: 6px !important;
+  }
+
+  .cbt-btn {
+    padding: 8px 10px !important;
+    min-height: 40px;
+    font-size: 12px !important;
+  }
+
+  /* Submit button in header */
+  .cbt-submit-btn,
+  [id="cbt-submit-btn"] {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+    min-height: 32px;
+  }
+
+  /* Palette: hidden by default, shown as bottom sheet */
+  .cbt-palette,
+  .cbt-sidebar {
+    width: 100% !important;
+    border-left: none !important;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+  }
+
+  .cbt-palette.open,
+  .cbt-sidebar.open {
+    max-height: 55vh;
+    overflow-y: auto;
+  }
+
+  .cbt-q-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .cbt-q-btn {
+    font-size: 11px !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Violation badge */
+  .cbt-violation-badge,
+  .ssc-violation-badge {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Instructions page */
+  .cbt-instructions {
+    margin: 8px !important;
+  }
+
+  .cbt-instructions-body {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .cbt-instructions-footer {
+    flex-direction: column !important;
+    gap: 10px;
+    padding: 12px !important;
+  }
+
+  .cbt-begin-btn,
+  [id="cbt-begin-btn"] {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+
+  /* Submit modal */
+  .cbt-submit-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .cbt-submit-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 90vh !important;
+  }
+
+  .cbt-submit-table {
+    font-size: 11px !important;
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+/* ── Small phones (360px and below) ── */
+@media (max-width: 400px) {
+
+  .ssc-q-grid,
+  .rrb-q-grid,
+  .ibps-q-grid,
+  .upsc-q-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  .ssc-exam-label,
+  .rrb-exam-label,
+  .ibps-exam-label {
+    max-width: 80px !important;
+  }
+
+  .ssc-timer,
+  .rrb-timer,
+  .ibps-timer,
+  .upsc-timer {
+    font-size: 13px !important;
+  }
+
+  .hp-hero h1 {
+    font-size: 20px !important;
+  }
+
+  .hp-stat-num {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Desktop: hide mobile elements ── */
+@media (min-width: 769px) {
+
+  .ssc-mobile-toggle,
+  .rrb-mobile-toggle,
+  .ibps-mobile-toggle,
+  .upsc-mobile-toggle {
+    display: none !important;
+  }
+
+  .ssc-mobile-bar,
+  .rrb-mobile-bar,
+  .ibps-mobile-bar,
+  .upsc-mobile-bar {
+    display: none !important;
+  }
+}

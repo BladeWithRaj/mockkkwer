@@ -112,17 +112,41 @@ const ResultPage = {
           </div>
 
           ${result.negativeMarking ? `
-            <div style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-color);">
-              <p style="font-size: var(--text-sm); color: var(--text-muted);">
-                Negative marking: -${result.negativeValue} per wrong answer
-                (Total deduction: -${(result.wrong * result.negativeValue).toFixed(2)})
-              </p>
+            <div class="scoring-breakdown" style="margin-top: var(--space-4); padding: var(--space-4); border-top: 1px solid var(--border-color); background: rgba(59,130,246,0.04); border-radius: var(--radius-md);">
+              <div style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-3); color: var(--text-primary);">📊 Score Breakdown</div>
+              <div style="display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm);">
+                <div style="display: flex; justify-content: space-between; color: var(--success);">
+                  <span>✓ Correct: ${result.correct} × +${result.marksPerQuestion || 1}</span>
+                  <span style="font-weight: var(--font-bold);">+${result.positiveScore || (result.correct * (result.marksPerQuestion || 1))}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--danger);">
+                  <span>✗ Wrong: ${result.wrong} × -${result.negativeValue}</span>
+                  <span style="font-weight: var(--font-bold);">-${result.negativeDeduction || (result.wrong * result.negativeValue).toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                  <span>⊘ Skipped: ${result.skipped}</span>
+                  <span>0</span>
+                </div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: var(--space-2); display: flex; justify-content: space-between; font-weight: var(--font-bold); font-size: var(--text-base); color: var(--text-primary);">
+                  <span>Final Score</span>
+                  <span>${result.totalMarks} / ${result.maxMarks}</span>
+                </div>
+              </div>
             </div>
           ` : ''}
         </div>
 
-        <!-- 💰 GAMIFICATION REWARDS SUMMARY -->
-        ${this._renderRewardsSummary(result)}
+        <!-- 📈 PROGRESS PSYCHOLOGY — Percentile + Improvement -->
+        ${this._renderProgressSection(result)}
+
+        <!-- 🎯 DAILY GOALS -->
+        ${this._renderDailyGoals(result)}
+
+        <!-- 🏅 BADGES -->
+        ${this._renderBadges()}
+
+        <!-- 💰 GAMIFICATION REWARDS SUMMARY (only in rival-battle) -->
+        ${(result._isRivalBattle || window._currentTestMode === 'rival-battle') ? this._renderRewardsSummary(result) : ''}
 
         <!-- 🔥 SMART INSIGHTS — Game Changer Section -->
         <div class="insights-section animate-fadeInUp stagger-2">
@@ -467,5 +491,153 @@ const ResultPage = {
         bar.style.width = bar.dataset.target + '%';
       });
     }, 600);
+
+    // Record result in progress engine
+    if (typeof ProgressEngine !== 'undefined') {
+      ProgressEngine.recordResult(result);
+    }
+
+    // Animate timeline bars if present
+    setTimeout(() => {
+      document.querySelectorAll('.timeline-bar-fill').forEach(bar => {
+        bar.style.height = bar.dataset.target + '%';
+      });
+    }, 800);
+  },
+
+  // ── PROGRESS SECTION: Percentile + Improvement ──
+  _renderProgressSection(result) {
+    if (typeof ProgressEngine === 'undefined') return '';
+
+    const improvement = ProgressEngine.getImprovement(result);
+    const percentile = ProgressEngine.calculatePercentile(result.accuracy || 0);
+    const progress = ProgressEngine.getProgress();
+    const timeline = ProgressEngine.getTimeline(8);
+
+    // No progress data yet (first test)
+    if (progress.totalTests <= 0 && !improvement) return '';
+
+    const trendIcon = improvement
+      ? improvement.trend === 'up' ? '📈' : improvement.trend === 'down' ? '📉' : '➡️'
+      : '🆕';
+    const trendColor = improvement
+      ? improvement.trend === 'up' ? 'var(--success)' : improvement.trend === 'down' ? 'var(--danger)' : 'var(--text-muted)'
+      : 'var(--primary)';
+    const deltaSign = improvement && improvement.accuracyDelta > 0 ? '+' : '';
+
+    return `
+      <div class="card animate-fadeInUp stagger-1" style="margin-top: var(--space-4); padding: var(--space-5);">
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4); display:flex; align-items:center; gap:8px;">
+          📊 Your Progress
+          <span style="font-size: var(--text-xs); color: var(--text-muted); font-weight: normal;">
+            Test #${progress.totalTests + 1}
+          </span>
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4);">
+          ${percentile !== null ? `
+          <div style="text-align:center; padding: var(--space-3); background: rgba(99,102,241,0.1); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--primary-light);">${percentile}%</div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">Percentile</div>
+          </div>
+          ` : ''}
+
+          ${improvement ? `
+          <div style="text-align:center; padding: var(--space-3); background: ${improvement.trend === 'up' ? 'rgba(16,185,129,0.1)' : improvement.trend === 'down' ? 'rgba(239,68,68,0.1)' : 'rgba(148,163,184,0.1)'}; border-radius: var(--radius-lg);">
+            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: ${trendColor};">
+              ${trendIcon} ${deltaSign}${improvement.accuracyDelta}%
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">vs Last Test</div>
+          </div>
+          ` : ''}
+
+          <div style="text-align:center; padding: var(--space-3); background: rgba(245,158,11,0.1); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--warning-light);">
+              🔥 ${progress.currentStreak}
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">Day Streak</div>
+          </div>
+
+          <div style="text-align:center; padding: var(--space-3); background: rgba(16,185,129,0.1); border-radius: var(--radius-lg);">
+            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--success-light);">
+              ${progress.bestAccuracy}%
+            </div>
+            <div style="font-size: var(--text-xs); color: var(--text-muted);">Best Accuracy</div>
+          </div>
+        </div>
+
+        ${timeline.length >= 2 ? `
+        <div style="margin-top: var(--space-3);">
+          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">Accuracy Timeline</div>
+          <div style="display: flex; align-items: flex-end; gap: 4px; height: 60px; padding-top: 4px;">
+            ${timeline.map((t, i) => {
+              const barColor = t.accuracy >= 70 ? 'var(--success)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
+              const isLast = i === timeline.length - 1;
+              return `
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                  <span style="font-size:9px; color: ${isLast ? 'var(--text-primary)' : 'var(--text-muted)'}; font-weight:${isLast ? '700' : '400'};">${t.accuracy}%</span>
+                  <div style="width:100%; background: var(--bg-glass); border-radius: 3px; height: 48px; display:flex; align-items:flex-end; overflow:hidden;">
+                    <div class="timeline-bar-fill" data-target="${t.accuracy}" style="width:100%; height:0%; background: ${barColor}; border-radius: 3px; transition: height 0.8s ease-out ${i * 80}ms;"></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  // ── DAILY GOALS ──
+  _renderDailyGoals(result) {
+    if (typeof ProgressEngine === 'undefined') return '';
+    const goals = ProgressEngine.getDailyGoals(result);
+    const allDone = goals.every(g => g.done);
+
+    return `
+      <div class="card animate-fadeInUp stagger-1" style="margin-top: var(--space-3); padding: var(--space-4);">
+        <h3 style="font-size: var(--text-sm); margin-bottom: var(--space-3); display:flex; align-items:center; gap:8px;">
+          🎯 Today's Goals ${allDone ? '<span style="color: var(--success); font-size: var(--text-xs);">All Complete! 🎉</span>' : ''}
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+          ${goals.map(g => `
+            <div style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: ${g.done ? 'rgba(16,185,129,0.08)' : 'transparent'}; border-radius: var(--radius-md); font-size: var(--text-sm);">
+              <span style="font-size: 16px;">${g.done ? '☑' : '⬜'}</span>
+              <span style="color: ${g.done ? 'var(--success-light)' : 'var(--text-secondary)'}; ${g.done ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
+                ${g.icon} ${g.text}
+              </span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  // ── BADGES ──
+  _renderBadges() {
+    if (typeof ProgressEngine === 'undefined') return '';
+    const badges = ProgressEngine.getBadges();
+    const earned = badges.filter(b => b.earned);
+    if (earned.length === 0) return '';
+
+    return `
+      <div class="card animate-fadeInUp stagger-2" style="margin-top: var(--space-3); padding: var(--space-4);">
+        <h3 style="font-size: var(--text-sm); margin-bottom: var(--space-3);">🏅 Badges Earned</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+          ${earned.map(b => `
+            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: var(--font-semibold);">
+              <span>${b.icon}</span>
+              <span style="color: var(--primary-light);">${b.name}</span>
+            </div>
+          `).join('')}
+        </div>
+        ${badges.filter(b => !b.earned).length > 0 ? `
+          <div style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted);">
+            ${badges.filter(b => !b.earned).length} more badges to unlock
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 };

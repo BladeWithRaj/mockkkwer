@@ -270,10 +270,17 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Quantitative Aptitude', subject: 'math', questions: 35 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
-        { name: 'English Language', subject: 'english', questions: 30 }
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 35, sectionTime: 20 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35, sectionTime: 20 * 60 },
+        { name: 'English Language', subject: 'english', questions: 30, sectionTime: 20 * 60 }
       ],
+      // ── Behavior Config ──
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'IBPS PO Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
@@ -289,10 +296,16 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Numerical Ability', subject: 'math', questions: 35 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
-        { name: 'English Language', subject: 'english', questions: 30 }
+        { name: 'Numerical Ability', subject: 'math', questions: 35, sectionTime: 20 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35, sectionTime: 20 * 60 },
+        { name: 'English Language', subject: 'english', questions: 30, sectionTime: 20 * 60 }
       ],
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'IBPS Clerk Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
@@ -308,10 +321,16 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Quantitative Aptitude', subject: 'math', questions: 35 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
-        { name: 'English Language', subject: 'english', questions: 30 }
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 35, sectionTime: 20 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35, sectionTime: 20 * 60 },
+        { name: 'English Language', subject: 'english', questions: 30, sectionTime: 20 * 60 }
       ],
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'SBI PO Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
@@ -327,10 +346,16 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Numerical Ability', subject: 'math', questions: 35 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
-        { name: 'English Language', subject: 'english', questions: 30 }
+        { name: 'Numerical Ability', subject: 'math', questions: 35, sectionTime: 20 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35, sectionTime: 20 * 60 },
+        { name: 'English Language', subject: 'english', questions: 30, sectionTime: 20 * 60 }
       ],
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'SBI Clerk Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
@@ -346,10 +371,16 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Numerical Ability', subject: 'math', questions: 35 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 },
-        { name: 'English Language', subject: 'english', questions: 30 }
+        { name: 'Numerical Ability', subject: 'math', questions: 35, sectionTime: 20 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 35, sectionTime: 20 * 60 },
+        { name: 'English Language', subject: 'english', questions: 30, sectionTime: 20 * 60 }
       ],
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'RBI Assistant Prelims: 100 questions, 60 min, -0.25 marking'
     },
 
@@ -365,9 +396,15 @@ const ExamPresets = {
       negativeValue: 0.25,
       marksPerQuestion: 1,
       sections: [
-        { name: 'Quantitative Aptitude', subject: 'math', questions: 40 },
-        { name: 'Reasoning Ability', subject: 'reasoning', questions: 40 }
+        { name: 'Quantitative Aptitude', subject: 'math', questions: 40, sectionTime: 23 * 60 },
+        { name: 'Reasoning Ability', subject: 'reasoning', questions: 40, sectionTime: 22 * 60 }
       ],
+      renderer: 'banking',
+      sectionLocking: true,
+      sectionTimers: true,
+      calculator: true,
+      paletteType: 'ibps',
+      keyboardNav: true,
       description: 'IBPS RRB Officer Prelims: 80 questions, 45 min, -0.25 marking'
     },
 
@@ -632,7 +669,13 @@ const ExamPresets = {
         { name: 'Environment & Ecology', subject: 'science', questions: 10 },
         { name: 'Current Affairs', subject: 'gk', questions: 15 }
       ],
-      description: 'UPSC Prelims GS-1: 100 questions, 2 hours, -1/3 marking'
+      description: 'UPSC Prelims GS-1: 100 questions, 2 hours, -1/3 marking',
+      // ── Behavior Config ──
+      renderer: 'upsc',
+      sectionLocking: false,
+      calculator: false,
+      paletteType: 'paper',
+      keyboardNav: false
     },
 
     'uppsc-prelims': {
@@ -654,7 +697,12 @@ const ExamPresets = {
         { name: 'Economy & GK', subject: 'gk', questions: 30 },
         { name: 'Current Affairs', subject: 'gk', questions: 30 }
       ],
-      description: 'UPPSC GS-1: 150 questions, 2 hours, -1/3 marking'
+      description: 'UPPSC GS-1: 150 questions, 2 hours, -1/3 marking',
+      renderer: 'upsc',
+      sectionLocking: false,
+      calculator: false,
+      paletteType: 'paper',
+      keyboardNav: false
     },
 
     'bpsc-prelims': {
@@ -676,7 +724,12 @@ const ExamPresets = {
         { name: 'General Knowledge', subject: 'gk', questions: 25 },
         { name: 'Current Affairs', subject: 'gk', questions: 25 }
       ],
-      description: 'BPSC Prelims: 150 questions, 2 hours, no negative marking'
+      description: 'BPSC Prelims: 150 questions, 2 hours, no negative marking',
+      renderer: 'upsc',
+      sectionLocking: false,
+      calculator: false,
+      paletteType: 'paper',
+      keyboardNav: false
     },
 
     // ────────────────────────────────────

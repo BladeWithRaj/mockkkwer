@@ -227,8 +227,11 @@ const TestEngine = {
     let correct = 0;
     let wrong = 0;
     let skipped = 0;
-    let totalMarks = 0;
-    const maxMarks = this.state.questions.length * this.state.marksPerQuestion;
+    let positiveScore = 0;
+    let negativeDeduction = 0;
+    const marksPerQ = this.state.marksPerQuestion;
+    const negValue = this.state.negativeValue;
+    const maxMarks = this.state.questions.length * marksPerQ;
     const subjectWise = {};
     const topicWise = {};
     const questionResults = [];
@@ -253,18 +256,21 @@ const TestEngine = {
       topicWise[topicKey].total++;
 
       if (isSkipped) {
+        // ── SKIPPED → 0 marks, no deduction ──
         skipped++;
         subjectWise[q.subject].skipped++;
         topicWise[topicKey].wrong++; // count as wrong for weak detection
       } else if (isCorrect) {
+        // ── CORRECT → +marksPerQuestion ──
         correct++;
-        totalMarks += this.state.marksPerQuestion;
+        positiveScore += marksPerQ;
         subjectWise[q.subject].correct++;
         topicWise[topicKey].correct++;
       } else {
+        // ── WRONG → deduct negativeValue (only if negativeMarking enabled) ──
         wrong++;
         if (this.state.negativeMarking) {
-          totalMarks -= this.state.negativeValue;
+          negativeDeduction += negValue;
         }
         subjectWise[q.subject].wrong++;
         topicWise[topicKey].wrong++;
@@ -278,6 +284,9 @@ const TestEngine = {
         timeSpent
       });
     });
+
+    // ── Final score: positive - negative (can go negative in real exams) ──
+    const finalScore = parseFloat((positiveScore - negativeDeduction).toFixed(2));
 
     const totalTime = this.state.totalTime - this.state.timeRemaining;
     const accuracy = this.state.questions.length > 0
@@ -305,7 +314,9 @@ const TestEngine = {
       correct,
       wrong,
       skipped,
-      totalMarks: Math.max(0, parseFloat(totalMarks.toFixed(2))),
+      positiveScore: parseFloat(positiveScore.toFixed(2)),
+      negativeDeduction: parseFloat(negativeDeduction.toFixed(2)),
+      totalMarks: finalScore,
       maxMarks,
       accuracy,
       timeTaken: totalTime,
@@ -318,7 +329,8 @@ const TestEngine = {
       questionResults,
       config: this.state.config,
       negativeMarking: this.state.negativeMarking,
-      negativeValue: this.state.negativeValue
+      negativeValue: this.state.negativeValue,
+      marksPerQuestion: marksPerQ
     };
   },
 

@@ -113,14 +113,14 @@ const LeaderboardPage = {
         // Display order: 2nd, 1st, 3rd
         const podiumOrder = [top3[1], top3[0], top3[2]];
         const podiumClasses = ['podium-second', 'podium-first', 'podium-third'];
-        
+
         html += '<div class="podium-grid">';
         podiumOrder.forEach((user, idx) => {
           if (!user) return;
           const badge = RANK_BADGES[user.rank];
           const avatarEmoji = AVATAR_EMOJIS[user.avatar] || AVATAR_EMOJIS.default;
           const isMe = user.username === myUsername;
-          
+
           html += `
             <div class="podium-card ${podiumClasses[idx]} ${isMe ? 'podium-me' : ''}">
               <div class="podium-rank-badge" style="color: ${badge.color};">${badge.emoji}</div>
@@ -158,13 +158,13 @@ const LeaderboardPage = {
       const listStart = leaderboard.length >= 3 ? 3 : 0;
       if (leaderboard.length > listStart) {
         html += '<div class="lb-list animate-fadeInUp stagger-3">';
-        
+
         leaderboard.slice(listStart).forEach(user => {
           const isMe = user.username === myUsername;
           const avatarEmoji = AVATAR_EMOJIS[user.avatar] || AVATAR_EMOJIS.default;
           const scoreColor = user.best_score >= 80 ? 'var(--success-light)' :
-                            user.best_score >= 60 ? 'var(--warning)' : 'var(--danger-light)';
-          
+            user.best_score >= 60 ? 'var(--warning)' : 'var(--danger-light)';
+
           // Rank-based tier styling
           let tierClass = '';
           if (user.rank <= 5) tierClass = 'lb-tier-gold';
