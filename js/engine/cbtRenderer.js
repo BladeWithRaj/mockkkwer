@@ -18,7 +18,7 @@ const CBTRenderer = {
 
   _getCandidateName() {
     try {
-      const u = localStorage.getItem('clerk_username') || localStorage.getItem('username');
+      const u = localStorage.getItem('mock_user') || localStorage.getItem('username');
       return u || 'Candidate';
     } catch { return 'Candidate'; }
   },

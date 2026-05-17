@@ -4,7 +4,8 @@
 // ═══════════════════════════════════════════════
 
 import { createClient } from "@supabase/supabase-js";
-import { verifyToken } from "@clerk/backend";
+// Clerk removed — using username-based identity system
+import { verifyAdminLogin, verifyAdminSession, destroyAdminSession } from "./_lib/adminAuth.js";
 
 // ── Supabase Admin (service role) ─────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -87,6 +88,13 @@ export default async function handler(req, res) {
   console.log(`[API] ${req.method} ${path}`);
 
   try {
+    // ── Admin routes (MUST be checked before generic ones) ──
+    if (path.includes("/admin-login"))     return await handleAdminLogin(req, res);
+    if (path.includes("/admin-verify"))    return await handleAdminVerify(req, res);
+    if (path.includes("/admin-logout"))    return await handleAdminLogout(req, res);
+    if (path.includes("/admin-data"))      return await handleAdminData(req, res);
+
+    // ── Public routes ──
     if (path.includes("/submit"))          return await handleSubmit(req, res);
     if (path.includes("/track"))           return await handleTrack(req, res);
     if (path.includes("/analytics"))       return await handleAnalytics(req, res);
@@ -121,36 +129,12 @@ async function handleSubmit(req, res) {
     const { questionIds, answers, timeTaken, testId, isDaily, username } = req.body || {};
     console.log("BODY keys:", Object.keys(req.body || {}));
 
-    // 🔐 Verify Clerk session token
-    const authHeader = req.headers.authorization || "";
-    const token = authHeader.replace(/^Bearer\s+/i, "");
-    console.log("TOKEN present:", !!token, "length:", token.length);
-
-    if (!token) {
-      console.log("❌ NO TOKEN");
-      return res.status(401).json({ error: "No authentication token" });
-    }
-
-    let clerkId = null;
-    try {
-      const payload = await verifyToken(token, {
-        secretKey: process.env.CLERK_SECRET_KEY
-      });
-      clerkId = payload.sub;
-      console.log("✅ CLERK ID:", clerkId);
-    } catch (verifyErr) {
-      console.error("❌ VERIFY FAILED:", verifyErr.message);
-      console.error("SECRET_KEY set:", !!process.env.CLERK_SECRET_KEY);
-      return res.status(401).json({ error: "Invalid or expired session", detail: verifyErr.message });
-    }
-
-    if (!clerkId) {
-      return res.status(401).json({ error: "Could not extract user identity" });
-    }
-
-    // Use clerk_id as the user_id
-    const user_id = clerkId;
+    // Username-based identity (no Clerk)
     const displayName = username || "User";
+    if (!displayName || displayName === "User") {
+      return res.status(401).json({ error: "Username required" });
+    }
+    const user_id = displayName.toLowerCase().trim();
 
     if (!Array.isArray(questionIds) || questionIds.length === 0) {
       return res.status(400).json({ error: "questionIds required" });
@@ -179,7 +163,7 @@ async function handleSubmit(req, res) {
     // Score
     const result = calculateResult(dbQuestions, answers);
 
-    // Upsert user (lookup by id = clerk_id)
+    // Upsert user (username-based identity)
     const { data: existingUser, error: lookupErr } = await supabase
       .from("users_light")
       .select("id, total_tests, total_score")
@@ -192,7 +176,6 @@ async function handleSubmit(req, res) {
       console.log("CREATING USER:", user_id, displayName);
       const { data: newUser, error: insertErr } = await supabase.from("users_light").insert([{
         id: user_id,
-        clerk_id: clerkId,
         username: displayName,
         total_tests: 1,
         total_score: result.scorePercent
@@ -206,7 +189,6 @@ async function handleSubmit(req, res) {
     } else {
       const { error: updateErr } = await supabase.from("users_light").update({
         username: displayName,
-        clerk_id: clerkId,
         total_tests: (existingUser.total_tests || 0) + 1,
         total_score: (existingUser.total_score || 0) + result.scorePercent
       }).eq("id", user_id);
@@ -604,19 +586,11 @@ async function handleRewards(req, res) {
 
 async function handleProfileSummary(req, res) {
   try {
-    // Verify auth
+    // Username-based identity
     const authHeader = req.headers.authorization || "";
-    const token = authHeader.replace(/^Bearer\s+/i, "");
+    const userId = authHeader.replace(/^Bearer\s+/i, "").trim();
 
-    if (!token) return res.status(401).json({ error: "No auth token" });
-
-    let userId = null;
-    try {
-      const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
-      userId = payload.sub;
-    } catch (e) {
-      return res.status(401).json({ error: "Invalid session" });
-    }
+    if (!userId) return res.status(401).json({ error: "No user identity" });
 
     // Single RPC call for everything
     const { data, error } = await supabase.rpc("get_profile_summary", { p_user_id: userId });
@@ -640,4 +614,361 @@ async function handleProfileSummary(req, res) {
     console.error("[PROFILE-SUMMARY] Crash:", err);
     return res.status(500).json({ error: err.message });
   }
+}
+
+// ═══════════════════════════════════════════════
+// /api/admin-login — Secure admin authentication
+// bcrypt + brute-force protection + httpOnly cookie
+// ═══════════════════════════════════════════════
+
+async function handleAdminLogin(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
+
+  try {
+    const { username, password } = req.body || {};
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
+
+    // Extract client info for audit
+    const ip = req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || req.socket?.remoteAddress || "unknown";
+    const userAgent = req.headers["user-agent"] || "unknown";
+
+    const result = await verifyAdminLogin(supabase, {
+      username,
+      password,
+      ip,
+      userAgent
+    });
+
+    if (!result.success) {
+      const status = result.banned ? 429 : 401;
+      return res.status(status).json({
+        error: result.error,
+        attemptsRemaining: result.attemptsRemaining,
+        retryAfter: result.retryAfter,
+        banned: result.banned || false
+      });
+    }
+
+    // ── Set httpOnly cookie (NEVER accessible from JS) ──
+    const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL === "1";
+    const cookieOptions = [
+      `admin_session=${result.token}`,
+      `Path=/`,
+      `HttpOnly`,
+      `SameSite=Strict`,
+      `Max-Age=${24 * 60 * 60}`, // 24 hours
+      isProduction ? `Secure` : ""
+    ].filter(Boolean).join("; ");
+
+    res.setHeader("Set-Cookie", cookieOptions);
+
+    // CSRF token is returned in response body (stored in JS memory, NOT localStorage)
+    return res.json({
+      success: true,
+      username: result.username,
+      csrfToken: result.csrfToken,
+      expiresAt: result.expiresAt
+    });
+  } catch (err) {
+    console.error("[ADMIN LOGIN] Crash:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/admin-verify — Verify admin session
+// ═══════════════════════════════════════════════
+
+async function handleAdminVerify(req, res) {
+  try {
+    const token = extractAdminToken(req);
+
+    if (!token) {
+      return res.status(401).json({ valid: false, error: "No session" });
+    }
+
+    const result = await verifyAdminSession(supabase, token);
+
+    if (!result.valid) {
+      // Clear stale cookie
+      res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; Max-Age=0");
+      return res.status(401).json({ valid: false, expired: result.expired || false });
+    }
+
+    return res.json({
+      valid: true,
+      username: result.admin.username,
+      adminId: result.admin.id,
+      csrfToken: result.csrfToken
+    });
+  } catch (err) {
+    console.error("[ADMIN VERIFY] Crash:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/admin-logout — Destroy admin session
+// ═══════════════════════════════════════════════
+
+async function handleAdminLogout(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
+
+  try {
+    const token = extractAdminToken(req);
+
+    if (token) {
+      await destroyAdminSession(supabase, token);
+    }
+
+    // Clear cookie
+    res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; Max-Age=0; SameSite=Strict");
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("[ADMIN LOGOUT] Crash:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// /api/admin-data — Protected admin data endpoints
+// All admin panel data fetches go through here
+// ═══════════════════════════════════════════════
+
+async function handleAdminData(req, res) {
+  try {
+    // ── Verify admin session ──
+    const token = extractAdminToken(req);
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // For POST/PUT/DELETE: require CSRF validation
+    const isMutation = req.method === "POST" || req.method === "PUT" || req.method === "DELETE";
+    const csrfToken = req.headers["x-csrf-token"] || null;
+    const session = await verifyAdminSession(supabase, token, csrfToken, isMutation);
+    if (!session.valid) {
+      if (session.csrfMismatch) {
+        return res.status(403).json({ error: "CSRF validation failed" });
+      }
+      res.setHeader("Set-Cookie", "admin_session=; Path=/; HttpOnly; Max-Age=0");
+      return res.status(401).json({ error: "Session expired" });
+    }
+
+    // Parse action from query
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const action = url.searchParams.get("action") || "dashboard";
+
+    switch (action) {
+      case "dashboard": {
+        // Fetch aggregate stats
+        const { count: questionCount } = await supabase
+          .from("questions")
+          .select("*", { count: "exact", head: true });
+
+        const { count: userCount } = await supabase
+          .from("users")
+          .select("*", { count: "exact", head: true });
+
+        const { count: testCount } = await supabase
+          .from("test_attempts")
+          .select("*", { count: "exact", head: true });
+
+        // Recent tests (last 7 days)
+        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+        const { count: recentTests } = await supabase
+          .from("test_attempts")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", weekAgo);
+
+        // Subject distribution
+        const { data: subjectData } = await supabase
+          .from("questions")
+          .select("subject");
+
+        const subjectCounts = {};
+        (subjectData || []).forEach(q => {
+          subjectCounts[q.subject] = (subjectCounts[q.subject] || 0) + 1;
+        });
+
+        // Recent login attempts
+        const { data: loginLog } = await supabase
+          .from("admin_login_log")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        return res.json({
+          success: true,
+          stats: {
+            totalQuestions: questionCount || 0,
+            totalUsers: userCount || 0,
+            totalTests: testCount || 0,
+            recentTests: recentTests || 0,
+            subjectDistribution: subjectCounts
+          },
+          loginLog: loginLog || [],
+          admin: session.admin.username
+        });
+      }
+
+      case "questions": {
+        const page = parseInt(url.searchParams.get("page") || "1");
+        const search = url.searchParams.get("search") || "";
+        const subject = url.searchParams.get("subject") || "";
+        const limit = 50;
+        const offset = (page - 1) * limit;
+
+        let query = supabase
+          .from("questions")
+          .select("*", { count: "exact" });
+
+        if (search) query = query.ilike("question_en", `%${search}%`);
+        if (subject) query = query.eq("subject", subject);
+
+        query = query.range(offset, offset + limit - 1)
+          .order("created_at", { ascending: false });
+
+        const { data, count, error } = await query;
+
+        if (error) return res.status(500).json({ error: error.message });
+
+        return res.json({
+          success: true,
+          questions: data || [],
+          total: count || 0,
+          page,
+          totalPages: Math.ceil((count || 0) / limit)
+        });
+      }
+
+      case "users": {
+        const { data: users, error } = await supabase
+          .from("users")
+          .select("id, username, streak, tests_given, created_at")
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (error) return res.status(500).json({ error: error.message });
+
+        return res.json({ success: true, users: users || [] });
+      }
+
+      // ── Question CRUD (POST — requires CSRF) ──
+
+      case "create-question": {
+        if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+        const q = req.body || {};
+        if (!q.question_en || !Array.isArray(q.options_en) || q.options_en.length < 2) {
+          return res.status(400).json({ error: "question_en and options_en[] required" });
+        }
+        if (typeof q.correct_index !== "number") {
+          return res.status(400).json({ error: "correct_index required" });
+        }
+
+        const row = {
+          question_en: q.question_en.trim(),
+          question_hi: (q.question_hi || "").trim() || null,
+          options_en: q.options_en,
+          options_hi: Array.isArray(q.options_hi) ? q.options_hi : null,
+          correct_index: q.correct_index,
+          subject: (q.subject || "general").toLowerCase(),
+          difficulty: (q.difficulty || "medium").toLowerCase(),
+          exam: q.exam || null,
+          // Extended schema fields
+          board: q.board || null,
+          topic: q.topic || null,
+          year: q.year || null,
+          source: q.source || null,
+          marks: q.marks || null
+        };
+
+        const { data, error } = await supabase.from("questions").insert([row]).select();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.json({ success: true, question: data?.[0] });
+      }
+
+      case "edit-question": {
+        if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+        const { id, ...updates } = req.body || {};
+        if (!id) return res.status(400).json({ error: "Question ID required" });
+
+        // Only allow safe fields
+        const safeFields = {};
+        const allowed = ["question_en", "question_hi", "options_en", "options_hi", "correct_index", "subject", "difficulty", "exam", "board", "topic", "year", "source", "marks"];
+        for (const key of allowed) {
+          if (updates[key] !== undefined) safeFields[key] = updates[key];
+        }
+
+        const { data, error } = await supabase.from("questions").update(safeFields).eq("id", id).select();
+        if (error) return res.status(500).json({ error: error.message });
+        return res.json({ success: true, question: data?.[0] });
+      }
+
+      case "delete-question": {
+        if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+        const { id: delId } = req.body || {};
+        if (!delId) return res.status(400).json({ error: "Question ID required" });
+
+        const { error } = await supabase.from("questions").delete().eq("id", delId);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.json({ success: true });
+      }
+
+      case "bulk-import": {
+        if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+        const { questions: bulkQ } = req.body || {};
+        if (!Array.isArray(bulkQ) || bulkQ.length === 0) {
+          return res.status(400).json({ error: "questions[] array required" });
+        }
+        if (bulkQ.length > 500) {
+          return res.status(400).json({ error: "Max 500 questions per import" });
+        }
+
+        const rows = bulkQ.map(q => ({
+          question_en: (q.question_en || "").trim(),
+          question_hi: (q.question_hi || "").trim() || null,
+          options_en: q.options_en || [],
+          options_hi: Array.isArray(q.options_hi) ? q.options_hi : null,
+          correct_index: q.correct_index ?? 0,
+          subject: (q.subject || "general").toLowerCase(),
+          difficulty: (q.difficulty || "medium").toLowerCase(),
+          exam: q.exam || null,
+          board: q.board || null,
+          topic: q.topic || null,
+          year: q.year || null,
+          source: q.source || null,
+          marks: q.marks || null
+        })).filter(r => r.question_en && r.options_en.length >= 2);
+
+        const { data, error } = await supabase.from("questions").insert(rows).select("id");
+        if (error) return res.status(500).json({ error: error.message });
+        return res.json({ success: true, imported: data?.length || 0 });
+      }
+
+      default:
+        return res.status(400).json({ error: "Unknown action: " + action });
+    }
+  } catch (err) {
+    console.error("[ADMIN DATA] Crash:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// Helper: Extract admin session token from cookie
+// ═══════════════════════════════════════════════
+
+function extractAdminToken(req) {
+  const cookies = req.headers.cookie || "";
+  const match = cookies.match(/admin_session=([^;]+)/);
+  return match ? match[1] : null;
 }

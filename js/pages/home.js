@@ -8,23 +8,23 @@ const HomePage = {
 
   // Board registry with design tokens
   _boards: [
-    { id: 'SSC',      icon: '📋', color: '#2563EB', label: 'SSC',           exams: 'CGL · CHSL · MTS · GD · CPO',  url: '#board?id=SSC' },
-    { id: 'Railway',  icon: '🚂', color: '#059669', label: 'Railway',       exams: 'NTPC · Group D · ALP · JE',     url: '#board?id=Railway' },
-    { id: 'Banking',  icon: '🏦', color: '#7C3AED', label: 'Banking',       exams: 'IBPS PO · Clerk · SBI · RBI',   url: '#board?id=Banking' },
-    { id: 'UPSC',     icon: '⚖️', color: '#9333EA', label: 'UPSC',          exams: 'Prelims · CAPF · EPFO',         url: '#board?id=UPSC' },
-    { id: 'Teaching', icon: '📚', color: '#0891B2', label: 'Teaching',      exams: 'CTET · DSSSB · SUPER TET',      url: '#board?id=Teaching' },
-    { id: 'Defence',  icon: '🛡️', color: '#DC2626', label: 'Defence',       exams: 'CDS · AFCAT · NDA',             url: '#board?id=Defence' },
-    { id: 'State',    icon: '🏛️', color: '#D97706', label: 'State Exams',   exams: 'UP PCS · BPSC · MPPSC · RAS',   url: '#board?id=State' }
+    { id: 'SSC', icon: '📋', color: '#2563EB', label: 'SSC', exams: 'CGL · CHSL · MTS · GD · CPO', url: '#board?id=SSC' },
+    { id: 'Railway', icon: '🚂', color: '#059669', label: 'Railway', exams: 'NTPC · Group D · ALP · JE', url: '#board?id=Railway' },
+    { id: 'Banking', icon: '🏦', color: '#7C3AED', label: 'Banking', exams: 'IBPS PO · Clerk · SBI · RBI', url: '#board?id=Banking' },
+    { id: 'UPSC', icon: '⚖️', color: '#9333EA', label: 'UPSC', exams: 'Prelims · CAPF · EPFO', url: '#board?id=UPSC' },
+    { id: 'Teaching', icon: '📚', color: '#0891B2', label: 'Teaching', exams: 'CTET · DSSSB · SUPER TET', url: '#board?id=Teaching' },
+    { id: 'Defence', icon: '🛡️', color: '#DC2626', label: 'Defence', exams: 'CDS · AFCAT · NDA', url: '#board?id=Defence' },
+    { id: 'State', icon: '🏛️', color: '#D97706', label: 'State Exams', exams: 'UP PCS · BPSC · MPPSC · RAS', url: '#board?id=State' }
   ],
 
   // Popular exams for trending section
   _popularExams: [
-    { id: 'ssc-cgl',     name: 'SSC CGL',    meta: '100Q · 60 min · Latest Pattern' },
-    { id: 'rrb-ntpc',    name: 'RRB NTPC',   meta: '100Q · 90 min · CBT-1 Pattern'  },
-    { id: 'ibps-po',     name: 'IBPS PO',    meta: '100Q · 60 min · Prelims'        },
-    { id: 'ssc-chsl',    name: 'SSC CHSL',   meta: '100Q · 60 min · Tier-1'         },
-    { id: 'rrb-group-d', name: 'RRB Group D', meta: '100Q · 90 min · CBT'           },
-    { id: 'sbi-clerk',   name: 'SBI Clerk',  meta: '100Q · 60 min · Prelims'        }
+    { id: 'ssc-cgl', name: 'SSC CGL', meta: '100Q · 60 min · Latest Pattern' },
+    { id: 'rrb-ntpc', name: 'RRB NTPC', meta: '100Q · 90 min · CBT-1 Pattern' },
+    { id: 'ibps-po', name: 'IBPS PO', meta: '100Q · 60 min · Prelims' },
+    { id: 'ssc-chsl', name: 'SSC CHSL', meta: '100Q · 60 min · Tier-1' },
+    { id: 'rrb-group-d', name: 'RRB Group D', meta: '100Q · 90 min · CBT' },
+    { id: 'sbi-clerk', name: 'SBI Clerk', meta: '100Q · 60 min · Prelims' }
   ],
 
   render() {
@@ -101,9 +101,9 @@ const HomePage = {
 
           <div class="hp-board-grid">
             ${this._boards.map((board, i) => {
-              const presets = ExamPresets.getByCategory(board.id);
-              const count = presets ? presets.length : 0;
-              return `
+      const presets = ExamPresets.getByCategory(board.id);
+      const count = presets ? presets.length : 0;
+      return `
                 <div class="hp-board-card"
                      style="--board-color: ${board.color}; animation: hp-fadeUp 0.5s ${0.05 * i}s ease both;"
                      onclick="App.navigate('board', {id: '${board.id}'})"
@@ -121,7 +121,7 @@ const HomePage = {
                   </div>
                 </div>
               `;
-            }).join('')}
+    }).join('')}
           </div>
         </section>
 
@@ -208,31 +208,90 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══ QUICK MODES ═══ -->
+        <!-- ═══ QUICK MODES — PREMIUM ═══ -->
         <section class="hp-section">
-          <h2 class="hp-section-title">⚡ Quick Practice</h2>
-          <p class="hp-section-sub">Short bursts for focused improvement</p>
+          <div class="qm-header">
+            <div>
+              <h2 class="hp-section-title">⚡ Quick Practice</h2>
+              <p class="hp-section-sub">Jump into a focused session — no setup needed</p>
+            </div>
+          </div>
 
-          <div class="hp-quick-row">
-            <div class="hp-quick-card" onclick="App.navigate('battle')">
-              <div class="hp-quick-icon" style="background: rgba(239, 68, 68, 0.1);">⚔️</div>
-              <div>
-                <div class="hp-quick-title">Rival Battle</div>
-                <div class="hp-quick-sub">Challenge AI rivals · Instant feedback</div>
+          <div class="qm-grid">
+            <!-- ━━━ RIVAL BATTLE — Hero Card ━━━ -->
+            <div class="qm-card qm-hero" onclick="App.navigate('battle')" id="mode-rival-battle">
+              <div class="qm-card-bg"></div>
+              <div class="qm-pill">🔴 LIVE BATTLE</div>
+              <div class="qm-hero-content">
+                <div class="qm-icon-box qm-icon-battle">
+                  <span>⚔️</span>
+                </div>
+                <div class="qm-info">
+                  <h3>Rival Battle</h3>
+                  <p>Go head-to-head against AI-powered rivals. Answer faster, score higher, dominate the leaderboard.</p>
+                </div>
+              </div>
+              <div class="qm-footer">
+                <div class="qm-tags">
+                  <span class="qm-tag">🎯 5 Rounds</span>
+                  <span class="qm-tag">⚡ Real-time</span>
+                  <span class="qm-tag">🏆 Ranked</span>
+                </div>
+                <button class="qm-btn qm-btn-battle" onclick="event.stopPropagation(); App.navigate('battle')">
+                  Enter Battle
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
               </div>
             </div>
-            <div class="hp-quick-card" onclick="HomePage.startQuickMode('quick-10')">
-              <div class="hp-quick-icon" style="background: rgba(59, 130, 246, 0.1);">⚡</div>
-              <div>
-                <div class="hp-quick-title">Quick 10</div>
-                <div class="hp-quick-sub">10 Questions · 5 min · Mixed</div>
+
+            <!-- ━━━ RIGHT COLUMN — Stacked ━━━ -->
+            <div class="qm-stack">
+              <!-- Quick 10 -->
+              <div class="qm-card qm-compact" onclick="HomePage.startQuickMode('quick-10')" id="mode-quick-10">
+                <div class="qm-card-bg"></div>
+                <div class="qm-compact-row">
+                  <div class="qm-icon-box qm-icon-quick">
+                    <span>⚡</span>
+                  </div>
+                  <div class="qm-compact-info">
+                    <div class="qm-compact-top">
+                      <h3>Quick 10</h3>
+                      <span class="qm-pill-sm">5 MIN</span>
+                    </div>
+                    <p>10 mixed questions for a rapid warm-up session</p>
+                    <div class="qm-tags">
+                      <span class="qm-tag">📝 10 Questions</span>
+                      <span class="qm-tag">🎲 Mixed</span>
+                    </div>
+                  </div>
+                  <button class="qm-arrow-btn qm-arrow-quick" onclick="event.stopPropagation(); HomePage.startQuickMode('quick-10')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
               </div>
-            </div>
-            <div class="hp-quick-card" onclick="App.navigate('setup')">
-              <div class="hp-quick-icon" style="background: rgba(139, 92, 246, 0.1);">🎲</div>
-              <div>
-                <div class="hp-quick-title">Custom Test</div>
-                <div class="hp-quick-sub">Your rules · Your pace</div>
+
+              <!-- Custom Test -->
+              <div class="qm-card qm-compact" onclick="App.navigate('setup')" id="mode-custom-test">
+                <div class="qm-card-bg"></div>
+                <div class="qm-compact-row">
+                  <div class="qm-icon-box qm-icon-custom">
+                    <span>🎯</span>
+                  </div>
+                  <div class="qm-compact-info">
+                    <div class="qm-compact-top">
+                      <h3>Custom Test</h3>
+                      <span class="qm-pill-sm">FLEX</span>
+                    </div>
+                    <p>Pick subjects, time & questions — fully customizable</p>
+                    <div class="qm-tags">
+                      <span class="qm-tag">📚 Any Subject</span>
+                      <span class="qm-tag">⏱️ Your Pace</span>
+                    </div>
+                  </div>
+                  <button class="qm-arrow-btn qm-arrow-custom" onclick="event.stopPropagation(); App.navigate('setup')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -240,7 +299,7 @@ const HomePage = {
 
         <!-- ═══ WHY MOCKTESTPRO ═══ -->
         <section class="hp-section">
-          <h2 class="hp-section-title">✨ Why MockTestPro?</h2>
+          <h2 class="hp-section-title">✨ Why Mock24hr?</h2>
           <p class="hp-section-sub">Built specifically for Indian competitive exam aspirants</p>
 
           <div class="hp-trust-grid">
@@ -269,7 +328,7 @@ const HomePage = {
 
         <!-- ═══ FOOTER ═══ -->
         <footer class="hp-footer">
-          <div class="hp-footer-text">© ${new Date().getFullYear()} MockTestPro — Free Mock Tests for Competitive Exams</div>
+          <div class="hp-footer-text">© ${new Date().getFullYear()} Mock24hr — Free Mock Tests for Competitive Exams</div>
           <div class="hp-footer-links">
             <a href="#home">Home</a>
             <a href="#dashboard">Dashboard</a>

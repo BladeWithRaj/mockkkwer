@@ -64,8 +64,14 @@
 }
 
 .username-brand-icon {
-  font-size: 36px;
-  filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.4));
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #3B82F6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
   animation: brandPulse 2s ease-in-out infinite;
 }
 
@@ -83,12 +89,11 @@
 }
 
 .username-brand-title span {
-  background: linear-gradient(135deg, #818cf8, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #3B82F6, #06B6D4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
 [data-theme="light"] .username-brand-title {
   color: #1e293b;
 }

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- NO indexing — this is a private system -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow">
+  <title>System Access</title>
+
+  <!-- Minimal CSS — self-contained, no external dependencies -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #07080C;
+      --bg-card: #0D0F15;
+      --bg-input: #111319;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-focus: rgba(99, 102, 241, 0.5);
+      --text-primary: #E2E8F0;
+      --text-secondary: #64748B;
+      --text-muted: #475569;
+      --danger: #e84848;
+      --danger-bg: rgba(239, 68, 68, 0.08);
+      --danger-border: rgba(239, 68, 68, 0.2);
+      --success: #10B981;
+      --accent: #6366F1;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --warning: #F59E0B;
+      --warning-bg: rgba(245, 158, 11, 0.08);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Subtle grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Ambient glow */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+      animation: ambientPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes ambientPulse {
+
+      0%,
+      100% {
+        opacity: 0.5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+
+    /* Top accent line */
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 32px;
+      right: 32px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.4;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 20px;
+    }
+
+    .login-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .login-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .field-group {
+      margin-bottom: 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .field-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .field-input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .field-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.5px;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      background: #5558E3;
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .login-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .login-btn.loading {
+      color: transparent;
+    }
+
+    .login-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      margin: -9px 0 0 -9px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: btnSpin 0.6s linear infinite;
+    }
+
+    @keyframes btnSpin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Status messages */
+    .status-message {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.5;
+    }
+
+    .status-message.visible {
+      display: flex;
+    }
+
+    .status-message.error {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger);
+    }
+
+    .status-message.warning {
+      background: var(--warning-bg);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+    }
+
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+
+    /* Ban countdown */
+    .ban-timer {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--danger);
+      text-align: center;
+      padding: 24px;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      border-radius: 12px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .ban-timer.visible {
+      display: block;
+    }
+
+    .ban-timer-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Footer */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Shake animation */
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-8px);
+      }
+
+      40% {
+        transform: translateX(8px);
+      }
+
+      60% {
+        transform: translateX(-4px);
+      }
+
+      80% {
+        transform: translateX(4px);
+      }
+    }
+
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* Fade in */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-card {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 32px 24px;
+      }
+
+      .login-container {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-container">
+    <div class="login-card" id="loginCard">
+      <div class="login-header">
+        <div class="login-icon">🔒</div>
+        <div class="login-title">System Access</div>
+        <div class="login-subtitle">authorized personnel only</div>
+      </div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="field-group">
+          <label class="field-label" for="adminUsername">Identifier</label>
+          <input type="text" id="adminUsername" class="field-input" placeholder="username" autocomplete="off"
+            spellcheck="false" required />
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="adminPassword">Passphrase</label>
+          <input type="password" id="adminPassword" class="field-input" placeholder="••••••••••••" autocomplete="off"
+            required />
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">
+          AUTHENTICATE
+        </button>
+      </form>
+
+      <div class="status-message" id="statusMessage">
+        <span id="statusIcon"></span>
+        <span id="statusText"></span>
+      </div>
+
+      <div class="ban-timer" id="banTimer">
+        <div class="ban-timer-label">Account Locked — Retry In</div>
+        <div id="banCountdown">--:--</div>
+      </div>
+
+      <div class="login-footer">
+        session expires after 24 hours
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════
+    // ADMIN LOGIN — Zero client-side secrets
+    // All verification happens on the server
+    // ═══════════════════════════════════════════════
+
+    const form = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('adminUsername');
+    const passwordInput = document.getElementById('adminPassword');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginCard = document.getElementById('loginCard');
+    const statusEl = document.getElementById('statusMessage');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusText = document.getElementById('statusText');
+    const banTimerEl = document.getElementById('banTimer');
+    const banCountdown = document.getElementById('banCountdown');
+
+    let banEndTime = null;
+    let banInterval = null;
+
+    // ── Check if already authenticated ──
+    (async () => {
+      try {
+        const resp = await fetch('/api/admin-verify', { credentials: 'include' });
+        const data = await resp.json();
+        if (data.valid) {
+          window.location.href = '/admin/dashboard/';
+        }
+      } catch (e) {
+        // Not authenticated — stay on login
+      }
+    })();
+
+    // ── Form Submit ──
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+        showStatus('error', '⚠', 'Both fields required');
+        return;
+      }
+
+      // Disable form
+      setLoading(true);
+      hideStatus();
+      hideBanTimer();
+
+      try {
+        const resp = await fetch('/api/admin-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          showStatus('success', '✓', 'Access granted. Redirecting...');
+          setTimeout(() => {
+            window.location.href = '/admin/dashboard/';
+          }, 800);
+          return;
+        }
+
+        // ── Handle errors ──
+        if (data.banned) {
+          showStatus('error', '🔒', data.error);
+          startBanTimer(data.retryAfter || 60);
+          loginCard.classList.add('shake');
+          setTimeout(() => loginCard.classList.remove('shake'), 500);
+        } else if (data.attemptsRemaining !== undefined) {
+          showStatus('warning', '⚠', `${data.error} (${data.attemptsRemaining} attempt${data.attemptsRemaining !== 1 ? 's' : ''} remaining)`);
+          loginCard.classList.add('shake');
+          setTimeout(() => loginCard.classList.remove('shake'), 500);
+        } else {
+          showStatus('error', '✗', data.error || 'Authentication failed');
+        }
+
+        passwordInput.value = '';
+        passwordInput.focus();
+      } catch (err) {
+        showStatus('error', '✗', 'Connection error. Try again.');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // ── UI Helpers ──
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.classList.toggle('loading', loading);
+      usernameInput.disabled = loading;
+      passwordInput.disabled = loading;
+    }
+
+    function showStatus(type, icon, message) {
+      statusEl.className = `status-message visible ${type}`;
+      statusIcon.textContent = icon;
+      statusText.textContent = message;
+    }
+
+    function hideStatus() {
+      statusEl.className = 'status-message';
+    }
+
+    function startBanTimer(minutes) {
+      banEndTime = Date.now() + minutes * 60 * 1000;
+      banTimerEl.classList.add('visible');
+
+      // Disable inputs during ban
+      usernameInput.disabled = true;
+      passwordInput.disabled = true;
+      loginBtn.disabled = true;
+
+      clearInterval(banInterval);
+      banInterval = setInterval(() => {
+        const remaining = Math.max(0, banEndTime - Date.now());
+        if (remaining <= 0) {
+          clearInterval(banInterval);
+          hideBanTimer();
+          usernameInput.disabled = false;
+          passwordInput.disabled = false;
+          loginBtn.disabled = false;
+          showStatus('success', '🔓', 'You can try again now.');
+          return;
+        }
+
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        banCountdown.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function hideBanTimer() {
+      banTimerEl.classList.remove('visible');
+      clearInterval(banInterval);
+    }
+
+    // ── Keyboard shortcut — quick focus ──
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        usernameInput.value = '';
+        passwordInput.value = '';
+        hideStatus();
+        hideBanTimer();
+      }
+    });
+
+    // Focus username on load
+    setTimeout(() => usernameInput.focus(), 100);
+  </script>
+</body>
+
+</html>

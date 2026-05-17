@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>Control Panel</title>
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/admin-console.css">
+</head>
+<body>
+  <div class="admin-guard" id="authGuard">
+    <div class="guard-msg"><span class="guard-spin"></span> Verifying session...</div>
+  </div>
+
+  <div id="adminShell" style="display:none;">
+    <div class="console-topbar">
+      <div class="topbar-left">
+        <span class="topbar-title">🔒 Control Panel</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user"><span class="topbar-dot"></span><span id="adminName">admin</span></span>
+        <button class="topbar-logout" onclick="adminLogout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="console-tabs" id="adminTabs">
+      <div class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">📊 Dashboard</div>
+      <div class="tab" data-tab="questions" onclick="switchTab('questions')">📋 Questions</div>
+      <div class="tab" data-tab="add" onclick="switchTab('add')">➕ Add Question</div>
+      <div class="tab" data-tab="import" onclick="switchTab('import')">📥 Bulk Import</div>
+      <div class="tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
+      <div class="tab" data-tab="security" onclick="switchTab('security')">🛡️ Security</div>
+    </div>
+
+    <div class="console-content" id="adminContent"></div>
+  </div>
+
+  <script>
+  // ═══════════════════════════════════════
+  // ADMIN CONSOLE — Content Operating System
+  // ═══════════════════════════════════════
+
+  let adminUser = null, csrfToken = null, currentTab = 'dashboard';
+  let qPage = 1, qSearch = '', qSubject = '';
+
+  // ── Auth Guard ──
+  (async () => {
+    try {
+      const r = await fetch('/api/admin-verify', { credentials: 'include' });
+      const d = await r.json();
+      if (!d.valid) throw 0;
+      adminUser = d; csrfToken = d.csrfToken;
+      document.getElementById('adminName').textContent = d.username;
+      document.getElementById('authGuard').style.display = 'none';
+      document.getElementById('adminShell').style.display = 'block';
+      loadTab('dashboard');
+    } catch(e) { window.location.href = '/secure-admin-login/'; }
+  })();
+
+  function switchTab(t) {
+    currentTab = t;
+    document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+    loadTab(t);
+  }
+
+  async function loadTab(t) {
+    const el = document.getElementById('adminContent');
+    el.innerHTML = '<div class="loading"><span class="guard-spin"></span> Loading...</div>';
+    try {
+      switch(t) {
+        case 'dashboard': await renderDashboard(el); break;
+        case 'questions': await renderQuestions(el); break;
+        case 'add': renderAddQuestion(el); break;
+        case 'import': renderBulkImport(el); break;
+        case 'users': await renderUsers(el); break;
+        case 'security': renderSecurity(el); break;
+      }
+    } catch(e) { el.innerHTML = `<div class="empty">❌ ${e.message}</div>`; }
+  }
+
+  // ── API Helper ──
+  async function adminAPI(action, body = null) {
+    const opts = { credentials: 'include' };
+    let url = `/api/admin-data?action=${action}`;
+    if (body) {
+      opts.method = 'POST';
+      opts.headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken || '' };
+      opts.body = JSON.stringify(body);
+    }
+    const r = await fetch(url, opts);
+    if (r.status === 401) { window.location.href = '/secure-admin-login/'; throw new Error('Session expired'); }
+    if (r.status === 403) throw new Error('CSRF validation failed — reload page');
+    const d = await r.json();
+    if (!d.success && d.error) throw new Error(d.error);
+    return d;
+  }
+
+  // ═══════════════ DASHBOARD ═══════════════
+  async function renderDashboard(el) {
+    const d = await adminAPI('dashboard');
+    const s = d.stats;
+    const subs = Object.entries(s.subjectDistribution || {});
+    el.innerHTML = `
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-label">Questions</div><div class="metric-value">${s.totalQuestions}</div></div>
+        <div class="metric-card"><div class="metric-label">Users</div><div class="metric-value">${s.totalUsers}</div></div>
+        <div class="metric-card"><div class="metric-label">Total Tests</div><div class="metric-value">${s.totalTests}</div></div>
+        <div class="metric-card"><div class="metric-label">Tests (7d)</div><div class="metric-value">${s.recentTests}</div></div>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">📚 Subject Distribution</div>
+        ${subs.length === 0 ? '<div class="empty">No questions yet</div>' :
+          subs.map(([sub,c]) => `<div class="dist-row"><span class="dist-name">${sub}</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:${Math.round(c/s.totalQuestions*100)}%"></div></div><span class="dist-count">${c}</span></div>`).join('')}
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🛡️ Recent Login Activity</div>
+        ${!(d.loginLog||[]).length ? '<div class="empty">No activity</div>' : `
+          <table class="dtable"><thead><tr><th>Time</th><th>User</th><th>Status</th><th>Reason</th><th>IP</th></tr></thead><tbody>
+          ${d.loginLog.map(l => `<tr><td>${new Date(l.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td>${l.username}</td><td class="${l.success?'ok':'fail'}">${l.success?'✓ OK':'✗ FAIL'}</td><td>${l.reason||'-'}</td><td class="mono">${l.ip_address||'-'}</td></tr>`).join('')}
+          </tbody></table>`}
+      </div>`;
+  }
+
+  // ═══════════════ QUESTIONS ═══════════════
+  async function renderQuestions(el) {
+    const params = new URLSearchParams({ action:'questions', page:qPage, search:qSearch });
+    if (qSubject) params.set('subject', qSubject);
+    const r = await fetch(`/api/admin-data?${params}`, { credentials:'include' });
+    if (r.status === 401) return window.location.href = '/secure-admin-login/';
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error);
+    const labels = ['A','B','C','D'];
+
+    el.innerHTML = `
+      <div class="toolbar">
+        <input type="text" placeholder="Search questions..." value="${qSearch}" id="qSearch" class="tool-input" onkeydown="if(event.key==='Enter'){qSearch=this.value;qPage=1;loadTab('questions')}">
+        <select class="tool-select" onchange="qSubject=this.value;qPage=1;loadTab('questions')">
+          <option value="">All Subjects</option>
+          ${['math','gk','reasoning','english','hindi','science','polity','geography','history'].map(s=>`<option value="${s}" ${qSubject===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <button class="tool-btn" onclick="qSearch=document.getElementById('qSearch').value;qPage=1;loadTab('questions')">Search</button>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">📋 Questions (${d.total} total — Page ${d.page}/${d.totalPages||1})</div>
+        ${d.questions.length===0 ? '<div class="empty">No questions found</div>' :
+          d.questions.map(q => `
+            <div class="q-row">
+              <div class="q-body">
+                <div class="q-text">${q.question_en||'-'}</div>
+                ${q.question_hi ? `<div class="q-hi">${q.question_hi}</div>` : ''}
+                <div class="q-options">${(q.options_en||[]).map((o,i)=>`<span class="q-opt ${i===q.correct_index?'correct':''}">${labels[i]}. ${o}</span>`).join('')}</div>
+                <div class="q-meta">
+                  <span class="chip-s chip-subj">${q.subject||'general'}</span>
+                  <span class="chip-s chip-diff-${q.difficulty||'medium'}">${q.difficulty||'medium'}</span>
+                  ${q.board?`<span class="chip-s chip-board">${q.board}</span>`:''}
+                  ${q.topic?`<span class="chip-s chip-topic">${q.topic}</span>`:''}
+                  ${q.year?`<span class="chip-s chip-year">${q.year}</span>`:''}
+                  <span class="q-id">ID: ${q.id}</span>
+                </div>
+              </div>
+              <div class="q-actions">
+                <button class="act-btn" onclick="editQuestion(${q.id})" title="Edit">✏️</button>
+                <button class="act-btn danger" onclick="deleteQuestion(${q.id})" title="Delete">🗑️</button>
+              </div>
+            </div>`).join('')}
+      </div>
+      <div class="paginator">
+        <button ${qPage<=1?'disabled':''} onclick="qPage--;loadTab('questions')">← Prev</button>
+        <span class="page-info">Page ${d.page} / ${d.totalPages||1}</span>
+        <button ${qPage>=d.totalPages?'disabled':''} onclick="qPage++;loadTab('questions')">Next →</button>
+      </div>`;
+  }
+
+  async function deleteQuestion(id) {
+    if (!confirm('Delete this question permanently?')) return;
+    try {
+      await adminAPI('delete-question', { id });
+      showToast('Question deleted','success');
+      loadTab('questions');
+    } catch(e) { showToast(e.message,'error'); }
+  }
+
+  function editQuestion(id) {
+    // Fetch and populate the add form with existing data
+    renderEditQuestion(id);
+  }
+
+  async function renderEditQuestion(id) {
+    const el = document.getElementById('adminContent');
+    el.innerHTML = '<div class="loading"><span class="guard-spin"></span> Loading question...</div>';
+    // Fetch the specific question from the questions list
+    const r = await fetch(`/api/admin-data?action=questions&search=&page=1`, { credentials:'include' });
+    const d = await r.json();
+    const q = (d.questions||[]).find(x => x.id === id);
+    if (!q) { showToast('Question not found','error'); return switchTab('questions'); }
+    renderAddQuestion(el, q);
+  }
+
+  // ═══════════════ ADD / EDIT QUESTION ═══════════════
+  function renderAddQuestion(el, editData = null) {
+    const q = editData || { question_en:'', question_hi:'', options_en:['','','',''], options_hi:['','','',''], correct_index:0, subject:'math', difficulty:'medium', board:'', topic:'', year:'', exam:'', source:'', marks:'' };
+    const isEdit = !!editData;
+    const labels = ['A','B','C','D'];
+
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">${isEdit ? '✏️ Edit Question #'+q.id : '➕ Add New Question'}</div>
+        <form id="questionForm" onsubmit="return false;">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Question (English) *</label>
+              <textarea id="f_qen" rows="3" required>${q.question_en||''}</textarea>
+            </div>
+            <div class="form-group full">
+              <label>Question (Hindi)</label>
+              <textarea id="f_qhi" rows="3">${q.question_hi||''}</textarea>
+            </div>
+            <div class="form-group full">
+              <label>Options (English) *</label>
+              <div class="opts-grid">
+                ${(q.options_en||['','','','']).map((o,i) => `<div class="opt-row"><span class="opt-label">${labels[i]}</span><input type="text" id="f_oen${i}" value="${o}" placeholder="Option ${labels[i]}" required></div>`).join('')}
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>Options (Hindi)</label>
+              <div class="opts-grid">
+                ${(q.options_hi||['','','','']).map((o,i) => `<div class="opt-row"><span class="opt-label">${labels[i]}</span><input type="text" id="f_ohi${i}" value="${o||''}" placeholder="विकल्प ${labels[i]}"></div>`).join('')}
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Correct Answer *</label>
+              <div class="correct-btns" id="correctBtns">
+                ${labels.map((l,i) => `<button type="button" class="cor-btn ${q.correct_index===i?'active':''}" onclick="setCorrect(${i})">${l}</button>`).join('')}
+              </div>
+            </div>
+            <div class="form-group"><label>Subject *</label>
+              <select id="f_subject">${['math','gk','reasoning','english','hindi','science','polity','geography','history'].map(s=>`<option value="${s}" ${q.subject===s?'selected':''}>${s}</option>`).join('')}</select>
+            </div>
+            <div class="form-group"><label>Difficulty</label>
+              <select id="f_diff">${['easy','medium','hard'].map(d=>`<option value="${d}" ${q.difficulty===d?'selected':''}>${d}</option>`).join('')}</select>
+            </div>
+            <div class="form-group"><label>Board</label><input type="text" id="f_board" value="${q.board||''}" placeholder="SSC, Railway..."></div>
+            <div class="form-group"><label>Exam</label><input type="text" id="f_exam" value="${q.exam||''}" placeholder="CGL, NTPC..."></div>
+            <div class="form-group"><label>Topic</label><input type="text" id="f_topic" value="${q.topic||''}" placeholder="Algebra, Polity..."></div>
+            <div class="form-group"><label>Year (PYQ)</label><input type="text" id="f_year" value="${q.year||''}" placeholder="2023"></div>
+            <div class="form-group"><label>Source</label><input type="text" id="f_source" value="${q.source||''}" placeholder="Official paper, Book..."></div>
+            <div class="form-group"><label>Marks</label><input type="number" id="f_marks" value="${q.marks||''}" placeholder="2" step="0.25"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="save-btn" id="saveBtn" onclick="saveQuestion(${isEdit?q.id:'null'})">${isEdit?'💾 Update':'➕ Add'} Question</button>
+            ${isEdit?'<button type="button" class="cancel-btn" onclick="switchTab(\'questions\')">Cancel</button>':''}
+          </div>
+        </form>
+      </div>`;
+    window._correctIdx = q.correct_index || 0;
+  }
+
+  function setCorrect(i) {
+    window._correctIdx = i;
+    document.querySelectorAll('.cor-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+  }
+
+  async function saveQuestion(editId) {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.textContent = '⏳ Saving...';
+    try {
+      const payload = {
+        question_en: document.getElementById('f_qen').value.trim(),
+        question_hi: document.getElementById('f_qhi').value.trim() || null,
+        options_en: [0,1,2,3].map(i => document.getElementById(`f_oen${i}`).value.trim()),
+        options_hi: [0,1,2,3].map(i => document.getElementById(`f_ohi${i}`).value.trim()).filter(Boolean).length === 4
+          ? [0,1,2,3].map(i => document.getElementById(`f_ohi${i}`).value.trim()) : null,
+        correct_index: window._correctIdx,
+        subject: document.getElementById('f_subject').value,
+        difficulty: document.getElementById('f_diff').value,
+        board: document.getElementById('f_board').value.trim() || null,
+        exam: document.getElementById('f_exam').value.trim() || null,
+        topic: document.getElementById('f_topic').value.trim() || null,
+        year: document.getElementById('f_year').value.trim() || null,
+        source: document.getElementById('f_source').value.trim() || null,
+        marks: document.getElementById('f_marks').value ? parseFloat(document.getElementById('f_marks').value) : null
+      };
+
+      if (!payload.question_en) throw new Error('Question text required');
+      if (payload.options_en.some(o => !o)) throw new Error('All 4 options required');
+
+      if (editId) {
+        payload.id = editId;
+        await adminAPI('edit-question', payload);
+        showToast('Question updated!','success');
+      } else {
+        await adminAPI('create-question', payload);
+        showToast('Question added!','success');
+      }
+      switchTab('questions');
+    } catch(e) {
+      showToast(e.message,'error');
+      btn.disabled = false; btn.textContent = editId ? '💾 Update' : '➕ Add';
+    }
+  }
+
+  // ═══════════════ BULK IMPORT ═══════════════
+  function renderBulkImport(el) {
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">📥 Bulk CSV Import</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('csvFile').click()"
+          ondragover="event.preventDefault();this.classList.add('hover')" ondragleave="this.classList.remove('hover')"
+          ondrop="event.preventDefault();this.classList.remove('hover');handleFile(event.dataTransfer.files[0])">
+          <div style="font-size:40px;opacity:.5">📁</div>
+          <div>Click or drag CSV file</div>
+          <div class="upload-hint">question,option_a,option_b,option_c,option_d,correct,subject,difficulty,board,topic,year</div>
+          <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="handleFile(this.files[0])">
+        </div>
+        <button class="tool-btn" style="margin-top:12px" onclick="downloadTemplate()">📄 Download CSV Template</button>
+      </div>
+      <div id="importPreview"></div>`;
+  }
+
+  function downloadTemplate() {
+    const csv = 'question,option_a,option_b,option_c,option_d,correct,subject,difficulty,board,exam,topic,year,source\n"What is 2+2?","3","4","5","6","B","math","easy","SSC","CGL","Arithmetic","2023","PYQ"';
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'question_template.csv'; a.click();
+  }
+
+  function handleFile(file) {
+    if (!file || !file.name.endsWith('.csv')) return showToast('CSV file required','error');
+    const reader = new FileReader();
+    reader.onload = (e) => parseCSV(e.target.result);
+    reader.readAsText(file);
+  }
+
+  function parseCSV(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) return showToast('CSV has no data rows','error');
+    const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
+    const correctMap = {a:0,b:1,c:2,d:3};
+    const questions = [];
+    const errors = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const vals = parseCSVLine(lines[i]);
+      const get = (name) => { const idx = headers.indexOf(name); return idx >= 0 ? vals[idx] : ''; };
+      const q = get('question'), oa = get('option_a'), ob = get('option_b'), oc = get('option_c'), od = get('option_d');
+      const cor = get('correct').toUpperCase();
+      if (!q || !oa || !ob) { errors.push(`Row ${i+1}: missing question/options`); continue; }
+      if (!correctMap.hasOwnProperty(cor.toLowerCase())) { errors.push(`Row ${i+1}: invalid correct answer "${cor}"`); continue; }
+      questions.push({
+        question_en: q, options_en: [oa,ob,oc||'',od||''], correct_index: correctMap[cor.toLowerCase()],
+        subject: get('subject')||'general', difficulty: get('difficulty')||'medium',
+        board: get('board')||null, exam: get('exam')||null, topic: get('topic')||null,
+        year: get('year')||null, source: get('source')||null
+      });
+    }
+
+    window._pendingImport = questions;
+    const prev = document.getElementById('importPreview');
+    prev.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">Preview: ${questions.length} questions parsed ${errors.length?`(${errors.length} errors)`:''}</div>
+        ${errors.length?`<div class="import-errors">${errors.map(e=>`<div>${e}</div>`).join('')}</div>`:''}
+        ${questions.slice(0,20).map((q,i) => `<div class="q-row compact"><div class="q-body"><div class="q-text">${q.question_en}</div><div class="q-meta"><span class="chip-s chip-subj">${q.subject}</span><span class="chip-s chip-diff-${q.difficulty}">${q.difficulty}</span>${q.board?`<span class="chip-s chip-board">${q.board}</span>`:''}</div></div></div>`).join('')}
+        ${questions.length>20?`<div class="empty">...and ${questions.length-20} more</div>`:''}
+        <button class="save-btn" style="margin-top:16px" onclick="confirmImport()" id="importBtn">✅ Import ${questions.length} Questions</button>
+      </div>`;
+  }
+
+  function parseCSVLine(line) {
+    const result = []; let current = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  async function confirmImport() {
+    if (!window._pendingImport?.length) return;
+    const btn = document.getElementById('importBtn');
+    btn.disabled = true; btn.textContent = '⏳ Importing...';
+    try {
+      const d = await adminAPI('bulk-import', { questions: window._pendingImport });
+      showToast(`✅ ${d.imported} questions imported!`,'success');
+      window._pendingImport = [];
+      switchTab('questions');
+    } catch(e) { showToast(e.message,'error'); btn.disabled = false; btn.textContent = '✅ Import'; }
+  }
+
+  // ═══════════════ USERS ═══════════════
+  async function renderUsers(el) {
+    const d = await adminAPI('users');
+    el.innerHTML = `<div class="sec-card"><div class="sec-title">👥 Users (${(d.users||[]).length})</div>
+      ${!(d.users||[]).length ? '<div class="empty">No users</div>' : `
+        <table class="dtable"><thead><tr><th>Username</th><th>Tests</th><th>Streak</th><th>Joined</th></tr></thead><tbody>
+        ${d.users.map(u=>`<tr><td><strong>${u.username}</strong></td><td>${u.tests_given||0}</td><td>🔥 ${u.streak||0}</td><td>${new Date(u.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td></tr>`).join('')}
+        </tbody></table>`}</div>`;
+  }
+
+  // ═══════════════ SECURITY ═══════════════
+  function renderSecurity(el) {
+    el.innerHTML = `
+      <div class="sec-card"><div class="sec-title">🛡️ Security Configuration</div>
+        <table class="dtable"><tbody>
+          <tr><td>Max Failed Attempts</td><td>3</td></tr>
+          <tr><td>Ban Duration</td><td>1 hour</td></tr>
+          <tr><td>Session Lifetime</td><td>24 hours</td></tr>
+          <tr><td>Password Hash</td><td>bcrypt (12 rounds)</td></tr>
+          <tr><td>Cookie</td><td>httpOnly + Secure + SameSite=Strict</td></tr>
+          <tr><td>CSRF Protection</td><td>Token per session (X-CSRF-Token header)</td></tr>
+          <tr><td>IP Rate Limit</td><td>10 req/min per IP</td></tr>
+          <tr><td>Indexing</td><td>noindex, nofollow + robots.txt</td></tr>
+        </tbody></table></div>
+      <div class="sec-card"><div class="sec-title">📝 Current Session</div>
+        <table class="dtable"><tbody>
+          <tr><td>User</td><td>${adminUser?.username||'unknown'}</td></tr>
+          <tr><td>Auth</td><td>httpOnly cookie (JS cannot access)</td></tr>
+          <tr><td>CSRF</td><td class="mono">${csrfToken ? csrfToken.substring(0,16)+'...' : 'N/A'}</td></tr>
+        </tbody></table></div>`;
+  }
+
+  // ═══════════════ HELPERS ═══════════════
+  async function adminLogout() {
+    try { await fetch('/api/admin-logout', { method:'POST', credentials:'include' }); } catch(e){}
+    window.location.href = '/secure-admin-login/';
+  }
+
+  function showToast(msg, type='info') {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('visible'));
+    setTimeout(() => { t.classList.remove('visible'); setTimeout(()=>t.remove(),300); }, 3000);
+  }
+  </script>
+</body>
+</html>

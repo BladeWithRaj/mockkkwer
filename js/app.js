@@ -218,8 +218,13 @@ const App = {
       <header class="header">
         <div class="header-inner">
           <a href="#home" class="header-logo">
-            <div class="logo-icon">📝</div>
-            <span>MockTest<span style="color: var(--primary-light);">Pro</span></span>
+            <div class="logo-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <span class="brand-text">Mock<span class="brand-accent">24hr</span></span>
           </a>
           <nav class="header-nav">
             ${isTest ? '' : `

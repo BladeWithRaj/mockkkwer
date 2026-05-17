@@ -184,8 +184,13 @@ const Auth = {
       modal.innerHTML = `
         <div class="username-card">
           <div class="username-brand">
-            <div class="username-brand-icon">📝</div>
-            <h1 class="username-brand-title">MockTest<span>Pro</span></h1>
+            <div class="username-brand-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <h1 class="username-brand-title">Mock<span>24hr</span></h1>
           </div>
 
           <p class="username-subtitle">Choose your username to get started</p>

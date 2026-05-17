@@ -1,39 +1,25 @@
-// ============================================
-// AUTH LIB — Clerk Token Verification (Backend)
-// ============================================
-
-import { verifyToken } from "@clerk/backend";
+// ═══════════════════════════════════════════════
+// AUTH LIB — Username-based identity (no Clerk)
+// Kept for backward compatibility with any imports
+// ═══════════════════════════════════════════════
 
 /**
- * Verify Clerk session token from Authorization header.
- * Returns the Clerk user ID (payload.sub).
- * Throws on invalid/missing token.
+ * Extract username from request.
+ * Uses username from body or Authorization header.
  */
-export async function verifyClerkUser(req) {
-  const authHeader = req.headers.authorization || "";
-  const token = authHeader.replace(/^Bearer\s+/i, "");
-
-  if (!token) {
-    throw new Error("No authentication token provided");
+export async function verifyUser(req) {
+  // Check body first (POST requests)
+  if (req.body?.username) {
+    return { userId: req.body.username.toLowerCase().trim() };
   }
 
-  const secretKey = process.env.CLERK_SECRET_KEY;
-  if (!secretKey) {
-    throw new Error("Server misconfigured: CLERK_SECRET_KEY not set");
+  // Check Authorization header
+  const authHeader = req.headers?.authorization || "";
+  const userId = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+  if (!userId) {
+    throw new Error("No user identity provided");
   }
 
-  const payload = await verifyToken(token, { secretKey });
-
-  if (!payload || !payload.sub) {
-    throw new Error("Invalid token: no user ID found");
-  }
-
-  return {
-    clerkId: payload.sub,
-    sessionId: payload.sid || null,
-    email: payload.email || null
-  };
+  return { userId };
 }
-
-// Legacy export name for backward compat
-export const verifyUser = verifyClerkUser;

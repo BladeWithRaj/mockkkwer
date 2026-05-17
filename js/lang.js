@@ -201,7 +201,7 @@ const Lang = {
   // ═══════════════════════════════════════
   _en: {
     // ── Common ──
-    app_name: 'MockTestPro',
+    app_name: 'Mock24hr',
     loading: 'Loading...',
     retry: 'Retry',
     go_home: 'Go Home',
@@ -213,7 +213,7 @@ const Lang = {
     page_not_found_desc: "The page you're looking for doesn't exist",
 
     // ── Username Prompt ──
-    welcome: 'Welcome to MockTestPro',
+    welcome: 'Welcome to Mock24hr',
     enter_username: 'Enter a username to start practicing immediately. No signup required.',
     username_placeholder: 'Your name (e.g. Rahul)',
     start_practicing: "Let's Go! 🚀",
@@ -337,7 +337,7 @@ const Lang = {
   // ═══════════════════════════════════════
   _hi: {
     // ── Common ──
-    app_name: 'MockTestPro',
+    app_name: 'Mock24hr',
     loading: 'लोड हो रहा है...',
     retry: 'फिर से कोशिश करें',
     go_home: 'होम पर जाएं',
@@ -349,7 +349,7 @@ const Lang = {
     page_not_found_desc: 'जो पेज आप ढूंढ रहे हैं वो मौजूद नहीं है',
 
     // ── Username Prompt ──
-    welcome: 'MockTestPro में आपका स्वागत है',
+    welcome: 'Mock24hr में आपका स्वागत है',
     enter_username: 'अभी प्रैक्टिस शुरू करें। कोई साइनअप नहीं चाहिए।',
     username_placeholder: 'आपका नाम (जैसे राहुल)',
     start_practicing: 'चलो शुरू करें! 🚀',

@@ -12,3 +12,7 @@ Allow: /exams/
 
 # Block internal SPA routes from indexing
 Disallow: /api/
+
+# Block admin panel — NEVER index
+Disallow: /admin/
+Disallow: /secure-admin-login/

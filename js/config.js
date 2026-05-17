@@ -4,7 +4,7 @@
 
 const CONFIG = {
   // App info
-  APP_NAME: "MockTestPro",
+  APP_NAME: "Mock24hr",
   VERSION: "2.0",
 
   // Auth mode

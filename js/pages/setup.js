@@ -64,12 +64,14 @@ const SetupPage = {
 
     return `
       <div class="setup-page page-enter">
+        ${!preset ? `
         <div class="setup-header">
-          <h1 class="animate-fadeInDown">${preset ? preset.icon + ' ' + preset.name : Lang.t('setup_title')}</h1>
+          <h1 class="animate-fadeInDown">${Lang.t('setup_title')}</h1>
           <p class="animate-fadeInDown stagger-1" style="color: var(--text-secondary); margin-top: var(--space-2);">
-            ${preset ? preset.description : Lang.t('setup_subtitle')}
+            ${Lang.t('setup_subtitle')}
           </p>
         </div>
+        ` : ''}
 
         ${preset ? this._renderPresetInfo(preset) : ''}
 
@@ -151,27 +153,23 @@ const SetupPage = {
             <div class="switch-wrapper">
               <label class="switch">
                 <input type="checkbox" ${this.config.negativeMarking ? 'checked' : ''}
-                       onchange="SetupPage.setConfig('negativeMarking', this.checked)"
+                       onchange="SetupPage._toggleNegativeMarking(this.checked)"
                        id="neg-mark-toggle">
                 <span class="switch-track"></span>
               </label>
-              <span style="font-size: var(--text-sm); color: var(--text-secondary);">
+              <span id="neg-mark-status" style="font-size: var(--text-sm); color: var(--text-secondary);">
                 ${this.config.negativeMarking ? Lang.t('setup_enabled') : Lang.t('setup_disabled')}
               </span>
             </div>
-            ${this.config.negativeMarking ? `
-              <div class="neg-mark-config">
-                <label class="input-label">${Lang.t('setup_deduction')}</label>
-                <select class="select" style="width: auto;"
-                        onchange="SetupPage.setConfig('negativeValue', parseFloat(this.value))"
-                        id="neg-value-select">
-                  <option value="0.25" ${this.config.negativeValue === 0.25 ? 'selected' : ''}>0.25</option>
-                  <option value="0.33" ${this.config.negativeValue === 0.33 ? 'selected' : ''}>0.33</option>
-                  <option value="0.50" ${this.config.negativeValue === 0.50 ? 'selected' : ''}>0.50</option>
-                  <option value="1" ${this.config.negativeValue === 1 ? 'selected' : ''}>1.00</option>
-                </select>
+            <div class="neg-mark-options" id="neg-mark-options" style="${this.config.negativeMarking ? '' : 'display:none;'}">
+              <div class="neg-mark-presets">
+                <button class="neg-preset-chip ${this.config.negativeValue === 0.25 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.25)">−0.25 <span>SSC Pattern</span></button>
+                <button class="neg-preset-chip ${this.config.negativeValue === 0.33 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.33)">−0.33 <span>Railway/UPSC</span></button>
+                <button class="neg-preset-chip ${this.config.negativeValue === 0.50 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.50)">−0.50 <span>Banking</span></button>
+                <button class="neg-preset-chip ${this.config.negativeValue === 0.66 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.66)">−0.66 <span>CTET</span></button>
+                <button class="neg-preset-chip ${this.config.negativeValue === 1 ? 'active' : ''}" onclick="SetupPage._setNegValue(1.00)">−1.00 <span>Full Deduction</span></button>
               </div>
-            ` : ''}
+            </div>
           </div>
           ` : ''}
 
@@ -312,7 +310,29 @@ const SetupPage = {
 
   setConfig(key, value) {
     this.config[key] = value;
-    document.getElementById('app').innerHTML = App._renderHeader('setup') + this.render();
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
+  },
+
+  _toggleNegativeMarking(checked) {
+    this.config.negativeMarking = checked;
+    const optionsEl = document.getElementById('neg-mark-options');
+    const statusEl = document.getElementById('neg-mark-status');
+    if (optionsEl) optionsEl.style.display = checked ? '' : 'none';
+    if (statusEl) statusEl.textContent = checked ? Lang.t('setup_enabled') : Lang.t('setup_disabled');
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
+  },
+
+  _setNegValue(val) {
+    this.config.negativeValue = val;
+    // Update active states
+    document.querySelectorAll('.neg-preset-chip').forEach(chip => {
+      const chipVal = parseFloat(chip.textContent.replace('−', ''));
+      chip.classList.toggle('active', Math.abs(chipVal - val) < 0.01);
+    });
+    const summary = document.getElementById('setup-summary');
+    if (summary) summary.innerHTML = this._renderSummary();
   },
 
   _toggleSubject(subject) {

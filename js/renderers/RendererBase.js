@@ -19,7 +19,7 @@ const RendererBase = {
 
   _getCandidateName() {
     try {
-      const u = localStorage.getItem('clerk_username') || localStorage.getItem('username');
+      const u = localStorage.getItem('mock_user') || localStorage.getItem('username');
       return u || 'Candidate';
     } catch { return 'Candidate'; }
   },
@@ -27,7 +27,7 @@ const RendererBase = {
   _getCandidateRoll() {
     // Generate a consistent roll number for the session
     try {
-      const u = localStorage.getItem('clerk_username') || localStorage.getItem('username') || 'user';
+      const u = localStorage.getItem('mock_user') || localStorage.getItem('username') || 'user';
       let hash = 0;
       for (let i = 0; i < u.length; i++) {
         hash = ((hash << 5) - hash) + u.charCodeAt(i);
