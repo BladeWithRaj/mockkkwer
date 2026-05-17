@@ -67,6 +67,22 @@ export async function handleAdminLogout(supabase, req, res) {
   }
 }
 
+// TOTP Status — lightweight check (no secret generation)
+export async function handleTOTPStatus(supabase, req, res) {
+  try {
+    const { data: admin } = await supabase.from("admin_users").select("id").limit(1).single();
+    if (!admin) return res.json({ needsSetup: true });
+
+    const { data: totp } = await supabase.from("admin_totp").select("setup_complete").eq("admin_id", admin.id).single();
+    const isSetup = totp?.setup_complete === true;
+
+    return res.json({ needsSetup: !isSetup });
+  } catch (err) {
+    console.error("[TOTP STATUS] Crash:", err);
+    return res.json({ needsSetup: true });
+  }
+}
+
 // TOTP Setup — LOCKED after initial configuration
 export async function handleTOTPSetup(supabase, req, res) {
   try {

@@ -124,9 +124,9 @@
       }
       // Check if TOTP needs setup — show link only if not configured
       try {
-        const r = await fetch('/api/totp-setup');
+        const r = await fetch('/api/totp-status');
         const d = await r.json();
-        if (d.success) document.getElementById('setupLink').style.display = 'inline';
+        if (d.needsSetup) document.getElementById('setupLink').style.display = 'inline';
       } catch(e) {}
     })();
 

@@ -12,7 +12,7 @@ import { handleSubmit } from "./handlers/attemptHandlers.js";
 import { handleTrack, handleAnalytics } from "./handlers/trackingHandlers.js";
 import { handleLeaderboard, handleAvatar, handleProfile, handleStreak, handleWallet, handleRewards, handleProfileSummary } from "./handlers/profileHandlers.js";
 import { handleUserLogin, handleUserVerify, handleUserLogout } from "./handlers/authHandlers.js";
-import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup } from "./handlers/adminHandlers.js";
+import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus } from "./handlers/adminHandlers.js";
 import { handleExams } from "./handlers/examHandlers.js";
 
 // ── Supabase Admin (service role) ─────────────
@@ -61,6 +61,7 @@ export default async function handler(req, res) {
     if (path.includes("/admin-login"))     return await handleAdminLogin(supabase, req, res);
     if (path.includes("/admin-verify"))    return await handleAdminVerify(supabase, req, res);
     if (path.includes("/admin-logout"))    return await handleAdminLogout(supabase, req, res);
+    if (path.includes("/totp-status"))     return await handleTOTPStatus(supabase, req, res);
     if (path.includes("/totp-setup"))      return await handleTOTPSetup(supabase, req, res);
     if (path.includes("/admin-data"))      return await handleAdminData(supabase, req, res);
 
