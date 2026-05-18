@@ -1479,13 +1479,13 @@
   position: relative;
   background: linear-gradient(135deg, #111827 0%, #1e293b 50%, #0f172a 100%);
   border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 20px;
-  padding: 32px 36px;
+  border-radius: 18px;
+  padding: 24px 28px;
   cursor: pointer;
   overflow: hidden;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   animation: hp-fadeUp 0.5s 0.45s ease both;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 .poly-flagship:hover {
   transform: translateY(-5px);
@@ -1507,19 +1507,9 @@
   pointer-events: none;
 }
 
-/* Chip — top-right */
+/* Chip — removed */
 .poly-flagship-chip {
-  position: absolute;
-  top: 16px;
-  right: 20px;
-  padding: 4px 12px;
-  background: rgba(59, 130, 246, 0.12);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #93c5fd;
-  letter-spacing: 0.3px;
+  display: none;
 }
 
 /* Inner 2-col layout */
@@ -1554,11 +1544,11 @@
 
 .poly-flagship-title {
   font-family: var(--font-heading, 'Inter', sans-serif);
-  font-size: clamp(20px, 3vw, 26px);
+  font-size: clamp(18px, 2.5vw, 22px);
   font-weight: 800;
   color: #f1f5f9;
   line-height: 1.2;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .poly-flagship-sub {

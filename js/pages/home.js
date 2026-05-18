@@ -152,15 +152,14 @@ const HomePage = {
         <section class="hp-section" style="margin-top: 8px;">
           <div class="poly-flagship" onclick="window.location.href='/polytechnic-important-paper/'" id="polytechnic-feature-card">
             <div class="poly-flagship-glow"></div>
-            <div class="poly-flagship-chip">✨ Powered by Gemini AI</div>
             <div class="poly-flagship-inner">
               <div class="poly-flagship-left">
                 <div class="poly-flagship-badge">NEW</div>
-                <h2 class="poly-flagship-title">AI Polytechnic Important Paper Generator</h2>
-                <p class="poly-flagship-sub">Generate realistic BTEUP / UPBTE important papers instantly using AI.</p>
+                <h2 class="poly-flagship-title">Polytechnic Exam Paper Generator</h2>
+                <p class="poly-flagship-sub">Generate realistic BTEUP / UPBTE important papers instantly.</p>
                 <div class="poly-flagship-features">
                   <span>✓ BTEUP Pattern</span>
-                  <span>✓ Printable White Page</span>
+                  <span>✓ Printable Format</span>
                   <span>✓ Important Questions</span>
                   <span>✓ Semester-wise</span>
                   <span>✓ One Click Generate</span>
