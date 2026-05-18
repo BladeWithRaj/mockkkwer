@@ -14,6 +14,7 @@ import { handleLeaderboard, handleAvatar, handleProfile, handleStreak, handleWal
 import { handleUserLogin, handleUserVerify, handleUserLogout } from "./handlers/authHandlers.js";
 import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus } from "./handlers/adminHandlers.js";
 import { handleExams } from "./handlers/examHandlers.js";
+import { handlePolytechnic } from "./handlers/polytechnicHandlers.js";
 
 // ── Supabase Admin (service role) ─────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -69,6 +70,9 @@ export default async function handler(req, res) {
     if (path.includes("/user-login"))      return await handleUserLogin(supabase, req, res);
     if (path.includes("/user-verify"))     return await handleUserVerify(supabase, req, res);
     if (path.includes("/user-logout"))     return await handleUserLogout(supabase, req, res);
+
+    // ── Polytechnic engine routes ──
+    if (path.includes("/polytechnic"))     return await handlePolytechnic(supabase, req, res);
 
     // ── Exam config routes ──
     if (path.includes("/exams"))           return await handleExams(supabase, req, res);

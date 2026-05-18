@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polytechnic Paper Generator — MockTestPro</title>
+  <meta name="description" content="Generate weighted, balanced polytechnic exam papers with bilingual support. Printable PDF-quality output with answer keys.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --surface: #12122a;
+      --surface2: #1a1a3e;
+      --accent: #6c5ce7;
+      --accent-glow: rgba(108, 92, 231, 0.3);
+      --text: #e4e4f0;
+      --text-dim: #8888aa;
+      --border: #2a2a4a;
+      --success: #00d68f;
+      --warn: #ffa726;
+      --danger: #ff5252;
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      background: linear-gradient(135deg, #0f0f2e 0%, #1a1a4e 50%, #0a0a2a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 32px;
+    }
+    .page-header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #6c5ce7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .page-header p { color: var(--text-dim); font-size: 0.9rem; margin-top: 4px; }
+    .back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-bottom: 8px;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .main-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .form-group select,
+    .form-group input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: border 0.2s;
+    }
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 16px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); background: rgba(108, 92, 231, 0.1); }
+
+    /* ── Stats ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6c5ce7, #00d68f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Result ── */
+    .result-section { display: none; }
+    .result-section.visible { display: block; }
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Loading ── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+    }
+    .loading.visible { display: block; }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+    .toast.success { border-color: var(--success); color: var(--success); }
+
+    /* ── Syllabus Preview ── */
+    .syllabus-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .syllabus-chip {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip-weight {
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    /* ── Sections Preview ── */
+    .sections-preview {
+      margin-top: 12px;
+    }
+    .section-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    .section-row .section-name { font-weight: 600; }
+    .section-row .section-meta { color: var(--text-dim); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <a href="/" class="back-link">← Back to Home</a>
+    <h1>📄 Polytechnic Paper Generator</h1>
+    <p>Generate weighted, balanced exam papers with bilingual support</p>
+  </div>
+
+  <div class="main-content">
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="statSubjects">-</div>
+        <div class="stat-label">Subjects</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statQuestions">-</div>
+        <div class="stat-label">Questions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statApproved">-</div>
+        <div class="stat-label">Approved</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statPapers">-</div>
+        <div class="stat-label">Generated</div>
+      </div>
+    </div>
+
+    <!-- Generator Form -->
+    <div class="card">
+      <div class="card-title">🎯 Paper Configuration</div>
+      <form id="generateForm" onsubmit="return handleGenerate(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="subjectSelect" required onchange="loadSubjectDetails()">
+              <option value="">Select Subject...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pattern</label>
+            <select id="patternSelect">
+              <option value="">Default Pattern</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Language</label>
+            <select id="languageSelect">
+              <option value="bilingual">Bilingual (EN + HI)</option>
+              <option value="en">English Only</option>
+              <option value="hi">Hindi Only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Avoid Recent (Days)</label>
+            <input type="number" id="recentDays" value="30" min="0" max="365">
+          </div>
+          <div class="form-group">
+            <label>Paper Title (Optional)</label>
+            <input type="text" id="paperTitle" placeholder="Auto-generated if empty">
+          </div>
+          <div class="form-group">
+            <label>Watermark</label>
+            <input type="text" id="watermark" placeholder="e.g., PRACTICE ONLY">
+          </div>
+        </div>
+
+        <!-- Syllabus preview -->
+        <div id="syllabusPreview" style="margin-top:16px; display:none;">
+          <div class="card-title" style="font-size:0.9rem">📚 Syllabus Weightage</div>
+          <div class="syllabus-chips" id="syllabusChips"></div>
+        </div>
+
+        <!-- Pattern preview -->
+        <div id="patternPreview" style="margin-top:16px; display:none;">
+          <div class="card-title" style="font-size:0.9rem">📋 Paper Structure</div>
+          <div class="sections-preview" id="sectionsPreview"></div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="generateBtn">
+          ⚡ Generate Paper
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loadingSection">
+      <div class="spinner"></div>
+      <div style="font-weight:600">Generating balanced paper...</div>
+      <div style="color:var(--text-dim);margin-top:4px;font-size:0.85rem">Applying unit weightage, difficulty balancing, and anti-repetition</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-section" id="resultSection">
+      <div class="card">
+        <div class="result-header">
+          <div>
+            <div class="card-title">✅ Paper Generated</div>
+            <div style="color:var(--text-dim);font-size:0.85rem" id="resultMeta"></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn-secondary" onclick="openPaper()">🖨️ Print / Preview</button>
+            <button class="btn-secondary" onclick="showAnswerKey()">🔑 Answer Key</button>
+            <button class="btn-secondary" onclick="generateAnother()">🔄 Generate Another</button>
+          </div>
+        </div>
+
+        <!-- Sections summary -->
+        <div id="sectionsSummary"></div>
+      </div>
+    </div>
+
+    <!-- Recent Papers -->
+    <div class="card">
+      <div class="card-title">📚 Recent Papers</div>
+      <div id="recentPapers" style="color:var(--text-dim);font-size:0.9rem">Loading...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let generatedHTML = "";
+    let generatedAnswerKey = null;
+
+    // ── Init ──
+    (async () => {
+      await loadSubjects();
+      await loadRecentPapers();
+      loadStats();
+    })();
+
+    async function loadSubjects() {
+      try {
+        const r = await fetch("/api/polytechnic/subjects");
+        const d = await r.json();
+        const sel = document.getElementById("subjectSelect");
+        (d.subjects || []).forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = `${s.branch} Sem-${s.semester} | ${s.subject_name} (${s.subject_code})`;
+          sel.appendChild(opt);
+        });
+        document.getElementById("statSubjects").textContent = (d.subjects || []).length;
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadSubjectDetails() {
+      const subjectId = document.getElementById("subjectSelect").value;
+      if (!subjectId) {
+        document.getElementById("syllabusPreview").style.display = "none";
+        document.getElementById("patternPreview").style.display = "none";
+        return;
+      }
+
+      // Load syllabus
+      try {
+        const r = await fetch(`/api/polytechnic/syllabus?subject_id=${subjectId}`);
+        const d = await r.json();
+        const chips = document.getElementById("syllabusChips");
+        chips.innerHTML = "";
+        (d.syllabus || []).forEach(u => {
+          chips.innerHTML += `<div class="syllabus-chip">U${u.unit_no}: ${u.unit_name} <span class="chip-weight">${u.weightage}%</span></div>`;
+        });
+        document.getElementById("syllabusPreview").style.display = "block";
+      } catch(e) {}
+
+      // Load patterns
+      try {
+        const r = await fetch(`/api/polytechnic/patterns?subject_id=${subjectId}`);
+        const d = await r.json();
+        const sel = document.getElementById("patternSelect");
+        sel.innerHTML = '<option value="">Default Pattern</option>';
+        (d.patterns || []).forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = `${p.pattern_name} (${p.total_marks}M, ${p.time_minutes}min)`;
+          opt.dataset.pattern = JSON.stringify(p.pattern_json);
+          sel.appendChild(opt);
+        });
+
+        // Show first pattern structure
+        if (d.patterns?.[0]?.pattern_json?.sections) {
+          renderPatternPreview(d.patterns[0].pattern_json);
+        }
+      } catch(e) {}
+    }
+
+    function renderPatternPreview(pattern) {
+      const cont = document.getElementById("sectionsPreview");
+      cont.innerHTML = "";
+      let totalQ = 0, totalM = 0;
+      (pattern.sections || []).forEach(s => {
+        const count = s.question_count || s.questions || 0;
+        const marks = count * (s.marks_each || 1);
+        totalQ += count;
+        totalM += marks;
+        cont.innerHTML += `<div class="section-row">
+          <span class="section-name">${s.name}</span>
+          <span class="section-meta">${count}Q × ${s.marks_each}M = ${marks} Marks | ${(s.difficulty || 'mixed').toUpperCase()}</span>
+        </div>`;
+      });
+      cont.innerHTML += `<div class="section-row" style="border:1px solid var(--accent);background:rgba(108,92,231,0.1)">
+        <span class="section-name">Total</span>
+        <span style="font-weight:700">${totalQ} Questions | ${totalM} Marks</span>
+      </div>`;
+      document.getElementById("patternPreview").style.display = "block";
+    }
+
+    async function handleGenerate(e) {
+      e.preventDefault();
+      const subjectId = document.getElementById("subjectSelect").value;
+      if (!subjectId) return toast("Select a subject first", "error");
+
+      document.getElementById("generateBtn").disabled = true;
+      document.getElementById("loadingSection").classList.add("visible");
+      document.getElementById("resultSection").classList.remove("visible");
+
+      try {
+        const r = await fetch("/api/polytechnic/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subject_id: parseInt(subjectId),
+            pattern_id: document.getElementById("patternSelect").value || null,
+            title: document.getElementById("paperTitle").value || null,
+            language: document.getElementById("languageSelect").value,
+            watermark: document.getElementById("watermark").value || "",
+            exclude_recent_days: parseInt(document.getElementById("recentDays").value) || 30,
+            show_answer_key: true
+          })
+        });
+
+        const d = await r.json();
+        if (!r.ok || !d.success) throw new Error(d.error || "Generation failed");
+
+        generatedHTML = d.html;
+        generatedAnswerKey = d.answer_key;
+
+        // Show result
+        document.getElementById("resultMeta").textContent =
+          `${d.total_questions} Questions | ${d.total_marks} Marks | ${d.time_minutes} Min | Paper #${d.paper_id}`;
+
+        const summary = document.getElementById("sectionsSummary");
+        summary.innerHTML = "";
+        (d.sections_summary || []).forEach(s => {
+          summary.innerHTML += `<div class="section-row">
+            <span class="section-name">${s.name}</span>
+            <span class="section-meta">${s.questions}Q = ${s.marks}M</span>
+          </div>`;
+        });
+
+        document.getElementById("resultSection").classList.add("visible");
+        toast("Paper generated successfully!", "success");
+        loadRecentPapers();
+      } catch(err) {
+        toast(err.message, "error");
+      } finally {
+        document.getElementById("generateBtn").disabled = false;
+        document.getElementById("loadingSection").classList.remove("visible");
+      }
+    }
+
+    function openPaper() {
+      if (!generatedHTML) return toast("No paper generated yet", "error");
+      const w = window.open("", "_blank");
+      w.document.write(generatedHTML);
+      w.document.close();
+    }
+
+    function showAnswerKey() {
+      if (!generatedHTML) return toast("No paper generated yet", "error");
+      // Open paper with answer key visible
+      const w = window.open("", "_blank");
+      const html = generatedHTML.replace("style=\"display:none;\"", "style=\"display:block;\"");
+      w.document.write(html);
+      w.document.close();
+    }
+
+    function generateAnother() {
+      document.getElementById("resultSection").classList.remove("visible");
+      document.getElementById("subjectSelect").focus();
+    }
+
+    async function loadRecentPapers() {
+      try {
+        const r = await fetch("/api/polytechnic/papers");
+        const d = await r.json();
+        const cont = document.getElementById("recentPapers");
+        if (!d.papers?.length) {
+          cont.innerHTML = '<div style="padding:12px;color:var(--text-dim)">No papers generated yet.</div>';
+          document.getElementById("statPapers").textContent = "0";
+          return;
+        }
+        document.getElementById("statPapers").textContent = d.papers.length;
+        cont.innerHTML = d.papers.slice(0, 10).map(p => `
+          <div class="section-row">
+            <span class="section-name">${p.title}</span>
+            <span class="section-meta">${p.paper_type} | ${new Date(p.created_at).toLocaleDateString("en-IN")}</span>
+          </div>
+        `).join("");
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadStats() {
+      try {
+        const r1 = await fetch("/api/polytechnic/questions?status=approved&limit=1");
+        const d1 = await r1.json();
+        document.getElementById("statApproved").textContent = d1.total || 0;
+
+        const r2 = await fetch("/api/polytechnic/questions?status=pending&limit=1");
+        const d2 = await r2.json();
+        document.getElementById("statQuestions").textContent = (d1.total || 0) + (d2.total || 0);
+      } catch(e) {}
+    }
+
+    function toast(msg, type = "") {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast visible " + type;
+      setTimeout(() => t.className = "toast", 3000);
+    }
+  </script>
+</body>
+</html>
