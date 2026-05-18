@@ -5,13 +5,22 @@
 // Flow: Authenticator 6-digit code → verify → token → localStorage
 // ═══════════════════════════════════════════════
 
-import { authenticator } from "otplib";
 import crypto from "crypto";
 
-// qrcode is CommonJS — must use dynamic import in ESM
+// ── CJS-safe lazy loaders (otplib + qrcode are CommonJS) ──
+let _authenticator = null;
+async function getAuthenticator() {
+  if (!_authenticator) {
+    const otplib = await import("otplib");
+    _authenticator = otplib.authenticator || otplib.default?.authenticator;
+  }
+  return _authenticator;
+}
+
 async function generateQR(text) {
   const QRCode = await import("qrcode");
-  return QRCode.toDataURL(text);
+  const fn = QRCode.toDataURL || QRCode.default?.toDataURL;
+  return fn(text);
 }
 
 const TOKEN_EXPIRY_HOURS = 72; // 3 days
@@ -53,7 +62,8 @@ export async function setupTOTP(supabase, adminId) {
     return { success: false, error: "TOTP already configured. Use reset flow." };
   }
 
-  const secret = authenticator.generateSecret();
+  const auth = await getAuthenticator();
+  const secret = auth.generateSecret();
 
   // Get admin username for QR label
   const { data: admin } = await supabase
@@ -62,7 +72,7 @@ export async function setupTOTP(supabase, adminId) {
     .eq("id", adminId)
     .single();
 
-  const otpauthUrl = authenticator.keyuri(
+  const otpauthUrl = auth.keyuri(
     admin?.username || "admin",
     APP_NAME,
     secret
@@ -100,7 +110,8 @@ export async function verifyTOTPSetup(supabase, adminId, code) {
 
   if (!totp) return { success: false, error: "No pending setup found" };
 
-  const isValid = authenticator.check(code, totp.secret);
+  const auth = await getAuthenticator();
+  const isValid = auth.check(code, totp.secret);
   if (!isValid) return { success: false, error: "Invalid code. Try again." };
 
   // Mark setup complete
@@ -157,7 +168,8 @@ export async function verifyTOTPLogin(supabase, code, ip, userAgent) {
   }
 
   // Verify TOTP
-  const isValid = authenticator.check(code, totp.secret);
+  const auth = await getAuthenticator();
+  const isValid = auth.check(code, totp.secret);
 
   if (!isValid) {
     const attempts = (admin.failed_attempts || 0) + 1;
