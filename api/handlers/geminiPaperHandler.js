@@ -6,8 +6,14 @@
 // diversity rules, output validation + sanitization
 // ═══════════════════════════════════════════════
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Read at request time, not module load — Vercel env may not be ready at cold start
+function getGeminiConfig() {
+  const key = process.env.GEMINI_API_KEY;
+  return {
+    key,
+    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
+  };
+}
 
 const MAX_RETRIES = 2;
 
@@ -113,8 +119,10 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     return res.status(405).json({ error: "POST only" });
   }
 
+  const { key: GEMINI_API_KEY, url: GEMINI_URL } = getGeminiConfig();
   if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Gemini API key not configured." });
+    console.error("[GEMINI] GEMINI_API_KEY not found in env vars");
+    return res.status(500).json({ error: "Gemini API key not configured. Set GEMINI_API_KEY in Vercel env vars." });
   }
 
   try {
