@@ -8,15 +8,15 @@ const HomePage = {
 
   // ── Board design tokens (fallback for styling) ──
   _boardDesignTokens: {
-    'SSC':      { color: '#2563EB', label: 'SSC' },
-    'Railway':  { color: '#059669', label: 'Railway' },
-    'Banking':  { color: '#7C3AED', label: 'Banking' },
-    'UPSC':     { color: '#9333EA', label: 'UPSC' },
+    'SSC': { color: '#2563EB', label: 'SSC' },
+    'Railway': { color: '#059669', label: 'Railway' },
+    'Banking': { color: '#7C3AED', label: 'Banking' },
+    'UPSC': { color: '#9333EA', label: 'UPSC' },
     'Teaching': { color: '#0891B2', label: 'Teaching' },
-    'Defence':  { color: '#DC2626', label: 'Defence' },
-    'State':    { color: '#D97706', label: 'State Exams' },
-    'Quick':    { color: '#F59E0B', label: 'Quick Modes' },
-    'Daily':    { color: '#EF4444', label: 'Daily' }
+    'Defence': { color: '#DC2626', label: 'Defence' },
+    'State': { color: '#D97706', label: 'State Exams' },
+    'Quick': { color: '#F59E0B', label: 'Quick Modes' },
+    'Daily': { color: '#EF4444', label: 'Daily' }
   },
 
   // Default color palette for unknown boards
@@ -28,6 +28,12 @@ const HomePage = {
    */
   _getBoards() {
     const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
+
+    // ── SAFE FALLBACK: if no presets loaded, show default boards ──
+    if (!allPresets.length) {
+      return this._getDefaultBoards();
+    }
+
     const boardMap = {};
 
     // Group exams by category (which maps to board)
@@ -45,7 +51,7 @@ const HomePage = {
 
     // Convert to array with design tokens
     let colorIdx = 0;
-    return Object.values(boardMap).map(board => {
+    const boards = Object.values(boardMap).map(board => {
       const tokens = this._boardDesignTokens[board.id] || {};
       const examNames = board.exams
         .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
@@ -63,6 +69,23 @@ const HomePage = {
         count: board.exams.length
       };
     });
+
+    // If only Quick/Daily categories exist, still show defaults
+    return boards.length > 0 ? boards : this._getDefaultBoards();
+  },
+
+  /**
+   * Hardcoded default boards — guaranteed homepage never goes empty.
+   */
+  _getDefaultBoards() {
+    return [
+      { id: 'SSC', icon: '🎯', color: '#2563EB', label: 'SSC', exams: 'CGL · CHSL · MTS · GD · Stenographer', count: 5 },
+      { id: 'Railway', icon: '🚆', color: '#059669', label: 'Railway', exams: 'NTPC · Group D · ALP · JE', count: 4 },
+      { id: 'Banking', icon: '🏦', color: '#7C3AED', label: 'Banking', exams: 'IBPS PO · SBI Clerk · RBI Assistant', count: 3 },
+      { id: 'UPSC', icon: '🏛️', color: '#9333EA', label: 'UPSC', exams: 'Prelims · CSAT · NDA', count: 3 },
+      { id: 'Teaching', icon: '📚', color: '#0891B2', label: 'Teaching', exams: 'CTET · SUPER TET · KVS', count: 3 },
+      { id: 'Defence', icon: '🎖️', color: '#DC2626', label: 'Defence', exams: 'CDS · NDA · AFCAT', count: 3 }
+    ];
   },
 
   /**
@@ -149,7 +172,7 @@ const HomePage = {
         </div>
 
         <!-- ═══ POLYTECHNIC FLAGSHIP CARD ═══ -->
-        <section class="hp-section" style="margin-top: 8px;">
+        <section class="hp-section" style="margin-top: 0;">
           <div class="poly-flagship" onclick="window.location.href='/polytechnic-important-paper/'" id="polytechnic-feature-card">
             <div class="poly-flagship-glow"></div>
             <div class="poly-flagship-inner">

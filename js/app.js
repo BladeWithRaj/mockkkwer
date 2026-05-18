@@ -95,7 +95,9 @@ const App = {
       this.questionsLoaded = true;
 
       // Load exam configs from API (replaces hardcoded presets)
-      if (window.ExamPresets && ExamPresets.load) {
+      // Note: ExamPresets is declared with `const`, so it won't exist on `window`.
+      // Use `typeof` to safely check for its existence.
+      if (typeof ExamPresets !== 'undefined' && ExamPresets.load) {
         await ExamPresets.load();
       }
 

@@ -185,3 +185,6 @@ const ExamPresets = {
     return `-${preset.negativeValue} per wrong`;
   }
 };
+
+// Export to window for consistent access across scripts
+window.ExamPresets = ExamPresets;
