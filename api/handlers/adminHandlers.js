@@ -86,8 +86,16 @@ export async function handleTOTPStatus(supabase, req, res) {
 // TOTP Setup — LOCKED after initial configuration
 export async function handleTOTPSetup(supabase, req, res) {
   try {
-    const { data: admin } = await supabase.from("admin_users").select("id").limit(1).single();
+    const { data: admin } = await supabase.from("admin_users").select("id, setup_locked").limit(1).single();
     if (!admin) return res.status(500).json({ error: "No admin configured" });
+
+    // If setup is locked, require valid admin token
+    if (admin.setup_locked) {
+      const token = extractToken(req);
+      if (!token) return res.status(403).json({ error: "TOTP setup locked. Authenticate first." });
+      const session = await verifyAdminToken(supabase, token);
+      if (!session.valid) return res.status(403).json({ error: "TOTP setup locked. Authenticate first." });
+    }
 
     // Check if TOTP is already set up
     const { data: existing } = await supabase.from("admin_totp").select("setup_complete").eq("admin_id", admin.id).single();
