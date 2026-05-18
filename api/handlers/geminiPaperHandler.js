@@ -6,10 +6,37 @@
 // diversity rules, output validation + sanitization
 // ═══════════════════════════════════════════════
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+// Read at request time, not module load — Vercel env may not be ready at cold start
+function getGeminiConfig() {
+  const key = process.env.GEMINI_API_KEY;
+  return {
+    key,
+    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
+  };
+}
 
 const MAX_RETRIES = 2;
+
+// ── IP-based rate limiter — protect Gemini quota from abuse ──
+const rateBuckets = {};
+const RATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const RATE_MAX = 10; // max 10 papers per 5 min per IP
+
+function checkRateLimit(ip) {
+  if (!ip || ip === "unknown") ip = "global";
+  const now = Date.now();
+  if (!rateBuckets[ip]) rateBuckets[ip] = [];
+  rateBuckets[ip] = rateBuckets[ip].filter(ts => now - ts < RATE_WINDOW_MS);
+  if (rateBuckets[ip].length >= RATE_MAX) return false;
+  rateBuckets[ip].push(now);
+  // Cleanup old IPs
+  if (Object.keys(rateBuckets).length > 500) {
+    for (const k of Object.keys(rateBuckets)) {
+      if (!rateBuckets[k].length) delete rateBuckets[k];
+    }
+  }
+  return true;
+}
 
 // ── Subject → Syllabus mapping (common subjects) ──
 const SYLLABUS_MAP = {
@@ -113,9 +140,33 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     return res.status(405).json({ error: "POST only" });
   }
 
+  // ── Origin check — only allow requests from our own domain ──
+  const origin = req.headers.origin || req.headers.referer || "";
+  const allowedOrigins = ["mock24hr.vercel.app", "localhost", "127.0.0.1"];
+  const isAllowed = allowedOrigins.some(o => origin.includes(o));
+  if (!isAllowed && origin) {
+    console.warn("[PAPER] Blocked cross-origin request from:", origin);
+    return res.status(403).json({ error: "Forbidden — cross-origin requests not allowed" });
+  }
+
+  // ── Rate limit per IP ──
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() 
+          || req.headers["x-real-ip"] 
+          || req.socket?.remoteAddress 
+          || "unknown";
+  if (!checkRateLimit(ip)) {
+    console.warn("[PAPER] Rate limited IP:", ip);
+    return res.status(429).json({ 
+      error: "Too many requests. Max 10 papers per 5 minutes. Please wait.",
+      retryAfter: 60 
+    });
+  }
+
+  // ── Get Gemini config at request time ──
+  const { key: GEMINI_API_KEY, url: GEMINI_URL } = getGeminiConfig();
   if (!GEMINI_API_KEY) {
     console.error("[GEMINI] GEMINI_API_KEY not found in env vars");
-    return res.status(500).json({ error: "Gemini API key not configured. Set GEMINI_API_KEY in Vercel env vars." });
+    return res.status(500).json({ error: "Gemini API key not configured." });
   }
 
   try {
