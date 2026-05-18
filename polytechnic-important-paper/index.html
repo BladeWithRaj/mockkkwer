@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Polytechnic Exam Paper Generator — BTEUP Style</title>
+  <meta name="description" content="Generate realistic UPBTE/BTEUP style polytechnic exam papers. Select branch, semester, subject and get a printable question paper instantly.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b1e;
+      --surface: #111130;
+      --surface2: #191945;
+      --accent: #7c5cfc;
+      --accent-glow: rgba(124,92,252,0.25);
+      --text: #e2e2f0;
+      --text-dim: #7878a0;
+      --border: #252550;
+      --radius: 14px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .hero {
+      text-align: center;
+      padding: 48px 20px 32px;
+      background: linear-gradient(180deg, #0f0f30 0%, var(--bg) 100%);
+    }
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #7c5cfc, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .hero p { color: var(--text-dim); font-size: 1rem; }
+
+    /* ── Form Card ── */
+    .container { max-width: 620px; margin: 0 auto; padding: 0 16px 60px; }
+
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-dim);
+      margin-bottom: 7px;
+    }
+    .form-group select {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237878a0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+      transition: border 0.2s;
+    }
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #7c5cfc, #a78bfa);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Loading ── */
+    .loading { display: none; text-align: center; padding: 48px 20px; }
+    .loading.show { display: block; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-weight: 600; color: var(--text); }
+    .loading-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+
+    /* ── Error ── */
+    .error-msg {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: #f87171;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── Paper Output ── */
+    .paper-output { display: none; }
+    .paper-output.show { display: block; }
+
+    .output-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .output-actions button {
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .output-actions button:hover { border-color: var(--accent); background: var(--surface2); }
+    .output-actions .btn-print { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .output-actions .btn-print:hover { background: #6a4de6; }
+
+    /* ── The Paper ── */
+    .paper-sheet {
+      background: #fff;
+      color: #111;
+      font-family: 'Times New Roman', 'Georgia', serif;
+      padding: 40px 36px;
+      border-radius: 4px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      max-width: 210mm;
+      margin: 0 auto;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: #fff; }
+      .hero, .form-card, .output-actions, .loading, .error-msg, .container > *:not(.paper-output) { display: none !important; }
+      .paper-output { display: block !important; }
+      .paper-sheet {
+        box-shadow: none; border-radius: 0; padding: 0;
+        margin: 0; max-width: 100%;
+        font-size: 13px; line-height: 1.65;
+      }
+    }
+    @page { size: A4; margin: 15mm; }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1>📄 Polytechnic Exam Paper Generator</h1>
+    <p>Generate realistic UPBTE / BTEUP style important papers</p>
+  </div>
+
+  <div class="container">
+    <!-- Form -->
+    <div class="form-card" id="formCard">
+      <div class="form-group">
+        <label>Branch</label>
+        <select id="branchSelect">
+          <option value="Mechanical Engineering (Automobile)">Mechanical Engineering (Automobile)</option>
+          <option value="Civil Engineering">Civil Engineering</option>
+          <option value="Electrical Engineering">Electrical Engineering</option>
+          <option value="Mechanical Engineering (Production)">Mechanical Engineering (Production)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Semester</label>
+        <select id="semesterSelect">
+          <option value="Semester 1">Semester 1</option>
+          <option value="Semester 2">Semester 2</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Subject</label>
+        <select id="subjectSelect">
+          <option value="Applied Mathematics-II">Applied Mathematics-II</option>
+        </select>
+      </div>
+      <button class="btn-generate" id="generateBtn" onclick="generatePaper()">
+        ⚡ Generate Exam Paper
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Loading -->
+    <div class="loading" id="loadingSection">
+      <div class="spinner"></div>
+      <div class="loading-text">Generating BTEUP paper...</div>
+      <div class="loading-sub">AI is crafting a realistic question paper</div>
+    </div>
+
+    <!-- Output -->
+    <div class="paper-output" id="paperOutput">
+      <div class="output-actions">
+        <button class="btn-print" onclick="window.print()">🖨️ Print Paper</button>
+        <button onclick="copyText()">📋 Copy Text</button>
+        <button onclick="generateAnother()">🔄 Generate Another</button>
+      </div>
+      <div class="paper-sheet" id="paperSheet"></div>
+    </div>
+  </div>
+
+  <script>
+    async function generatePaper() {
+      const branch = document.getElementById('branchSelect').value;
+      const semester = document.getElementById('semesterSelect').value;
+      const subject = document.getElementById('subjectSelect').value;
+      const btn = document.getElementById('generateBtn');
+      const loading = document.getElementById('loadingSection');
+      const error = document.getElementById('errorMsg');
+      const output = document.getElementById('paperOutput');
+
+      // Reset
+      error.classList.remove('show');
+      output.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      loading.classList.add('show');
+
+      try {
+        const r = await fetch('/api/generate-polytechnic-paper', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ branch, semester, subject })
+        });
+
+        const d = await r.json();
+
+        if (!r.ok || !d.success) {
+          throw new Error(d.error || 'Failed to generate paper. Please try again.');
+        }
+
+        if (!d.paper || d.paper.trim().length < 50) {
+          throw new Error('No paper generated. Please try again.');
+        }
+
+        // Render paper
+        document.getElementById('paperSheet').textContent = d.paper;
+        output.classList.add('show');
+        output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ Generate Exam Paper';
+        loading.classList.remove('show');
+      }
+    }
+
+    function copyText() {
+      const text = document.getElementById('paperSheet').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btns = document.querySelectorAll('.output-actions button');
+        btns[1].textContent = '✅ Copied!';
+        setTimeout(() => btns[1].textContent = '📋 Copy Text', 2000);
+      });
+    }
+
+    function generateAnother() {
+      document.getElementById('paperOutput').classList.remove('show');
+      document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>

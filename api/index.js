@@ -15,6 +15,7 @@ import { handleUserLogin, handleUserVerify, handleUserLogout } from "./handlers/
 import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus } from "./handlers/adminHandlers.js";
 import { handleExams } from "./handlers/examHandlers.js";
 import { handlePolytechnic } from "./handlers/polytechnicHandlers.js";
+import { handleGeneratePolytechnicPaper } from "./handlers/geminiPaperHandler.js";
 
 // ── Supabase Admin (service role) ─────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -38,7 +39,7 @@ export default async function handler(req, res) {
   if (origin) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token");
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Vary", "Origin");  // Required when origin is dynamic
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
     if (path.includes("/user-logout"))     return await handleUserLogout(supabase, req, res);
 
     // ── Polytechnic engine routes ──
+    if (path.includes("/generate-polytechnic-paper")) return await handleGeneratePolytechnicPaper(req, res);
     if (path.includes("/polytechnic"))     return await handlePolytechnic(supabase, req, res);
 
     // ── Exam config routes ──
