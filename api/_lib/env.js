@@ -11,9 +11,7 @@ const REQUIRED_ENV = [
 
 const OPTIONAL_ENV = [
   "NODE_ENV",
-  "VERCEL",
-  "GEMINI_API_KEY",
-  "ADMIN_RESET_SECRET"
+  "VERCEL"
 ];
 
 const missing = REQUIRED_ENV.filter(key => !process.env[key]);

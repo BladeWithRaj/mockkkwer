@@ -524,8 +524,22 @@
         output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (err) {
-        document.getElementById('errorText').textContent = err.message;
-        error.classList.add('show');
+        // Handle rate limit with countdown
+        if (err.message.includes('quota') || err.message.includes('wait')) {
+          document.getElementById('errorText').innerHTML = 
+            err.message + '<br><span id="countdown" style="font-size:0.8rem;opacity:0.8">Auto-retry in 60s...</span>';
+          error.classList.add('show');
+          let secs = 60;
+          const cd = setInterval(() => {
+            secs--;
+            const el = document.getElementById('countdown');
+            if (el) el.textContent = secs > 0 ? `Auto-retry in ${secs}s...` : 'Ready! Click Try Again.';
+            if (secs <= 0) clearInterval(cd);
+          }, 1000);
+        } else {
+          document.getElementById('errorText').textContent = err.message;
+          error.classList.add('show');
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = '⚡ Generate Exam Paper';

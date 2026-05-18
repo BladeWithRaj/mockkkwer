@@ -6,14 +6,8 @@
 // diversity rules, output validation + sanitization
 // ═══════════════════════════════════════════════
 
-// Read at request time, not module load — Vercel env may not be ready at cold start
-function getGeminiConfig() {
-  const key = process.env.GEMINI_API_KEY;
-  return {
-    key,
-    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
-  };
-}
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 const MAX_RETRIES = 2;
 
@@ -119,7 +113,6 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     return res.status(405).json({ error: "POST only" });
   }
 
-  const { key: GEMINI_API_KEY, url: GEMINI_URL } = getGeminiConfig();
   if (!GEMINI_API_KEY) {
     console.error("[GEMINI] GEMINI_API_KEY not found in env vars");
     return res.status(500).json({ error: "Gemini API key not configured. Set GEMINI_API_KEY in Vercel env vars." });
@@ -133,19 +126,24 @@ export async function handleGeneratePolytechnicPaper(req, res) {
       return res.status(400).json({ error: "branch, semester, and subject are required" });
     }
 
-    // Try with retries
+    // Try with retries (but NOT on rate limit errors)
     let lastError = null;
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
+        // Add delay between retries (not on first attempt)
+        if (attempt > 0) {
+          await new Promise(r => setTimeout(r, 2000 * attempt));
+        }
+
         const prompt = buildPrompt(branch, semester, subject);
-        
+
         const geminiRes = await fetch(GEMINI_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
-              temperature: attempt === 0 ? 0.6 : 0.75, // Slightly higher temp on retry
+              temperature: attempt === 0 ? 0.6 : 0.75,
               maxOutputTokens: 6000,
               topP: 0.9,
               topK: 40
@@ -155,7 +153,23 @@ export async function handleGeneratePolytechnicPaper(req, res) {
 
         if (!geminiRes.ok) {
           const errText = await geminiRes.text();
-          console.error(`[GEMINI] API error (attempt ${attempt + 1}):`, geminiRes.status, errText);
+          console.error(`[GEMINI] API error (attempt ${attempt + 1}):`, geminiRes.status, errText.substring(0, 300));
+          
+          // 429 = rate limit — DON'T retry, it wastes quota
+          if (geminiRes.status === 429) {
+            return res.status(429).json({ 
+              error: "AI generation quota exceeded. Please wait 1 minute and try again.",
+              retryAfter: 60
+            });
+          }
+          
+          // 403 = invalid key or disabled
+          if (geminiRes.status === 403) {
+            return res.status(500).json({ 
+              error: "Gemini API key is invalid or disabled. Check your API key."
+            });
+          }
+          
           lastError = `Gemini API error: ${geminiRes.status}`;
           continue;
         }
@@ -179,8 +193,8 @@ export async function handleGeneratePolytechnicPaper(req, res) {
           continue;
         }
 
-        return res.json({ 
-          success: true, 
+        return res.json({
+          success: true,
           paper: paper.trim(),
           validation: validation.valid ? "passed" : { issues: validation.issues },
           attempt: attempt + 1
@@ -193,7 +207,7 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     }
 
     // All retries exhausted
-    return res.status(502).json({ 
+    return res.status(502).json({
       error: "Failed to generate paper after multiple attempts. Please try again.",
       detail: lastError
     });
