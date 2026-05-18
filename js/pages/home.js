@@ -148,6 +148,48 @@ const HomePage = {
           </div>
         </div>
 
+        <!-- ═══ POLYTECHNIC FLAGSHIP CARD ═══ -->
+        <section class="hp-section" style="margin-top: 8px;">
+          <div class="poly-flagship" onclick="window.location.href='/polytechnic-important-paper/'" id="polytechnic-feature-card">
+            <div class="poly-flagship-glow"></div>
+            <div class="poly-flagship-chip">✨ Powered by Gemini AI</div>
+            <div class="poly-flagship-inner">
+              <div class="poly-flagship-left">
+                <div class="poly-flagship-badge">NEW</div>
+                <h2 class="poly-flagship-title">AI Polytechnic Important Paper Generator</h2>
+                <p class="poly-flagship-sub">Generate realistic BTEUP / UPBTE important papers instantly using AI.</p>
+                <div class="poly-flagship-features">
+                  <span>✓ BTEUP Pattern</span>
+                  <span>✓ Printable White Page</span>
+                  <span>✓ Important Questions</span>
+                  <span>✓ Semester-wise</span>
+                  <span>✓ One Click Generate</span>
+                </div>
+                <button class="poly-flagship-cta" onclick="event.stopPropagation(); window.location.href='/polytechnic-important-paper/'">
+                  <span>⚡ Generate Paper</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <div class="poly-flagship-right">
+                <div class="poly-flagship-visual">
+                  <div class="poly-paper-mock">
+                    <div class="poly-paper-header">BOARD OF TECHNICAL EDUCATION</div>
+                    <div class="poly-paper-subtitle">POLYTECHNIC EXAMINATION</div>
+                    <div class="poly-paper-line"></div>
+                    <div class="poly-paper-q">Q1) Attempt any ten parts... (10×1=10)</div>
+                    <div class="poly-paper-q dim">Q2) Attempt any five parts... (5×2=10)</div>
+                    <div class="poly-paper-q dim">Q3) Attempt any two parts... (2×5=10)</div>
+                    <div class="poly-paper-dots">· · ·</div>
+                  </div>
+                  <div class="poly-sparkle poly-sparkle-1">✦</div>
+                  <div class="poly-sparkle poly-sparkle-2">✦</div>
+                  <div class="poly-sparkle poly-sparkle-3">⚡</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ═══ BOARD GRID (DB-driven) ═══ -->
         <section class="hp-section" id="board-section">
           <h2 class="hp-section-title">🎯 Choose Your Board</h2>
