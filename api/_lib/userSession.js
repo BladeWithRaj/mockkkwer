@@ -20,8 +20,7 @@ export async function createUserSession(supabase, { userId, username, ip, userAg
     .from("user_sessions")
     .insert({
       user_id: userId,
-      username: username,
-      token,
+      session_token: token,
       ip_address: ip || null,
       user_agent: userAgent || null,
       expires_at: expiresAt.toISOString()
@@ -44,8 +43,8 @@ export async function verifyUserSession(supabase, token) {
 
   const { data: session, error } = await supabase
     .from("user_sessions")
-    .select("id, user_id, username, expires_at")
-    .eq("token", token)
+    .select("id, user_id, expires_at")
+    .eq("session_token", token)
     .single();
 
   if (error || !session) return { valid: false };
@@ -56,10 +55,16 @@ export async function verifyUserSession(supabase, token) {
     return { valid: false, expired: true };
   }
 
+  // Fetch username from users table
+  let username = session.user_id;
+  const { data: user } = await supabase
+    .from("users").select("username").eq("id", session.user_id).single();
+  if (user) username = user.username;
+
   return {
     valid: true,
     userId: session.user_id,
-    username: session.username,
+    username,
     sessionId: session.id
   };
 }
@@ -69,7 +74,7 @@ export async function verifyUserSession(supabase, token) {
  */
 export async function destroyUserSession(supabase, token) {
   if (!token) return;
-  await supabase.from("user_sessions").delete().eq("token", token);
+  await supabase.from("user_sessions").delete().eq("session_token", token);
 }
 
 /**

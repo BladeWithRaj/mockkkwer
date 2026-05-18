@@ -21,14 +21,14 @@ export async function handleUserLogin(supabase, req, res) {
     const userAgent = req.headers["user-agent"] || "unknown";
 
     const { data: existing } = await supabase
-      .from("users").select("id, username").eq("id", normalized).single();
+      .from("users").select("id, username").eq("username", normalized).single();
 
     let userId, displayName;
 
     if (action === "create" && !existing) {
       const { data: newUser, error: insertErr } = await supabase
         .from("users")
-        .insert([{ id: normalized, username: normalized, total_tests: 0, total_score: 0 }])
+        .insert([{ username: normalized }])
         .select().single();
 
       if (insertErr) return res.status(500).json({ error: "Could not create user: " + insertErr.message });
@@ -40,14 +40,21 @@ export async function handleUserLogin(supabase, req, res) {
     } else if (action === "login") {
       return res.status(404).json({ error: "User not found" });
     } else {
-      const { data: autoUser, error: autoErr } = await supabase
-        .from("users")
-        .upsert([{ id: normalized, username: normalized }], { onConflict: "id" })
-        .select().single();
-
-      if (autoErr) return res.status(500).json({ error: autoErr.message });
-      userId = autoUser.id;
-      displayName = autoUser.username;
+      // Auto-create: check again then insert if not found
+      const { data: check } = await supabase
+        .from("users").select("id, username").eq("username", normalized).single();
+      if (check) {
+        userId = check.id;
+        displayName = check.username;
+      } else {
+        const { data: autoUser, error: autoErr } = await supabase
+          .from("users")
+          .insert([{ username: normalized }])
+          .select().single();
+        if (autoErr) return res.status(500).json({ error: autoErr.message });
+        userId = autoUser.id;
+        displayName = autoUser.username;
+      }
     }
 
     const session = await createUserSession(supabase, { userId, username: displayName, ip, userAgent });
