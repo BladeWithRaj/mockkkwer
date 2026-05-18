@@ -6,8 +6,13 @@
 // ═══════════════════════════════════════════════
 
 import { authenticator } from "otplib";
-import * as QRCode from "qrcode";
 import crypto from "crypto";
+
+// qrcode is CommonJS — must use dynamic import in ESM
+async function generateQR(text) {
+  const QRCode = await import("qrcode");
+  return QRCode.toDataURL(text);
+}
 
 const TOKEN_EXPIRY_HOURS = 72; // 3 days
 const APP_NAME = "MockTestPro Admin";
@@ -64,7 +69,7 @@ export async function setupTOTP(supabase, adminId) {
   );
 
   // Generate QR code as data URL
-  const qrDataUrl = await QRCode.toDataURL(otpauthUrl);
+  const qrDataUrl = await generateQR(otpauthUrl);
 
   // Upsert secret (not yet verified)
   await supabase.from("admin_totp").upsert({

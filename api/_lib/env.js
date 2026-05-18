@@ -22,10 +22,9 @@ if (missing.length > 0) {
   console.error("╚══════════════════════════════════════════╝");
   missing.forEach(key => console.error(`  → ${key}`));
   console.error("\nServer CANNOT start without these. Set them in Vercel dashboard or .env.local\n");
-  // In production, throw to prevent serving broken responses
-  if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") {
-    throw new Error(`Missing required env vars: ${missing.join(", ")}`);
-  }
+  // Don't throw — handler already returns 500 with helpful message for missing supabase
+  // Throwing here kills ALL routes including health checks
+  console.error("⚠️  Server may not function correctly without these vars.");
 }
 
 // Log env status on cold start
