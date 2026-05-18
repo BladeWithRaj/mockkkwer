@@ -13,6 +13,16 @@ async function getAuthenticator() {
   if (!_authenticator) {
     const otplib = await import("otplib");
     _authenticator = otplib.authenticator || otplib.default?.authenticator;
+    
+    // ── CRITICAL FIX: Set TOTP window tolerance ──
+    // Default window=0 is too strict — Google Authenticator time drift 
+    // causes intermittent failures. window=2 allows ±60s tolerance.
+    if (_authenticator && _authenticator.options) {
+      _authenticator.options = { 
+        ...(_authenticator.options || {}),
+        window: 2 
+      };
+    }
   }
   return _authenticator;
 }
@@ -167,9 +177,28 @@ export async function verifyTOTPLogin(supabase, code, ip, userAgent) {
     return { success: false, error: "TOTP not set up. Visit setup page first.", needsSetup: true };
   }
 
-  // Verify TOTP
+  // Verify TOTP with window tolerance
   const auth = await getAuthenticator();
-  const isValid = auth.check(code, totp.secret);
+  
+  // Double-check: ensure window is set (belt + suspenders)
+  let isValid = false;
+  try {
+    isValid = auth.check(code, totp.secret);
+  } catch (verifyErr) {
+    console.error("[TOTP] Verify error:", verifyErr.message);
+    isValid = false;
+  }
+
+  // Debug logging for failed attempts (temporary — remove after stabilization)
+  if (!isValid) {
+    console.warn("[TOTP DEBUG]", {
+      inputCode: code,
+      secretExists: !!totp.secret,
+      secretLength: totp.secret?.length,
+      serverTime: new Date().toISOString(),
+      verifyResult: isValid
+    });
+  }
 
   if (!isValid) {
     const attempts = (admin.failed_attempts || 0) + 1;
@@ -228,6 +257,54 @@ export async function adminLogout(supabase, token) {
   await supabase.from("admin_users")
     .update({ session_token: null, session_expires: null })
     .eq("session_token", token);
+}
+
+/**
+ * Emergency TOTP Reset — protected by env secret.
+ * Allows re-setup if authenticator is lost/broken.
+ */
+export async function resetTOTP(supabase, resetSecret) {
+  const expectedSecret = process.env.ADMIN_RESET_SECRET;
+  
+  if (!expectedSecret) {
+    return { success: false, error: "Reset not configured. Set ADMIN_RESET_SECRET env var." };
+  }
+  
+  if (!resetSecret || resetSecret !== expectedSecret) {
+    return { success: false, error: "Invalid reset secret." };
+  }
+
+  // Get admin
+  const { data: admin } = await supabase
+    .from("admin_users")
+    .select("id, username")
+    .limit(1)
+    .single();
+
+  if (!admin) {
+    return { success: false, error: "No admin found." };
+  }
+
+  // Clear TOTP — allows fresh setup
+  await supabase.from("admin_totp")
+    .update({ setup_complete: false, enabled: false })
+    .eq("admin_id", admin.id);
+
+  // Clear any existing session
+  await supabase.from("admin_users")
+    .update({ 
+      session_token: null, session_expires: null,
+      failed_attempts: 0, banned_until: null 
+    })
+    .eq("id", admin.id);
+
+  console.warn(`[ADMIN] TOTP reset performed for ${admin.username}`);
+
+  return { 
+    success: true, 
+    message: "TOTP reset. Visit /admin to set up a new authenticator.",
+    username: admin.username
+  };
 }
 
 /**

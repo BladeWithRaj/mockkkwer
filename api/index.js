@@ -12,7 +12,7 @@ import { handleSubmit } from "./handlers/attemptHandlers.js";
 import { handleTrack, handleAnalytics } from "./handlers/trackingHandlers.js";
 import { handleLeaderboard, handleAvatar, handleProfile, handleStreak, handleWallet, handleRewards, handleProfileSummary } from "./handlers/profileHandlers.js";
 import { handleUserLogin, handleUserVerify, handleUserLogout } from "./handlers/authHandlers.js";
-import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus } from "./handlers/adminHandlers.js";
+import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus, handleAdminResetTOTP } from "./handlers/adminHandlers.js";
 import { handleExams } from "./handlers/examHandlers.js";
 import { handlePolytechnic } from "./handlers/polytechnicHandlers.js";
 import { handleGeneratePolytechnicPaper } from "./handlers/geminiPaperHandler.js";
@@ -65,6 +65,7 @@ export default async function handler(req, res) {
     if (path.includes("/admin-logout"))    return await handleAdminLogout(supabase, req, res);
     if (path.includes("/totp-status"))     return await handleTOTPStatus(supabase, req, res);
     if (path.includes("/totp-setup"))      return await handleTOTPSetup(supabase, req, res);
+    if (path.includes("/admin-reset-totp")) return await handleAdminResetTOTP(supabase, req, res);
     if (path.includes("/admin-data"))      return await handleAdminData(supabase, req, res);
 
     // ── User auth routes ──

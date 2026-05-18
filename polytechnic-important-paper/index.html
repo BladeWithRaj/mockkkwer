@@ -18,6 +18,8 @@
       --text-dim: #7878a0;
       --border: #252550;
       --radius: 14px;
+      --success: #22c55e;
+      --danger: #ef4444;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -33,6 +35,17 @@
       padding: 48px 20px 32px;
       background: linear-gradient(180deg, #0f0f30 0%, var(--bg) 100%);
     }
+    .hero-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      text-decoration: none;
+      margin-bottom: 16px;
+      transition: color 0.2s;
+    }
+    .hero-back:hover { color: var(--text); }
     .hero h1 {
       font-size: 2rem;
       font-weight: 800;
@@ -84,6 +97,25 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
+    .form-group select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .subject-hint {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+      font-style: italic;
+    }
+    .subject-hint .common-badge {
+      background: rgba(124,92,252,0.15);
+      color: var(--accent);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-style: normal;
+      font-weight: 600;
+    }
 
     .btn-generate {
       width: 100%;
@@ -101,7 +133,7 @@
     .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
     .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-    /* ── Loading ── */
+    /* ── Loading — Multi-step ── */
     .loading { display: none; text-align: center; padding: 48px 20px; }
     .loading.show { display: block; }
     .spinner {
@@ -113,8 +145,54 @@
       margin: 0 auto 14px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-text { font-weight: 600; color: var(--text); }
+    .loading-text { font-weight: 600; color: var(--text); font-size: 1rem; }
     .loading-sub { font-size: 0.85rem; color: var(--text-dim); margin-top: 4px; }
+    .loading-steps {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .loading-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      transition: all 0.4s;
+    }
+    .loading-step.active {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .loading-step.done {
+      color: var(--success);
+    }
+    .step-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--surface2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+    .loading-step.active .step-icon {
+      background: var(--accent);
+      animation: pulse 1.5s ease infinite;
+    }
+    .loading-step.done .step-icon {
+      background: var(--success);
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(124,92,252,0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(124,92,252,0); }
+    }
 
     /* ── Error ── */
     .error-msg {
@@ -122,13 +200,31 @@
       background: rgba(239,68,68,0.1);
       border: 1px solid rgba(239,68,68,0.3);
       border-radius: 10px;
-      padding: 14px 18px;
+      padding: 18px;
       color: #f87171;
       font-size: 0.9rem;
       margin-bottom: 20px;
       text-align: center;
     }
     .error-msg.show { display: block; }
+    .error-msg .error-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+    .error-retry {
+      margin-top: 12px;
+      padding: 8px 20px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      color: #f87171;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .error-retry:hover { background: rgba(239,68,68,0.25); }
 
     /* ── Paper Output ── */
     .paper-output { display: none; }
@@ -188,6 +284,7 @@
 <body>
 
   <div class="hero">
+    <a href="/" class="hero-back">← Back to Mock24hr</a>
     <h1>📄 Polytechnic Exam Paper Generator</h1>
     <p>Generate realistic UPBTE / BTEUP style important papers</p>
   </div>
@@ -197,7 +294,7 @@
     <div class="form-card" id="formCard">
       <div class="form-group">
         <label>Branch</label>
-        <select id="branchSelect">
+        <select id="branchSelect" onchange="updateSubjects()">
           <option value="Mechanical Engineering (Automobile)">Mechanical Engineering (Automobile)</option>
           <option value="Civil Engineering">Civil Engineering</option>
           <option value="Electrical Engineering">Electrical Engineering</option>
@@ -206,30 +303,49 @@
       </div>
       <div class="form-group">
         <label>Semester</label>
-        <select id="semesterSelect">
+        <select id="semesterSelect" onchange="updateSubjects()">
           <option value="Semester 1">Semester 1</option>
-          <option value="Semester 2">Semester 2</option>
+          <option value="Semester 2" selected>Semester 2</option>
         </select>
       </div>
       <div class="form-group">
         <label>Subject</label>
-        <select id="subjectSelect">
-          <option value="Applied Mathematics-II">Applied Mathematics-II</option>
+        <select id="subjectSelect" disabled>
+          <option value="">Loading subjects...</option>
         </select>
+        <div class="subject-hint" id="subjectHint"></div>
       </div>
-      <button class="btn-generate" id="generateBtn" onclick="generatePaper()">
+      <button class="btn-generate" id="generateBtn" onclick="generatePaper()" disabled>
         ⚡ Generate Exam Paper
       </button>
     </div>
 
     <!-- Error -->
-    <div class="error-msg" id="errorMsg"></div>
+    <div class="error-msg" id="errorMsg">
+      <div class="error-title">⚠️ Generation Failed</div>
+      <div id="errorText"></div>
+      <button class="error-retry" onclick="generatePaper()">🔄 Try Again</button>
+    </div>
 
-    <!-- Loading -->
+    <!-- Loading — Multi-step -->
     <div class="loading" id="loadingSection">
       <div class="spinner"></div>
-      <div class="loading-text">Generating BTEUP paper...</div>
-      <div class="loading-sub">AI is crafting a realistic question paper</div>
+      <div class="loading-text" id="loadingTitle">Generating BTEUP paper...</div>
+      <div class="loading-sub" id="loadingSub">This usually takes 8-12 seconds</div>
+      <div class="loading-steps">
+        <div class="loading-step active" id="step1">
+          <div class="step-icon">1</div>
+          <span>Analyzing syllabus & unit coverage...</span>
+        </div>
+        <div class="loading-step" id="step2">
+          <div class="step-icon">2</div>
+          <span>Generating important questions...</span>
+        </div>
+        <div class="loading-step" id="step3">
+          <div class="step-icon">3</div>
+          <span>Formatting printable paper...</span>
+        </div>
+      </div>
     </div>
 
     <!-- Output -->
@@ -244,6 +360,123 @@
   </div>
 
   <script>
+    // ── Subject Data (matches backend SYLLABUS_MAP) ──
+    const SUBJECTS = {
+      "Semester 1": [
+        { 
+          name: "Applied Mathematics-I", code: "AM-I", isCommon: true,
+          branches: ["Mechanical Engineering (Automobile)", "Civil Engineering", "Electrical Engineering", "Mechanical Engineering (Production)"],
+          desc: "Algebra, Trigonometry, Coordinate Geometry, Calculus-I"
+        },
+        {
+          name: "Applied Physics-I", code: "AP-I", isCommon: true,
+          branches: ["Mechanical Engineering (Automobile)", "Civil Engineering", "Electrical Engineering", "Mechanical Engineering (Production)"],
+          desc: "Units & Dimensions, Force, Energy, Properties of Matter, Heat"
+        },
+        {
+          name: "Applied Chemistry", code: "AC", isCommon: true,
+          branches: ["Mechanical Engineering (Automobile)", "Civil Engineering", "Electrical Engineering", "Mechanical Engineering (Production)"],
+          desc: "Atomic Structure, Fuels, Water Treatment, Polymers, Corrosion"
+        }
+      ],
+      "Semester 2": [
+        {
+          name: "Applied Mathematics-II", code: "AM-II", isCommon: true,
+          branches: ["Mechanical Engineering (Automobile)", "Civil Engineering", "Electrical Engineering", "Mechanical Engineering (Production)"],
+          desc: "Determinants, Matrices, Integral Calculus, Diff. Equations, Numerical Methods"
+        },
+        {
+          name: "Applied Physics-II", code: "AP-II", isCommon: true,
+          branches: ["Mechanical Engineering (Automobile)", "Civil Engineering", "Electrical Engineering", "Mechanical Engineering (Production)"],
+          desc: "Wave Motion, Optics, Electrostatics, Current Electricity, Modern Physics"
+        }
+      ]
+    };
+
+    // ── Populate subjects on page load ──
+    function updateSubjects() {
+      const branch = document.getElementById('branchSelect').value;
+      const semester = document.getElementById('semesterSelect').value;
+      const select = document.getElementById('subjectSelect');
+      const hint = document.getElementById('subjectHint');
+      const btn = document.getElementById('generateBtn');
+
+      const subjects = (SUBJECTS[semester] || []).filter(s => s.branches.includes(branch));
+
+      select.innerHTML = '';
+      if (subjects.length === 0) {
+        select.innerHTML = '<option value="">No subjects available</option>';
+        select.disabled = true;
+        btn.disabled = true;
+        hint.innerHTML = '';
+        return;
+      }
+
+      subjects.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = s.name;
+        select.appendChild(opt);
+      });
+
+      select.disabled = false;
+      btn.disabled = false;
+
+      // Show hint for selected subject
+      const selected = subjects[0];
+      if (selected.isCommon) {
+        hint.innerHTML = `<span class="common-badge">COMMON</span> ${selected.desc}`;
+      } else {
+        hint.innerHTML = selected.desc;
+      }
+
+      // Update hint on subject change
+      select.onchange = () => {
+        const sub = subjects.find(s => s.name === select.value);
+        if (sub) {
+          hint.innerHTML = sub.isCommon
+            ? `<span class="common-badge">COMMON</span> ${sub.desc}`
+            : sub.desc;
+        }
+      };
+    }
+
+    // Initialize on load
+    updateSubjects();
+
+    // ── Loading step animation ──
+    let stepTimer = null;
+    function startLoadingSteps() {
+      const steps = [
+        document.getElementById('step1'),
+        document.getElementById('step2'),
+        document.getElementById('step3')
+      ];
+      steps.forEach(s => { s.className = 'loading-step'; });
+      steps[0].className = 'loading-step active';
+
+      let currentStep = 0;
+      stepTimer = setInterval(() => {
+        if (currentStep < steps.length) {
+          steps[currentStep].className = 'loading-step done';
+          steps[currentStep].querySelector('.step-icon').textContent = '✓';
+        }
+        currentStep++;
+        if (currentStep < steps.length) {
+          steps[currentStep].className = 'loading-step active';
+        }
+      }, 3500);
+    }
+
+    function stopLoadingSteps() {
+      if (stepTimer) { clearInterval(stepTimer); stepTimer = null; }
+      document.querySelectorAll('.loading-step').forEach(s => {
+        s.className = 'loading-step done';
+        s.querySelector('.step-icon').textContent = '✓';
+      });
+    }
+
+    // ── Generate Paper ──
     async function generatePaper() {
       const branch = document.getElementById('branchSelect').value;
       const semester = document.getElementById('semesterSelect').value;
@@ -253,12 +486,15 @@
       const error = document.getElementById('errorMsg');
       const output = document.getElementById('paperOutput');
 
+      if (!subject) return;
+
       // Reset
       error.classList.remove('show');
       output.classList.remove('show');
       btn.disabled = true;
       btn.textContent = '⏳ Generating...';
       loading.classList.add('show');
+      startLoadingSteps();
 
       try {
         const r = await fetch('/api/generate-polytechnic-paper', {
@@ -273,9 +509,14 @@
           throw new Error(d.error || 'Failed to generate paper. Please try again.');
         }
 
-        if (!d.paper || d.paper.trim().length < 50) {
-          throw new Error('No paper generated. Please try again.');
+        if (!d.paper || d.paper.trim().length < 100) {
+          throw new Error('Generated paper was incomplete. Please try again.');
         }
+
+        stopLoadingSteps();
+
+        // Small delay for visual satisfaction
+        await new Promise(resolve => setTimeout(resolve, 600));
 
         // Render paper
         document.getElementById('paperSheet').textContent = d.paper;
@@ -283,12 +524,13 @@
         output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       } catch (err) {
-        error.textContent = err.message;
+        document.getElementById('errorText').textContent = err.message;
         error.classList.add('show');
       } finally {
         btn.disabled = false;
         btn.textContent = '⚡ Generate Exam Paper';
         loading.classList.remove('show');
+        stopLoadingSteps();
       }
     }
 

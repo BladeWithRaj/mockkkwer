@@ -3,7 +3,7 @@
 // No cookies. No CSRF. Authenticator-based.
 // ═══════════════════════════════════════════════
 
-import { verifyTOTPLogin, verifyAdminToken, adminLogout, setupTOTP, verifyTOTPSetup } from "../_lib/adminAuth.js";
+import { verifyTOTPLogin, verifyAdminToken, adminLogout, setupTOTP, verifyTOTPSetup, resetTOTP } from "../_lib/adminAuth.js";
 import { validateExamConfig } from "../_lib/examConfigValidator.js";
 import { auditLog, getAuditLogs } from "../_lib/auditLogger.js";
 import { generateQuestionHash, backfillQuestionHashes } from "../_lib/questionHash.js";
@@ -476,3 +476,21 @@ export async function handleAdminData(supabase, req, res) {
   }
 }
 
+/**
+ * Emergency TOTP Reset — protected by ADMIN_RESET_SECRET env var.
+ * POST /api/admin-reset-totp { resetSecret: "..." }
+ */
+export async function handleAdminResetTOTP(supabase, req, res) {
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  try {
+    const { resetSecret } = req.body || {};
+    if (!resetSecret) return res.status(400).json({ error: "resetSecret required" });
+
+    const result = await resetTOTP(supabase, resetSecret);
+    const status = result.success ? 200 : 403;
+    return res.status(status).json(result);
+  } catch (err) {
+    console.error("[ADMIN RESET TOTP] Crash:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+}
