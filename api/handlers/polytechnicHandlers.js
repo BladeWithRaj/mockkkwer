@@ -143,16 +143,19 @@ async function handleQuestions(supabase, req, res) {
   if (req.method === "POST") {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
 
+    // Handle both single and batch inserts
+    const isArray = Array.isArray(body);
+    const items = isArray ? body : [body];
+
     // Ensure moderation_status defaults to pending
-    if (!body.moderation_status) body.moderation_status = "pending";
+    items.forEach(item => { if (!item.moderation_status) item.moderation_status = "pending"; });
 
     const { data, error } = await supabase
       .from("polytechnic_questions")
-      .insert(body)
-      .select()
-      .single();
+      .insert(items)
+      .select("id");
     if (error) return res.status(400).json({ error: error.message });
-    return res.json({ success: true, question: data });
+    return res.json({ success: true, imported: data?.length || 0, question: isArray ? undefined : data?.[0] });
   }
 
   // Bulk approve/reject
