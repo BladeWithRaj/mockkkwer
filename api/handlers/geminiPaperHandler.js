@@ -190,11 +190,13 @@ export async function handleGeneratePolytechnicPaper(req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { branch, semester, subject } = body || {};
+    const { branch, semester, subject, language } = body || {};
 
     if (!branch || !semester || !subject) {
       return res.status(400).json({ error: "branch, semester, and subject are required" });
     }
+
+    const lang = (language || 'english').toLowerCase();
 
     // Try with retries (but NOT on rate limit errors)
     let lastError = null;
@@ -205,7 +207,7 @@ export async function handleGeneratePolytechnicPaper(req, res) {
           await new Promise(r => setTimeout(r, 2000 * attempt));
         }
 
-        const prompt = buildPrompt(branch, semester, subject);
+        const prompt = buildPrompt(branch, semester, subject, lang);
 
         const geminiRes = await fetch(GEMINI_URL, {
           method: "POST",
@@ -273,7 +275,7 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     if (GROQ_KEY) {
       console.log("[PAPER] Gemini failed, trying Groq fallback...");
       try {
-        const prompt = buildPrompt(branch, semester, subject);
+        const prompt = buildPrompt(branch, semester, subject, lang);
 
         const groqRes = await fetch(GROQ_URL, {
           method: "POST",
@@ -327,7 +329,7 @@ export async function handleGeneratePolytechnicPaper(req, res) {
     if (DEEPSEEK_KEY) {
       console.log("[PAPER] Groq also failed, trying DeepSeek fallback...");
       try {
-        const prompt = buildPrompt(branch, semester, subject);
+        const prompt = buildPrompt(branch, semester, subject, lang);
 
         const dsRes = await fetch(DEEPSEEK_URL, {
           method: "POST",
@@ -395,7 +397,8 @@ export async function handleGeneratePolytechnicPaper(req, res) {
  * - Dynamic syllabus per subject
  * - Diversity rules
  */
-function buildPrompt(branch, semester, subject) {
+function buildPrompt(branch, semester, subject, language = 'english') {
+  const isHindi = language === 'hindi';
   const syllabus = SYLLABUS_MAP[subject];
   const unitList = syllabus
     ? syllabus.units.map((u, i) => `  ${u}`).join("\n")
@@ -487,6 +490,18 @@ STRICT QUALITY RULES:
    - Keep exactly the structure shown above
    - Do NOT add explanations, hints, or answer keys
    - Do NOT add any text before or after the paper
+
+${isHindi ? `7. LANGUAGE — HINDI MEDIUM:
+   - Write ALL question text in Hindi (Devanagari script).
+   - The HEADER (Board name, branch, semester, time, marks, notes) should remain in ENGLISH.
+   - Mathematical symbols, formulas, equations, variables (x, y, z, A, B, etc.) stay in English/Unicode math notation.
+   - Technical terms can be written in Hindi with English in brackets. Example: "अवकल समीकरण (Differential Equation)"
+   - Question numbering (Q1, Q2, (a), (b)) stays in English.
+   - Marks pattern stays in English: (10 × 1 = 10)
+   - Instructions like "Attempt any ten parts" should be in Hindi: "निम्नलिखित में से किन्हीं दस भागों को हल करें"
+   - Example Hindi question: "(a) अवकलज ज्ञात करें: y = x² + 3x + 5"
+   - Example Hindi question: "(b) आव्यूह A = [[1,2],[3,4]] का सारणिक ज्ञात करें।"
+` : ''}
 
 GENERATE THE COMPLETE PAPER NOW:`;
 }

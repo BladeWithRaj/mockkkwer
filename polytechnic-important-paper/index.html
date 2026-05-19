@@ -117,6 +117,44 @@
       font-weight: 600;
     }
 
+    /* Language Toggle */
+    .lang-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--surface2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .lang-btn {
+      flex: 1;
+      padding: 11px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+    .lang-btn:hover:not(.active) {
+      background: rgba(124,92,252,0.1);
+      color: var(--text);
+    }
+    .lang-hint {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
     .btn-generate {
       width: 100%;
       padding: 16px;
@@ -293,6 +331,14 @@
     <!-- Form -->
     <div class="form-card" id="formCard">
       <div class="form-group">
+        <label>📝 Paper Language</label>
+        <div class="lang-toggle">
+          <button type="button" class="lang-btn active" id="langEn" onclick="setLang('english')">🇬🇧 English</button>
+          <button type="button" class="lang-btn" id="langHi" onclick="setLang('hindi')">🇮🇳 हिन्दी (Hindi)</button>
+        </div>
+        <div class="lang-hint" id="langHint">Paper will be generated in English</div>
+      </div>
+      <div class="form-group">
         <label>Branch</label>
         <select id="branchSelect" onchange="updateSubjects()">
           <option value="Mechanical Engineering (Automobile)">Mechanical Engineering (Automobile)</option>
@@ -360,6 +406,18 @@
   </div>
 
   <script>
+    // ── Language state ──
+    let selectedLang = 'english';
+
+    function setLang(lang) {
+      selectedLang = lang;
+      document.getElementById('langEn').classList.toggle('active', lang === 'english');
+      document.getElementById('langHi').classList.toggle('active', lang === 'hindi');
+      document.getElementById('langHint').textContent = lang === 'hindi'
+        ? 'पेपर हिन्दी में जनरेट होगा'
+        : 'Paper will be generated in English';
+    }
+
     // ── Subject Data (matches backend SYLLABUS_MAP) ──
     const SUBJECTS = {
       "Semester 1": [
@@ -497,10 +555,11 @@
       startLoadingSteps();
 
       try {
+        const language = selectedLang || 'english';
         const r = await fetch('/api/generate-polytechnic-paper', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branch, semester, subject })
+          body: JSON.stringify({ branch, semester, subject, language })
         });
 
         const d = await r.json();
