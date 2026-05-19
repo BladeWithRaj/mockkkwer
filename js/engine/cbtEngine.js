@@ -37,6 +37,15 @@ const CBTEngine = {
     // Start inactivity monitor
     this._startInactivityMonitor();
 
+    // Anti-refresh protection (beforeunload)
+    this._beforeUnloadHandler = (e) => {
+      if (!this._active) return;
+      e.preventDefault();
+      e.returnValue = 'Your examination is in progress. Are you sure you want to leave? Your answers may be lost.';
+      return e.returnValue;
+    };
+    window.addEventListener('beforeunload', this._beforeUnloadHandler);
+
     // Fullscreen change listener
     document.addEventListener('fullscreenchange', this._onFullscreenChange);
 
@@ -54,6 +63,11 @@ const CBTEngine = {
     this._active = false;
     if (this._inactivityTimer) clearInterval(this._inactivityTimer);
     this._removeStatusBar();
+    // Remove anti-refresh
+    if (this._beforeUnloadHandler) {
+      window.removeEventListener('beforeunload', this._beforeUnloadHandler);
+      this._beforeUnloadHandler = null;
+    }
     document.removeEventListener('fullscreenchange', this._onFullscreenChange);
     document.removeEventListener('visibilitychange', this._onVisibilityChange);
     document.removeEventListener('mousemove', this._onActivity);
