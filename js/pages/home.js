@@ -181,7 +181,9 @@ const HomePage = {
                 </button>
               </div>
               <div class="hp5-poly-right">
-                <div class="hp5-poly-visual">
+                <div class="hp5-poly-visual" style="position:relative">
+                  <div style="position:absolute;top:-8px;right:-8px;font-size:16px;animation:hp5pulse 2s infinite">✨</div>
+                  <div style="position:absolute;bottom:-6px;left:-6px;font-size:14px;animation:hp5pulse 2s .5s infinite">💫</div>
                   <div class="hp5-poly-paper">
                     <div class="hp5-pp-header">BOARD OF TECHNICAL EDUCATION</div>
                     <div class="hp5-pp-sub">POLYTECHNIC EXAMINATION</div>

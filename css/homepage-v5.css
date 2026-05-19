@@ -59,13 +59,14 @@
 .hp5-poly-cta { padding: 11px 24px; background: linear-gradient(135deg, #7C3AED, #4F6EF7); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; box-shadow: 0 4px 14px rgba(124,58,237,.25); }
 .hp5-poly-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,58,237,.35); }
 .hp5-poly-right { flex-shrink: 0; }
-.hp5-poly-paper { width: 200px; padding: 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; transform: rotate(2deg); transition: transform .3s; }
-.hp5-poly:hover .hp5-poly-paper { transform: rotate(0); }
-.hp5-pp-header { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); text-align: center; margin-bottom: 3px; }
-.hp5-pp-sub { font-size: 8px; text-align: center; color: var(--text-muted); opacity: .6; margin-bottom: 8px; }
-.hp5-pp-line { height: 1px; background: var(--border-color); margin-bottom: 8px; }
-.hp5-pp-q { font-size: 10px; color: var(--text-secondary); margin-bottom: 5px; line-height: 1.4; }
-.hp5-pp-q.dim { opacity: .35; }
+.hp5-poly-visual { position: relative; }
+.hp5-poly-paper { width: 200px; padding: 18px; background: #FAFBFC; border: 1px solid #E2E8F0; border-radius: 8px; transform: rotate(2deg); transition: transform .3s; box-shadow: 0 4px 16px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.1); }
+.hp5-poly:hover .hp5-poly-paper { transform: rotate(0); box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.hp5-pp-header { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #1E293B; text-align: center; margin-bottom: 2px; }
+.hp5-pp-sub { font-size: 8px; text-align: center; color: #7C3AED; font-weight: 600; letter-spacing: .04em; margin-bottom: 8px; text-decoration: underline; }
+.hp5-pp-line { height: 1px; background: #CBD5E1; margin-bottom: 8px; }
+.hp5-pp-q { font-size: 10px; color: #334155; margin-bottom: 5px; line-height: 1.4; }
+.hp5-pp-q.dim { opacity: .4; }
 
 /* Board Cards — Premium with visible depth */
 .hp5-board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
