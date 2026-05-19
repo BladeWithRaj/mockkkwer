@@ -25,6 +25,15 @@ function getGroqConfig() {
   };
 }
 
+// DeepSeek fallback — last resort if both Gemini & Groq fail
+function getDeepSeekConfig() {
+  const key = process.env.DEEPSEEK_API_KEY;
+  return {
+    key,
+    url: "https://api.deepseek.com/chat/completions"
+  };
+}
+
 const MAX_RETRIES = 2;
 
 // ── IP-based rate limiter — protect Gemini quota from abuse ──
@@ -313,7 +322,61 @@ export async function handleGeneratePolytechnicPaper(req, res) {
       }
     }
 
-    // All providers exhausted
+    // ── DeepSeek Fallback — last resort ──────────────────────
+    const { key: DEEPSEEK_KEY, url: DEEPSEEK_URL } = getDeepSeekConfig();
+    if (DEEPSEEK_KEY) {
+      console.log("[PAPER] Groq also failed, trying DeepSeek fallback...");
+      try {
+        const prompt = buildPrompt(branch, semester, subject);
+
+        const dsRes = await fetch(DEEPSEEK_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${DEEPSEEK_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert BTEUP Polytechnic paper setter. Follow all formatting instructions exactly. Output plain text only, no markdown."
+              },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.65,
+            max_tokens: 6000
+          })
+        });
+
+        if (dsRes.ok) {
+          const dsData = await dsRes.json();
+          let paper = dsData?.choices?.[0]?.message?.content || "";
+
+          if (paper && paper.trim().length >= 100) {
+            paper = sanitizePaper(paper);
+            const validation = validatePaper(paper);
+
+            console.log("[PAPER] ✅ Generated via DeepSeek fallback");
+            return res.json({
+              success: true,
+              paper: paper.trim(),
+              validation: validation.valid ? "passed" : { issues: validation.issues },
+              provider: "deepseek-fallback"
+            });
+          } else {
+            console.warn("[DEEPSEEK] Paper too short:", paper?.length || 0);
+          }
+        } else {
+          const errText = await dsRes.text();
+          console.error("[DEEPSEEK] Fallback API error:", dsRes.status, errText.substring(0, 300));
+        }
+      } catch (dsErr) {
+        console.error("[DEEPSEEK] Fallback error:", dsErr.message);
+      }
+    }
+
+    // All 3 providers exhausted
     return res.status(502).json({
       error: "Failed to generate paper after multiple attempts. Please try again.",
       detail: lastError
