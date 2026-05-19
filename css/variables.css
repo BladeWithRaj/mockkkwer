@@ -2,7 +2,7 @@
    MOCK TEST PLATFORM — Design Tokens
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
   /* ── Colors (PRD v2 — multi-layered dark) ── */
@@ -50,8 +50,8 @@
   --text-accent: #6B8AFF;
 
   /* ── Typography ── */
-  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-heading: 'Syne', 'Outfit', 'Inter', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
