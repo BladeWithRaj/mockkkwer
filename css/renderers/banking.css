@@ -6,6 +6,7 @@
 
 .ibps-mode {
   --ibps-blue: #1A237E;
+  --ibps-blue-dark: #0D1642;
   --ibps-blue-light: #E8EAF6;
   --ibps-surface: #FFFFFF;
   --ibps-bg: #ECEFF1;
@@ -21,14 +22,22 @@
   font-family: 'Segoe UI', Roboto, Arial, sans-serif !important;
   font-size: 14px; min-height: 100vh;
   -webkit-user-select: none; user-select: none;
+  /* Subtle grid pattern for enterprise feel */
+  background-image:
+    linear-gradient(rgba(26,35,126,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26,35,126,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 .ibps-header {
-  background: var(--ibps-blue); color: white;
+  background: linear-gradient(180deg, #283593 0%, #1A237E 100%);
+  color: white;
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 16px; font-size: 13px;
   position: sticky; top: 0; z-index: 100;
-  border-bottom: 2px solid #0D1642;
+  border-bottom: 3px solid var(--ibps-blue-dark);
+  min-height: 48px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 .ibps-header-left { display: flex; align-items: center; gap: 12px; }
 .ibps-header-right { display: flex; align-items: center; gap: 10px; }

@@ -29,11 +29,11 @@ const RailwayRenderer = {
     <div class="rrb-mode" id="rrb-container">
       <div class="rrb-header">
         <div class="rrb-header-left">
-          <span class="rrb-logo">🚂 Railway Recruitment Board</span>
-          <span class="rrb-exam-name">${preset.fullName || preset.name}</span>
+          <span class="rrb-logo">🚂 Indian Railways</span>
+          <span class="rrb-exam-name">Railway Recruitment Board — ${preset.fullName || preset.name}</span>
         </div>
         <div class="rrb-header-right">
-          <span class="rrb-candidate">${this._getCandidateName()} | Roll: ${this._getCandidateRoll()}</span>
+          <span class="rrb-candidate">Candidate: ${this._getCandidateName()} | Roll: ${this._getCandidateRoll()}</span>
           <span class="rrb-profile-photo">👤</span>
         </div>
       </div>

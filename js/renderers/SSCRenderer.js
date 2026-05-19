@@ -37,6 +37,19 @@ const SSCRenderer = {
     return boards.includes(preset.category);
   },
 
+  // ── Dynamic org branding based on category ──
+  _getOrgInfo() {
+    const preset = this._getPreset();
+    const cat = preset?.category || 'SSC';
+    const map = {
+      'SSC':      { icon: '📋', name: 'Staff Selection Commission', short: 'SSC' },
+      'Defence':  { icon: '🎖️', name: 'Ministry of Defence', short: 'MoD' },
+      'State':    { icon: '🏛️', name: 'State Public Service Commission', short: 'SPSC' },
+      'Teaching': { icon: '📚', name: 'Central Teacher Eligibility Test', short: 'CTET' }
+    };
+    return map[cat] || map['SSC'];
+  },
+
   // ── Bilingual question text rendering ──
   _renderQuestionText(q) {
     const mode = typeof Lang !== 'undefined' ? Lang.questionLang : 'en';
@@ -91,15 +104,16 @@ const SSCRenderer = {
       ? `<li><strong>Negative Marking:</strong> ${preset.negativeValue} marks will be deducted for each wrong answer.</li>`
       : `<li>There is <strong>NO negative marking</strong> in this exam.</li>`;
 
+    const org = this._getOrgInfo();
     return `
     <div class="ssc-mode" id="ssc-container">
       <!-- TCS iON Header -->
       <div class="ssc-header">
         <div class="ssc-header-left">
           <div class="ssc-header-logo">
-            <div class="ssc-logo-icon">📋</div>
+            <div class="ssc-logo-icon">${org.icon}</div>
             <div class="ssc-logo-text">
-              <span class="ssc-org-name">Staff Selection Commission</span>
+              <span class="ssc-org-name">${org.name}</span>
               <span class="ssc-exam-subtitle">${preset.fullName || preset.name}</span>
             </div>
           </div>
@@ -245,9 +259,10 @@ const SSCRenderer = {
       <div class="ssc-header">
         <div class="ssc-header-left">
           <div class="ssc-header-logo">
-            <div class="ssc-logo-icon">📋</div>
+            <div class="ssc-logo-icon">${this._getOrgInfo().icon}</div>
             <div class="ssc-logo-text">
-              <span class="ssc-org-name">${preset ? (preset.fullName || preset.name) : 'Mock Test'}</span>
+              <span class="ssc-org-name">${this._getOrgInfo().name}</span>
+              <span class="ssc-exam-subtitle">${preset ? (preset.fullName || preset.name) : 'Mock Test'}</span>
             </div>
           </div>
         </div>

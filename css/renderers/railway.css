@@ -5,10 +5,11 @@
    ============================================ */
 
 .rrb-mode {
-  --rrb-green: #2E7D32;
-  --rrb-green-dark: #1B5E20;
+  --rrb-green: #1B5E20;
+  --rrb-green-dark: #0A3D0A;
   --rrb-green-light: #E8F5E9;
-  --rrb-header-bg: #2E7D32;
+  --rrb-green-mid: #2E7D32;
+  --rrb-header-bg: linear-gradient(180deg, #2E7D32 0%, #1B5E20 100%);
   --rrb-surface: #FFFFFF;
   --rrb-bg: #ECEFF1;
   --rrb-border: #B0BEC5;
@@ -24,6 +25,11 @@
   font-size: 14px;
   min-height: 100vh;
   -webkit-user-select: none; user-select: none;
+  /* Subtle rail-track pattern */
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 150px,
+    rgba(27,94,32,0.015) 150px, rgba(27,94,32,0.015) 152px
+  );
 }
 
 .rrb-header {
@@ -32,8 +38,9 @@
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 16px; font-size: 13px;
   position: sticky; top: 0; z-index: 100;
-  border-bottom: 2px solid var(--rrb-green-dark);
-  min-height: 42px;
+  border-bottom: 3px solid var(--rrb-green-dark);
+  min-height: 48px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 .rrb-header-left { display: flex; align-items: center; gap: 12px; }
 .rrb-header-right { display: flex; align-items: center; gap: 10px; }
