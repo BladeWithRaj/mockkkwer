@@ -2,31 +2,33 @@
    MOCK TEST PLATFORM — Design Tokens
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap');
 
 :root {
-  /* ── Colors ── */
-  --bg-primary: #060a13;
-  --bg-secondary: #0c1222;
-  --bg-surface: #111a2e;
-  --bg-card: rgba(17, 26, 46, 0.7);
-  --bg-card-hover: rgba(25, 38, 66, 0.8);
+  /* ── Colors (PRD v1) ── */
+  --bg-primary: #0A0B0F;
+  --bg-secondary: #111318;
+  --bg-surface: #1A1D26;
+  --bg-card: rgba(26, 29, 38, 0.85);
+  --bg-card-hover: rgba(35, 39, 52, 0.9);
   --bg-glass: rgba(255, 255, 255, 0.04);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  --border-color: rgba(255, 255, 255, 0.06);
+  --border-color: #2A2D3A;
   --border-light: rgba(255, 255, 255, 0.06);
-  --border-active: rgba(59, 130, 246, 0.4);
+  --border-active: rgba(79, 110, 247, 0.5);
 
   /* Accent */
-  --primary: #3B82F6;
-  --primary-light: #60A5FA;
-  --primary-dark: #2563EB;
+  --primary: #4F6EF7;
+  --primary-light: #6B8AFF;
+  --primary-dark: #3B5CE0;
   --secondary: #8B5CF6;
   --secondary-light: #A78BFA;
-  --accent-gradient: linear-gradient(135deg, #3B82F6, #8B5CF6);
-  --accent-gradient-hover: linear-gradient(135deg, #60A5FA, #A78BFA);
-  --accent-glow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.15);
+  --accent: #FF8C00;
+  --accent-light: #FFB347;
+  --accent-gradient: linear-gradient(135deg, #4F6EF7, #8B5CF6);
+  --accent-gradient-hover: linear-gradient(135deg, #6B8AFF, #A78BFA);
+  --accent-glow: 0 0 20px rgba(79, 110, 247, 0.3), 0 0 60px rgba(139, 92, 246, 0.15);
 
   /* Semantic */
   --success: #10B981;
@@ -42,14 +44,14 @@
   --info-bg: rgba(6, 182, 212, 0.1);
 
   /* Text */
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-accent: #60A5FA;
+  --text-primary: #F1F3F9;
+  --text-secondary: #8B92A5;
+  --text-muted: #4A5068;
+  --text-accent: #6B8AFF;
 
   /* ── Typography ── */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-heading: 'Outfit', 'Inter', sans-serif;
+  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-heading: 'Syne', 'Outfit', 'Inter', sans-serif;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;

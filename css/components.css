@@ -155,7 +155,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: rgba(6, 10, 19, 0.85);
+  background: rgba(10, 11, 15, 0.88);
   backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border-color);
   height: var(--header-height);
