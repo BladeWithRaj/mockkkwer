@@ -1,9 +1,10 @@
 // ═══════════════════════════════════════════════
-// POLYTECHNIC PAPER GENERATOR — Gemini AI
+// POLYTECHNIC PAPER GENERATOR — Gemini AI + Groq Fallback
 // POST /api/generate-polytechnic-paper
 // 
 // Hardened: strict structure, real sample context,
 // diversity rules, output validation + sanitization
+// Fallback: Gemini → Groq (if Gemini fails/rate-limited)
 // ═══════════════════════════════════════════════
 
 // Read at request time, not module load — Vercel env may not be ready at cold start
@@ -12,6 +13,15 @@ function getGeminiConfig() {
   return {
     key,
     url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
+  };
+}
+
+// Groq fallback — used when Gemini is rate-limited or unavailable
+function getGroqConfig() {
+  const key = process.env.GROQ_API_KEY;
+  return {
+    key,
+    url: "https://api.groq.com/openai/v1/chat/completions"
   };
 }
 
@@ -257,7 +267,61 @@ export async function handleGeneratePolytechnicPaper(req, res) {
       }
     }
 
-    // All retries exhausted
+    // ── Groq Fallback — try if Gemini exhausted ──────────────
+    const { key: GROQ_KEY, url: GROQ_URL } = getGroqConfig();
+    if (GROQ_KEY) {
+      console.log("[PAPER] Gemini failed, trying Groq fallback...");
+      try {
+        const prompt = buildPrompt(branch, semester, subject);
+
+        const groqRes = await fetch(GROQ_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${GROQ_KEY}`
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-oss-120b",
+            messages: [
+              {
+                role: "system",
+                content: "You are an expert BTEUP Polytechnic paper setter. Follow all formatting instructions exactly. Output plain text only, no markdown."
+              },
+              { role: "user", content: prompt }
+            ],
+            temperature: 0.65,
+            max_tokens: 6000
+          })
+        });
+
+        if (groqRes.ok) {
+          const groqData = await groqRes.json();
+          let paper = groqData?.choices?.[0]?.message?.content || "";
+
+          if (paper && paper.trim().length >= 100) {
+            paper = sanitizePaper(paper);
+            const validation = validatePaper(paper);
+
+            console.log("[PAPER] ✅ Generated via Groq fallback");
+            return res.json({
+              success: true,
+              paper: paper.trim(),
+              validation: validation.valid ? "passed" : { issues: validation.issues },
+              provider: "groq-fallback"
+            });
+          } else {
+            console.warn("[GROQ] Paper too short:", paper?.length || 0);
+          }
+        } else {
+          const errText = await groqRes.text();
+          console.error("[GROQ] Fallback API error:", groqRes.status, errText.substring(0, 300));
+        }
+      } catch (groqErr) {
+        console.error("[GROQ] Fallback error:", groqErr.message);
+      }
+    }
+
+    // All providers exhausted
     return res.status(502).json({
       error: "Failed to generate paper after multiple attempts. Please try again.",
       detail: lastError
