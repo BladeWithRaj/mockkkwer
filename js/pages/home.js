@@ -167,14 +167,14 @@ const HomePage = {
             <div class="hp5-poly-glow"></div>
             <div class="hp5-poly-inner">
               <div class="hp5-poly-left">
-                <div class="hp5-poly-badge">🆕 NEW FEATURE</div>
-                <h2 class="hp5-poly-title">Polytechnic Exam Paper Generator</h2>
-                <p class="hp5-poly-desc">Generate realistic BTEUP / UPBTE important papers instantly. AI-powered, exam-pattern matched.</p>
+                <div class="hp5-poly-badge">📄 BTEUP AUTHENTIC</div>
+                <h2 class="hp5-poly-title">Mathematics-II Paper Generator</h2>
+                <p class="hp5-poly-desc">Real BTEUP format · 60 Marks · Part A-D · All units covered · Print-ready A4</p>
                 <div class="hp5-poly-chips">
-                  <span>✓ BTEUP Pattern</span>
-                  <span>✓ Printable</span>
-                  <span>✓ Important Questions</span>
-                  <span>✓ Semester-wise</span>
+                  <span>✓ Real BTEUP Format</span>
+                  <span>✓ 60 Marks Paper</span>
+                  <span>✓ Hindi / English</span>
+                  <span>✓ Print Ready</span>
                 </div>
                 <button class="hp5-poly-cta" onclick="event.stopPropagation(); window.location.href='/polytechnic-important-paper/'">
                   Generate Paper →
@@ -186,11 +186,12 @@ const HomePage = {
                   <div style="position:absolute;bottom:-6px;left:-6px;font-size:14px;animation:hp5pulse 2s .5s infinite">💫</div>
                   <div class="hp5-poly-paper">
                     <div class="hp5-pp-header">BOARD OF TECHNICAL EDUCATION</div>
-                    <div class="hp5-pp-sub">POLYTECHNIC EXAMINATION</div>
+                    <div class="hp5-pp-sub">MATHEMATICS-II</div>
                     <div class="hp5-pp-line"></div>
-                    <div class="hp5-pp-q">Q1. Attempt any ten parts ···(10×1=10)</div>
-                    <div class="hp5-pp-q dim">Q2. Attempt any five parts ···(5×2=10)</div>
-                    <div class="hp5-pp-q dim">Q3. Attempt any two parts ···(2×5=10)</div>
+                    <div class="hp5-pp-q">Part A ··· 10 × 1 = 10</div>
+                    <div class="hp5-pp-q dim">Part B ··· 5 × 2 = 10</div>
+                    <div class="hp5-pp-q dim">Part C ··· 8 × 2½ = 20</div>
+                    <div class="hp5-pp-q dim">Part D ··· 4 × 5 = 20</div>
                   </div>
                 </div>
               </div>
