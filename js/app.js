@@ -217,10 +217,6 @@ const App = {
     // Avatar: emoji-based (no Clerk image)
     const avatarHTML = `<span class="header-user-emoji">👤</span>`;
 
-    // Gamification data for header
-    const coins = window.Gamification ? Gamification.getCoins() : 0;
-    const level = window.Gamification && Gamification.getTier ? Gamification.getTier() : { level: 1, title: 'Beginner', icon: '🌱', progress: 0 };
-
     return `
       <header class="header">
         <div class="header-inner">
@@ -235,31 +231,14 @@ const App = {
           </a>
           <nav class="header-nav">
             ${isTest ? '' : `
-              <a href="#home" class="${activePage === 'home' ? 'active' : ''}">${Lang.t('nav_home')}</a>
-              <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">${Lang.t('nav_new_test')}</a>
-              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">${Lang.t('nav_dashboard')}</a>
-              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">${Lang.t('nav_leaderboard')}</a>
+              <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
+              <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
+              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
             `}
-
-            <!-- Coins Display -->
-            ${!isTest ? `
-            <div class="coin-display" onclick="App.navigate('profile')" title="Your Coins">
-              <span class="coin-display-icon">💰</span>
-              <span class="coin-display-value">${coins}</span>
-            </div>
-            <div class="xp-display" title="${level.title} — Tier ${level.level}/5">
-              <span class="xp-level-badge">${level.icon || '🌱'} ${level.level}</span>
-              <div class="xp-bar-wrap">
-                <div class="xp-bar-fill" style="width:${level.progress}%"></div>
-              </div>
-            </div>
-            ` : ''}
 
             <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'}">
               ${ThemeManager.isDark() ? '🌙' : '☀️'}
-            </button>
-            <button class="lang-toggle-btn" title="Switch Language">
-              🌐 ${Lang.isHindi() ? 'EN' : 'हिंदी'}
             </button>
 
             <!-- User Profile -->
