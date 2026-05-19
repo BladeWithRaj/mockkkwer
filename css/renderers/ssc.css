@@ -748,7 +748,59 @@
   justify-content: center;
   font-size: 10px;
   flex-shrink: 0;
+  border: 1px solid var(--ssc-border-light);
+  color: white;
+  font-weight: 600;
 }
+.ssc-dot-not-visited {
+  background: #FAFAFA;
+  border-color: var(--ssc-border);
+  color: #757575;
+}
+.ssc-dot-not-answered {
+  background: var(--ssc-red);
+  border-color: var(--ssc-red);
+}
+.ssc-dot-answered {
+  background: var(--ssc-green);
+  border-color: var(--ssc-green);
+}
+.ssc-dot-marked {
+  background: var(--ssc-purple);
+  border-color: var(--ssc-purple);
+}
+.ssc-dot-marked-answered {
+  background: var(--ssc-purple);
+  border-color: var(--ssc-purple);
+  position: relative;
+}
+.ssc-dot-marked-answered::after {
+  content: '✓';
+  position: absolute;
+  bottom: -3px; right: -3px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--ssc-green);
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+}
+
+/* Legend dots in test palette */
+.ssc-legend-dot {
+  width: 22px; height: 22px;
+  border-radius: 2px;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
+  color: white;
+  border: 1px solid transparent;
+}
+.ssc-legend-dot.ssc-dot-not-visited { background: #FAFAFA; border-color: var(--ssc-border); color: #757575; }
+.ssc-legend-dot.ssc-dot-not-answered { background: var(--ssc-red); }
+.ssc-legend-dot.ssc-dot-answered { background: var(--ssc-green); }
+.ssc-legend-dot.ssc-dot-marked { background: var(--ssc-purple); }
+.ssc-legend-dot.ssc-dot-marked-answered { background: var(--ssc-purple); }
 
 /* Instruction table */
 .ssc-inst-table {
