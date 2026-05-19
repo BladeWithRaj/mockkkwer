@@ -5,16 +5,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@600;700;800&display=swap');
 
 :root {
-  /* ── Colors (PRD v1) ── */
-  --bg-primary: #0A0B0F;
-  --bg-secondary: #111318;
-  --bg-surface: #1A1D26;
-  --bg-card: rgba(26, 29, 38, 0.85);
-  --bg-card-hover: rgba(35, 39, 52, 0.9);
+  /* ── Colors (PRD v2 — multi-layered dark) ── */
+  --bg-primary: #0F172A;
+  --bg-secondary: #141C2F;
+  --bg-surface: #1E293B;
+  --bg-card: rgba(30, 41, 59, 0.9);
+  --bg-card-hover: rgba(42, 55, 76, 0.95);
   --bg-glass: rgba(255, 255, 255, 0.04);
   --bg-glass-hover: rgba(255, 255, 255, 0.08);
 
-  --border-color: #2A2D3A;
+  --border-color: #334155;
   --border-light: rgba(255, 255, 255, 0.06);
   --border-active: rgba(79, 110, 247, 0.5);
 

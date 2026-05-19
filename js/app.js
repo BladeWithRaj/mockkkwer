@@ -213,9 +213,8 @@ const App = {
     const isTest = activePage === 'test';
     const user = Auth.getUser();
     const userName = user?.name || user?.username || Storage.getUsername() || 'User';
-
-    // Avatar: emoji-based (no Clerk image)
-    const avatarHTML = `<span class="header-user-emoji">👤</span>`;
+    const coins = window.Gamification ? Gamification.getCoins() : 0;
+    const streak = window.DailySystem ? DailySystem.getStreak() : { current: 0 };
 
     return `
       <header class="header">
@@ -229,41 +228,68 @@ const App = {
             </div>
             <span class="brand-text">Mock<span class="brand-accent">24hr</span></span>
           </a>
+
           <nav class="header-nav">
             ${isTest ? '' : `
-              <a href="#home" class="${activePage === 'home' ? 'active' : ''}">Home</a>
-              <a href="#setup" class="${activePage === 'setup' ? 'active' : ''}">New Test</a>
-              <a href="#dashboard" class="${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
-              <a href="#leaderboard" class="${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
+              <a href="#home" class="nav-link ${activePage === 'home' ? 'active' : ''}">Home</a>
+              <a href="#setup" class="nav-link ${activePage === 'setup' ? 'active' : ''}">Practice</a>
+              <a href="#dashboard" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+              <a href="#leaderboard" class="nav-link ${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
+            `}
+          </nav>
+
+          <div class="header-actions">
+            ${isTest ? '' : `
+            <!-- Rewards Widget -->
+            <div class="rewards-widget" id="rewards-widget">
+              <button class="rewards-trigger" onclick="App._toggleRewards()">
+                <span class="rw-streak ${streak.current > 0 ? 'active' : ''}">🔥 ${streak.current}</span>
+                <span class="rw-sep"></span>
+                <span class="rw-coins">💰 ${coins}</span>
+              </button>
+              <div class="rewards-dropdown" id="rewards-dropdown">
+                <div class="rw-drop-item">
+                  <span class="rw-drop-icon">🔥</span>
+                  <div>
+                    <div class="rw-drop-label">Streak</div>
+                    <div class="rw-drop-value">${streak.current} days</div>
+                  </div>
+                </div>
+                <div class="rw-drop-item">
+                  <span class="rw-drop-icon">💰</span>
+                  <div>
+                    <div class="rw-drop-label">Coins</div>
+                    <div class="rw-drop-value">${coins}</div>
+                  </div>
+                </div>
+                <div class="rw-drop-divider"></div>
+                <a href="#profile" class="rw-drop-link">View Rewards →</a>
+              </div>
+            </div>
             `}
 
-            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'}">
+            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Light Mode' : 'Dark Mode'}">
               ${ThemeManager.isDark() ? '🌙' : '☀️'}
             </button>
 
-            <!-- User Profile -->
             <div class="header-user-menu">
               <button class="header-user-btn" onclick="App._toggleUserMenu()" title="${userName}">
-                ${avatarHTML}
-                <span class="header-user-name">${userName.split(' ')[0]}</span>
+                <span class="header-avatar">${userName.charAt(0).toUpperCase()}</span>
               </button>
               <div class="header-user-dropdown" id="user-dropdown">
                 <div class="dropdown-user-info">
-                  ${avatarHTML}
+                  <span class="dropdown-avatar">${userName.charAt(0).toUpperCase()}</span>
                   <div>
                     <div class="dropdown-name">${userName}</div>
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
-                <button class="dropdown-item" onclick="App.navigate('profile')">
-                  👤 Profile & Rewards
-                </button>
-                <button class="dropdown-item dropdown-signout" onclick="Auth.signOut()">
-                  🚪 Sign Out
-                </button>
+                <button class="dropdown-item" onclick="App.navigate('profile')">Profile & Rewards</button>
+                <button class="dropdown-item" onclick="App.navigate('dashboard')">My Dashboard</button>
+                <button class="dropdown-item dropdown-signout" onclick="Auth.signOut()">Sign Out</button>
               </div>
             </div>
-          </nav>
+          </div>
         </div>
       </header>
     `;
@@ -272,11 +298,30 @@ const App = {
   _toggleUserMenu() {
     const dd = document.getElementById('user-dropdown');
     if (dd) dd.classList.toggle('open');
-    // Close on outside click
+    // Close rewards if open
+    document.getElementById('rewards-dropdown')?.classList.remove('open');
     if (dd?.classList.contains('open')) {
       setTimeout(() => {
         const close = (e) => {
           if (!e.target.closest('.header-user-menu')) {
+            dd.classList.remove('open');
+            document.removeEventListener('click', close);
+          }
+        };
+        document.addEventListener('click', close);
+      }, 10);
+    }
+  },
+
+  _toggleRewards() {
+    const dd = document.getElementById('rewards-dropdown');
+    if (dd) dd.classList.toggle('open');
+    // Close user menu if open
+    document.getElementById('user-dropdown')?.classList.remove('open');
+    if (dd?.classList.contains('open')) {
+      setTimeout(() => {
+        const close = (e) => {
+          if (!e.target.closest('.rewards-widget')) {
             dd.classList.remove('open');
             document.removeEventListener('click', close);
           }

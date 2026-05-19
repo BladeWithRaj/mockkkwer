@@ -3,10 +3,10 @@
 /* Hero */
 .hp5-hero{position:relative;padding:80px 24px 48px;text-align:center;overflow:hidden}
 .hp5-hero-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.hp5-hero-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;animation:hp5float 8s ease-in-out infinite}
-.hp5-orb-1{width:500px;height:500px;background:#3B82F6;top:-150px;left:-100px}
+.hp5-hero-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.12;animation:hp5float 8s ease-in-out infinite}
+.hp5-orb-1{width:500px;height:500px;background:#4F6EF7;top:-150px;left:-100px}
 .hp5-orb-2{width:400px;height:400px;background:#8B5CF6;top:-80px;right:-80px;animation-delay:2s}
-.hp5-orb-3{width:300px;height:300px;background:#06B6D4;bottom:-60px;left:40%;animation-delay:4s}
+.hp5-orb-3{width:300px;height:300px;background:#FF8C00;bottom:-60px;left:40%;animation-delay:4s}
 .hp5-hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px}
 .hp5-hero-content{position:relative;max-width:720px;margin:0 auto}
 @keyframes hp5float{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,-20px)}}
@@ -21,9 +21,9 @@
 .hp5-subtitle{font-size:clamp(15px,2vw,18px);color:var(--text-secondary);line-height:1.65;max-width:560px;margin:0 auto 32px;animation:hp5up .6s .2s ease both}
 
 .hp5-hero-actions{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;animation:hp5up .6s .3s ease both}
-.hp5-btn-glow{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:linear-gradient(135deg,#3B82F6,#7C3AED);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;box-shadow:0 4px 20px rgba(59,130,246,.35),0 0 40px rgba(124,58,237,.15);position:relative;overflow:hidden}
-.hp5-btn-glow::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#60A5FA,#A78BFA);opacity:0;transition:opacity .25s}
-.hp5-btn-glow:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(59,130,246,.45),0 0 60px rgba(124,58,237,.2)}
+.hp5-btn-glow{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:linear-gradient(135deg,#4F6EF7,#8B5CF6);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all .25s;box-shadow:0 4px 20px rgba(79,110,247,.35),0 0 40px rgba(139,92,246,.15);position:relative;overflow:hidden}
+.hp5-btn-glow::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#6B8AFF,#A78BFA);opacity:0;transition:opacity .25s}
+.hp5-btn-glow:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(79,110,247,.45),0 0 60px rgba(139,92,246,.2)}
 .hp5-btn-glow:hover::before{opacity:1}
 .hp5-btn-glow>*{position:relative;z-index:1}
 .hp5-btn-glass{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:var(--bg-glass);color:var(--text-primary);border:1px solid var(--border-color);border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;backdrop-filter:blur(12px)}
@@ -147,10 +147,11 @@
 .hp5-footer-bottom{text-align:center;margin-top:36px;padding-top:24px;border-top:1px solid var(--border-color);max-width:1140px;margin-left:auto;margin-right:auto;font-size:12px;color:var(--text-muted)}
 
 /* Light theme tweaks */
-[data-theme="light"] .hp5-hero-orb{opacity:.08}
+[data-theme="light"] .hp5-hero-orb{opacity:.06}
 [data-theme="light"] .hp5-hero-grid{background-image:linear-gradient(rgba(0,0,0,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.03) 1px,transparent 1px)}
 [data-theme="light"] .hp5-board-card:hover{box-shadow:0 12px 32px rgba(0,0,0,.06),0 0 0 1px var(--bc)}
-[data-theme="light"] .hp5-poly{background:linear-gradient(135deg,rgba(59,130,246,.04),rgba(139,92,246,.06))}
+[data-theme="light"] .hp5-poly{background:linear-gradient(135deg,rgba(79,110,247,.04),rgba(139,92,246,.06))}
+[data-theme="light"] .header{background:rgba(255,255,255,.92)}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:768px){
