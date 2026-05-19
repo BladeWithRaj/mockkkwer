@@ -1,0 +1,160 @@
+/* ============================================
+   CBT ENGINE — System UI Styles
+   Status bar, popups, connection indicators
+   Intentionally "government system" aesthetic
+   ============================================ */
+
+/* ── Status Bar (below header) ── */
+.cbt-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 16px;
+  background: #E8E8E8;
+  border-bottom: 1px solid #BDBDBD;
+  font-size: 11px;
+  font-family: Arial, 'Segoe UI', sans-serif;
+  color: #616161;
+  min-height: 22px;
+  user-select: none;
+}
+
+/* Connection indicator */
+.cbt-conn-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cbt-conn-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.cbt-conn-dot.online {
+  background: #2E7D32;
+  box-shadow: 0 0 3px #2E7D32;
+}
+.cbt-conn-dot.offline {
+  background: #C62828;
+  box-shadow: 0 0 3px #C62828;
+}
+.cbt-conn-dot.reconnecting {
+  background: #E65100;
+  animation: cbt-blink 0.8s infinite;
+}
+.cbt-conn-text {
+  font-size: 11px;
+  color: #616161;
+}
+
+/* Autosave indicator */
+.cbt-autosave-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cbt-save-text {
+  font-size: 11px;
+  color: #757575;
+}
+.cbt-save-text.saving {
+  color: #E65100;
+  font-weight: 600;
+}
+.cbt-save-text.saved {
+  color: #2E7D32;
+  font-weight: 600;
+}
+.cbt-save-text.warning-flash {
+  color: #C62828;
+  font-weight: 700;
+  animation: cbt-flash 0.5s ease 3;
+}
+
+/* Spinner */
+.cbt-save-spinner {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 2px solid #E65100;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: cbt-spin 0.6s linear infinite;
+}
+
+@keyframes cbt-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes cbt-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes cbt-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── System Popups (inactivity, fullscreen) ── */
+.cbt-system-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cbt-system-popup-box {
+  background: #FAFAFA;
+  border: 2px solid #424242;
+  border-radius: 4px;
+  padding: 28px 36px;
+  max-width: 420px;
+  text-align: center;
+  font-family: Arial, 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.cbt-system-popup-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.cbt-system-popup-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #212121;
+  margin-bottom: 10px;
+}
+.cbt-system-popup-text {
+  font-size: 13px;
+  color: #424242;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+.cbt-system-popup-btn {
+  display: inline-block;
+  padding: 8px 24px;
+  background: #1565C0;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 4px;
+}
+.cbt-system-popup-btn:hover {
+  background: #0D47A1;
+}
+.cbt-system-popup-btn-secondary {
+  display: block;
+  margin: 8px auto 0;
+  padding: 6px 16px;
+  background: transparent;
+  color: #757575;
+  border: 1px solid #BDBDBD;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.cbt-system-popup-btn-secondary:hover {
+  background: #EEEEEE;
+}

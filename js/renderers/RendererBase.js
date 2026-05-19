@@ -72,6 +72,7 @@ const RendererBase = {
     this._currentSectionIdx = 0;
     this._lockedSections.clear();
     if (typeof ExamProctor !== 'undefined') ExamProctor.start();
+    if (typeof CBTEngine !== 'undefined') CBTEngine.start();
     const container = document.getElementById('app');
     if (container) {
       const html = TestPage.render();

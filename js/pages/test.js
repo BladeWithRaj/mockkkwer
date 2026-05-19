@@ -285,6 +285,8 @@ const TestPage = {
     if (this._keyHandler) {
       document.removeEventListener('keydown', this._keyHandler);
     }
+    // Stop CBT Engine
+    if (typeof CBTEngine !== 'undefined') CBTEngine.stop();
     // Reset board color
     document.documentElement.style.removeProperty('--exam-color');
     // Exit fullscreen
@@ -342,6 +344,11 @@ const TestPage = {
         CBTRenderer.updateTimer(result, TestEngine.state.totalTime);
       }
 
+      // CBT Engine: check for warning beeps at thresholds
+      if (typeof CBTEngine !== 'undefined' && CBTEngine.isActive()) {
+        CBTEngine.checkTimerWarnings(result, TestEngine.state.totalTime);
+      }
+
       if (timerDisplay) {
         const totalTime = TestEngine.state.totalTime;
         const percentLeft = result / totalTime;
@@ -379,6 +386,11 @@ const TestPage = {
     this.refreshQuestion();
     this.refreshNav();
     this._updateProgress();
+
+    // CBT Engine: show "Saving answer..." feedback
+    if (typeof CBTEngine !== 'undefined' && CBTEngine.isActive()) {
+      CBTEngine.showSaving();
+    }
 
     // Gamification: track combo for correct answers (approximate)
     this._trackAnswerForGamification(index);
