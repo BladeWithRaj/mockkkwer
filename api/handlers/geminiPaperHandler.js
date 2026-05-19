@@ -216,19 +216,11 @@ export async function handleGeneratePolytechnicPaper(req, res) {
           const errText = await geminiRes.text();
           console.error(`[GEMINI] API error (attempt ${attempt + 1}):`, geminiRes.status, errText.substring(0, 300));
           
-          // 429 = rate limit — DON'T retry, it wastes quota
-          if (geminiRes.status === 429) {
-            return res.status(429).json({ 
-              error: "AI generation quota exceeded. Please wait 1 minute and try again.",
-              retryAfter: 60
-            });
-          }
-          
-          // 403 = invalid key or disabled
-          if (geminiRes.status === 403) {
-            return res.status(500).json({ 
-              error: "Gemini API key is invalid or disabled. Check your API key."
-            });
+          // 429 = rate limit / 403 = invalid key — skip retries, go to Groq fallback
+          if (geminiRes.status === 429 || geminiRes.status === 403) {
+            lastError = `Gemini ${geminiRes.status}: ${geminiRes.status === 429 ? "rate limited" : "key invalid"}`;
+            console.warn(`[GEMINI] ${lastError} — switching to Groq fallback`);
+            break; // Exit retry loop → fall through to Groq
           }
           
           lastError = `Gemini API error: ${geminiRes.status}`;
