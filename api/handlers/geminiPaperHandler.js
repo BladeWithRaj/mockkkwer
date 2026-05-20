@@ -1,11 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// BTEUP PAPER GENERATOR — Production-Grade Engine v2
+// BTEUP PAPER GENERATOR — Production-Grade Engine v3
 // POST /api/generate-polytechnic-paper
 //
 // Architecture: Blueprint → Pattern → AI Filling → Renderer
-// Modes: important | board_pattern | pyq_weighted | pass_guaranteed
-// Languages: english | hindi (separate prompts — NOT translation)
+// Providers:   Gemini (premium) | Groq (fast) | Mistral (structured)
+// Routing:     providerRouter.js — cost-optimized per subject+section
+// Modes:       important | board_pattern | pyq_weighted | pass_guaranteed
+// Languages:   english | hindi (separate prompts — NOT translation)
 // ═══════════════════════════════════════════════════════════════
+
+import { routeToProvider, getProviderStatus } from '../providers/providerRouter.js';
 
 // ── Generation Mode Modifiers ──
 // Each mode injects specific behavioral instructions into the AI prompt.
@@ -37,29 +41,9 @@ const MODE_MODIFIERS = {
   }
 };
 
-const MAX_RETRIES = 3;
 const RATE_WINDOW_MS = 5 * 60 * 1000;
 const RATE_MAX = 10;
 const rateBuckets = {};
-
-// ── Provider Configs ──
-function getGeminiConfig() {
-  const key = process.env.GEMINI_API_KEY;
-  return {
-    key,
-    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
-  };
-}
-
-function getGroqConfig() {
-  const key = process.env.GROQ_API_KEY;
-  return { key, url: "https://api.groq.com/openai/v1/chat/completions" };
-}
-
-function getDeepSeekConfig() {
-  const key = process.env.DEEPSEEK_API_KEY;
-  return { key, url: "https://api.deepseek.com/v1/chat/completions" };
-}
 
 // ── Rate Limiter ──
 function checkRateLimit(ip) {
@@ -500,210 +484,27 @@ GENERATE NOW:`;
 
 
 // ═══════════════════════════════════════════════════════════════
-// AI CALLER — Calls Gemini with JSON mode
+// AI CALLER — Delegates to providerRouter.js
+// All provider logic lives in api/providers/ — never add inline callers here.
+// Cost routing: premium subjects (maths/physics) → Gemini first
+//               theory subjects (EVS/IT/Workshop) → Groq/Mistral first
 // ═══════════════════════════════════════════════════════════════
 
-async function callGeminiJSON(prompt, maxTokens, temperature = 0.6) {
-  const { key, url } = getGeminiConfig();
-  if (!key) throw new Error("GEMINI_API_KEY not configured");
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        maxOutputTokens: maxTokens,
-        topP: 0.9,
-        topK: 40,
-        responseMimeType: "application/json"
-      }
-    })
+async function callAIWithFallback(prompt, maxTokens, temperature = 0.6, context = {}) {
+  const result = await routeToProvider(prompt, {
+    subjectNamespace: context.subjectNamespace || 'general',
+    sectionKey:       context.sectionKey       || 'general',
+    maxTokens,
+    temperature
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Gemini ${res.status}: ${errText.substring(0, 200)}`);
-  }
-
-  const data = await res.json();
-  const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  if (!rawText || rawText.trim().length < 20) {
-    throw new Error("Gemini returned empty/short response");
-  }
-
-  // Parse JSON — Gemini with responseMimeType should return clean JSON
-  try {
-    return JSON.parse(rawText);
-  } catch (e) {
-    // Try to extract JSON from response if wrapped in text
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-    throw new Error(`JSON parse failed: ${rawText.substring(0, 100)}`);
-  }
-}
-
-async function callGroqJSON(prompt, maxTokens) {
-  const { key, url } = getGroqConfig();
-  if (!key) {
-    console.warn('[GROQ] No GROQ_API_KEY configured');
-    return null;
-  }
-
-  // Try multiple Groq models — each has its own separate daily quota pool
-  // NOTE: mixtral-8x7b-32768 and llama3-8b-8192 are RETIRED (Feb 2025) — do not use
-  const groqModels = [
-    'llama-3.1-8b-instant',          // Primary: very high free limits (6000 TPM, 500k TPD)
-    'llama3-groq-8b-8192-tool-use-preview', // Separate pool, reliable fallback
-    'gemma2-9b-it',                  // Google model on Groq, independent quota
-    'llama-3.3-70b-versatile',       // High quality, lower TPD — last resort
-  ];
-
-  for (const model of groqModels) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No explanations. No markdown code blocks." },
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.6,
-          max_tokens: Math.min(maxTokens, 4000)
-        })
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        console.warn(`[GROQ] ${model} HTTP ${res.status}:`, errText.substring(0, 200));
-        // 400=bad req, 401=key issue, 402=billing, 429=quota, 503=overload → try next model
-        continue;
-      }
-
-      const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content || "";
-      if (!text || text.length < 10) { console.warn(`[GROQ] ${model} empty response`); continue; }
-
-      // Extract JSON — handle markdown code blocks and raw JSON
-      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ||
-                        text.match(/(\{[\s\S]*\})/);
-      const raw = jsonMatch ? (jsonMatch[1] || jsonMatch[0]).trim() : text.trim();
-      const parsed = JSON.parse(raw);
-      console.log(`[GROQ] Success via model: ${model}`);
-      return parsed;
-
-    } catch (e) {
-      console.warn(`[GROQ] ${model} error:`, e.message.substring(0, 100));
-      continue;
-    }
-  }
-
-  console.error('[GROQ] All models exhausted (llama-3.1-8b-instant, groq-8b, gemma2, llama-3.3-70b)');
-  return null;
-}
-
-async function callDeepSeekJSON(prompt, maxTokens) {
-  const { key, url } = getDeepSeekConfig();
-  if (!key) {
-    console.warn('[DEEPSEEK] No DEEPSEEK_API_KEY configured');
-    return null;
-  }
-
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No markdown, no explanations." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.6,
-        max_tokens: maxTokens,
-        response_format: { type: "json_object" }  // DeepSeek supports this
-      })
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(`[DEEPSEEK] HTTP ${res.status}:`, errText.substring(0, 200));
-      return null;
-    }
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    if (!text || text.length < 10) {
-      console.warn('[DEEPSEEK] Empty response text');
-      return null;
-    }
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    return JSON.parse(jsonMatch ? jsonMatch[0] : text);
-  } catch (e) {
-    console.error("[DEEPSEEK] Failed:", e.message);
-    return null;
-  }
-}
-
-// ── Smart 3-provider AI caller ──
-// Strategy: Gemini (best quality) → Groq (fast, high limits) → DeepSeek (backup)
-// 429 quota errors: SKIP immediately to next provider (no wasted retries)
-// 5xx/network errors: retry up to MAX_RETRIES within same provider
-async function callAIWithFallback(prompt, maxTokens, temperature = 0.6) {
-  const providers = [
-    { name: 'Gemini', fn: () => callGeminiJSON(prompt, maxTokens, temperature) },
-    { name: 'Groq',   fn: () => callGroqJSON(prompt, maxTokens) },
-    { name: 'DeepSeek', fn: () => callDeepSeekJSON(prompt, maxTokens) }
-  ];
-
-  let lastError = null;
-
-  for (const provider of providers) {
-    try {
-      const result = await provider.fn();
-      if (result) {
-        console.log(`[AI] Success via ${provider.name}`);
-        return result;
-      }
-      console.warn(`[AI] ${provider.name} returned null, trying next provider...`);
-    } catch (err) {
-      lastError = err;
-      const is429 = err.message.includes('429');
-      const is503 = err.message.includes('503') || err.message.includes('overloaded');
-
-      if (is429) {
-        // Quota exhausted — skip immediately to next provider
-        console.warn(`[AI] ${provider.name} QUOTA EXHAUSTED (429), switching provider...`);
-        continue;
-      }
-
-      if (is503) {
-        // Service overloaded — brief wait then try next
-        console.warn(`[AI] ${provider.name} overloaded, switching provider...`);
-        await new Promise(r => setTimeout(r, 1000));
-        continue;
-      }
-
-      // Other error (network, parse) — log and try next provider
-      console.error(`[AI] ${provider.name} error:`, err.message.substring(0, 100));
-      continue;
-    }
-  }
-
-  throw new Error(
-    lastError
-      ? `All AI providers failed. Last error: ${lastError.message.substring(0, 150)}`
-      : 'All AI providers returned null or empty response'
-  );
+  // routeToProvider throws if all cascade providers fail
+  return result.content;
 }
 
 // ═══════════════════════════════════════════════════════════════
 // VALIDATORS — Strict schema validation per section
 // ═══════════════════════════════════════════════════════════════
+
 
 function validateMathSection(key, data, expectedCount) {
   const questions = data?.questions;
@@ -918,8 +719,11 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
             });
           }
 
-          // Smart fallback: Gemini → Groq → DeepSeek
-          const result = await callAIWithFallback(prompt, section.maxTokens, temperature);
+          // Smart fallback via providerRouter (cost-optimized: premium subjects → Gemini, theory → Groq/Mistral)
+          const result = await callAIWithFallback(prompt, section.maxTokens, temperature, {
+            subjectNamespace: subject.prompt_namespace || 'general',
+            sectionKey: section.key
+          });
 
           // Validate result
           const validation = validateSection(subject.renderer_type, section.key, result, section.count);
