@@ -554,11 +554,12 @@ async function callGroqJSON(prompt, maxTokens) {
   }
 
   // Try multiple Groq models — each has its own separate daily quota pool
+  // NOTE: mixtral-8x7b-32768 and llama3-8b-8192 are RETIRED (Feb 2025) — do not use
   const groqModels = [
-    'llama-3.1-8b-instant',   // Very high free limits (separate pool)
-    'mixtral-8x7b-32768',     // Good quality, separate quota
-    'gemma2-9b-it',           // Google model on Groq, separate quota
-    'llama3-8b-8192',         // Last resort fallback
+    'llama-3.1-8b-instant',          // Primary: very high free limits (6000 TPM, 500k TPD)
+    'llama3-groq-8b-8192-tool-use-preview', // Separate pool, reliable fallback
+    'gemma2-9b-it',                  // Google model on Groq, independent quota
+    'llama-3.3-70b-versatile',       // High quality, lower TPD — last resort
   ];
 
   for (const model of groqModels) {
@@ -579,9 +580,9 @@ async function callGroqJSON(prompt, maxTokens) {
 
       if (!res.ok) {
         const errText = await res.text();
-        console.warn(`[GROQ] ${model} HTTP ${res.status}:`, errText.substring(0, 150));
-        if (res.status === 429 || res.status === 503) continue; // quota — try next model
-        return null;
+        console.warn(`[GROQ] ${model} HTTP ${res.status}:`, errText.substring(0, 200));
+        // 400=bad req, 401=key issue, 402=billing, 429=quota, 503=overload → try next model
+        continue;
       }
 
       const data = await res.json();
@@ -602,7 +603,7 @@ async function callGroqJSON(prompt, maxTokens) {
     }
   }
 
-  console.error('[GROQ] All 4 models exhausted');
+  console.error('[GROQ] All models exhausted (llama-3.1-8b-instant, groq-8b, gemma2, llama-3.3-70b)');
   return null;
 }
 
