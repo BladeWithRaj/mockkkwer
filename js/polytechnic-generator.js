@@ -6,7 +6,7 @@
       {
         id: 1, name: 'Mathematics-II', code: '4201', renderer: 'PATTERN_MATH', marks: 60,
         topics: ['Determinants','Matrices','Differential Calculus','Integral Calculus','Differential Equations','Coordinate Geometry','Vector Algebra'],
-        profile: { style: 'symbolic', keyVerbs: ['Find','Solve','Evaluate','Prove','Derive'], repetitionExpected: true },
+        profile: { style: 'symbolic', keyVerbs: ['Find','Solve','Evaluate','Prove','Derive'] },
         pattern: [
           { part: 'Part A', type: 'Objective (MCQ + Fill + True/False)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
           { part: 'Part B', type: 'Very Short Answer (Numericals)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
@@ -23,8 +23,8 @@
       },
       {
         id: 2, name: 'Fundamentals of Electrical & Electronics Engg.', code: '4209', renderer: 'PATTERN_FEEE', marks: 60,
-        topics: ['DC Circuits','Kirchhoff Laws','Electromagnetic Induction','AC Circuits','Transformers','Induction Motors','PN Junction','MOSFET','Logic Gates','CRO'],
-        profile: { style: 'descriptive', keyVerbs: ['Explain','Differentiate','Write notes on','State and explain','Describe'], repetitionExpected: true },
+        topics: ['DC Circuits','Kirchhoff Laws','EM Induction','AC Circuits','Transformers','Induction Motors','PN Junction','MOSFET','Logic Gates','CRO'],
+        profile: { style: 'descriptive', keyVerbs: ['Explain','Differentiate','State and explain','Draw and explain'] },
         pattern: [
           { part: 'Q.1', type: 'DC Circuits & Magnetic Circuits', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
           { part: 'Q.2', type: 'AC Circuits', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
@@ -39,6 +39,114 @@
           { no: 3, name: 'Electrical Machines', weight: 22 },
           { no: 4, name: 'Electronic Devices', weight: 22 },
           { no: 5, name: 'Digital Electronics', weight: 18 }
+        ]
+      },
+      {
+        id: 3, name: 'Applied Physics-II', code: '4202', renderer: 'PATTERN_GENERAL', marks: 60, optional: false,
+        topics: ['Wave Motion','Ultrasonics','Optics & Laser','Electrostatics','Current Electricity','Electromagnetism','Semiconductor Physics'],
+        profile: { style: 'mixed', keyVerbs: ['Define','Derive','Calculate','Explain','State and prove'], numericalPct: 40 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/1-word)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Definitions/Short notes)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Theory + Diagrams)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long / Numerical Problems', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Wave Motion & Acoustics', weight: 22 },
+          { no: 2, name: 'Optics (TIR, Optical Fiber, LASER)', weight: 22 },
+          { no: 3, name: 'Electrostatics & Current Electricity', weight: 20 },
+          { no: 4, name: 'Electromagnetism', weight: 18 },
+          { no: 5, name: 'Semiconductor Physics', weight: 18 }
+        ]
+      },
+      {
+        id: 4, name: 'Introduction to IT Systems', code: '4203', renderer: 'PATTERN_GENERAL', marks: 60, optional: false,
+        topics: ['Computer Basics','Hardware','Operating Systems','MS Office','Internet','Networking','Cyber Security','E-Commerce'],
+        profile: { style: 'descriptive', keyVerbs: ['Define','Differentiate','Explain','List','Write short note on'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Expand)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Definitions/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Theory + Block diagrams)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Theory / Practical Usage', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Computer Fundamentals & Hardware', weight: 22 },
+          { no: 2, name: 'Operating System & Software', weight: 20 },
+          { no: 3, name: 'MS Office Applications', weight: 18 },
+          { no: 4, name: 'Networking & Internet', weight: 20 },
+          { no: 5, name: 'Cyber Security & E-Commerce', weight: 20 }
+        ]
+      },
+      {
+        id: 5, name: 'Engineering Mechanics', code: '4204', renderer: 'PATTERN_GENERAL', marks: 60, optional: false,
+        topics: ['Force System','Resultants','Moments','Equilibrium','Friction','Centroid','Moment of Inertia','Simple Machines'],
+        profile: { style: 'numerical', keyVerbs: ['Find','Calculate','Determine','State and prove','Derive'], numericalPct: 50 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Define)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Derivations/Definitions)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Numerical Problems (Medium)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long Numericals & Theory', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Force System & Resultants', weight: 22 },
+          { no: 2, name: 'Moments & Equilibrium', weight: 22 },
+          { no: 3, name: 'Friction', weight: 18 },
+          { no: 4, name: 'Centroid & Moment of Inertia', weight: 20 },
+          { no: 5, name: 'Simple Lifting Machines', weight: 18 }
+        ]
+      },
+      {
+        id: 6, name: 'Environmental Sciences', code: '4205', renderer: 'PATTERN_GENERAL', marks: 60, optional: false,
+        topics: ['Ecosystem','Pollution','Global Warming','Ozone Depletion','Renewable Energy','Waste Management','Biodiversity','Sustainable Development'],
+        profile: { style: 'descriptive', keyVerbs: ['Define','Explain','What are causes of','Write short note on','Differentiate'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Define)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Causes/Effects/Definitions)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Pollution/Environment)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Theory / Environmental Issues', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Environment & Ecosystem', weight: 20 },
+          { no: 2, name: 'Pollution (Air/Water/Soil/Noise)', weight: 25 },
+          { no: 3, name: 'Global Environmental Issues', weight: 20 },
+          { no: 4, name: 'Natural Resources & Energy', weight: 18 },
+          { no: 5, name: 'Waste Management & Sustainability', weight: 17 }
+        ]
+      },
+      {
+        id: 7, name: 'Engineering Workshop Practice', code: '4206', renderer: 'PATTERN_GENERAL', marks: 60, optional: true,
+        topics: ['Carpentry','Fitting','Welding','Smithy','Foundry','Machine Tools','Workshop Safety'],
+        profile: { style: 'practical', keyVerbs: ['Name','State','Explain','Draw and label','Differentiate'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (Tool ID/True-False/Fill)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Safety/Tools/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Processes with diagrams)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Process / Workshop Operations', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Carpentry & Wood Working', weight: 20 },
+          { no: 2, name: 'Fitting & Sheet Metal', weight: 22 },
+          { no: 3, name: 'Welding', weight: 22 },
+          { no: 4, name: 'Smithy & Foundry', weight: 18 },
+          { no: 5, name: 'Machine Tools & Safety', weight: 18 }
+        ]
+      },
+      {
+        id: 8, name: 'Engineering Graphics', code: '4207', renderer: 'PATTERN_GENERAL', marks: 60, optional: true,
+        topics: ['Drawing Instruments','Scales','Projection of Points','Orthographic Projection','Isometric Projection','Sectional Views','Projection of Solids'],
+        profile: { style: 'graphical', keyVerbs: ['Draw','Construct','Project','Find the true shape','Determine'], numericalPct: 10 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (Definitions/True-False/Fill)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Theory/RF/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Drawing Problems (Projections)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long Drawing Problems (Ortho/Isometric)', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Introduction & Scales', weight: 18 },
+          { no: 2, name: 'Projection of Points & Lines', weight: 20 },
+          { no: 3, name: 'Orthographic Projection', weight: 25 },
+          { no: 4, name: 'Isometric Projection', weight: 22 },
+          { no: 5, name: 'Projection of Solids & Sections', weight: 15 }
         ]
       }
     ]
@@ -98,7 +206,9 @@
     (SUBJECTS_DB[`semester${sem}`] || []).forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = `${s.name} (${s.code}) — ${s.marks} Marks`;
+      opt.textContent = s.optional
+        ? `${s.name} [Optional] (${s.code}) — ${s.marks} Marks`
+        : `${s.name} (${s.code}) — ${s.marks} Marks`;
       opt.dataset.subject = JSON.stringify(s);
       sel.appendChild(opt);
     });
@@ -343,6 +453,8 @@
       sheet.innerHTML = renderMathPaper(data.subject, data.branch, data.sections, data.language);
     } else if (data.subject?.renderer_type === 'PATTERN_FEEE') {
       sheet.innerHTML = renderFEEEPaper(data.subject, data.branch, data.sections, data.language);
+    } else if (data.subject?.renderer_type === 'PATTERN_GENERAL') {
+      sheet.innerHTML = renderGeneralPaper(data.subject, data.branch, data.sections, data.language);
     }
 
     if (meta) {
@@ -510,6 +622,76 @@
       </div>`;
 
     return getPaperHeader(subject, branch, lang) + questionsHTML + `
+      <div class="bteup-footer">
+        <span class="bteup-page-num">(2)</span>
+        <span>— × —</span>
+        <span></span>
+      </div>
+      </div>`;
+  }
+
+  // ════════════════════════════════════════════════════════
+  // PATTERN_GENERAL renderer — Physics, IT, Mechanics, Env, Workshop, Graphics
+  // Structure: Section A (10×1) + B (7×2) + C (5×4) + D (5×6) = 60 marks
+  // ════════════════════════════════════════════════════════
+  function renderGeneralPaper(subject, branch, sections, lang) {
+    const isHindi = lang === 'hindi';
+
+    // Render a single question <li>
+    function renderQ(q, num, showMarks, showOptions) {
+      const text = isHindi ? (q.hi || q.en) : q.en;
+      let html = `<li><span class="q-num">${num}.</span><span class="q-body">${esc(text)}`;
+      if (showOptions && q.type === 'mcq' && q.options && q.options.length) {
+        html += `<div class="q-options">`;
+        q.options.forEach((o, i) => {
+          html += `<span>(${String.fromCharCode(97+i)}) ${esc(String(o))}</span>`;
+        });
+        html += `</div>`;
+      }
+      html += `</span>`;
+      if (showMarks && q.marks) html += `<span class="q-marks">[${q.marks} M]</span>`;
+      html += `</li>`;
+      return html;
+    }
+
+    const secA = sections.secA?.questions || [];
+    const secB = sections.secB?.questions || [];
+    const secC = sections.secC?.questions || [];
+    const secD = sections.secD?.questions || [];
+
+    const iH = isHindi;
+
+    return getPaperHeader(subject, branch, lang) + `
+      <div class="bteup-part-header">SECTION – A — अति लघुत्तरीय प्रश्न</div>
+      <div class="bteup-part-meta">
+        <span>${iH ? 'सभी प्रश्न अनिवार्य हैं।' : 'All questions are compulsory.'}</span>
+        <span>10 × 1 = 10</span>
+      </div>
+      <ol class="bteup-questions">${secA.map((q,i) => renderQ(q, i+1, false, true)).join('')}</ol>
+
+      <div class="bteup-pto">[ P.T.O. ]</div>
+
+      <div class="bteup-part-header">SECTION – B — लघुत्तरीय प्रश्न</div>
+      <div class="bteup-part-meta">
+        <span>${iH ? 'किन्हीं पाँच प्रश्नों के उत्तर दीजिए।' : 'Attempt any FIVE questions out of seven.'}</span>
+        <span>5 × 2 = 10</span>
+      </div>
+      <ol class="bteup-questions">${secB.map((q,i) => renderQ(q, i+1, false, false)).join('')}</ol>
+
+      <div class="bteup-part-header">SECTION – C — दीर्घउत्तरीय प्रश्न</div>
+      <div class="bteup-part-meta">
+        <span>${iH ? 'किन्हीं चार प्रश्नों के उत्तर दीजिए।' : 'Attempt any FOUR questions out of five.'}</span>
+        <span>4 × 4 = 16</span>
+      </div>
+      <ol class="bteup-questions">${secC.map((q,i) => renderQ(q, i+1, true, false)).join('')}</ol>
+
+      <div class="bteup-part-header">SECTION – D — दीर्घ / आंकिक प्रश्न</div>
+      <div class="bteup-part-meta">
+        <span>${iH ? 'किन्हीं चार प्रश्नों के उत्तर दीजिए।' : 'Attempt any FOUR questions out of five.'}</span>
+        <span>4 × 6 = 24</span>
+      </div>
+      <ol class="bteup-questions">${secD.map((q,i) => renderQ(q, i+1, true, false)).join('')}</ol>
+
       <div class="bteup-footer">
         <span class="bteup-page-num">(2)</span>
         <span>— × —</span>

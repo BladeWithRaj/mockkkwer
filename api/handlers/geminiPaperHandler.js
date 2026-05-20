@@ -90,6 +90,13 @@ const PATTERN_SECTIONS = {
     { key: "q4", promptFile: "q4", label: "Q4 — Electronic Devices",               stageText: "Generating Q4 — Electronic Devices...",        maxTokens: 2000, difficulty: "medium-hard", count: 3 },
     { key: "q5", promptFile: "q5", label: "Q5 — Digital Electronics & Instruments", stageText: "Generating Q5 — Digital Electronics...",       maxTokens: 2000, difficulty: "medium-hard", count: 3 },
     { key: "q6", promptFile: "q6", label: "Q6 — Short Notes",                       stageText: "Generating Q6 — Short Notes...",               maxTokens: 1500, difficulty: "easy-medium", count: 5 }
+  ],
+  // PATTERN_GENERAL — used for Physics, IT, Mechanics, Env, Workshop, Graphics
+  PATTERN_GENERAL: [
+    { key: "secA", label: "Section A — Very Short Answer",  stageText: "Generating Section A — Very Short (10 × 1 marks)...",    maxTokens: 2500, difficulty: "easy",        count: 10 },
+    { key: "secB", label: "Section B — Short Answer",       stageText: "Generating Section B — Short Answer (7 × 2 marks)...",   maxTokens: 2200, difficulty: "easy-medium", count: 7  },
+    { key: "secC", label: "Section C — Long Answer",        stageText: "Generating Section C — Long Answer (5 × 4 marks)...",    maxTokens: 2500, difficulty: "medium",      count: 5  },
+    { key: "secD", label: "Section D — Long / Numerical",   stageText: "Generating Section D — Long/Numerical (5 × 6 marks)...", maxTokens: 2500, difficulty: "medium-hard", count: 5  }
   ]
 };
 
@@ -130,6 +137,8 @@ function buildSectionPrompt(subject, units, sectionConfig, language, mode) {
     return buildMathPrompt(sectionConfig, syllabusText, keywordsText, pyqText, language, subject.name, modeModifier);
   } else if (subject.renderer_type === 'PATTERN_FEEE') {
     return buildFEEEPrompt(sectionConfig, syllabusText, keywordsText, pyqText, language, subject.name, units, modeModifier);
+  } else if (subject.renderer_type === 'PATTERN_GENERAL') {
+    return buildGeneralPrompt(subject, sectionConfig, syllabusText, keywordsText, pyqText, language, modeModifier, units);
   }
   throw new Error(`Unknown renderer_type: ${subject.renderer_type}`);
 }
@@ -257,6 +266,229 @@ RULES:
 3. FEEE question types: explain working principle, derive equation, draw+explain circuit diagram, compare/differentiate, numerical calculation, state and prove theorem.
 4. ${isHindi ? 'Hindi phrasing examples: "कार्यसिद्धांत समझाइए", "परिपथ आरेख बनाइए", "अंतर स्पष्ट कीजिए"' : 'English phrasing must be practical diploma-level: NOT engineering-degree level theory.'}
 5. Difficulty bias: ${modeModifier.difficulty_bias}
+
+GENERATE NOW:`;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// SUBJECT_CONFIGS — Structured JSON rules per subject namespace
+// These are CONSUMED by prompt builders — no raw text dumping.
+// Each config mirrors the generation_rules column in DB.
+// ═══════════════════════════════════════════════════════════════
+
+const SUBJECT_CONFIGS = {
+  physics2: {
+    name: 'Applied Physics-II',
+    content_mix:   { numericals: 40, theory: 30, applications: 20, diagrams: 10 },
+    bloom_mix:     { remember: 25, understand: 30, apply: 30, analyze: 15 },
+    priority_topics: ['SHM', 'Wave equation', 'Doppler effect', 'Ultrasonic applications',
+      'Total internal reflection', 'Critical angle', 'Optical fiber', 'LASER applications',
+      'Kirchhoff laws', 'Capacitors series-parallel', 'Ohm law', 'Faraday laws',
+      'Lenz law', 'PN junction diode', 'Zener diode'],
+    forbidden_topics: ['Schrodinger equation', 'Quantum numbers', 'Nuclear reactor theory',
+      'Relativistic mechanics', 'Advanced band theory', 'Maxwell equations derivation'],
+    question_styles: {
+      secA: ['Define', 'State', 'Write the formula for', 'What is', 'True/False'],
+      secB: ['Differentiate between', 'State and explain', 'Write short note on', 'Give two applications of'],
+      secC: ['Explain with diagram', 'Derive the expression for', 'What are applications of', 'Explain working of'],
+      secD: ['A numerical on', 'Calculate', 'Find the value of', 'Derive and apply']
+    },
+    numerical_topics: ['capacitor problems', 'resistance network', 'Kirchhoff circuit', 'lens formula', 'wave velocity']
+  },
+
+  it_systems: {
+    name: 'Introduction to IT Systems',
+    content_mix:   { numericals: 0, theory: 40, applications: 35, diagrams: 25 },
+    bloom_mix:     { remember: 35, understand: 30, apply: 25, analyze: 10 },
+    priority_topics: ['RAM vs ROM', 'CPU components', 'Input output devices', 'Operating system functions',
+      'Application vs system software', 'MS Word Excel PowerPoint', 'LAN MAN WAN',
+      'Network topology', 'IP address', 'Cyber security threats', 'Virus antivirus',
+      'E-commerce types', 'Internet and email'],
+    forbidden_topics: ['Programming syntax', 'C Java Python code', 'SQL queries',
+      'Algorithm complexity', 'Data structures', 'Compiler design theory',
+      'Advanced TCP/IP protocols', 'Subnetting calculations'],
+    question_styles: {
+      secA: ['Define', 'What is', 'Expand the abbreviation', 'True/False', 'Fill in blank'],
+      secB: ['Differentiate between', 'List the functions of', 'Write short note on', 'Give examples of'],
+      secC: ['Explain with block diagram', 'What are types of', 'Explain the working of', 'State advantages and disadvantages'],
+      secD: ['Draw and explain', 'Explain in detail', 'Compare and contrast']
+    },
+    numerical_topics: []
+  },
+
+  engg_mechanics: {
+    name: 'Engineering Mechanics',
+    content_mix:   { numericals: 50, theory: 25, applications: 15, diagrams: 10 },
+    bloom_mix:     { remember: 20, understand: 25, apply: 40, analyze: 15 },
+    priority_topics: ['Lami theorem', 'Resultant of forces', 'Resolution of forces', 'FBD',
+      'Beam reactions', 'Moment of force', 'Varignon theorem', 'Coefficient of friction',
+      'Angle of repose', 'Centroid of composite figure', 'Parallel axis theorem',
+      'Mechanical advantage', 'Velocity ratio', 'Efficiency of machine'],
+    forbidden_topics: ['Advanced dynamics', 'Vibration analysis', 'Torsion theory',
+      'Shear force bending moment diagrams advanced', 'Fluid statics', 'Virtual work advanced'],
+    question_styles: {
+      secA: ['Define', 'State', 'Write the formula', 'What is', 'Fill in blank'],
+      secB: ['State and prove', 'Differentiate between', 'Derive', 'Explain with diagram'],
+      secC: ['A body of weight... find', 'Calculate the resultant', 'Find the centroid of'],
+      secD: ['A simply supported beam...', 'A body rests on rough surface...', 'Find MI of']
+    },
+    numerical_topics: ['equilibrium problems', 'friction numerical', 'resultant force', 'centroid calculation', 'beam reactions', 'machine efficiency']
+  },
+
+  env_science: {
+    name: 'Environmental Sciences',
+    content_mix:   { numericals: 0, theory: 60, applications: 25, diagrams: 15 },
+    bloom_mix:     { remember: 35, understand: 30, apply: 25, analyze: 10 },
+    priority_topics: ['Air pollution causes effects control', 'Water pollution treatment',
+      'Soil pollution noise pollution', 'Global warming greenhouse effect',
+      'Ozone layer depletion CFC', 'Renewable energy solar wind biogas',
+      'Waste management 3R', 'Ecosystem food chain food web',
+      'Biodiversity conservation', 'Sustainable development', 'E-waste'],
+    forbidden_topics: ['Advanced biochemistry equations', 'Organic chemistry reactions',
+      'Genetic modification', 'Ecological modeling equations', 'Advanced environmental chemistry'],
+    question_styles: {
+      secA: ['Define', 'What is', 'Expand', 'True/False', 'Give one example of'],
+      secB: ['What are causes of', 'What are effects of', 'Write short note on', 'Differentiate between'],
+      secC: ['Explain in detail', 'What preventive measures', 'Explain with diagram', 'Discuss the role of'],
+      secD: ['Write detailed note on', 'Explain the concept of', 'Discuss with examples']
+    },
+    numerical_topics: []
+  },
+
+  workshop: {
+    name: 'Engineering Workshop Practice',
+    content_mix:   { numericals: 0, theory: 35, applications: 40, diagrams: 25 },
+    bloom_mix:     { remember: 30, understand: 30, apply: 30, analyze: 10 },
+    priority_topics: ['Workshop safety rules', 'Types of welding arc gas', 'Welding joints',
+      'Fitting tools files hacksaw', 'Carpentry tools saw chisel plane',
+      'Soldering brazing difference', 'Lathe machine parts', 'Types of files',
+      'Sheet metal operations', 'PPE personal protective equipment'],
+    forbidden_topics: ['CNC programming G-code', 'Industrial automation PLC',
+      'Gear cutting calculations', 'Precision metrology CMM', 'CAD CAM software'],
+    question_styles: {
+      secA: ['Name the tool', 'What is', 'Define', 'True/False', 'Fill in blank'],
+      secB: ['Name five tools used in', 'State safety precautions for', 'Differentiate between', 'Write short note on'],
+      secC: ['Explain the process of', 'Draw and label', 'What are types of', 'Explain with neat sketch'],
+      secD: ['Explain in detail the process of', 'State all safety rules for', 'Draw and explain']
+    },
+    numerical_topics: []
+  },
+
+  engg_graphics: {
+    name: 'Engineering Graphics',
+    content_mix:   { numericals: 10, theory: 30, applications: 10, diagrams: 50 },
+    bloom_mix:     { remember: 25, understand: 30, apply: 35, analyze: 10 },
+    priority_topics: ['Orthographic projection three views', 'First angle third angle projection',
+      'Isometric drawing', 'Isometric view from orthographic', 'Projection of points',
+      'Projection of lines', 'True length of line', 'Plain scale diagonal scale',
+      'Sectional views', 'Projection of solids prism cylinder'],
+    forbidden_topics: ['AutoCAD commands', 'CAD software theory', '3D rendering',
+      'Computer graphics algorithms', 'Animation theory'],
+    question_styles: {
+      secA: ['Define', 'What is RF', 'True/False', 'Name the type of projection', 'State'],
+      secB: ['Differentiate between first and third angle', 'Define and explain', 'What are types of'],
+      secC: ['Draw the projection of', 'Draw and explain', 'Construct a scale'],
+      secD: ['Draw the three views of', 'Draw the isometric view of', 'Find the true shape of section']
+    },
+    numerical_topics: ['representative fraction calculation', 'scale construction']
+  }
+};
+
+// ── PATTERN_GENERAL unified prompt builder ──
+// Dispatches to correct subject config by prompt_namespace.
+// Each subject gets completely ISOLATED prompt — zero cross-contamination.
+function buildGeneralPrompt(subject, section, syllabus, keywords, pyqData, language, modeModifier, units) {
+  const cfg = SUBJECT_CONFIGS[subject.prompt_namespace];
+  if (!cfg) throw new Error(`No SUBJECT_CONFIG found for namespace: ${subject.prompt_namespace}`);
+
+  const isHindi = language === 'hindi';
+  const langRule = isHindi
+    ? `Write ALL question text in Hindi (Devanagari script). Set "en" to empty string. Technical terms use standard Hindi diploma terminology.`
+    : `Write all questions in English ONLY. Set "hi" to empty string. Use mechanical UPBTE-style phrasing — short, direct, board-exam wording.`;
+
+  // Build section-specific instruction from config
+  const styles = cfg.question_styles[section.key] || ['Explain', 'Define', 'Describe'];
+  const secInstructions = {
+    secA: `Generate EXACTLY ${section.count} very short questions (1 mark each = ${section.count} marks total).
+Mix: MCQ, Fill-in-blank, True/False, One-word answer, Expand abbreviation.
+Start questions with: ${styles.join(', ')}.
+Cover all 5 units. Difficulty: EASY.`,
+    secB: `Generate EXACTLY ${section.count} short-answer questions (2 marks each).
+Student attempts ANY 5 of these ${section.count} questions = 10 marks.
+Start questions with: ${styles.join(', ')}.
+Cover minimum 4 units. Difficulty: EASY-MEDIUM.`,
+    secC: `Generate EXACTLY ${section.count} long-answer questions (4 marks each).
+Student attempts ANY 4 = 16 marks.
+Start questions with: ${styles.join(', ')}.
+At least 2 questions must require diagram. All 5 units must appear.
+Difficulty: MEDIUM.`,
+    secD: `Generate EXACTLY ${section.count} long/numerical questions (6 marks each).
+Student attempts ANY 4 = 24 marks.
+${cfg.content_mix.numericals > 0 ? `MUST include at least ${Math.ceil(section.count * 0.5)} numerical problems on: ${(cfg.numerical_topics || []).join(', ')}.` : 'Theory-focused. No numericals for this subject.'}
+Difficulty: MEDIUM-HARD.`
+  };
+
+  const priorityBlock = cfg.priority_topics.length
+    ? `HIGH PRIORITY TOPICS (these MUST appear — PYQ repeated, high scoring):\n${cfg.priority_topics.map(t => `  • ${t}`).join('\n')}`
+    : '';
+
+  const forbiddenBlock = cfg.forbidden_topics.length
+    ? `STRICTLY FORBIDDEN TOPICS (DO NOT generate questions on these — out of syllabus):\n${cfg.forbidden_topics.map(t => `  ✗ ${t}`).join('\n')}`
+    : '';
+
+  const contentMixBlock = `CONTENT MIX REQUIRED:
+  • Numericals: ${cfg.content_mix.numericals}%
+  • Theory/Explanation: ${cfg.content_mix.theory}%
+  • Applications/Examples: ${cfg.content_mix.applications}%
+  • Diagram-based: ${cfg.content_mix.diagrams}%`;
+
+  const bloomBlock = `BLOOM TAXONOMY MIX:
+  • Remember (definitions, facts): ${cfg.bloom_mix.remember}%
+  • Understand (explain, compare): ${cfg.bloom_mix.understand}%
+  • Apply (problems, examples): ${cfg.bloom_mix.apply}%
+  • Analyze (evaluate, design): ${cfg.bloom_mix.analyze}%`;
+
+  return `You are a senior UPBTE (Uttar Pradesh Board of Technical Education) ${cfg.name} paper setter with 20 years of board examination experience.
+
+=== GENERATION MODE: ${modeModifier.label} ===
+${modeModifier.instruction}
+
+TASK: Generate exam questions for ${section.label}.
+${secInstructions[section.key]}
+
+SYLLABUS (5 units — questions MUST stay within these boundaries):
+${syllabus}
+
+KEYWORDS BY UNIT:
+${keywords}
+${pyqData ? `\nPYQ FREQUENCY DATA (weight your selection accordingly):\n${pyqData}` : ''}
+
+${priorityBlock}
+
+${forbiddenBlock}
+
+${contentMixBlock}
+
+${bloomBlock}
+
+OUTPUT FORMAT (return ONLY this exact JSON — no markdown, no explanation):
+${
+  section.key === 'secA'
+  ? `{ "questions": [ { "en": "question text", "hi": "", "type": "mcq|fill|tf|one-word", "options": ["a","b","c","d"], "answer": "correct option or answer", "unit": 1 } ] }`
+  : `{ "questions": [ { "en": "question text", "hi": "", "unit": 1, "marks": ${section.key === 'secB' ? 2 : section.key === 'secC' ? 4 : 6} } ] }`
+}
+
+CRITICAL RULES:
+1. Output ONLY valid JSON. No text before or after.
+2. ${langRule}
+3. UPBTE diploma level ONLY — Polytechnic 2nd semester. NOT degree-level complexity.
+4. No repeated concepts across questions.
+5. Questions must feel human-made — not AI-generated. Use real exam wording patterns.
+6. Difficulty bias: ${modeModifier.difficulty_bias}
+7. ${isHindi ? 'Hindi technical terms: use standard diploma Hindi — e.g. "विद्युत धारा", "चुम्बकीय क्षेत्र", "पारितंत्र"' : 'English: use short mechanical phrasing — "State", "Define", "Explain", "Calculate", "Draw and label".'}
+8. Every question must be answerable from the given syllabus. Nothing beyond it.
+9. For diagram-required questions: add note in English "(Draw a neat labelled diagram)" at end.
 
 GENERATE NOW:`;
 }
