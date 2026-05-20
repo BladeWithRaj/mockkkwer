@@ -2,18 +2,40 @@
 // BTEUP PAPER GENERATOR — Production-Grade Engine v2
 // POST /api/generate-polytechnic-paper
 //
-// Architecture:
-//   3-Layer: DATA → AI → RENDER
-//   - Section-wise sequential generation
-//   - Strict JSON output (responseMimeType)
-//   - SSE streaming progress to client
-//   - Retry logic with MAX_RETRIES=3
-//   - Per-section token budgets
-//   - Difficulty balancing
-//   - Paper caching
-//
-// Patterns: PATTERN_MATH (Math-II), PATTERN_FEEE (FEEE)
+// Architecture: Blueprint → Pattern → AI Filling → Renderer
+// Modes: important | board_pattern | pyq_weighted | pass_guaranteed
+// Languages: english | hindi (separate prompts — NOT translation)
 // ═══════════════════════════════════════════════════════════════
+
+// ── Generation Mode Modifiers ──
+// Each mode injects specific behavioral instructions into the AI prompt.
+// This is REAL behavioral difference — not a UI label.
+const MODE_MODIFIERS = {
+  important: {
+    label: 'Important Questions',
+    instruction: 'PRIORITY: Focus ONLY on high-frequency concepts that have appeared repeatedly in BTEUP board exams over the last 6 years. Prefer topics that recur every year or alternate years. Avoid rare or obscure topics. Students rely on these for exam preparation.',
+    temperature_adj: -0.05,   // slightly lower temp = more predictable, repeated topics
+    difficulty_bias: 'favor commonly tested difficulty'
+  },
+  board_pattern: {
+    label: 'Board Pattern',
+    instruction: 'PRIORITY: Use STRICT official BTEUP board examination wording. Questions must be mechanical, short, and robotic — exactly as they appear in official printed papers. Use exact verb patterns: "Find the value of", "Solve the following", "Prove that", "Evaluate", "Write the equation of". NO creative or explanatory phrasing. Paper must be indistinguishable from an actual board paper.',
+    temperature_adj: -0.15,   // lower temp = rigid, formulaic outputs
+    difficulty_bias: 'standard board distribution'
+  },
+  pyq_weighted: {
+    label: 'PYQ Weighted',
+    instruction: 'PRIORITY: Weight your question selection by historical repetition. Topics that appear in 4+ of the last 6 years must get priority. Use the keywords and concepts most commonly tested in previous board papers. Distribution should heavily favor units with highest exam frequency. Avoid topics that appeared only once or never.',
+    temperature_adj: -0.1,
+    difficulty_bias: 'historically tested difficulty'
+  },
+  pass_guaranteed: {
+    label: 'Pass-Guaranteed',
+    instruction: 'PRIORITY: Generate questions that a below-average student can attempt to secure passing marks (17/60). Focus on: direct formula application (not derivation), short definitions, basic numericals with simple numbers, true/false based on fundamental concepts. Avoid complex proofs, multi-step derivations, or advanced topics. Every question must be solvable in under 5 minutes.',
+    temperature_adj: -0.2,    // most predictable = easiest questions
+    difficulty_bias: 'easy to easy-medium only'
+  }
+};
 
 const MAX_RETRIES = 3;
 const RATE_WINDOW_MS = 5 * 60 * 1000;
@@ -86,11 +108,7 @@ function getPromptTemplate(namespace, promptFile) {
   return null;
 }
 
-function buildSectionPrompt(subject, units, sectionConfig, language) {
-  const isHindi = language === 'hindi';
-  const isBilingual = language === 'bilingual';
-  const namespace = subject.prompt_namespace;
-
+function buildSectionPrompt(subject, units, sectionConfig, language, mode) {
   const syllabusText = units.map(u =>
     `Unit ${u.unit_no} — ${u.unit_name}: ${u.topics}`
   ).join('\n');
@@ -99,141 +117,111 @@ function buildSectionPrompt(subject, units, sectionConfig, language) {
     `Unit ${u.unit_no}: ${(u.important_keywords || []).join(', ')}`
   ).join('\n');
 
-  // Base template per pattern type
+  // PYQ weight context — inject if available
+  const pyqText = units.map(u => {
+    const imp = u.importance_score ? `importance:${u.importance_score}` : '';
+    const freq = u.pyq_frequency   ? `pyq_freq:${u.pyq_frequency}`     : '';
+    return imp || freq ? `Unit ${u.unit_no}: ${imp} ${freq}` : null;
+  }).filter(Boolean).join('\n');
+
+  const modeModifier = MODE_MODIFIERS[mode] || MODE_MODIFIERS.important;
+
   if (subject.renderer_type === 'PATTERN_MATH') {
-    return buildMathPrompt(sectionConfig, syllabusText, keywordsText, language, subject.name);
+    return buildMathPrompt(sectionConfig, syllabusText, keywordsText, pyqText, language, subject.name, modeModifier);
   } else if (subject.renderer_type === 'PATTERN_FEEE') {
-    return buildFEEEPrompt(sectionConfig, syllabusText, keywordsText, language, subject.name, units);
+    return buildFEEEPrompt(sectionConfig, syllabusText, keywordsText, pyqText, language, subject.name, units, modeModifier);
   }
   throw new Error(`Unknown renderer_type: ${subject.renderer_type}`);
 }
 
-function buildMathPrompt(section, syllabus, keywords, language, subjectName) {
-  const langRule = language === 'hindi'
-    ? 'Write ALL text in Hindi (Devanagari). Math symbols/variables stay in Unicode.'
-    : language === 'bilingual'
-      ? 'Provide BOTH "en" (English) and "hi" (Hindi Devanagari) fields for every question.'
-      : 'Write all questions in English only. Still include both "en" and "hi" fields — set "hi" to empty string.';
+function buildMathPrompt(section, syllabus, keywords, pyqData, language, subjectName, modeModifier) {
+  const isHindi = language === 'hindi';
+  const langRule = isHindi
+    ? 'Write ALL question text in Hindi (Devanagari script). Set "en" to empty string. Math symbols/variables stay in Unicode (x², √x, ∫, π etc).'
+    : 'Write all questions in English only. Set "hi" to empty string. Use short mechanical board-style phrasing.';
 
   const schemas = {
     partA: `{
   "questions": [
-    {
-      "en": "English question text",
-      "hi": "Hindi question text",
-      "type": "mcq",
-      "options": ["option a", "option b", "option c", "option d"],
-      "answer": "correct answer",
-      "unit": 1
-    }
+    { "en": "question", "hi": "", "type": "mcq", "options": ["a","b","c","d"], "answer": "correct", "unit": 1 }
   ]
 }
-NOTES: "type" must be one of: "mcq", "fill", "truefalse", "oneword".
-"options" array ONLY for type "mcq" (exactly 4 options). Omit for other types.
-Generate EXACTLY 10 questions. Mix types: at least 4 MCQ, 2 fill-in-blank, rest true/false or one-word.
-Cover all 5 units (at least 2 questions per unit). Difficulty: EASY (1 mark each).`,
-
+Generate EXACTLY 10 questions. Mix: at least 4 MCQ, 2 fill-in-blank, rest true/false or one-word.
+Cover all 5 units (2 per unit). Difficulty: EASY.`,
     partB: `{
-  "questions": [
-    {
-      "en": "English question text",
-      "hi": "Hindi question text",
-      "unit": 1
-    }
-  ]
+  "questions": [ { "en": "question", "hi": "", "unit": 1 } ]
 }
-Generate EXACTLY 7 questions. Short calculation, formula recall, single-step derivation.
-Cover at least 4 units. Difficulty: EASY-MEDIUM (2 marks each).`,
-
+Generate EXACTLY 7 questions. Short calculation or formula recall. Cover 4+ units. Difficulty: EASY-MEDIUM.`,
     partC: `{
-  "questions": [
-    {
-      "en": "English question text",
-      "hi": "Hindi question text",
-      "unit": 1
-    }
-  ]
+  "questions": [ { "en": "question", "hi": "", "unit": 1 } ]
 }
-Generate EXACTLY 10 questions. Multi-step numericals, short proofs, formula applications.
-Cover all 5 units (2 per unit). Difficulty: MEDIUM (2.5 marks each).`,
-
+Generate EXACTLY 10 questions. Multi-step numericals, short proofs. All 5 units (2 each). Difficulty: MEDIUM.`,
     partD: `{
-  "questions": [
-    {
-      "en": "English question text",
-      "hi": "Hindi question text",
-      "unit": 1
-    }
-  ]
+  "questions": [ { "en": "question", "hi": "", "unit": 1 } ]
 }
-Generate EXACTLY 6 questions. Full derivations, multi-step numericals, proofs, matrix problems.
-Cover at least 4 units. Difficulty: HARD (5 marks each).`
+Generate EXACTLY 6 questions. Full derivations, matrix problems, multi-step proofs. 4+ units. Difficulty: HARD.`
   };
 
-  return `You are a senior BTEUP (Board of Technical Education, UP) ${subjectName} paper setter.
+  return `You are a senior BTEUP (Board of Technical Education, Uttar Pradesh) ${subjectName} paper setter with 20 years experience.
+
+=== GENERATION MODE: ${modeModifier.label} ===
+${modeModifier.instruction}
 
 TASK: Generate exam questions for ${section.label}.
 
 SYLLABUS:
 ${syllabus}
 
-IMPORTANT KEYWORDS BY UNIT:
+KEYWORDS BY UNIT:
 ${keywords}
+${pyqData ? `
+PYQ IMPORTANCE DATA:
+${pyqData}` : ''}
 
-OUTPUT: Return STRICT JSON matching this schema EXACTLY:
+OUTPUT SCHEMA (return ONLY this JSON, no other text):
 ${schemas[section.key]}
 
-STRICT RULES:
-1. Output ONLY valid JSON. No text outside JSON. No markdown. No explanation.
-2. No LaTeX. Use Unicode math: x², x³, √x, ∫, Σ, ∂, Δ, π, ∞
-3. Fractions: a/b format. Matrices: [[a,b],[c,d]]
+BOARD STYLE RULES:
+1. Output ONLY valid JSON. No markdown. No explanation. No extra fields.
+2. No LaTeX. Unicode math only: x², x³, √x, ∫, Σ, ∂, Δ, π, ∞, →
+3. Fractions: use a/b. Matrices: [[a,b],[c,d]] notation.
 4. ${langRule}
-5. Hindi technical terms must include English in brackets: "सारणिक (Determinant)"
-6. Board style: UPBTE diploma level (NOT degree level).
-7. Questions must have clean, solvable numbers.
+5. ${isHindi ? 'Hindi technical terms: use standard academic Hindi. Example: "सारणिक", "आव्यूह", "अवकल समीकरण"' : 'English phrasing must be MECHANICAL: "Find", "Solve", "Evaluate", "Prove", "Derive" — not "Determine" or "Calculate the analytical solution".'}
+6. Diploma level ONLY. Not degree/engineering level complexity.
+7. Each question must use clean, solvable numbers.
 8. No repeated concepts within this section.
-9. Difficulty: ${section.difficulty}
-10. avoid_repetition: true
+9. Difficulty bias: ${modeModifier.difficulty_bias}
 
 GENERATE NOW:`;
 }
 
-function buildFEEEPrompt(section, syllabus, keywords, language, subjectName, units) {
-  const langRule = language === 'hindi'
-    ? 'Write ALL text in Hindi (Devanagari). Technical symbols stay in Unicode.'
-    : language === 'bilingual'
-      ? 'Provide BOTH "en" (English) and "hi" (Hindi Devanagari) fields for every item.'
-      : 'Write all in English only. Still include both "en" and "hi" fields — set "hi" to empty string.';
+function buildFEEEPrompt(section, syllabus, keywords, pyqData, language, subjectName, units, modeModifier) {
+  const isHindi = language === 'hindi';
+  const langRule = isHindi
+    ? 'Write ALL text in Hindi (Devanagari). Set "en" to empty string. Technical terms: use standard Hindi diploma terminology.'
+    : 'Write all in English only. Set "hi" to empty string. Use diploma-level practical wording: "Explain", "Differentiate between", "Write short note on", "State and explain", "Draw and explain".';
 
   if (section.key === 'q6') {
     return `You are a senior BTEUP ${subjectName} paper setter.
+
+=== GENERATION MODE: ${modeModifier.label} ===
+${modeModifier.instruction}
 
 TASK: Generate short note topics for Q6 (Short Notes section).
 
 SYLLABUS:
 ${syllabus}
 
-OUTPUT: Return STRICT JSON matching this schema:
-{
-  "notes": [
-    {
-      "en": "Topic name or short question in English",
-      "hi": "Topic in Hindi",
-      "unit": 1
-    }
-  ]
-}
+OUTPUT (return ONLY this JSON):
+{ "notes": [ { "en": "topic", "hi": "", "unit": 1 } ] }
 
-Generate EXACTLY 5 short note topics from across ALL 5 units.
-Difficulty: EASY-MEDIUM (2.5 marks each).
+Generate EXACTLY 5 short note topics across all 5 units. Difficulty: EASY-MEDIUM (2.5 marks each).
 
-STRICT RULES:
-1. Output ONLY valid JSON. No text outside JSON. No markdown.
-2. No LaTeX. Use Unicode symbols.
-3. ${langRule}
-4. Board style: UPBTE diploma level.
-5. Topics should be focused (e.g., "Working principle of CRO", "Zener diode as voltage regulator").
-6. avoid_repetition: true
+RULES:
+1. ONLY valid JSON. No markdown.
+2. ${langRule}
+3. Topics must be focused and specific. Examples: "Working principle of CRO", "Zener diode as voltage regulator", "Types of DC motors"
+4. Diploma level. Difficulty bias: ${modeModifier.difficulty_bias}
 
 GENERATE NOW:`;
   }
@@ -242,37 +230,33 @@ GENERATE NOW:`;
   const qNum = parseInt(section.key.replace('q', ''));
   const unit = units.find(u => u.unit_no === qNum);
   const unitTopics = unit ? `${unit.unit_name}: ${unit.topics}` : syllabus;
+  const unitPYQ = unit?.importance_score ? `(PYQ importance: ${unit.importance_score}, frequency: ${unit.pyq_frequency || 'N/A'})` : '';
 
-  return `You are a senior BTEUP ${subjectName} paper setter.
+  return `You are a senior BTEUP ${subjectName} paper setter with 20 years experience.
+
+=== GENERATION MODE: ${modeModifier.label} ===
+${modeModifier.instruction}
 
 TASK: Generate 3 long-answer sub-parts for ${section.label}.
-This question covers: ${unitTopics}
+This question covers: ${unitTopics} ${unitPYQ}
 
-SYLLABUS (full for reference):
+SYLLABUS (full reference):
 ${syllabus}
+${pyqData ? `
+PYQ DATA:
+${pyqData}` : ''}
 
-OUTPUT: Return STRICT JSON matching this schema:
-{
-  "parts": [
-    {
-      "en": "Full question text in English",
-      "hi": "Full question text in Hindi",
-      "marks": 10
-    }
-  ]
-}
+OUTPUT (return ONLY this JSON):
+{ "parts": [ { "en": "question text", "hi": "", "marks": 10 } ] }
 
-Generate EXACTLY 3 parts (student attempts any 2).
-Each part is worth 10 marks. Difficulty: MEDIUM-HARD.
+Generate EXACTLY 3 parts (student attempts any 2). Each part: 10 marks. Difficulty: MEDIUM-HARD.
 
-STRICT RULES:
-1. Output ONLY valid JSON. No text outside JSON. No markdown.
-2. No LaTeX. Use Unicode symbols.
-3. ${langRule}
-4. Board style: UPBTE diploma level.
-5. Questions should include derivations, diagrams descriptions, numerical problems, or explain-with-diagram type.
-6. avoid_repetition: true
-7. Each part should be substantial enough for 10 marks (multi-step).
+RULES:
+1. ONLY valid JSON. No markdown.
+2. ${langRule}
+3. FEEE question types: explain working principle, derive equation, draw+explain circuit diagram, compare/differentiate, numerical calculation, state and prove theorem.
+4. ${isHindi ? 'Hindi phrasing examples: "कार्यसिद्धांत समझाइए", "परिपथ आरेख बनाइए", "अंतर स्पष्ट कीजिए"' : 'English phrasing must be practical diploma-level: NOT engineering-degree level theory.'}
+5. Difficulty bias: ${modeModifier.difficulty_bias}
 
 GENERATE NOW:`;
 }
@@ -457,8 +441,9 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const { subject_id, branch, language } = body || {};
-    const lang = (language || 'bilingual').toLowerCase();
+    const { subject_id, branch, language, mode } = body || {};
+    const lang = (language === 'hindi') ? 'hindi' : 'english';
+    const genMode = MODE_MODIFIERS[mode] ? mode : 'important';
 
     if (!subject_id) {
       return res.status(400).json({ error: "subject_id is required" });
@@ -537,8 +522,9 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
             });
           }
 
-          const prompt = buildSectionPrompt(subject, units, section, lang);
-          const temperature = attempt === 1 ? 0.55 : 0.7;
+          const prompt = buildSectionPrompt(subject, units, section, lang, genMode);
+          const modeAdj = MODE_MODIFIERS[genMode]?.temperature_adj || 0;
+          const temperature = attempt === 1 ? (0.55 + modeAdj) : 0.7;
 
           // Try Gemini first
           let result = null;
@@ -617,6 +603,8 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
       },
       branch: branch || "Common",
       language: lang,
+      mode: genMode,
+      mode_label: MODE_MODIFIERS[genMode]?.label || genMode,
       sections: paperData,
       failed_sections: failedSections,
       generated_at: new Date().toISOString()

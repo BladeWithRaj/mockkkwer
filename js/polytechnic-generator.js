@@ -1,19 +1,46 @@
-// ═══════════════════════════════════════════════════════════════
-// BTEUP POLYTECHNIC PAPER GENERATOR — Frontend Engine
-// Handles: Subject selection, SSE streaming, progress overlay,
-//          topic chip animations, and bilingual paper rendering
-// ═══════════════════════════════════════════════════════════════
-
 (function() {
   'use strict';
 
-  // ═══════════════════════════════════
-  // SUBJECT DATABASE (Client-side)
-  // ═══════════════════════════════════
   const SUBJECTS_DB = {
     semester2: [
-      { id: 1, name: 'Mathematics-II', code: '4201', renderer: 'PATTERN_MATH', marks: 60, topics: ['Determinants', 'Matrices', 'Differential Calculus', 'Integral Calculus', 'Differential Equations', 'Coordinate Geometry', 'Vector Algebra', 'Beta & Gamma Functions', 'Numerical Integration'] },
-      { id: 2, name: 'Fundamentals of Electrical & Electronics Engg.', code: '4209', renderer: 'PATTERN_FEEE', marks: 60, topics: ['DC Circuits', 'Kirchhoff Laws', 'Electromagnetic Induction', 'AC Circuits', 'Transformers', 'Induction Motors', 'PN Junction', 'MOSFET', 'Logic Gates', 'CRO', 'Wattmeter'] }
+      {
+        id: 1, name: 'Mathematics-II', code: '4201', renderer: 'PATTERN_MATH', marks: 60,
+        topics: ['Determinants','Matrices','Differential Calculus','Integral Calculus','Differential Equations','Coordinate Geometry','Vector Algebra'],
+        profile: { style: 'symbolic', keyVerbs: ['Find','Solve','Evaluate','Prove','Derive'], repetitionExpected: true },
+        pattern: [
+          { part: 'Part A', type: 'Objective (MCQ + Fill + True/False)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Part B', type: 'Very Short Answer (Numericals)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Part C', type: 'Short Answer (Derivations)', attempt: 'Attempt any 8 of 10', marks: '8 × 2½ = 20' },
+          { part: 'Part D', type: 'Long Answer (Full Proofs/Problems)', attempt: 'Attempt any 4 of 6', marks: '4 × 5 = 20' }
+        ],
+        units: [
+          { no: 1, name: 'Determinants & Matrices', weight: 22 },
+          { no: 2, name: 'Differential Calculus-II', weight: 20 },
+          { no: 3, name: 'Integral Calculus', weight: 22 },
+          { no: 4, name: 'Differential Equations', weight: 20 },
+          { no: 5, name: 'Coord. Geometry & Vectors', weight: 16 }
+        ]
+      },
+      {
+        id: 2, name: 'Fundamentals of Electrical & Electronics Engg.', code: '4209', renderer: 'PATTERN_FEEE', marks: 60,
+        topics: ['DC Circuits','Kirchhoff Laws','Electromagnetic Induction','AC Circuits','Transformers','Induction Motors','PN Junction','MOSFET','Logic Gates','CRO'],
+        profile: { style: 'descriptive', keyVerbs: ['Explain','Differentiate','Write notes on','State and explain','Describe'], repetitionExpected: true },
+        pattern: [
+          { part: 'Q.1', type: 'DC Circuits & Magnetic Circuits', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
+          { part: 'Q.2', type: 'AC Circuits', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
+          { part: 'Q.3', type: 'Electrical Machines', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
+          { part: 'Q.4', type: 'Electronic Devices', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
+          { part: 'Q.5', type: 'Digital Electronics & Instruments', attempt: 'Attempt any 2 of 3', marks: '2 × 10 = 20' },
+          { part: 'Q.6', type: 'Short Notes (All Units)', attempt: 'Attempt any 4 of 5', marks: '4 × 2½ = 10' }
+        ],
+        units: [
+          { no: 1, name: 'DC & Magnetic Circuits', weight: 20 },
+          { no: 2, name: 'AC Circuits', weight: 18 },
+          { no: 3, name: 'Electrical Machines', weight: 22 },
+          { no: 4, name: 'Electronic Devices', weight: 22 },
+          { no: 5, name: 'Digital Electronics', weight: 18 }
+        ]
+      }
     ]
   };
 
@@ -22,19 +49,24 @@
     'Mechanical Engineering (Automobile)',
     'Mechanical Engineering (Production)',
     'Civil Engineering',
-    'Electrical Engineering'
+    'Electrical Engineering',
+    'Electronics Engineering',
+    'Computer Science & Engineering',
+    'Information Technology'
   ];
 
-  // ═══════════════════════════════════
-  // STATE
-  // ═══════════════════════════════════
-  let selectedLanguage = 'bilingual';
-  let currentSubject = null;
+  const MODE_INFO = {
+    important:      { label: 'Important Questions', hint: 'High-frequency PYQ concepts — most likely to repeat in board exam.' },
+    board_pattern:  { label: 'Board Pattern',       hint: 'Strict official BTEUP wording. Closest to actual board paper style.' },
+    pyq_weighted:   { label: 'PYQ Weighted',         hint: 'Topics ranked by 6-year repetition frequency from previous papers.' },
+    pass_guaranteed:{ label: 'Pass-Guaranteed',      hint: 'Easy-to-medium questions focusing on minimum passing marks.' }
+  };
+
+  let selectedLanguage = 'english';
+  let selectedMode     = 'important';
+  let currentSubject   = null;
   let generatedPaperData = null;
 
-  // ═══════════════════════════════════
-  // INIT
-  // ═══════════════════════════════════
   window.addEventListener('DOMContentLoaded', () => {
     populateBranches();
     populateSemesters();
@@ -47,8 +79,7 @@
     if (!sel) return;
     BRANCHES.forEach(b => {
       const opt = document.createElement('option');
-      opt.value = b;
-      opt.textContent = b;
+      opt.value = b; opt.textContent = b;
       sel.appendChild(opt);
     });
   }
@@ -56,17 +87,15 @@
   function populateSemesters() {
     const sel = document.getElementById('semesterSelect');
     if (!sel) return;
-    // Only semester 2 for now
     sel.innerHTML = '<option value="2">2nd Semester</option>';
   }
 
   function populateSubjects() {
     const sel = document.getElementById('subjectSelect');
     if (!sel) return;
-    sel.innerHTML = '<option value="">Select Subject...</option>';
-    const semester = document.getElementById('semesterSelect')?.value || '2';
-    const subjects = SUBJECTS_DB[`semester${semester}`] || [];
-    subjects.forEach(s => {
+    sel.innerHTML = '<option value="">-- Select Subject --</option>';
+    const sem = document.getElementById('semesterSelect')?.value || '2';
+    (SUBJECTS_DB[`semester${sem}`] || []).forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id;
       opt.textContent = `${s.name} (${s.code}) — ${s.marks} Marks`;
@@ -76,87 +105,123 @@
   }
 
   function bindEvents() {
-    // Language toggle
-    document.querySelectorAll('.pg-lang-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.pg-lang-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        selectedLanguage = this.dataset.lang;
-        const hint = document.getElementById('langHint');
-        if (hint) {
-          const labels = { english: 'Paper in English', hindi: 'पेपर हिन्दी में', bilingual: 'Bilingual — English + Hindi' };
-          hint.textContent = labels[selectedLanguage] || '';
-        }
+    // Language radios
+    document.querySelectorAll('input[name="paperLang"]').forEach(r => {
+      r.addEventListener('change', function() {
+        selectedLanguage = this.value;
+        updateModeInfo();
+      });
+    });
+
+    // Mode radios
+    document.querySelectorAll('input[name="genMode"]').forEach(r => {
+      r.addEventListener('change', function() {
+        selectedMode = this.value;
+        updateModeInfo();
       });
     });
 
     // Subject change
-    const subjectSel = document.getElementById('subjectSelect');
-    if (subjectSel) {
-      subjectSel.addEventListener('change', function() {
-        const opt = this.selectedOptions[0];
-        currentSubject = opt?.dataset?.subject ? JSON.parse(opt.dataset.subject) : null;
-        updateSubjectInfo();
-      });
-    }
+    document.getElementById('subjectSelect')?.addEventListener('change', function() {
+      const opt = this.selectedOptions[0];
+      currentSubject = opt?.dataset?.subject ? JSON.parse(opt.dataset.subject) : null;
+      updatePreviewPanel();
+      updateModeInfo();
+    });
 
     // Semester change
-    const semSel = document.getElementById('semesterSelect');
-    if (semSel) {
-      semSel.addEventListener('change', () => {
-        populateSubjects();
-        currentSubject = null;
-        updateSubjectInfo();
-      });
-    }
-
-    // Generate button
-    const genBtn = document.getElementById('generateBtn');
-    if (genBtn) {
-      genBtn.addEventListener('click', () => generatePaper());
-    }
+    document.getElementById('semesterSelect')?.addEventListener('change', () => {
+      populateSubjects();
+      currentSubject = null;
+      updatePreviewPanel();
+    });
   }
 
-  function updateSubjectInfo() {
-    const infoEl = document.getElementById('subjectInfo');
-    if (!infoEl) return;
+  function updateModeInfo() {
+    // Update mode info hint in preview panel if visible
+    const modeEl = document.getElementById('previewModeInfo');
+    if (!modeEl) return;
+    const info = MODE_INFO[selectedMode];
+    if (info) modeEl.innerHTML = `<strong>${info.label}:</strong> ${info.hint}`;
+  }
+
+  function updatePreviewPanel() {
+    const placeholder = document.getElementById('previewPlaceholder');
+    const content     = document.getElementById('previewContent');
     if (!currentSubject) {
-      infoEl.style.display = 'none';
+      if (placeholder) placeholder.style.display = '';
+      if (content)     content.style.display = 'none';
       return;
     }
-    infoEl.style.display = 'block';
-    const patternLabel = currentSubject.renderer === 'PATTERN_MATH'
-      ? 'Part A-B-C-D (Objective + Short + Long)'
-      : 'Q1-Q6 (Long Answer + Short Notes)';
-    infoEl.innerHTML = `
-      <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--text-dim);padding:10px 14px;background:var(--surface2);border-radius:8px;margin-top:12px">
-        <span>📋 Pattern: ${patternLabel}</span>
-        <span>📝 ${currentSubject.marks} Marks</span>
+    if (placeholder) placeholder.style.display = 'none';
+    if (content)     content.style.display = '';
+
+    const s = currentSubject;
+    // Pattern table
+    let patternRows = s.pattern.map(p => `
+      <tr>
+        <td><strong>${p.part}</strong></td>
+        <td>${p.type}</td>
+        <td style="font-size:10px;color:#555">${p.attempt}</td>
+        <td class="marks-col">${p.marks}</td>
+      </tr>`).join('');
+
+    // Unit weightage bars
+    let unitBars = s.units.map(u => `
+      <div class="inst-unit-row">
+        <span class="inst-unit-name">Unit ${u.no}</span>
+        <div class="inst-unit-bar-wrap">
+          <div class="inst-unit-bar-fill" style="width:${u.weight}%"></div>
+        </div>
+        <span class="inst-unit-pct">${u.weight}%</span>
+      </div>`).join('');
+
+    content.innerHTML = `
+      <div class="inst-section-label" style="margin-bottom:6px">Paper Structure — ${s.name} (${s.code})</div>
+      <table class="inst-pattern-table">
+        <thead>
+          <tr>
+            <th>Part</th><th>Type</th><th>Instructions</th><th>Marks</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${patternRows}
+          <tr class="total-row">
+            <td colspan="3">Total Marks</td>
+            <td class="marks-col">${s.marks}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">Unit Weightage (PYQ Based)</div>
+      ${unitBars}
+
+      <div class="inst-mode-info" id="previewModeInfo">
+        <strong>${MODE_INFO[selectedMode].label}:</strong> ${MODE_INFO[selectedMode].hint}
+      </div>
+
+      <div class="inst-subject-note">
+        <strong>Generation Style:</strong>
+        ${s.profile.style === 'symbolic'
+          ? 'Mathematical · Symbolic · Short board-style phrasing (Find, Solve, Evaluate, Derive)'
+          : 'Descriptive · Diploma-practical · Theory-based (Explain, Differentiate, Write notes)'}
       </div>`;
   }
 
-
-  // ═══════════════════════════════════
-  // PAPER GENERATION (SSE Streaming)
-  // ═══════════════════════════════════
+  // ── GENERATION ──
   async function generatePaper() {
     if (!currentSubject) {
       showError('Please select a subject first.');
       return;
     }
-
-    const branch = document.getElementById('branchSelect')?.value || 'Mechanical Engineering';
-    const genBtn = document.getElementById('generateBtn');
-    const overlay = document.getElementById('loadingOverlay');
+    const branch  = document.getElementById('branchSelect')?.value || 'Mechanical Engineering';
+    const genBtn  = document.getElementById('generateBtn');
     const errorEl = document.getElementById('errorMsg');
-    const outputEl = document.getElementById('paperOutput');
+    const outputEl= document.getElementById('paperOutput');
 
-    // Reset UI
     errorEl?.classList.remove('show');
     outputEl?.classList.remove('show');
     if (genBtn) { genBtn.disabled = true; genBtn.textContent = '⏳ Generating...'; }
-
-    // Show loading overlay with topic chips
     showLoadingOverlay(currentSubject);
 
     try {
@@ -165,8 +230,9 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject_id: currentSubject.id,
-          branch: branch,
-          language: selectedLanguage
+          branch,
+          language: selectedLanguage,
+          mode: selectedMode
         })
       });
 
@@ -175,161 +241,113 @@
         throw new Error(err.error || 'Generation failed');
       }
 
-      // Read SSE stream
-      const reader = response.body.getReader();
+      const reader  = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
-
-        // Process complete SSE events
         const events = buffer.split('\n\n');
-        buffer = events.pop(); // Keep incomplete event in buffer
-
+        buffer = events.pop();
         for (const eventStr of events) {
           if (!eventStr.trim()) continue;
-
-          const lines = eventStr.split('\n');
-          let eventType = '';
-          let eventData = '';
-
-          for (const line of lines) {
+          let eventType = '', eventData = '';
+          for (const line of eventStr.split('\n')) {
             if (line.startsWith('event: ')) eventType = line.substring(7);
-            if (line.startsWith('data: ')) eventData = line.substring(6);
+            if (line.startsWith('data: '))  eventData = line.substring(6);
           }
-
           if (!eventType || !eventData) continue;
-
-          try {
-            const data = JSON.parse(eventData);
-            handleSSEEvent(eventType, data);
-          } catch (e) {
-            console.warn('[SSE] Parse error:', e, eventData);
-          }
+          try { handleSSEEvent(eventType, JSON.parse(eventData)); } catch(e) {}
         }
       }
-
     } catch (err) {
       hideLoadingOverlay();
       showError(err.message);
     } finally {
-      if (genBtn) { genBtn.disabled = false; genBtn.textContent = '⚡ Generate BTEUP Paper'; }
+      if (genBtn) { genBtn.disabled = false; genBtn.textContent = '▶ Generate BTEUP Paper'; }
     }
   }
-
-  // Make it globally accessible
   window.generatePaper = generatePaper;
 
   function handleSSEEvent(type, data) {
-    switch (type) {
-      case 'progress':
-        updateProgress(data);
-        break;
-      case 'complete':
-        hideLoadingOverlay();
-        if (data.success) {
-          generatedPaperData = data;
-          renderPaper(data);
-        } else {
-          showError(data.error || 'Generation failed');
-        }
-        break;
-      case 'error':
-        hideLoadingOverlay();
-        showError(data.error || 'An error occurred');
-        break;
+    if (type === 'progress') updateProgress(data);
+    else if (type === 'complete') {
+      hideLoadingOverlay();
+      if (data.success) { generatedPaperData = data; renderPaper(data); }
+      else showError(data.error || 'Generation failed');
+    } else if (type === 'error') {
+      hideLoadingOverlay();
+      showError(data.error || 'An error occurred');
     }
   }
 
-
-  // ═══════════════════════════════════
-  // LOADING OVERLAY
-  // ═══════════════════════════════════
+  // ── LOADING ──
   function showLoadingOverlay(subject) {
     const overlay = document.getElementById('loadingOverlay');
-    if (!overlay) return;
-
-    // Populate topic chips
-    const chipsContainer = overlay.querySelector('.pg-topic-chips');
-    if (chipsContainer && subject.topics) {
-      chipsContainer.innerHTML = subject.topics.map(t =>
-        `<span class="pg-topic-chip">${t}</span>`
-      ).join('');
-      // Start rotating chip highlights
-      startChipAnimation(chipsContainer);
+    const chips   = document.getElementById('topicChips');
+    if (chips && subject.topics) {
+      chips.innerHTML = subject.topics.map(t => `<span class="pg-topic-chip">${t}</span>`).join('');
+      startChipAnimation(chips);
     }
-
-    // Reset progress
-    const fill = overlay.querySelector('.pg-progress-fill');
+    const fill = document.getElementById('progressFill');
     if (fill) fill.style.width = '0%';
-    const stageText = overlay.querySelector('.pg-stage-text');
-    if (stageText) stageText.textContent = 'Initializing...';
-
-    overlay.classList.add('active');
+    const st = document.getElementById('stageText');
+    if (st) st.textContent = 'Analyzing syllabus...';
+    if (overlay) overlay.classList.add('active');
   }
 
   function hideLoadingOverlay() {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-      overlay.classList.remove('active');
-      stopChipAnimation();
-    }
+    stopChipAnimation();
+    document.getElementById('loadingOverlay')?.classList.remove('active');
   }
 
-  let chipAnimInterval = null;
+  let chipTimer = null;
   function startChipAnimation(container) {
     stopChipAnimation();
     const chips = container.querySelectorAll('.pg-topic-chip');
     if (!chips.length) return;
-    let idx = 0;
-    chipAnimInterval = setInterval(() => {
+    let i = 0;
+    chipTimer = setInterval(() => {
       chips.forEach(c => c.classList.remove('active'));
-      chips[idx % chips.length].classList.add('active');
-      idx++;
-    }, 800);
+      chips[i % chips.length].classList.add('active');
+      i++;
+    }, 900);
   }
   function stopChipAnimation() {
-    if (chipAnimInterval) { clearInterval(chipAnimInterval); chipAnimInterval = null; }
+    if (chipTimer) { clearInterval(chipTimer); chipTimer = null; }
   }
 
   function updateProgress(data) {
-    const fill = document.querySelector('.pg-progress-fill');
-    const stageText = document.querySelector('.pg-stage-text');
-    const stageSub = document.querySelector('.pg-stage-sub');
-
+    const fill = document.getElementById('progressFill');
+    const st   = document.getElementById('stageText');
+    const sub  = document.getElementById('stageSub');
     if (fill && data.progress != null) fill.style.width = data.progress + '%';
-    if (stageText && data.message) {
-      stageText.style.opacity = '0';
-      setTimeout(() => {
-        stageText.textContent = data.message;
-        stageText.style.opacity = '1';
-      }, 150);
-    }
-    if (stageSub && data.section) stageSub.textContent = data.section;
+    if (st   && data.message)  st.textContent  = data.message;
+    if (sub  && data.section)  sub.textContent = data.section;
   }
 
-
-  // ═══════════════════════════════════
-  // PAPER RENDERER
-  // ═══════════════════════════════════
+  // ── RENDERER ──
   function renderPaper(data) {
-    const sheet = document.getElementById('paperSheet');
+    const sheet  = document.getElementById('paperSheet');
     const output = document.getElementById('paperOutput');
+    const meta   = document.getElementById('paperMeta');
     if (!sheet || !output) return;
 
-    const subject = data.subject;
-    const branch = data.branch;
-    const sections = data.sections;
-    const lang = data.language;
+    const isHindi = data.language === 'hindi';
+    if (isHindi) sheet.classList.add('hindi-paper');
+    else          sheet.classList.remove('hindi-paper');
 
-    if (subject.renderer_type === 'PATTERN_MATH') {
-      sheet.innerHTML = renderMathPaper(subject, branch, sections, lang);
-    } else if (subject.renderer_type === 'PATTERN_FEEE') {
-      sheet.innerHTML = renderFEEEPaper(subject, branch, sections, lang);
+    if (data.subject?.renderer_type === 'PATTERN_MATH') {
+      sheet.innerHTML = renderMathPaper(data.subject, data.branch, data.sections, data.language);
+    } else if (data.subject?.renderer_type === 'PATTERN_FEEE') {
+      sheet.innerHTML = renderFEEEPaper(data.subject, data.branch, data.sections, data.language);
+    }
+
+    if (meta) {
+      const modeLabel = MODE_INFO[data.mode || selectedMode]?.label || '';
+      meta.textContent = `Mode: ${modeLabel} · ${data.language === 'hindi' ? 'Hindi' : 'English'} · ${new Date().toLocaleDateString('en-IN')}`;
     }
 
     output.classList.add('show');
@@ -338,189 +356,185 @@
 
   function esc(s) {
     if (!s) return '';
-    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // ── MATH PAPER RENDERER ──
+  function getHdrNotes(lang) {
+    if (lang === 'hindi') return `
+      <div class="bteup-notes">
+        <p><strong>नोट :</strong></p>
+        <p>(i) सभी प्रश्न अनिवार्य हैं।</p>
+        <p>(ii) प्रत्येक भाग के साथ दिए गए निर्देशों का पालन करें।</p>
+        <p>(iii) परीक्षार्थी मोबाइल फोन व पेजर का प्रयोग न करें।</p>
+      </div>`;
+    return `
+      <div class="bteup-notes">
+        <p><strong>Notes :</strong></p>
+        <p>(i) Attempt all questions. All questions carry equal marks unless stated otherwise.</p>
+        <p>(ii) Use of Pager and Mobile Phone by students is not allowed in the examination hall.</p>
+        <p>(iii) Attempt all parts of each question at one place.</p>
+      </div>`;
+  }
+
+  function getPaperHeader(subject, branch, lang) {
+    const minMarks = Math.ceil((subject.marks_total || 60) * 0.283);
+    return `
+      <div class="bteup-paper-frame">
+      <div class="bteup-hdr">
+        <div class="bteup-hdr-top-row">
+          <div class="bteup-hdr-code">Code No. : ${subject.code}</div>
+          <div class="bteup-hdr-roll">Roll No. : ___________</div>
+        </div>
+        <div class="bteup-hdr-board">BOARD OF TECHNICAL EDUCATION UTTAR PRADESH, LUCKNOW</div>
+        <div class="bteup-hdr-subject">${esc(subject.name)}</div>
+        <table class="bteup-hdr-meta-table">
+          <tr>
+            <td>Branch : ${esc(branch)}</td>
+            <td>Semester : ${subject.semester || 2}nd</td>
+          </tr>
+          <tr>
+            <td>Time Allowed : 3:00 Hours</td>
+            <td>Maximum Marks : ${subject.marks_total || 60}</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>Minimum Marks : ${minMarks}</td>
+          </tr>
+        </table>
+      </div>
+      ${getHdrNotes(lang)}`;
+  }
+
   function renderMathPaper(subject, branch, sections, lang) {
-    const showHi = lang === 'hindi' || lang === 'bilingual';
-    const showEn = lang === 'english' || lang === 'bilingual';
+    const isHindi = lang === 'hindi';
 
     function renderQ(q, num) {
-      let html = `<li><span class="q-num">${num}.</span>`;
-      if (showEn) html += esc(q.en);
-      if (showHi && q.hi) html += `<span class="q-hi">${esc(q.hi)}</span>`;
+      const text = isHindi ? (q.hi || q.en) : q.en;
+      let html = `<li><span class="q-num">${num}.</span><span class="q-body">${esc(text)}`;
       if (q.type === 'mcq' && q.options) {
-        html += '<span class="q-options">';
+        html += `<div class="q-options">`;
         q.options.forEach((o, i) => {
-          html += `<span>(${String.fromCharCode(97 + i)}) ${esc(o)}</span>`;
+          html += `<span>(${String.fromCharCode(97+i)}) ${esc(o)}</span>`;
         });
-        html += '</span>';
+        html += `</div>`;
       }
-      html += '</li>';
+      html += `</span></li>`;
       return html;
     }
 
-    const partA = sections.partA?.questions || [];
-    const partB = sections.partB?.questions || [];
-    const partC = sections.partC?.questions || [];
-    const partD = sections.partD?.questions || [];
+    const pA = sections.partA?.questions || [];
+    const pB = sections.partB?.questions || [];
+    const pC = sections.partC?.questions || [];
+    const pD = sections.partD?.questions || [];
 
-    return `
-      <div class="bteup-hdr">
-        <div class="bteup-hdr-code">Code No.: ${subject.code}</div>
-        <div class="bteup-hdr-board">BOARD OF TECHNICAL EDUCATION UTTAR PRADESH, LUCKNOW</div>
-        <div class="bteup-hdr-subject">${subject.name}</div>
-        <div class="bteup-hdr-meta">
-          <span>Branch: ${branch}</span>
-          <span>Semester: ${subject.semester}nd</span>
-        </div>
-        <div class="bteup-hdr-meta-row">
-          <span>Time Allowed : 3:00 Hours</span>
-          <span>Maximum Marks : ${subject.marks_total}</span>
-        </div>
-        <div class="bteup-hdr-meta-row">
-          <span></span>
-          <span>Minimum Marks : ${Math.ceil(subject.marks_total * 0.283)}</span>
-        </div>
-      </div>
-
-      <div class="bteup-notes">
-        <p><strong>Notes:</strong></p>
-        <p>(i) Attempt All questions. All questions carry equal marks unless stated otherwise.</p>
-        <p>(ii) Students are advised to specially check the numerical data of question paper in both versions.</p>
-        <p>(iii) Use of Pager and Mobile Phone by students is not allowed.</p>
-      </div>
-
+    return getPaperHeader(subject, branch, lang) + `
       <div class="bteup-part-header">PART – A (Objective Type Questions)</div>
-      <div class="bteup-part-instruction">Attempt all questions.</div>
-      <div class="bteup-part-marks">10 × 1 = 10</div>
-      <ol class="bteup-questions">${partA.map((q, i) => renderQ(q, i + 1)).join('')}</ol>
+      <div class="bteup-part-meta">
+        <span>${isHindi ? 'सभी प्रश्न कीजिए।' : 'Attempt all questions.'}</span>
+        <span>10 × 1 = 10</span>
+      </div>
+      <ol class="bteup-questions">${pA.map((q,i) => renderQ(q,i+1)).join('')}</ol>
+
+      <div class="bteup-pto">[ P.T.O. ]</div>
 
       <div class="bteup-part-header">PART – B (Very Short Answer Questions)</div>
-      <div class="bteup-part-instruction">Attempt any five questions out of seven.</div>
-      <div class="bteup-part-marks">5 × 2 = 10</div>
-      <ol class="bteup-questions">${partB.map((q, i) => renderQ(q, i + 1)).join('')}</ol>
+      <div class="bteup-part-meta">
+        <span>${isHindi ? 'किन्हीं पाँच प्रश्नों के उत्तर दीजिए।' : 'Attempt any five questions out of seven.'}</span>
+        <span>5 × 2 = 10</span>
+      </div>
+      <ol class="bteup-questions">${pB.map((q,i) => renderQ(q,i+1)).join('')}</ol>
 
       <div class="bteup-part-header">PART – C (Short Answer Questions)</div>
-      <div class="bteup-part-instruction">Attempt any eight questions out of ten.</div>
-      <div class="bteup-part-marks">8 × 2½ = 20</div>
-      <ol class="bteup-questions">${partC.map((q, i) => renderQ(q, i + 1)).join('')}</ol>
+      <div class="bteup-part-meta">
+        <span>${isHindi ? 'किन्हीं आठ प्रश्नों के उत्तर दीजिए।' : 'Attempt any eight questions out of ten.'}</span>
+        <span>8 × 2½ = 20</span>
+      </div>
+      <ol class="bteup-questions">${pC.map((q,i) => renderQ(q,i+1)).join('')}</ol>
 
       <div class="bteup-part-header">PART – D (Long Answer / Numerical Questions)</div>
-      <div class="bteup-part-instruction">Attempt any four questions out of six.</div>
-      <div class="bteup-part-marks">4 × 5 = 20</div>
-      <ol class="bteup-questions">${partD.map((q, i) => renderQ(q, i + 1)).join('')}</ol>
+      <div class="bteup-part-meta">
+        <span>${isHindi ? 'किन्हीं चार प्रश्नों के उत्तर दीजिए।' : 'Attempt any four questions out of six.'}</span>
+        <span>4 × 5 = 20</span>
+      </div>
+      <ol class="bteup-questions">${pD.map((q,i) => renderQ(q,i+1)).join('')}</ol>
 
-      <div class="bteup-footer">— × —</div>
-    `;
+      <div class="bteup-footer">
+        <span class="bteup-page-num">(2)</span>
+        <span>— × —</span>
+        <span></span>
+      </div>
+      </div>`;
   }
 
-  // ── FEEE PAPER RENDERER ──
   function renderFEEEPaper(subject, branch, sections, lang) {
-    const showHi = lang === 'hindi' || lang === 'bilingual';
-    const showEn = lang === 'english' || lang === 'bilingual';
-    const unitNames = ['DC Circuits & Magnetic Circuits', 'AC Circuits', 'Electrical Machines', 'Electronic Devices', 'Digital Electronics & Instruments'];
+    const isHindi = lang === 'hindi';
+    const unitNames = [
+      'DC Circuits & Magnetic Circuits',
+      'AC Circuits',
+      'Electrical Machines',
+      'Electronic Devices',
+      'Digital Electronics & Instruments'
+    ];
+    const unitNamesHi = [
+      'DC परिपथ एवं चुम्बकीय परिपथ',
+      'AC परिपथ',
+      'विद्युत मशीनें',
+      'इलेक्ट्रॉनिक युक्तियाँ',
+      'डिजिटल इलेक्ट्रॉनिक्स एवं उपकरण'
+    ];
 
     let questionsHTML = '';
-
-    // Q1-Q5
     for (let i = 1; i <= 5; i++) {
-      const qData = sections[`q${i}`];
-      const parts = qData?.parts || [];
+      const parts = sections[`q${i}`]?.parts || [];
+      const uName = isHindi ? unitNamesHi[i-1] : unitNames[i-1];
       questionsHTML += `
         <div class="bteup-q-block">
-          <div class="bteup-q-header">Q.${i} — ${unitNames[i - 1]}</div>
-          <div class="bteup-q-instruction">Attempt any TWO of the following: (2 × 10 = 20 marks)</div>
-          <ol class="bteup-q-parts">
-            ${parts.map((p, j) => {
-              let html = `<li><span class="q-label">(${String.fromCharCode(97 + j)})</span>`;
-              if (showEn) html += esc(p.en);
-              if (showHi && p.hi) html += `<span class="q-hi">${esc(p.hi)}</span>`;
-              html += `<span style="font-size:11px;color:#666;margin-left:4px">[${p.marks || 10} Marks]</span>`;
-              html += '</li>';
-              return html;
-            }).join('')}
-          </ol>
-        </div>
-      `;
+          <div class="bteup-q-header">Q.${i} &nbsp; ${esc(uName)}</div>
+          <div class="bteup-q-instruction">${isHindi ? 'निम्न में से कोई दो प्रश्न हल कीजिए : (2 × 10 = 20 अंक)' : 'Attempt any TWO of the following : (2 × 10 = 20 Marks)'}</div>
+          <ol class="bteup-q-parts">${parts.map((p,j) => {
+            const text = isHindi ? (p.hi || p.en) : p.en;
+            return `<li><span class="q-label">(${String.fromCharCode(97+j)})</span><span class="q-body">${esc(text)}</span><span class="q-marks">[${p.marks||10} M]</span></li>`;
+          }).join('')}</ol>
+        </div>`;
     }
 
-    // Q6 — Short Notes
     const notes = sections.q6?.notes || [];
     questionsHTML += `
       <div class="bteup-q-block">
-        <div class="bteup-q-header">Q.6 — Short Notes</div>
-        <div class="bteup-q-instruction">Write short notes on any FOUR of the following: (4 × 2.5 = 10 marks)</div>
-        <ol class="bteup-q-parts">
-          ${notes.map((n, j) => {
-            let html = `<li><span class="q-label">(${String.fromCharCode(97 + j)})</span>`;
-            if (showEn) html += esc(n.en);
-            if (showHi && n.hi) html += `<span class="q-hi">${esc(n.hi)}</span>`;
-            html += '</li>';
-            return html;
-          }).join('')}
-        </ol>
+        <div class="bteup-q-header">Q.6 &nbsp; ${isHindi ? 'लघु टिप्पणी' : 'Short Notes'}</div>
+        <div class="bteup-q-instruction">${isHindi ? 'निम्न में से कोई चार पर लघु टिप्पणी लिखिए : (4 × 2½ = 10 अंक)' : 'Write short notes on any FOUR of the following : (4 × 2½ = 10 Marks)'}</div>
+        <ol class="bteup-q-parts">${notes.map((n,j) => {
+          const text = isHindi ? (n.hi || n.en) : n.en;
+          return `<li><span class="q-label">(${String.fromCharCode(97+j)})</span><span class="q-body">${esc(text)}</span></li>`;
+        }).join('')}</ol>
+      </div>`;
+
+    return getPaperHeader(subject, branch, lang) + questionsHTML + `
+      <div class="bteup-footer">
+        <span class="bteup-page-num">(2)</span>
+        <span>— × —</span>
+        <span></span>
       </div>
-    `;
-
-    return `
-      <div class="bteup-hdr">
-        <div class="bteup-hdr-code">Code No.: ${subject.code}</div>
-        <div class="bteup-hdr-board">BOARD OF TECHNICAL EDUCATION UTTAR PRADESH, LUCKNOW</div>
-        <div class="bteup-hdr-subject">${subject.name}</div>
-        <div class="bteup-hdr-meta">
-          <span>Branch: ${branch}</span>
-          <span>Semester: ${subject.semester}nd</span>
-        </div>
-        <div class="bteup-hdr-meta-row">
-          <span>Time Allowed : 3:00 Hours</span>
-          <span>Maximum Marks : ${subject.marks_total}</span>
-        </div>
-        <div class="bteup-hdr-meta-row">
-          <span></span>
-          <span>Minimum Marks : ${Math.ceil(subject.marks_total * 0.283)}</span>
-        </div>
-      </div>
-
-      <div class="bteup-notes">
-        <p><strong>Notes:</strong></p>
-        <p>(i) Attempt all questions as per instructions given with each question.</p>
-        <p>(ii) Students are advised to specially check the numerical data of question paper in both versions.</p>
-        <p>(iii) Use of Pager and Mobile Phone by students is not allowed.</p>
-      </div>
-
-      ${questionsHTML}
-
-      <div class="bteup-footer">— × —</div>
-    `;
+      </div>`;
   }
 
-
-  // ═══════════════════════════════════
-  // UTILITY FUNCTIONS
-  // ═══════════════════════════════════
+  // ── UTILITY ──
   function showError(msg) {
     const el = document.getElementById('errorMsg');
-    const textEl = document.getElementById('errorText');
-    if (el && textEl) {
-      textEl.textContent = msg;
-      el.classList.add('show');
-    }
+    const tx = document.getElementById('errorText');
+    if (el && tx) { tx.textContent = msg; el.classList.add('show'); }
   }
 
-  // Global functions for button onclick handlers
-  window.printPaper = function() { window.print(); };
-  window.copyPaper = function() {
+  window.printPaper   = () => window.print();
+  window.copyPaper    = () => {
     const text = document.getElementById('paperSheet')?.innerText || '';
     navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelector('.pg-output-actions .btn-copy');
+      const btn = document.querySelector('.pg-output-actions button:nth-child(2)');
       if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📋 Copy Text', 2000); }
     });
   };
-  window.generateAnother = function() {
+  window.generateAnother = () => {
     document.getElementById('paperOutput')?.classList.remove('show');
-    document.querySelector('.pg-card')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('formPanel')?.scrollIntoView({ behavior: 'smooth' });
   };
-
 })();

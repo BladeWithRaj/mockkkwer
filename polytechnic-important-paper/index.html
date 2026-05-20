@@ -3,119 +3,196 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTEUP Paper Generator — Real Board Pattern Papers</title>
-  <meta name="description" content="Generate authentic BTEUP polytechnic exam papers with real board patterns. Mathematics-II and FEEE supported. Bilingual EN+HI format.">
+  <title>BTEUP Important Paper Generator — Board Pattern Questions</title>
+  <meta name="description" content="Generate BTEUP board-pattern important question papers for Polytechnic exams. Mathematics-II and FEEE. Official format with PYQ weighted topics.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/polytechnic-paper.css">
 </head>
 <body class="polytechnic-generator">
 
-  <!-- ═══ HERO ═══ -->
-  <div class="pg-hero">
-    <a href="/" class="pg-hero-back">← Back to MockTestPro</a>
-    <h1>📄 BTEUP Paper Generator</h1>
-    <p>Authentic board-pattern exam papers — Real BTEUP format</p>
-    <div class="pg-hero-badge">🎯 Pattern-Based Engine · Mathematics-II & FEEE</div>
+  <!-- ═══ TOP NAVBAR ═══ -->
+  <div class="inst-navbar">
+    <div class="inst-navbar-left">
+      <!-- Ashoka Chakra SVG emblem -->
+      <svg class="inst-navbar-logo" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Ashoka Emblem">
+        <circle cx="30" cy="30" r="28" stroke="#c8d8f8" stroke-width="1.5" fill="none"/>
+        <circle cx="30" cy="30" r="4" fill="#c8d8f8"/>
+        <circle cx="30" cy="30" r="20" stroke="#c8d8f8" stroke-width="1" fill="none" stroke-dasharray="3.14 1.1"/>
+        <g fill="#c8d8f8">
+          <circle cx="30" cy="10" r="1.5"/>
+          <circle cx="40" cy="13" r="1.5"/>
+          <circle cx="47" cy="21" r="1.5"/>
+          <circle cx="50" cy="30" r="1.5"/>
+          <circle cx="47" cy="39" r="1.5"/>
+          <circle cx="40" cy="47" r="1.5"/>
+          <circle cx="30" cy="50" r="1.5"/>
+          <circle cx="20" cy="47" r="1.5"/>
+          <circle cx="13" cy="39" r="1.5"/>
+          <circle cx="10" cy="30" r="1.5"/>
+          <circle cx="13" cy="21" r="1.5"/>
+          <circle cx="20" cy="13" r="1.5"/>
+        </g>
+        <line x1="30" y1="10" x2="30" y2="50" stroke="#c8d8f8" stroke-width="0.8" opacity="0.4"/>
+        <line x1="10" y1="30" x2="50" y2="30" stroke="#c8d8f8" stroke-width="0.8" opacity="0.4"/>
+      </svg>
+      <div class="inst-navbar-title">
+        BOARD OF TECHNICAL EDUCATION UTTAR PRADESH
+        <span>LUCKNOW — IMPORTANT PAPER GENERATOR</span>
+      </div>
+    </div>
+    <div class="inst-navbar-right">
+      <div class="inst-session-badge">Session 2025-26</div>
+      <a href="/" class="inst-navbar-link">← MockTestPro</a>
+    </div>
   </div>
 
-  <!-- ═══ MAIN CONTAINER ═══ -->
-  <div class="pg-container">
+  <!-- ═══ SUB-HEADER ═══ -->
+  <div class="inst-subheader">
+    <div class="inst-subheader-title">Polytechnic Diploma — Semester Examination</div>
+    <div class="inst-subheader-meta">
+      <span>Subjects: Mathematics-II · FEEE</span>
+      <span>Pattern: BTEUP Official</span>
+      <span>Format: Board-Authentic</span>
+    </div>
+  </div>
 
-    <!-- ═══ FORM CARD ═══ -->
-    <div class="pg-card" id="formCard">
-      <div class="pg-card-title">⚡ Paper Configuration</div>
+  <!-- ═══ MAIN 2-COLUMN LAYOUT ═══ -->
+  <div class="inst-layout">
 
-      <div class="pg-form-grid">
-        <div class="pg-form-group">
-          <label>Branch</label>
-          <select id="branchSelect">
-            <!-- Populated by JS -->
-          </select>
-        </div>
+    <!-- ─── LEFT PANEL: Configuration Form ─── -->
+    <div class="inst-panel" id="formPanel">
+      <div class="inst-panel-head">📋 Paper Configuration</div>
+      <div class="inst-panel-body">
 
-        <div class="pg-form-group">
-          <label>Semester</label>
-          <select id="semesterSelect">
-            <!-- Populated by JS -->
-          </select>
-        </div>
-
-        <div class="pg-form-group full-width">
-          <label>Subject</label>
-          <select id="subjectSelect">
-            <option value="">Select Subject...</option>
-          </select>
-        </div>
-
-        <div class="pg-form-group full-width">
-          <label>Paper Language</label>
-          <div class="pg-lang-toggle">
-            <button type="button" class="pg-lang-btn" data-lang="english">🇬🇧 English</button>
-            <button type="button" class="pg-lang-btn active" data-lang="bilingual">🇮🇳 Bilingual</button>
-            <button type="button" class="pg-lang-btn" data-lang="hindi">हिन्दी</button>
+        <!-- Row 1: Branch + Semester -->
+        <div class="inst-form-row">
+          <div class="inst-field">
+            <label class="inst-label" for="branchSelect">Branch <span class="req">*</span></label>
+            <select class="inst-select" id="branchSelect"></select>
           </div>
-          <div id="langHint" style="font-size:0.72rem;color:var(--text-muted);margin-top:5px;font-style:italic">Bilingual — English + Hindi</div>
+          <div class="inst-field">
+            <label class="inst-label" for="semesterSelect">Semester <span class="req">*</span></label>
+            <select class="inst-select" id="semesterSelect"></select>
+          </div>
         </div>
+
+        <!-- Row 2: Subject -->
+        <div class="inst-form-row full">
+          <div class="inst-field">
+            <label class="inst-label" for="subjectSelect">Subject <span class="req">*</span></label>
+            <select class="inst-select" id="subjectSelect">
+              <option value="">-- Select Subject --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="inst-divider"></div>
+
+        <!-- Paper Language -->
+        <div class="inst-section-label">Paper Language</div>
+        <div class="inst-radio-group" role="radiogroup" aria-label="Paper Language">
+          <label class="inst-radio-row">
+            <input type="radio" name="paperLang" id="langEn" value="english" checked>
+            <span class="inst-radio-label">
+              English
+              <small>Questions in English — Board standard format</small>
+            </span>
+          </label>
+          <label class="inst-radio-row">
+            <input type="radio" name="paperLang" id="langHi" value="hindi">
+            <span class="inst-radio-label">
+              हिन्दी (Hindi)
+              <small>प्रश्न हिन्दी में — Board Hindi format</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="inst-divider"></div>
+
+        <!-- Generation Strategy -->
+        <div class="inst-section-label">Generation Strategy</div>
+        <div class="inst-radio-group" role="radiogroup" aria-label="Generation Strategy">
+          <label class="inst-radio-row">
+            <input type="radio" name="genMode" id="modeImportant" value="important" checked>
+            <span class="inst-radio-label">
+              🔥 Important Questions
+              <small>High-frequency concepts from past 6 years — most likely to appear</small>
+            </span>
+          </label>
+          <label class="inst-radio-row">
+            <input type="radio" name="genMode" id="modeBoardPattern" value="board_pattern">
+            <span class="inst-radio-label">
+              📘 Board Pattern
+              <small>Strict official BTEUP wording and question style</small>
+            </span>
+          </label>
+          <label class="inst-radio-row">
+            <input type="radio" name="genMode" id="modePYQ" value="pyq_weighted">
+            <span class="inst-radio-label">
+              🧠 PYQ Weighted
+              <small>Topics ranked by historical repetition frequency</small>
+            </span>
+          </label>
+          <label class="inst-radio-row">
+            <input type="radio" name="genMode" id="modePass" value="pass_guaranteed">
+            <span class="inst-radio-label">
+              🎯 Pass-Guaranteed
+              <small>Easy-to-medium scoring questions — minimum marks focus</small>
+            </span>
+          </label>
+        </div>
+
+        <!-- Error message -->
+        <div class="pg-error" id="errorMsg" role="alert">
+          <div id="errorText"></div>
+          <button class="pg-error-retry" onclick="generatePaper()">Retry</button>
+        </div>
+
+        <!-- Generate Button -->
+        <button class="inst-btn-generate" id="generateBtn" onclick="generatePaper()">
+          ▶ Generate BTEUP Paper
+        </button>
+
       </div>
+    </div><!-- /left panel -->
 
-      <!-- Subject Info -->
-      <div id="subjectInfo" style="display:none"></div>
-
-      <!-- Generate Button -->
-      <button class="pg-btn-generate" id="generateBtn">
-        ⚡ Generate BTEUP Paper
-      </button>
-    </div>
-
-    <!-- ═══ ERROR ═══ -->
-    <div class="pg-error" id="errorMsg">
-      <div id="errorText"></div>
-      <button class="pg-error-retry" onclick="generatePaper()">🔄 Try Again</button>
-    </div>
-
-    <!-- ═══ PAPER OUTPUT ═══ -->
-    <div class="pg-output" id="paperOutput">
-      <div class="pg-output-actions">
-        <button class="btn-print" onclick="printPaper()">🖨️ Print Paper</button>
-        <button class="btn-copy" onclick="copyPaper()">📋 Copy Text</button>
-        <button onclick="generateAnother()">🔄 Generate Another</button>
+    <!-- ─── RIGHT PANEL: Pattern Preview ─── -->
+    <div class="inst-panel" id="previewPanel">
+      <div class="inst-panel-head">📊 Paper Pattern &amp; Subject Info</div>
+      <div class="inst-panel-body" id="previewBody">
+        <div class="inst-preview-placeholder" id="previewPlaceholder">
+          Select a subject to view paper pattern, marks distribution, and unit weightage.
+        </div>
+        <!-- Populated by JS when subject is selected -->
+        <div id="previewContent" style="display:none"></div>
       </div>
-      <div class="bteup-paper" id="paperSheet"></div>
     </div>
+
+  </div><!-- /inst-layout -->
+
+  <!-- ═══ PAPER OUTPUT ═══ -->
+  <div class="pg-output" id="paperOutput">
+    <div class="pg-output-actions">
+      <button class="btn-print" onclick="printPaper()">🖨 Print / Save PDF</button>
+      <button onclick="copyPaper()">📋 Copy Text</button>
+      <button onclick="generateAnother()">↺ Generate Another</button>
+      <span style="margin-left:auto;font-size:10px;color:#666;" id="paperMeta"></span>
+    </div>
+    <div class="bteup-paper" id="paperSheet"></div>
   </div>
 
-  <!-- ═══ FULLSCREEN LOADING OVERLAY ═══ -->
-  <div class="pg-loading-overlay" id="loadingOverlay">
-    <!-- Animated Paper Preview -->
-    <div class="pg-loading-paper">
-      <div class="paper-lines">
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-        <div class="paper-line"></div>
-      </div>
-    </div>
-
-    <!-- Progress -->
-    <div class="pg-progress-container">
+  <!-- ═══ LOADING OVERLAY ═══ -->
+  <div class="pg-loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+    <div class="pg-loading-box">
+      <div class="pg-loading-title">Generating BTEUP Paper...</div>
       <div class="pg-progress-bar">
-        <div class="pg-progress-fill"></div>
+        <div class="pg-progress-fill" id="progressFill"></div>
       </div>
-      <div class="pg-stage-text">Initializing...</div>
-      <div class="pg-stage-sub"></div>
+      <div class="pg-stage-text" id="stageText">Initializing...</div>
+      <div class="pg-stage-sub" id="stageSub"></div>
     </div>
-
-    <!-- Topic Chips -->
-    <div class="pg-topic-chips">
-      <!-- Populated dynamically based on selected subject -->
-    </div>
+    <div class="pg-topic-chips" id="topicChips"></div>
   </div>
 
   <script src="/js/polytechnic-generator.js"></script>
