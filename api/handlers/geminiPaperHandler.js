@@ -56,6 +56,11 @@ function getGroqConfig() {
   return { key, url: "https://api.groq.com/openai/v1/chat/completions" };
 }
 
+function getDeepSeekConfig() {
+  const key = process.env.DEEPSEEK_API_KEY;
+  return { key, url: "https://api.deepseek.com/v1/chat/completions" };
+}
+
 // ── Rate Limiter ──
 function checkRateLimit(ip) {
   if (!ip || ip === "unknown") ip = "global";
@@ -561,14 +566,108 @@ async function callGroqJSON(prompt, maxTokens) {
       })
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[GROQ] ${res.status}:`, errText.substring(0, 100));
+      return null;
+    }
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
+    if (!text || text.length < 10) return null;
     return JSON.parse(text);
   } catch (e) {
     console.error("[GROQ] Fallback failed:", e.message);
     return null;
   }
+}
+
+async function callDeepSeekJSON(prompt, maxTokens) {
+  const { key, url } = getDeepSeekConfig();
+  if (!key) return null;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No markdown, no explanations." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.6,
+        max_tokens: maxTokens,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[DEEPSEEK] ${res.status}:`, errText.substring(0, 100));
+      return null;
+    }
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || "";
+    if (!text || text.length < 10) return null;
+    // DeepSeek sometimes wraps in markdown
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  } catch (e) {
+    console.error("[DEEPSEEK] Fallback failed:", e.message);
+    return null;
+  }
+}
+
+// ── Smart 3-provider AI caller ──
+// Strategy: Gemini (best quality) → Groq (fast, high limits) → DeepSeek (backup)
+// 429 quota errors: SKIP immediately to next provider (no wasted retries)
+// 5xx/network errors: retry up to MAX_RETRIES within same provider
+async function callAIWithFallback(prompt, maxTokens, temperature = 0.6) {
+  const providers = [
+    { name: 'Gemini', fn: () => callGeminiJSON(prompt, maxTokens, temperature) },
+    { name: 'Groq',   fn: () => callGroqJSON(prompt, maxTokens) },
+    { name: 'DeepSeek', fn: () => callDeepSeekJSON(prompt, maxTokens) }
+  ];
+
+  let lastError = null;
+
+  for (const provider of providers) {
+    try {
+      const result = await provider.fn();
+      if (result) {
+        console.log(`[AI] Success via ${provider.name}`);
+        return result;
+      }
+      console.warn(`[AI] ${provider.name} returned null, trying next provider...`);
+    } catch (err) {
+      lastError = err;
+      const is429 = err.message.includes('429');
+      const is503 = err.message.includes('503') || err.message.includes('overloaded');
+
+      if (is429) {
+        // Quota exhausted — skip immediately to next provider
+        console.warn(`[AI] ${provider.name} QUOTA EXHAUSTED (429), switching provider...`);
+        continue;
+      }
+
+      if (is503) {
+        // Service overloaded — brief wait then try next
+        console.warn(`[AI] ${provider.name} overloaded, switching provider...`);
+        await new Promise(r => setTimeout(r, 1000));
+        continue;
+      }
+
+      // Other error (network, parse) — log and try next provider
+      console.error(`[AI] ${provider.name} error:`, err.message.substring(0, 100));
+      continue;
+    }
+  }
+
+  throw new Error(
+    lastError
+      ? `All AI providers failed. Last error: ${lastError.message.substring(0, 150)}`
+      : 'All AI providers returned null or empty response'
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -772,38 +871,35 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
       let sectionData = null;
       let lastError = null;
 
-      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const prompt = buildSectionPrompt(subject, units, section, lang, genMode);
+      const modeAdj = MODE_MODIFIERS[genMode]?.temperature_adj || 0;
+      const temperature = 0.55 + modeAdj;
+
+      // Attempt generation with 3-provider cascade + up to 2 validation retries
+      for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           if (attempt > 1) {
-            await new Promise(r => setTimeout(r, 1500 * attempt));
+            await new Promise(r => setTimeout(r, 2000));
             sendSSE(res, "progress", {
               stage: section.key,
-              message: `Retrying ${section.label} (attempt ${attempt}/${MAX_RETRIES})...`,
+              message: `Retrying ${section.label} (attempt ${attempt}/2)...`,
               progress: progressPct
             });
           }
 
-          const prompt = buildSectionPrompt(subject, units, section, lang, genMode);
-          const modeAdj = MODE_MODIFIERS[genMode]?.temperature_adj || 0;
-          const temperature = attempt === 1 ? (0.55 + modeAdj) : 0.7;
+          // Smart fallback: Gemini → Groq → DeepSeek
+          const result = await callAIWithFallback(prompt, section.maxTokens, temperature);
 
-          // Try Gemini first
-          let result = null;
-          try {
-            result = await callGeminiJSON(prompt, section.maxTokens, temperature);
-          } catch (geminiErr) {
-            console.error(`[GEMINI] ${section.key} attempt ${attempt}:`, geminiErr.message);
-            // Try Groq fallback
-            result = await callGroqJSON(prompt, section.maxTokens);
-            if (!result) throw geminiErr;
-          }
-
-          // Validate
+          // Validate result
           const validation = validateSection(subject.renderer_type, section.key, result, section.count);
           if (!validation.valid) {
             lastError = validation.error;
             console.warn(`[VALIDATE] ${section.key} attempt ${attempt}: ${validation.error}`);
-            if (attempt < MAX_RETRIES) continue;
+            if (attempt < 2) continue;
+            // On second failure accept it anyway — partial data is better than nothing
+            console.warn(`[VALIDATE] Accepting partial result for ${section.key}`);
+            sectionData = result;
+            break;
           }
 
           sectionData = result;
@@ -811,7 +907,7 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
 
         } catch (err) {
           lastError = err.message;
-          console.error(`[GENERATE] ${section.key} attempt ${attempt}:`, err.message);
+          console.error(`[GENERATE] ${section.key} attempt ${attempt}:`, err.message.substring(0, 150));
         }
       }
 
