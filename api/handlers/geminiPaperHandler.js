@@ -553,42 +553,57 @@ async function callGroqJSON(prompt, maxTokens) {
     return null;
   }
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No explanations. No markdown code blocks." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.6,
-        max_tokens: Math.min(maxTokens, 4000)  // Groq free tier limit
-        // NOTE: response_format NOT used — llama models may not support json_object mode
-      })
-    });
+  // Try multiple Groq models — each has its own separate daily quota pool
+  const groqModels = [
+    'llama-3.1-8b-instant',   // Very high free limits (separate pool)
+    'mixtral-8x7b-32768',     // Good quality, separate quota
+    'gemma2-9b-it',           // Google model on Groq, separate quota
+    'llama3-8b-8192',         // Last resort fallback
+  ];
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error(`[GROQ] HTTP ${res.status}:`, errText.substring(0, 200));
-      return null;
+  for (const model of groqModels) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No explanations. No markdown code blocks." },
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.6,
+          max_tokens: Math.min(maxTokens, 4000)
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.warn(`[GROQ] ${model} HTTP ${res.status}:`, errText.substring(0, 150));
+        if (res.status === 429 || res.status === 503) continue; // quota — try next model
+        return null;
+      }
+
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content || "";
+      if (!text || text.length < 10) { console.warn(`[GROQ] ${model} empty response`); continue; }
+
+      // Extract JSON — handle markdown code blocks and raw JSON
+      const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+                        text.match(/(\{[\s\S]*\})/);
+      const raw = jsonMatch ? (jsonMatch[1] || jsonMatch[0]).trim() : text.trim();
+      const parsed = JSON.parse(raw);
+      console.log(`[GROQ] Success via model: ${model}`);
+      return parsed;
+
+    } catch (e) {
+      console.warn(`[GROQ] ${model} error:`, e.message.substring(0, 100));
+      continue;
     }
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content || "";
-    if (!text || text.length < 10) {
-      console.warn('[GROQ] Empty response text');
-      return null;
-    }
-    // Extract JSON — handle markdown code blocks and raw JSON
-    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ||
-                      text.match(/(\{[\s\S]*\})/);
-    const raw = jsonMatch ? (jsonMatch[1] || jsonMatch[0]).trim() : text.trim();
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error("[GROQ] Failed:", e.message);
-    return null;
   }
+
+  console.error('[GROQ] All 4 models exhausted');
+  return null;
 }
 
 async function callDeepSeekJSON(prompt, maxTokens) {
