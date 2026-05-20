@@ -1,204 +1,228 @@
 // ═══════════════════════════════════════════════════════════════
-// PROVIDER ROUTER — Smart AI dispatch with cost optimization
+// PROVIDER ROUTER v2 — Smart AI dispatch with cost optimization
 //
-// Philosophy (from PRD):
-//   • Gemini  = premium accuracy engine (final paper, numericals)
-//   • Groq    = ultra-fast utility layer (drafts, simple sections)
-//   • Mistral = structured fast worker (theory subjects, cleanup)
+// Cascade (from PRD):
+//   Gemini → OpenRouter (DeepSeek/Llama) → Mistral → Retry
 //
-// DO NOT add raw if/else per provider — use this router only.
+// Provider Roles:
+//   Gemini       = Premium accuracy, final paper, numericals, board phrasing
+//   OpenRouter   = Multi-model fallback (DeepSeek, Llama, Qwen free tier)
+//   Mistral      = Structured fast worker, JSON cleanup, simple theory
+//
+// DO NOT add raw if/else per provider anywhere else in codebase.
+// This is the ONLY place provider selection logic lives.
 // ═══════════════════════════════════════════════════════════════
 
-import { callGemini }  from './gemini.js';
-import { callGroq }    from './groq.js';
+import { callGemini }     from './gemini.js';
+import { callOpenRouter } from './openrouter.js';
 import { callMistral, cleanupJSON } from './mistral.js';
 
-// ── Subject Cost Profiles ────────────────────────────────────
-// Determines which provider handles each subject namespace.
-// Heavy numerical/reasoning → Gemini preferred
-// Theory-only, cheap → Mistral/Groq can handle it
+// ── Subject Routing Table ──────────────────────────────────────
+// Maps subject namespaces → provider tier preference
+// Tier determines cascade order (see getProviderCascade below)
 const SUBJECT_PROFILES = {
-  // ── Numerical-heavy — Gemini preferred ──
-  math:           { tier: 'premium',  reason: 'numerical heavy, complex derivations' },
-  engg_mechanics: { tier: 'premium',  reason: 'force/torque numericals, derivations' },
-  physics2:       { tier: 'premium',  reason: 'numerical + circuit problems' },
-  feee:           { tier: 'premium',  reason: 'electrical circuits, AC/DC numericals' },
+  // PREMIUM — Gemini first (numerical heavy, derivations, complex reasoning)
+  math:           { tier: 'premium',  reason: 'complex numericals, symbolic math, derivations' },
+  engg_mechanics: { tier: 'premium',  reason: 'force/torque numericals, FBD, beam reactions' },
+  physics2:       { tier: 'premium',  reason: 'circuit numericals, optics, wave problems' },
+  feee:           { tier: 'premium',  reason: 'AC/DC circuits, phasor diagrams, electrical machines' },
+  engg_graphics:  { tier: 'premium',  reason: 'projection problems, orthographic views, isometric' },
 
-  // ── Theory-heavy — Mistral/Groq handles fine ──
-  env_science:    { tier: 'standard', reason: 'pure theory, no numericals' },
-  it_systems:     { tier: 'standard', reason: 'theory, definitions, diagrams' },
-  workshop:       { tier: 'standard', reason: 'procedural knowledge, safety rules' },
-
-  // ── Mixed — Groq primary, Gemini for final quality ──
-  engg_graphics:  { tier: 'balanced', reason: 'diagram questions, mixed content' },
+  // STANDARD — OpenRouter first (theory, definitions, applications)
+  env_science:    { tier: 'standard', reason: 'pure theory, no numericals, EVS concepts' },
+  it_systems:     { tier: 'standard', reason: 'IT theory, definitions, computer basics' },
+  workshop:       { tier: 'standard', reason: 'procedural knowledge, safety rules, tools' },
 };
 
-// ── Section Cost Profiles ────────────────────────────────────
-// Some sections within a subject can use cheaper providers
+// ── Section Routing Table ──────────────────────────────────────
+// Sections within a paper have independent tier assignments.
+// High-complexity sections can override a standard-tier subject to use Gemini.
 const SECTION_PROFILES = {
-  // Simple objectives — fast providers fine
-  partA:  { tier: 'fast', reason: 'MCQ/T-F/fill-blank = low complexity' },
-  secA:   { tier: 'fast', reason: 'very short 1-mark questions' },
-  q6:     { tier: 'fast', reason: 'short note topics only' },
+  // FAST — Groq/OpenRouter Llama sufficient
+  partA: { tier: 'fast', reason: 'MCQ, T/F, fill-blank — low complexity objective' },
+  secA:  { tier: 'fast', reason: '1-mark very short questions' },
+  q6:    { tier: 'fast', reason: 'short note topics — structured list' },
 
-  // Medium complexity
-  partB:  { tier: 'balanced', reason: 'short recall questions' },
-  secB:   { tier: 'balanced', reason: '2-mark short answers' },
+  // BALANCED — OpenRouter DeepSeek good enough
+  partB: { tier: 'balanced', reason: '2-mark short recall and formula questions' },
+  secB:  { tier: 'balanced', reason: '2-mark short answer questions' },
 
-  // High complexity — Gemini preferred
-  partC:  { tier: 'premium', reason: '4-mark derivations/explanations' },
-  partD:  { tier: 'premium', reason: '6-mark proofs and long numericals' },
-  secC:   { tier: 'premium', reason: '4-mark diagram questions' },
-  secD:   { tier: 'premium', reason: '6-mark numerical/long answers' },
-  q1: { tier: 'premium', reason: 'DC circuits — numerical' },
-  q2: { tier: 'premium', reason: 'AC circuits — phasor, numerical' },
-  q3: { tier: 'premium', reason: 'machines — electrical engineering' },
-  q4: { tier: 'premium', reason: 'electronics — derivation heavy' },
-  q5: { tier: 'premium', reason: 'digital electronics — logic design' },
+  // PREMIUM — Gemini preferred
+  partC: { tier: 'premium', reason: '4-mark derivations and explanations' },
+  partD: { tier: 'premium', reason: '6-mark long answer + numericals' },
+  secC:  { tier: 'premium', reason: '4-mark diagram and explanation questions' },
+  secD:  { tier: 'premium', reason: '6-mark numerical/long answer questions' },
+  q1:    { tier: 'premium', reason: 'DC circuits — complex numerical derivation' },
+  q2:    { tier: 'premium', reason: 'AC circuits — phasor, impedance numericals' },
+  q3:    { tier: 'premium', reason: 'electrical machines — motor/generator theory' },
+  q4:    { tier: 'premium', reason: 'electronic devices — diode/transistor circuits' },
+  q5:    { tier: 'premium', reason: 'digital electronics — logic gates, K-map' },
 };
+
+// Tier rank for comparison (higher = more expensive/accurate)
+const TIER_RANK = { fast: 1, balanced: 2, standard: 2, premium: 3 };
 
 /**
- * Determine the best provider cascade for a given subject + section.
- * Returns ordered array: first = try first, last = last resort.
+ * Get ordered provider cascade for a subject+section combination.
  *
- * @param {string} subjectNamespace  - e.g. 'env_science', 'math'
- * @param {string} sectionKey        - e.g. 'secA', 'partD', 'q1'
- * @returns {string[]} Provider order: 'gemini' | 'groq' | 'mistral'
+ * Cascade logic:
+ *   premium tier  → Gemini → OpenRouter → Mistral
+ *   balanced tier → OpenRouter → Gemini → Mistral
+ *   fast tier     → OpenRouter → Mistral → Gemini
+ *   standard tier → OpenRouter → Mistral → Gemini  (theory subjects)
+ *
+ * @returns {string[]} e.g. ['gemini', 'openrouter', 'mistral']
  */
 export function getProviderCascade(subjectNamespace, sectionKey) {
   const subjectProfile = SUBJECT_PROFILES[subjectNamespace] || { tier: 'balanced' };
   const sectionProfile = SECTION_PROFILES[sectionKey]       || { tier: 'balanced' };
 
-  // Effective tier = most restrictive of subject & section
-  const effectiveTier = tierRank(sectionProfile.tier) > tierRank(subjectProfile.tier)
+  // Use the more demanding tier of subject vs section
+  const effectiveTier = (TIER_RANK[sectionProfile.tier] || 2) > (TIER_RANK[subjectProfile.tier] || 2)
     ? sectionProfile.tier
     : subjectProfile.tier;
 
   switch (effectiveTier) {
     case 'premium':
-      // Gemini → Groq → Mistral (only if theory subject)
-      return subjectProfile.tier === 'standard'
-        ? ['gemini', 'mistral', 'groq']
-        : ['gemini', 'groq', 'mistral'];
+      // Gemini first — best accuracy for complex content
+      return ['gemini', 'openrouter', 'mistral'];
 
     case 'balanced':
-      // Groq first (fast + cheap), Gemini as quality fallback
-      return ['groq', 'gemini', 'mistral'];
+      // OpenRouter (DeepSeek free) first — cost-effective for medium complexity
+      return ['openrouter', 'gemini', 'mistral'];
 
     case 'fast':
-      // Groq primary, Mistral secondary, Gemini only if both fail
-      return ['groq', 'mistral', 'gemini'];
+    case 'standard':
+      // OpenRouter → Mistral → Gemini (cheapest path first)
+      return ['openrouter', 'mistral', 'gemini'];
 
     default:
-      return ['gemini', 'groq', 'mistral'];
+      return ['gemini', 'openrouter', 'mistral'];
   }
 }
 
-function tierRank(tier) {
-  return { fast: 1, balanced: 2, standard: 2, premium: 3 }[tier] || 2;
-}
-
-// ── Standard Response Shape ───────────────────────────────────
-// Every provider MUST return this. Router enforces it.
-//
+// ── Standard Response Shape ────────────────────────────────────
+// CONTRACT: Every provider returns this exact shape.
 // {
-//   success: boolean
-//   provider: 'gemini' | 'groq' | 'mistral'
-//   model: string
-//   content: object         ← parsed JSON, the actual exam questions
-//   tokens_used: number
-//   latency_ms: number
-//   finish_reason: string
-//   error?: string          ← only if success: false
-//   quota_exhausted?: bool  ← hint to skip provider next time
+//   success:        boolean
+//   provider:       'gemini' | 'openrouter' | 'mistral'
+//   model:          string      ← exact model ID used
+//   content:        object      ← parsed JSON exam questions
+//   tokens_used:    number
+//   latency_ms:     number
+//   finish_reason:  string
+//   cost_estimate:  number      ← USD (0 for free tier)
+//   error?:         string      ← only when success: false
+//   quota_exhausted?: boolean   ← skip this provider hint
 // }
 
 /**
- * Route a prompt to the right provider cascade and return content.
- * Automatically falls back through the cascade on failure.
+ * Route a generation request through the provider cascade.
+ * Automatically falls back on any failure.
+ * Throws only if ALL providers in the cascade fail.
  *
  * @param {string} prompt
  * @param {object} opts
- * @param {string}  opts.subjectNamespace - for cost routing
- * @param {string}  opts.sectionKey       - for cost routing
+ * @param {string}  opts.subjectNamespace
+ * @param {string}  opts.sectionKey
  * @param {number}  opts.maxTokens
  * @param {number}  opts.temperature
- * @param {boolean} opts.useCleanupOnFail - try Mistral JSON cleanup on parse errors
- * @returns {object} { content, provider, model, latency_ms, ... }
- * @throws  Error if all providers in cascade fail
+ * @param {boolean} opts.useCleanupOnFail   try Mistral JSON repair as final rescue
+ * @param {string}  opts.systemPrompt       custom system message override
+ * @returns {object} Standard response shape with content field populated
+ * @throws  Error if all cascade providers fail
  */
 export async function routeToProvider(prompt, {
-  subjectNamespace = 'general',
-  sectionKey = 'general',
-  maxTokens = 4000,
-  temperature = 0.6,
-  useCleanupOnFail = true
+  subjectNamespace  = 'general',
+  sectionKey        = 'general',
+  maxTokens         = 4000,
+  temperature       = 0.6,
+  useCleanupOnFail  = true,
+  systemPrompt      = null
 } = {}) {
   const cascade = getProviderCascade(subjectNamespace, sectionKey);
-  const opts = { maxTokens, temperature };
+  const opts = { maxTokens, temperature, systemPrompt };
 
-  console.log(`[ROUTER] ${subjectNamespace}/${sectionKey} → cascade: [${cascade.join(' → ')}]`);
+  console.log(`[ROUTER] ${subjectNamespace}/${sectionKey} → [${cascade.join(' → ')}]`);
 
   let lastError = null;
-  let lastRawText = null;
 
   for (const providerName of cascade) {
     try {
       let result;
 
       switch (providerName) {
-        case 'gemini':  result = await callGemini(prompt, opts);  break;
-        case 'groq':    result = await callGroq(prompt, opts);    break;
-        case 'mistral': result = await callMistral(prompt, opts); break;
+        case 'gemini':
+          result = await callGemini(prompt, opts);
+          break;
+        case 'openrouter':
+          result = await callOpenRouter(prompt, opts);
+          break;
+        case 'mistral':
+          result = await callMistral(prompt, opts);
+          break;
         default:
-          console.warn(`[ROUTER] Unknown provider: ${providerName}, skipping`);
+          console.warn(`[ROUTER] Unknown provider "${providerName}" — skipping`);
           continue;
       }
 
       if (result.success) {
-        console.log(`[ROUTER] ✓ ${providerName}/${result.model} (${result.latency_ms}ms, ${result.tokens_used} tokens)`);
+        console.log(
+          `[ROUTER] ✓ ${result.provider}/${result.model} ` +
+          `(${result.latency_ms}ms, ${result.tokens_used} tokens, ~$${result.cost_estimate || 0})`
+        );
         return result;
       }
 
-      // Provider returned failure
+      // Provider responded but returned failure (quota, bad key, etc.)
       lastError = result.error;
       console.warn(`[ROUTER] ✗ ${providerName}: ${result.error}`);
 
-      // If quota exhausted, skip to next immediately
       if (result.quota_exhausted) {
-        console.warn(`[ROUTER] ${providerName} quota exhausted — skipping`);
-        continue;
+        console.warn(`[ROUTER] ${providerName} quota exhausted — moving to next`);
       }
 
     } catch (e) {
       lastError = e.message;
-      console.error(`[ROUTER] ${providerName} threw:`, e.message.substring(0, 100));
+      console.error(`[ROUTER] ${providerName} threw exception:`, e.message.substring(0, 150));
     }
   }
 
-  // All cascade providers failed — try Mistral JSON cleanup as last resort
-  if (useCleanupOnFail && lastRawText) {
-    console.warn('[ROUTER] All providers failed — attempting Mistral JSON cleanup...');
-    const cleaned = await cleanupJSON(lastRawText, {});
+  // ── Last Resort: Mistral JSON Repair ──────────────────────────
+  // If a provider returned malformed JSON, attempt cleanup via Mistral
+  // (only useful if we captured raw text, which we don't currently — future enhancement)
+  if (useCleanupOnFail) {
+    console.warn('[ROUTER] All providers failed — trying Mistral cleanup rescue...');
+    const cleaned = await cleanupJSON(`Regenerate a valid JSON for a BTEUP exam section prompt:\n${prompt.substring(0, 500)}`, {});
     if (cleaned.success) {
-      console.log('[ROUTER] ✓ Mistral cleanup rescued the response');
+      console.log('[ROUTER] ✓ Mistral rescue succeeded');
       return { ...cleaned, rescued: true };
     }
   }
 
   throw new Error(
-    `All providers failed [${cascade.join('→')}]. Last error: ${(lastError || 'unknown').substring(0, 150)}`
+    `All providers exhausted [${cascade.join('→')}]. ` +
+    `Last error: ${(lastError || 'unknown').substring(0, 200)}`
   );
 }
 
 /**
- * Health-check: verify which providers are configured.
- * Call this during startup/debug — not on every request.
+ * Health check — which providers are configured in environment?
+ * Safe to expose to admin endpoints (returns no key values).
  */
 export function getProviderStatus() {
   return {
-    gemini:  { configured: !!process.env.GEMINI_API_KEY,  role: 'Premium accuracy engine' },
-    groq:    { configured: !!process.env.GROQ_API_KEY,    role: 'Ultra-fast utility layer' },
-    mistral: { configured: !!process.env.MISTRAL_API_KEY, role: 'Structured fast worker' },
+    gemini: {
+      configured: !!process.env.GEMINI_API_KEY,
+      role: 'Premium accuracy engine — numericals, board phrasing, final paper'
+    },
+    openrouter: {
+      configured: !!process.env.OPENROUTER_API_KEY,
+      role: 'Multi-model fallback — DeepSeek, Llama, Qwen via single key'
+    },
+    mistral: {
+      configured: !!process.env.MISTRAL_API_KEY,
+      role: 'Structured fast worker — theory sections, JSON cleanup'
+    }
   };
 }

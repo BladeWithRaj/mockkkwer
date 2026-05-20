@@ -10,6 +10,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { routeToProvider, getProviderStatus } from '../providers/providerRouter.js';
+import { validateSection, validatePaper }      from '../engine/validationEngine.js';
+import { retrySection }                        from '../engine/retryManager.js';
+import { createBudgetTracker, logTokenUsage }  from '../engine/tokenBudgetManager.js';
 
 // ── Generation Mode Modifiers ──
 // Each mode injects specific behavioral instructions into the AI prompt.
@@ -491,102 +494,17 @@ GENERATE NOW:`;
 // ═══════════════════════════════════════════════════════════════
 
 async function callAIWithFallback(prompt, maxTokens, temperature = 0.6, context = {}) {
-  const result = await routeToProvider(prompt, {
+  return routeToProvider(prompt, {
     subjectNamespace: context.subjectNamespace || 'general',
     sectionKey:       context.sectionKey       || 'general',
     maxTokens,
     temperature
   });
   // routeToProvider throws if all cascade providers fail
-  return result.content;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// VALIDATORS — Strict schema validation per section
-// ═══════════════════════════════════════════════════════════════
-
-
-function validateMathSection(key, data, expectedCount) {
-  const questions = data?.questions;
-  if (!Array.isArray(questions)) return { valid: false, error: "Missing questions array" };
-  if (questions.length < Math.floor(expectedCount * 0.7)) {
-    return { valid: false, error: `Need ${expectedCount}, got ${questions.length}` };
-  }
-
-  for (let i = 0; i < questions.length; i++) {
-    const q = questions[i];
-    if (typeof q.en !== 'string' || q.en.length < 5) {
-      return { valid: false, error: `Question ${i + 1}: missing/short 'en' field` };
-    }
-    if (key === 'partA' && q.type === 'mcq') {
-      if (!Array.isArray(q.options) || q.options.length !== 4) {
-        return { valid: false, error: `Question ${i + 1}: MCQ needs exactly 4 options` };
-      }
-    }
-  }
-
-  return { valid: true };
-}
-
-function validateFEEESection(key, data) {
-  if (key === 'q6') {
-    const notes = data?.notes;
-    if (!Array.isArray(notes)) return { valid: false, error: "Missing notes array" };
-    if (notes.length < 3) return { valid: false, error: `Need 5 notes, got ${notes.length}` };
-    for (const n of notes) {
-      if (typeof n.en !== 'string' || n.en.length < 3) {
-        return { valid: false, error: "Short note missing 'en' field" };
-      }
-    }
-    return { valid: true };
-  }
-
-  // Q1-Q5
-  const parts = data?.parts;
-  if (!Array.isArray(parts)) return { valid: false, error: "Missing parts array" };
-  if (parts.length < 2) return { valid: false, error: `Need 3 parts, got ${parts.length}` };
-  for (const p of parts) {
-    if (typeof p.en !== 'string' || p.en.length < 10) {
-      return { valid: false, error: "Part missing/short 'en' field" };
-    }
-  }
-  return { valid: true };
-}
-
-function validateSection(rendererType, key, data, expectedCount) {
-  if (rendererType === 'PATTERN_MATH') return validateMathSection(key, data, expectedCount);
-  if (rendererType === 'PATTERN_FEEE') return validateFEEESection(key, data);
-  if (rendererType === 'PATTERN_GENERAL') return validateGeneralSection(key, data, expectedCount);
-  // Unknown renderer — let it pass rather than fail every section
-  return { valid: true };
-}
-
-// Validator for PATTERN_GENERAL sections (secA, secB, secC, secD)
-function validateGeneralSection(key, data, expectedCount) {
-  if (!data || typeof data !== 'object') {
-    return { valid: false, error: 'Response is not an object' };
-  }
-
-  // All sections return { questions: [...] }
-  const questions = data.questions;
-  if (!Array.isArray(questions) || questions.length === 0) {
-    return { valid: false, error: `${key}: questions array missing or empty` };
-  }
-
-  // Check minimum count (accept if at least 60% of expected)
-  const minRequired = Math.ceil(expectedCount * 0.6);
-  if (questions.length < minRequired) {
-    return { valid: false, error: `${key}: got ${questions.length} questions, need at least ${minRequired}` };
-  }
-
-  // Check each question has at least 'en' text
-  const invalid = questions.filter(q => !q.en || q.en.length < 5);
-  if (invalid.length > questions.length * 0.3) {
-    return { valid: false, error: `${key}: too many questions missing text (${invalid.length} invalid)` };
-  }
-
-  return { valid: true };
-}
+// Validators live in api/engine/validationEngine.js
+// Imported at top of file — do not add inline validators here.
 
 // ═══════════════════════════════════════════════════════════════
 // SSE HELPERS — Stream progress events to client
@@ -625,10 +543,11 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
     });
   }
 
-  // Gemini key check
-  const { key: GEMINI_API_KEY } = getGeminiConfig();
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: "API key not configured." });
+  // Provider status check — warn if Gemini not configured (fallbacks handle it)
+  const providerStatus = getProviderStatus();
+  const anyConfigured = Object.values(providerStatus).some(p => p.configured);
+  if (!anyConfigured) {
+    return res.status(500).json({ error: 'No AI providers configured. Set GEMINI_API_KEY, OPENROUTER_API_KEY, or MISTRAL_API_KEY.' });
   }
 
   try {
@@ -690,68 +609,52 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
     let completedSections = 0;
     const failedSections = [];
 
+    // ── Setup token budget tracker ──
+    const budget = createBudgetTracker();
+
     for (const section of sections) {
       const progressPct = Math.round(10 + (completedSections / totalSections) * 80);
 
-      sendSSE(res, "progress", {
+      sendSSE(res, 'progress', {
         stage: section.key,
         message: section.stageText,
         progress: progressPct,
         section: section.label
       });
 
-      let sectionData = null;
-      let lastError = null;
-
-      const prompt = buildSectionPrompt(subject, units, section, lang, genMode);
-      const modeAdj = MODE_MODIFIERS[genMode]?.temperature_adj || 0;
+      const prompt      = buildSectionPrompt(subject, units, section, lang, genMode);
+      const modeAdj     = MODE_MODIFIERS[genMode]?.temperature_adj || 0;
       const temperature = 0.55 + modeAdj;
+      const adjTokens   = budget.getAdjustedTokens(section.maxTokens);
 
-      // Attempt generation with 3-provider cascade + up to 2 validation retries
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          if (attempt > 1) {
-            await new Promise(r => setTimeout(r, 2000));
-            sendSSE(res, "progress", {
-              stage: section.key,
-              message: `Retrying ${section.label} (attempt ${attempt}/2)...`,
-              progress: progressPct
-            });
-          }
-
-          // Smart fallback via providerRouter (cost-optimized: premium subjects → Gemini, theory → Groq/Mistral)
-          const result = await callAIWithFallback(prompt, section.maxTokens, temperature, {
+      const { data: sectionData, valid, validation } = await retrySection(
+        async (attempt) => {
+          const providerResult = await callAIWithFallback(prompt, adjTokens, temperature, {
             subjectNamespace: subject.prompt_namespace || 'general',
             sectionKey: section.key
           });
-
-          // Validate result
-          const validation = validateSection(subject.renderer_type, section.key, result, section.count);
-          if (!validation.valid) {
-            lastError = validation.error;
-            console.warn(`[VALIDATE] ${section.key} attempt ${attempt}: ${validation.error}`);
-            if (attempt < 2) continue;
-            // On second failure accept it anyway — partial data is better than nothing
-            console.warn(`[VALIDATE] Accepting partial result for ${section.key}`);
-            sectionData = result;
-            break;
-          }
-
-          sectionData = result;
-          break;
-
-        } catch (err) {
-          lastError = err.message;
-          console.error(`[GENERATE] ${section.key} attempt ${attempt}:`, err.message.substring(0, 150));
+          budget.record(section.key, providerResult);
+          return providerResult.content;
+        },
+        (data) => validateSection(subject.renderer_type, section.key, data, section.count),
+        {
+          onProgress: (msg) => sendSSE(res, 'progress', { stage: section.key, message: msg, progress: progressPct }),
+          sectionLabel: section.label,
+          maxAttempts: 2
         }
-      }
+      ).catch(err => {
+        console.error(`[GENERATE] ${section.key} failed:`, err.message.substring(0, 150));
+        return { data: null, valid: false, validation: { errors: [err.message] } };
+      });
 
       if (sectionData) {
         paperData[section.key] = sectionData;
         completedSections++;
+        if (!valid) {
+          console.warn(`[VALIDATE] ${section.key}: accepted partial — ${validation?.errors?.[0] || 'validation issue'}`);
+        }
       } else {
-        failedSections.push({ key: section.key, label: section.label, error: lastError });
-        // Still continue — generate what we can
+        failedSections.push({ key: section.key, label: section.label, error: validation?.errors?.[0] || 'generation failed' });
       }
     }
 
@@ -782,8 +685,12 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
       console.error("[CACHE] Failed to save paper:", cacheErr.message);
     }
 
+    // ── Paper-level validation ──
+    const paperValidation = validatePaper(paperData, failedSections);
+    const budgetSummary   = budget.getSummary();
+
     // ── Send final paper data ──
-    sendSSE(res, "complete", {
+    sendSSE(res, 'complete', {
       success: true,
       paper_id: paperId,
       subject: {
@@ -794,16 +701,31 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
         renderer_type: subject.renderer_type,
         paper_style: subject.paper_style
       },
-      branch: branch || "Common",
+      branch: branch || 'Common',
       language: lang,
       mode: genMode,
       mode_label: MODE_MODIFIERS[genMode]?.label || genMode,
       sections: paperData,
       failed_sections: failedSections,
+      paper_quality: {
+        valid:        paperValidation.valid,
+        warnings:     paperValidation.warnings,
+        success_rate: paperValidation.successRate
+      },
+      generation_stats: {
+        total_tokens:    budgetSummary.total_tokens,
+        total_cost_usd:  budgetSummary.total_cost_usd,
+        elapsed_ms:      budgetSummary.elapsed_ms,
+        providers_used:  Object.keys(budgetSummary.provider_breakdown)
+      },
       generated_at: new Date().toISOString()
     });
 
     res.end();
+
+    // ── Async token usage log (non-blocking) ──
+    logTokenUsage(supabase, budgetSummary, subject.id, paperId).catch(() => {});
+
 
   } catch (err) {
     console.error("[GENERATE] Fatal:", err.message);
