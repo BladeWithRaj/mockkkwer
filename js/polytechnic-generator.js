@@ -6,6 +6,7 @@
     semester1: [
       {
         id: 9, name: 'Mathematics-I', code: '4101', renderer: 'PATTERN_MATH', marks: 60, semester: 1,
+        subject_category: 'core_theory', generation_mode: 'advanced_prediction', prediction_priority: 10,
         topics: ['Algebra','Trigonometry','Coordinate Geometry','Differential Calculus-I','Statistics & Probability'],
         importantTopics: ['Trigonometric identities','Quadratic equations','Compound angles','Permutation & Combination','Differentiation rules','Straight lines','Binomial theorem'],
         profile: { style: 'symbolic', keyVerbs: ['Find','Solve','Evaluate','Prove'] },
@@ -25,6 +26,7 @@
       },
       {
         id: 10, name: 'Applied Physics-I', code: '4102', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        subject_category: 'core_theory', generation_mode: 'advanced_prediction', prediction_priority: 9,
         topics: ['Units & Dimensions','Motion','Newton\'s Laws','Work & Energy','Rotational Motion','Heat & Thermodynamics','Elasticity'],
         importantTopics: ['Equations of motion','Newton\'s 3 laws','Work-energy theorem','Specific heat calorimetry','Moment of inertia','Young\'s modulus'],
         profile: { style: 'conceptual_numerical', keyVerbs: ['Define','Derive','Calculate','State and prove'], numericalPct: 50 },
@@ -44,6 +46,7 @@
       },
       {
         id: 11, name: 'Applied Chemistry', code: '4103', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        subject_category: 'core_theory', generation_mode: 'advanced_prediction', prediction_priority: 9,
         topics: ['Atomic Structure','Chemical Bonding','Acids & Bases','Water Treatment','Fuels','Lubricants','Polymers'],
         importantTopics: ['Bohr model','Ionic & covalent bonding','Hard water treatment','pH calculation','Calorific value','Polymer classification'],
         profile: { style: 'theory_application', keyVerbs: ['Define','Explain','Differentiate','Write short note on'], numericalPct: 20 },
@@ -63,6 +66,7 @@
       },
       {
         id: 12, name: 'Communication Skills in English', code: '4104', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        subject_category: 'core_theory', generation_mode: 'advanced_prediction', prediction_priority: 8,
         topics: ['Grammar','Letter Writing','Comprehension','Precis Writing','Report Writing','Essay Writing','Vocabulary'],
         importantTopics: ['Formal letter format','Job application letter','Precis writing','Grammar correction','Essay writing','Comprehension passage'],
         profile: { style: 'language_practical', keyVerbs: ['Write','Explain','Correct','Draft'], numericalPct: 0 },
@@ -82,6 +86,7 @@
       },
       {
         id: 13, name: 'Engineering Mechanics', code: '4105', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        subject_category: 'core_theory', generation_mode: 'advanced_prediction', prediction_priority: 9,
         topics: ['Force System','Lami\'s Theorem','Moments','Friction','Centroid','Simple Machines','Equilibrium'],
         importantTopics: ['Lami\'s theorem','Resultant of forces','Varignon\'s theorem','Coefficient of friction','Centroid of composite figures','MA & VR of machines'],
         profile: { style: 'numerical_mechanics', keyVerbs: ['Find','Calculate','State and prove','Derive'], numericalPct: 65 },
@@ -101,6 +106,7 @@
       },
       {
         id: 14, name: 'Environmental Science', code: '4106', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        subject_category: 'qualifying', generation_mode: 'pass_assist', prediction_priority: 2,
         topics: ['Ecosystem','Air Pollution','Water Pollution','Global Warming','Ozone Depletion','Renewable Energy','Waste Management'],
         importantTopics: ['Pollution types causes effects','Greenhouse effect','Ozone layer depletion','Food chain food web','Renewable energy sources','3R principle'],
         profile: { style: 'awareness_theory', keyVerbs: ['Define','Explain','What are causes of','Write short note on'], numericalPct: 0 },
@@ -120,6 +126,7 @@
       },
       {
         id: 15, name: 'Engineering Workshop Practice', code: '4107', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1, optional: true,
+        subject_category: 'practical', generation_mode: 'viva_and_practical', prediction_priority: 2,
         topics: ['Carpentry','Fitting','Welding','Smithy','Foundry','Lathe Machine','Workshop Safety'],
         importantTopics: ['Types of welding','Welding joints','Fitting tools','Carpentry joints','PPE safety rules','Lathe machine parts'],
         profile: { style: 'practical_workshop', keyVerbs: ['Name','State','Explain','Draw and label'], numericalPct: 0 },
@@ -139,6 +146,7 @@
       },
       {
         id: 16, name: 'Engineering Graphics', code: '4108', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1, optional: true,
+        subject_category: 'practical', generation_mode: 'viva_and_practical', prediction_priority: 2,
         topics: ['Drawing Instruments','Scales','Projection of Points','Projection of Lines','Orthographic Projection','Isometric Projection','Sectional Views'],
         importantTopics: ['Orthographic three views','First/Third angle projection','Projection of lines','Isometric drawing','Sectional views','Plain scale construction'],
         profile: { style: 'drawing_oriented', keyVerbs: ['Draw','Construct','Project','Find true length'], numericalPct: 10 },
@@ -357,19 +365,47 @@
     sel.value = '1'; // default to Semester-1 per PRD
   }
 
+  // Subject category config for UI display
+  const CATEGORY_META = {
+    core_theory:    { label: '📘 Core Theory',    badge: 'core-badge',      desc: 'Full AI prediction · PYQ weighted · Board pattern' },
+    optional_theory:{ label: '📗 Optional Theory', badge: 'optional-badge',  desc: 'Moderate prediction · Institute-dependent' },
+    practical:      { label: '🔧 Practical',        badge: 'practical-badge', desc: 'Viva · Practical file · No fake theory papers' },
+    qualifying:     { label: '📋 Qualifying',       badge: 'qualifying-badge',desc: 'Pass-focused · MCQs · Repeated PYQs' }
+  };
+
   function populateSubjects() {
     const sel = document.getElementById('subjectSelect');
     if (!sel) return;
     sel.innerHTML = '<option value="">-- Select Subject --</option>';
-    const sem = document.getElementById('semesterSelect')?.value || '2';
-    (SUBJECTS_DB[`semester${sem}`] || []).forEach(s => {
-      const opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.optional
-        ? `${s.name} [Optional] (${s.code}) — ${s.marks} Marks`
-        : `${s.name} (${s.code}) — ${s.marks} Marks`;
-      opt.dataset.subject = JSON.stringify(s);
-      sel.appendChild(opt);
+    const sem = document.getElementById('semesterSelect')?.value || '1';
+    const subjects = SUBJECTS_DB[`semester${sem}`] || [];
+
+    // Group by category
+    const groups = { core_theory: [], optional_theory: [], practical: [], qualifying: [] };
+    subjects.forEach(s => {
+      const cat = s.subject_category || 'core_theory';
+      if (groups[cat]) groups[cat].push(s);
+      else groups.core_theory.push(s);
+    });
+
+    // Render each category as an optgroup
+    Object.entries(groups).forEach(([cat, list]) => {
+      if (!list.length) return;
+      const meta = CATEGORY_META[cat] || { label: cat };
+      const grp = document.createElement('optgroup');
+      grp.label = meta.label;
+      list.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        const suffix = cat === 'practical'  ? ' [Viva/Practical]'
+                     : cat === 'qualifying' ? ' [Qualifying]'
+                     : cat === 'optional_theory' ? ' [Optional]'
+                     : '';
+        opt.textContent = `${s.name}${suffix} (${s.code})`;
+        opt.dataset.subject = JSON.stringify(s);
+        grp.appendChild(opt);
+      });
+      sel.appendChild(grp);
     });
   }
 
@@ -455,8 +491,71 @@
       ? '<span class="sem-badge sem1-badge">1st Semester</span>'
       : '<span class="sem-badge sem2-badge">2nd Semester</span>';
 
+    const cat = s.subject_category || 'core_theory';
+    const catMeta = CATEGORY_META[cat] || CATEGORY_META.core_theory;
+    const catBadge = `<span class="sem-badge ${catMeta.badge}">${cat.replace('_', ' ').replace(/\b\w/g,c=>c.toUpperCase())}</span>`;
+
+    // ── PRACTICAL subjects: show viva/practical info instead of theory paper ──
+    if (cat === 'practical') {
+      const sections = s.profile?.style === 'drawing_oriented'
+        ? ['Viva — Theory Questions', 'Drawing Guidance — Practice Problems', 'Projection Steps & Procedures', 'Dimensioning & BIS Rules', 'Practical File']
+        : ['Viva Voce — Oral Questions', 'Safety & Rules MCQ Bank', 'Tool Identification Q&A', 'Process Steps — Procedures', 'Practical File Write-up'];
+
+      content.innerHTML = `
+        <div class="inst-section-label" style="margin-bottom:6px">${s.name} (${s.code}) ${semBadge} ${catBadge}</div>
+        <div class="inst-pipeline-notice practical-notice">
+          <strong>🔧 Practical Pipeline Active</strong><br>
+          This subject does NOT generate a theory exam paper.<br>
+          Instead it generates: <strong>viva questions, practical file guidance, and safety/tool MCQs</strong>.
+        </div>
+        <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">What gets generated:</div>
+        <ul class="inst-pipeline-list">
+          ${sections.map(s => `<li>${s}</li>`).join('')}
+        </ul>
+        <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">Unit Coverage</div>
+        ${unitBars}
+        <div class="inst-mode-info" style="margin-top:10px;border-left-color:#2a6b2a">
+          <strong>Note:</strong> ${catMeta.desc}
+        </div>`;
+      return;
+    }
+
+    // ── QUALIFYING subjects: show pass-assist info ──
+    if (cat === 'qualifying') {
+      content.innerHTML = `
+        <div class="inst-section-label" style="margin-bottom:6px">${s.name} (${s.code}) ${semBadge} ${catBadge}</div>
+        <div class="inst-pipeline-notice qualifying-notice">
+          <strong>📋 Pass-Assist Mode</strong><br>
+          This is a <strong>qualifying subject</strong> (marks may not count in merit).<br>
+          System generates <strong>MCQ bank + important short answers + repeated PYQs</strong>.
+        </div>
+        <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">What gets generated:</div>
+        <ul class="inst-pipeline-list">
+          <li>MCQ Bank — 20 most repeated questions</li>
+          <li>Important Short Answers (2 marks)</li>
+          <li>Key Definitions & 1-mark facts</li>
+          <li>Important Long Answers (Pass-focused)</li>
+        </ul>
+        <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">Unit Coverage</div>
+        ${unitBars}
+        ${importantBlock}
+        <div class="inst-mode-info" style="margin-top:10px;border-left-color:#c4a000">
+          <strong>Note:</strong> ${catMeta.desc}
+        </div>`;
+      return;
+    }
+
+    // ── CORE / OPTIONAL THEORY: full paper structure ──
+    const optionalNote = cat === 'optional_theory'
+      ? `<div class="inst-pipeline-notice optional-notice">
+           <strong>📗 Optional Subject</strong> — Shown only for institutes that offer this subject.
+           PYQ confidence is moderate (institute-dependent syllabus variations).
+         </div>`
+      : '';
+
     content.innerHTML = `
-      <div class="inst-section-label" style="margin-bottom:6px">Paper Structure — ${s.name} (${s.code}) ${semBadge}</div>
+      <div class="inst-section-label" style="margin-bottom:6px">Paper Structure — ${s.name} (${s.code}) ${semBadge} ${catBadge}</div>
+      ${optionalNote}
       <table class="inst-pattern-table">
         <thead>
           <tr>

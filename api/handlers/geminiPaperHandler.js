@@ -13,6 +13,8 @@ import { routeToProvider, getProviderStatus } from '../providers/providerRouter.
 import { validateSection, validatePaper }      from '../engine/validationEngine.js';
 import { retrySection }                        from '../engine/retryManager.js';
 import { createBudgetTracker, logTokenUsage }  from '../engine/tokenBudgetManager.js';
+import { generatePracticalPaper }             from '../engine/practicalGenerator.js';
+import { generateQualifyingPaper }            from '../engine/qualifyingGenerator.js';
 
 // ── Generation Mode Modifiers ──
 // Each mode injects specific behavioral instructions into the AI prompt.
@@ -801,6 +803,70 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
       return res.status(404).json({ error: "Syllabus not found for this subject" });
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // PIPELINE ROUTING — Based on subject_category
+    // 4 tiers: core_theory | optional_theory | practical | qualifying
+    // Each tier uses a completely different generation strategy.
+    // ═══════════════════════════════════════════════════════════
+    const subjectCategory = subject.subject_category || 'core_theory';
+    const dbGenMode       = subject.generation_mode   || 'advanced_prediction';
+
+    // PRACTICAL pipeline — viva/practical/drawing (no theory paper)
+    if (subjectCategory === 'practical') {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+      sendSSE(res, "progress", { stage: "init", message: `Generating viva & practical questions for ${subject.name}...`, progress: 5 });
+      const practicalResult = await generatePracticalPaper(supabase, subject, units, lang, genMode, sendSSE, res);
+      sendSSE(res, 'complete', {
+        success: true,
+        pipeline: 'practical',
+        subject: { name: subject.name, code: subject.code, semester: subject.semester,
+                   subject_category: subjectCategory, generation_mode: dbGenMode },
+        language: lang,
+        mode: genMode,
+        sections: practicalResult.paperData,
+        sections_meta: practicalResult.sections_meta,
+        failed_sections: practicalResult.failedSections,
+        generated_at: new Date().toISOString()
+      });
+      return res.end();
+    }
+
+    // QUALIFYING pipeline — pass-focused MCQ + short answers
+    if (subjectCategory === 'qualifying') {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.setHeader("X-Accel-Buffering", "no");
+      res.flushHeaders();
+      sendSSE(res, "progress", { stage: "init", message: `Generating pass-focused content for ${subject.name}...`, progress: 5 });
+      const qualResult = await generateQualifyingPaper(supabase, subject, units, lang, genMode, sendSSE, res);
+      sendSSE(res, 'complete', {
+        success: true,
+        pipeline: 'qualifying',
+        subject: { name: subject.name, code: subject.code, semester: subject.semester,
+                   subject_category: subjectCategory, generation_mode: dbGenMode,
+                   marks_not_counted: subject.marks_not_counted },
+        language: lang,
+        mode: genMode,
+        sections: qualResult.paperData,
+        sections_meta: qualResult.sections_meta,
+        failed_sections: qualResult.failedSections,
+        generated_at: new Date().toISOString()
+      });
+      return res.end();
+    }
+
+    // OPTIONAL_THEORY — same engine as core_theory but lower confidence score
+    // genMode forced to moderate if user selected advanced (optional subjects have weaker PYQ data)
+    const effectiveMode = (subjectCategory === 'optional_theory' && genMode === 'important')
+      ? 'pyq_weighted'   // moderate prediction for optional subjects
+      : genMode;
+
+    // CORE_THEORY / OPTIONAL_THEORY — full advanced prediction engine
     // ── Get section config for this pattern ──
     const sections = PATTERN_SECTIONS[subject.renderer_type];
     if (!sections) {
@@ -911,13 +977,17 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
     sendSSE(res, 'complete', {
       success: true,
       paper_id: paperId,
+      pipeline: 'theory',
       subject: {
         name: subject.name,
         code: subject.code,
         semester: subject.semester,
         marks_total: subject.marks_total,
         renderer_type: subject.renderer_type,
-        paper_style: subject.paper_style
+        paper_style: subject.paper_style,
+        subject_category: subjectCategory,
+        generation_mode: dbGenMode,
+        prediction_priority: subject.prediction_priority
       },
       branch: branch || 'Common',
       language: lang,

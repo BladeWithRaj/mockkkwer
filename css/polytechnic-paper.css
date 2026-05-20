@@ -772,3 +772,77 @@ body.polytechnic-generator {
   border-color: rgba(255,255,255,0.35);
   color: #fff;
 }
+
+/* ═══════════════════════════════════
+   SUBJECT CATEGORY BADGES
+   4 tiers: core / optional / practical / qualifying
+   ═══════════════════════════════════ */
+.core-badge {
+  background: #e8f0fc;
+  color: #1a3a6b;
+  border: 1px solid #2a5298;
+}
+.optional-badge {
+  background: #e8f4e8;
+  color: #1a5c1a;
+  border: 1px solid #2a7a2a;
+}
+.practical-badge {
+  background: #f0f4e8;
+  color: #3a4a1a;
+  border: 1px solid #5a7a2a;
+}
+.qualifying-badge {
+  background: #fff8e0;
+  color: #5a4000;
+  border: 1px solid #c4a000;
+}
+
+/* ═══════════════════════════════════
+   PIPELINE NOTICE BOXES
+   Different color per pipeline type
+   ═══════════════════════════════════ */
+.inst-pipeline-notice {
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 1.6;
+  margin-bottom: 2px;
+  border-left-width: 3px;
+  border-left-style: solid;
+}
+.practical-notice {
+  background: #f0f8f0;
+  border-color: #2a7a2a;
+  color: #1a4a1a;
+}
+.qualifying-notice {
+  background: #fffbe8;
+  border-color: #c4a000;
+  color: #4a3800;
+}
+.optional-notice {
+  background: #f0f8e8;
+  border-color: #4a7a2a;
+  color: #2a4a10;
+}
+
+/* Pipeline list */
+.inst-pipeline-list {
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+}
+.inst-pipeline-list li {
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 2px 0 2px 14px;
+  border-bottom: 1px dotted var(--border);
+  position: relative;
+}
+.inst-pipeline-list li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--govt-blue);
+  font-weight: 700;
+}
