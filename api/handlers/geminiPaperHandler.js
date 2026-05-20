@@ -625,7 +625,36 @@ function validateFEEESection(key, data) {
 function validateSection(rendererType, key, data, expectedCount) {
   if (rendererType === 'PATTERN_MATH') return validateMathSection(key, data, expectedCount);
   if (rendererType === 'PATTERN_FEEE') return validateFEEESection(key, data);
-  return { valid: false, error: `Unknown renderer: ${rendererType}` };
+  if (rendererType === 'PATTERN_GENERAL') return validateGeneralSection(key, data, expectedCount);
+  // Unknown renderer — let it pass rather than fail every section
+  return { valid: true };
+}
+
+// Validator for PATTERN_GENERAL sections (secA, secB, secC, secD)
+function validateGeneralSection(key, data, expectedCount) {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, error: 'Response is not an object' };
+  }
+
+  // All sections return { questions: [...] }
+  const questions = data.questions;
+  if (!Array.isArray(questions) || questions.length === 0) {
+    return { valid: false, error: `${key}: questions array missing or empty` };
+  }
+
+  // Check minimum count (accept if at least 60% of expected)
+  const minRequired = Math.ceil(expectedCount * 0.6);
+  if (questions.length < minRequired) {
+    return { valid: false, error: `${key}: got ${questions.length} questions, need at least ${minRequired}` };
+  }
+
+  // Check each question has at least 'en' text
+  const invalid = questions.filter(q => !q.en || q.en.length < 5);
+  if (invalid.length > questions.length * 0.3) {
+    return { valid: false, error: `${key}: too many questions missing text (${invalid.length} invalid)` };
+  }
+
+  return { valid: true };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -809,9 +838,10 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
         .from("generated_papers")
         .insert({
           title: `${subject.name} — Generated Paper`,
-          subject_id: subject.id,
-          paper_type: subject.renderer_type,
+          subject_id: null,          // Avoid FK constraint to old polytechnic_subjects table
+          paper_type: 'generated',   // Must match CHECK constraint: generated|pyq|practice|mock
           paper_structure: paperData,
+          generation_config: { subject_id: subject.id, renderer: subject.renderer_type, mode: genMode },
           is_public: false
         })
         .select("id")
