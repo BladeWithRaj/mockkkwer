@@ -12,21 +12,22 @@
   --govt-blue-lt: #3d6bbf;
   --govt-red:     #8b1a1a;
   --govt-maroon:  #6b1010;
-  --page-bg:      #e8e8dc;
-  --panel-bg:     #f4f4f0;
-  --panel-bg2:    #ededea;
-  --border:       #b0a898;
-  --border-dark:  #7a7060;
+  --page-bg:      #f0ede6;
+  --panel-bg:     #faf9f5;
+  --panel-bg2:    #f0ede8;
+  --border:       #c4b89a;
+  --border-dark:  #8a7a60;
   --text:         #1a1a1a;
-  --text-dim:     #4a4a4a;
-  --text-muted:   #6a6a6a;
+  --text-dim:     #4a4040;
+  --text-muted:   #7a6a5a;
   --label-color:  #2a2a2a;
-  --input-bg:     #fafaf7;
+  --input-bg:     #fffef8;
   --success-bg:   #e8f4e8;
   --success-text: #1a5c1a;
   --error-bg:     #f4e8e8;
   --error-text:   #8b1a1a;
-  --font-ui: 'Arial', 'Helvetica Neue', sans-serif;
+  /* Font = Times New Roman throughout — matches paper font */
+  --font-ui:    'Times New Roman', 'Georgia', serif;
   --font-paper: 'Times New Roman', 'Georgia', serif;
   --font-hindi: 'Noto Serif Devanagari', 'Mangal', serif;
 }
@@ -39,7 +40,7 @@ body.polytechnic-generator {
   background: var(--page-bg);
   color: var(--text);
   min-height: 100vh;
-  font-size: 13px;
+  font-size: 15px;  /* larger for readability */
 }
 
 /* ═══════════════════════════════════
@@ -48,35 +49,24 @@ body.polytechnic-generator {
 .inst-navbar {
   background: var(--govt-navy);
   border-bottom: 3px solid var(--govt-red);
-  padding: 0 16px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 44px;
-}
-.inst-navbar-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.inst-navbar-logo {
-  width: 30px;
-  height: 30px;
-  flex-shrink: 0;
+  height: 52px;
 }
 .inst-navbar-title {
   color: #fff;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.3px;
-  line-height: 1.2;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
 }
 .inst-navbar-title span {
   display: block;
   font-weight: 400;
-  font-size: 10px;
+  font-size: 12px;
   color: #c8d8f8;
-  letter-spacing: 0.5px;
 }
 .inst-navbar-right {
   display: flex;
@@ -85,56 +75,30 @@ body.polytechnic-generator {
 }
 .inst-navbar-link {
   color: #c8d8f8;
-  font-size: 11px;
+  font-size: 13px;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
 }
 .inst-navbar-link:hover { color: #fff; }
 .inst-session-badge {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.2);
   color: #c8d8f8;
-  font-size: 10px;
-  padding: 2px 8px;
-  letter-spacing: 0.3px;
+  font-size: 12px;
+  padding: 3px 10px;
 }
 
-/* ═══════════════════════════════════
-   SUB-HEADER — Dense info strip
-   ═══════════════════════════════════ */
-.inst-subheader {
-  background: var(--govt-blue);
-  padding: 5px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.inst-subheader-title {
-  color: #fff;
-  font-size: 11px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-.inst-subheader-meta {
-  color: #b8c8e8;
-  font-size: 10px;
-  display: flex;
-  gap: 16px;
-}
+/* Sub-header removed */
 
 /* ═══════════════════════════════════
    MAIN LAYOUT — 2 Column
    ═══════════════════════════════════ */
 .inst-layout {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: 420px 1fr;
   gap: 0;
   max-width: 1100px;
-  margin: 16px auto;
-  padding: 0 16px;
+  margin: 20px auto;
+  padding: 0 20px;
 }
 
 /* ═══════════════════════════════════
@@ -142,24 +106,18 @@ body.polytechnic-generator {
    ═══════════════════════════════════ */
 .inst-panel {
   background: var(--panel-bg);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border-dark);
 }
-.inst-panel + .inst-panel {
-  border-left: none;
-}
+.inst-panel + .inst-panel { border-left: none; }
 .inst-panel-head {
   background: var(--govt-navy);
   color: #fff;
-  padding: 7px 12px;
-  font-size: 11px;
+  padding: 10px 16px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
   border-bottom: 2px solid var(--govt-red);
 }
-.inst-panel-body {
-  padding: 12px;
-}
+.inst-panel-body { padding: 16px; }
 
 /* ═══════════════════════════════════
    FORM ELEMENTS
@@ -167,38 +125,32 @@ body.polytechnic-generator {
 .inst-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .inst-form-row.full { grid-template-columns: 1fr; }
 
-.inst-field {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+.inst-field { display: flex; flex-direction: column; gap: 4px; }
 .inst-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: var(--label-color);
 }
 .inst-label .req { color: var(--govt-red); }
 
 .inst-select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 9px 10px;
   background: var(--input-bg);
-  border: 1px solid var(--border-dark);
+  border: 1.5px solid var(--border-dark);
   border-radius: 0;
   color: var(--text);
-  font-size: 12px;
-  font-family: inherit;
+  font-size: 14px;
+  font-family: var(--font-ui);
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%234a4a4a'%3E%3Cpath d='M5 7L1 3h8z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
+  background-position: right 10px center;
   cursor: pointer;
 }
 .inst-select:focus {
@@ -207,46 +159,43 @@ body.polytechnic-generator {
 }
 .inst-select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Divider ── */
-.inst-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 10px 0;
-}
+.inst-divider { height: 1px; background: var(--border); margin: 14px 0; }
 
 /* ── Radio Groups ── */
 .inst-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 8px 10px;
+  gap: 8px;
+  padding: 10px 12px;
   background: var(--input-bg);
-  border: 1px solid var(--border-dark);
+  border: 1.5px solid var(--border-dark);
 }
 .inst-radio-row {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: 8px;
   cursor: pointer;
-  padding: 2px 0;
+  padding: 3px 0;
 }
 .inst-radio-row input[type="radio"] {
-  margin-top: 2px;
+  margin-top: 3px;
   accent-color: var(--govt-blue);
   cursor: pointer;
   flex-shrink: 0;
+  width: 15px;
+  height: 15px;
 }
 .inst-radio-label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text);
   cursor: pointer;
   line-height: 1.3;
 }
 .inst-radio-label small {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-top: 1px;
+  margin-top: 2px;
 }
 .inst-radio-row input:checked + .inst-radio-label {
   color: var(--govt-blue);
@@ -255,40 +204,31 @@ body.polytechnic-generator {
 
 /* ── Section label ── */
 .inst-section-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: var(--text-dim);
-  margin-bottom: 5px;
-  padding-bottom: 3px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
 
 /* ── Generate Button ── */
 .inst-btn-generate {
   width: 100%;
-  padding: 9px 16px;
+  padding: 13px 16px;
   background: var(--govt-navy);
   color: #fff;
   border: 2px solid var(--govt-navy);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
-  font-family: inherit;
+  font-family: var(--font-ui);
   cursor: pointer;
   letter-spacing: 0.3px;
-  margin-top: 12px;
+  margin-top: 16px;
   text-transform: uppercase;
 }
-.inst-btn-generate:hover {
-  background: var(--govt-blue);
-  border-color: var(--govt-blue);
-}
-.inst-btn-generate:disabled {
-  background: #888;
-  border-color: #888;
-  cursor: not-allowed;
-}
+.inst-btn-generate:hover { background: var(--govt-blue); border-color: var(--govt-blue); }
+.inst-btn-generate:disabled { background: #888; border-color: #888; cursor: not-allowed; }
 .inst-btn-generate:active { transform: translateY(1px); }
 
 /* ═══════════════════════════════════
