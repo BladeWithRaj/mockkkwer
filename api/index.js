@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     if (path.includes("/user-logout"))     return await handleUserLogout(supabase, req, res);
 
     // ── Polytechnic engine routes ──
-    if (path.includes("/generate-polytechnic-paper")) return await handleGeneratePolytechnicPaper(req, res);
+    if (path.includes("/generate-polytechnic-paper")) return await handleGeneratePolytechnicPaper(supabase, req, res);
     if (path.includes("/polytechnic"))     return await handlePolytechnic(supabase, req, res);
 
     // ── Exam config routes ──

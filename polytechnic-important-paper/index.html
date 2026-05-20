@@ -3,300 +3,121 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTEUP Mathematics-II Paper Generator</title>
-  <meta name="description" content="Generate authentic BTEUP Mathematics-II exam papers. Real paper format, 60 marks, all units covered.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#0b0b1e;--surface:#111130;--surface2:#191945;--accent:#7c5cfc;--accent-glow:rgba(124,92,252,0.25);--text:#e2e2f0;--text-dim:#7878a0;--border:#252550;--success:#22c55e;--danger:#ef4444}
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-    .hero{text-align:center;padding:40px 20px 24px;background:linear-gradient(180deg,#0f0f30,var(--bg))}
-    .hero-back{display:inline-flex;align-items:center;gap:6px;color:var(--text-dim);font-size:.85rem;text-decoration:none;margin-bottom:12px;transition:color .2s}
-    .hero-back:hover{color:var(--text)}
-    .hero h1{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#a78bfa,#7c5cfc,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-    .hero p{color:var(--text-dim);font-size:.9rem}
-    .hero .scope-badge{display:inline-block;margin-top:10px;padding:4px 14px;background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.25);border-radius:6px;font-size:.75rem;color:var(--accent);font-weight:600}
-    .container{max-width:620px;margin:0 auto;padding:0 16px 60px}
-    .form-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px}
-    .form-group{margin-bottom:16px}
-    .form-group label{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:6px}
-    .form-group select{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:.9rem;font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237878a0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer;transition:border .2s}
-    .form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    .locked-field{padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:.9rem;color:var(--text);opacity:.7;display:flex;align-items:center;gap:8px}
-    .locked-field .lock-icon{font-size:.75rem;opacity:.6}
-    .lang-toggle{display:flex;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden}
-    .lang-btn{flex:1;padding:10px;border:none;background:transparent;color:var(--text-dim);font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;text-align:center}
-    .lang-btn.active{background:var(--accent);color:#fff}
-    .lang-btn:hover:not(.active){background:rgba(124,92,252,.1);color:var(--text)}
-    .lang-hint{font-size:.72rem;color:var(--text-dim);margin-top:5px;font-style:italic}
-    .btn-generate{width:100%;padding:14px;background:linear-gradient(135deg,#7c5cfc,#a78bfa);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s}
-    .btn-generate:hover{transform:translateY(-1px);box-shadow:0 8px 28px var(--accent-glow)}
-    .btn-generate:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-    .loading{display:none;text-align:center;padding:40px 20px}
-    .loading.show{display:block}
-    .spinner{width:40px;height:40px;border:4px solid var(--border);border-top:4px solid var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-text{font-weight:600;font-size:.95rem}
-    .loading-sub{font-size:.8rem;color:var(--text-dim);margin-top:3px}
-    .error-msg{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:16px;color:#f87171;font-size:.85rem;margin-bottom:16px;text-align:center}
-    .error-msg.show{display:block}
-    .error-retry{margin-top:10px;padding:7px 18px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#f87171;font-size:.8rem;font-weight:600;cursor:pointer}
-    .paper-output{display:none}
-    .paper-output.show{display:block}
-    .output-actions{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
-    .output-actions button{padding:9px 18px;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:all .2s}
-    .output-actions button:hover{border-color:var(--accent);background:var(--surface2)}
-    .output-actions .btn-print{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-    /* ═══ AUTHENTIC BTEUP PAPER SHEET ═══ */
-    .paper-sheet{background:#fff;color:#111;font-family:'Times New Roman','Georgia',serif;padding:40px 36px;border-radius:2px;box-shadow:0 4px 30px rgba(0,0,0,.3);font-size:14px;line-height:1.65;max-width:210mm;margin:0 auto}
-    .paper-sheet *{color:#111}
-    .bteup-header{text-align:center;margin-bottom:16px;border-bottom:2px solid #111;padding-bottom:12px}
-    .bteup-code{font-size:12px;text-align:right;margin-bottom:4px;font-weight:700}
-    .bteup-subject{font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-    .bteup-meta{display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px}
-    .bteup-meta-row{display:flex;justify-content:space-between;font-size:13px}
-    .bteup-notes{font-size:12px;margin:12px 0 16px;padding:8px 12px;border:1px solid #999;background:#f9f9f0}
-    .bteup-notes p{margin-bottom:2px;text-indent:0}
-    .bteup-notes strong{font-weight:700}
-    .part-header{margin:20px 0 8px;padding:4px 0;border-bottom:1px solid #333;font-size:15px;font-weight:700;text-transform:uppercase}
-    .part-instruction{font-size:12px;font-style:italic;margin-bottom:4px;color:#444}
-    .part-marks{font-size:13px;font-weight:700;text-align:right;margin-bottom:8px}
-    .question-list{list-style:none;padding:0;margin:0 0 12px}
-    .question-list li{margin-bottom:8px;padding-left:28px;position:relative;font-size:13.5px;line-height:1.6}
-    .question-list li .q-num{position:absolute;left:0;font-weight:700;width:24px}
-    .question-list li .q-options{display:block;margin-top:2px;padding-left:8px;font-size:12.5px;color:#333}
-    .paper-footer{margin-top:20px;text-align:center;font-size:11px;color:#666;border-top:1px solid #ccc;padding-top:8px}
-
-    /* ═══ PRINT ═══ */
-    @media print{
-      body{background:#fff}
-      .hero,.form-card,.output-actions,.loading,.error-msg,.container>*:not(.paper-output){display:none!important}
-      .paper-output{display:block!important}
-      .paper-sheet{box-shadow:none;border-radius:0;padding:0;margin:0;max-width:100%;font-size:13px;line-height:1.55}
-    }
-    @page{size:A4;margin:12mm}
-  </style>
+  <title>BTEUP Paper Generator — Real Board Pattern Papers</title>
+  <meta name="description" content="Generate authentic BTEUP polytechnic exam papers with real board patterns. Mathematics-II and FEEE supported. Bilingual EN+HI format.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/polytechnic-paper.css">
 </head>
-<body>
+<body class="polytechnic-generator">
 
-  <div class="hero">
-    <a href="/" class="hero-back">← Back to Mock24hr</a>
+  <!-- ═══ HERO ═══ -->
+  <div class="pg-hero">
+    <a href="/" class="pg-hero-back">← Back to MockTestPro</a>
     <h1>📄 BTEUP Paper Generator</h1>
-    <p>Authentic Mathematics-II exam papers — Real BTEUP format</p>
-    <div class="scope-badge">🔒 Mathematics-II · 2nd Semester · 60 Marks</div>
+    <p>Authentic board-pattern exam papers — Real BTEUP format</p>
+    <div class="pg-hero-badge">🎯 Pattern-Based Engine · Mathematics-II & FEEE</div>
   </div>
 
-  <div class="container">
-    <div class="form-card" id="formCard">
-      <div class="form-group">
-        <label>📝 Paper Language</label>
-        <div class="lang-toggle">
-          <button type="button" class="lang-btn active" id="langEn" onclick="setLang('english')">🇬🇧 English</button>
-          <button type="button" class="lang-btn" id="langHi" onclick="setLang('hindi')">🇮🇳 हिन्दी</button>
+  <!-- ═══ MAIN CONTAINER ═══ -->
+  <div class="pg-container">
+
+    <!-- ═══ FORM CARD ═══ -->
+    <div class="pg-card" id="formCard">
+      <div class="pg-card-title">⚡ Paper Configuration</div>
+
+      <div class="pg-form-grid">
+        <div class="pg-form-group">
+          <label>Branch</label>
+          <select id="branchSelect">
+            <!-- Populated by JS -->
+          </select>
         </div>
-        <div class="lang-hint" id="langHint">Paper will be generated in English</div>
+
+        <div class="pg-form-group">
+          <label>Semester</label>
+          <select id="semesterSelect">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div class="pg-form-group full-width">
+          <label>Subject</label>
+          <select id="subjectSelect">
+            <option value="">Select Subject...</option>
+          </select>
+        </div>
+
+        <div class="pg-form-group full-width">
+          <label>Paper Language</label>
+          <div class="pg-lang-toggle">
+            <button type="button" class="pg-lang-btn" data-lang="english">🇬🇧 English</button>
+            <button type="button" class="pg-lang-btn active" data-lang="bilingual">🇮🇳 Bilingual</button>
+            <button type="button" class="pg-lang-btn" data-lang="hindi">हिन्दी</button>
+          </div>
+          <div id="langHint" style="font-size:0.72rem;color:var(--text-muted);margin-top:5px;font-style:italic">Bilingual — English + Hindi</div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Branch</label>
-        <select id="branchSelect">
-          <option value="Mechanical Engineering">Mechanical Engineering</option>
-          <option value="Mechanical Engineering (Automobile)">Mechanical Engg. (Automobile)</option>
-          <option value="Mechanical Engineering (Production)">Mechanical Engg. (Production)</option>
-          <option value="Civil Engineering">Civil Engineering</option>
-          <option value="Electrical Engineering">Electrical Engineering</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Subject</label>
-        <div class="locked-field"><span class="lock-icon">🔒</span> Applied Mathematics-II</div>
-      </div>
-      <div class="form-group">
-        <label>Semester</label>
-        <div class="locked-field"><span class="lock-icon">🔒</span> 2nd Semester (Common for all branches)</div>
-      </div>
-      <button class="btn-generate" id="generateBtn" onclick="generatePaper()">
+
+      <!-- Subject Info -->
+      <div id="subjectInfo" style="display:none"></div>
+
+      <!-- Generate Button -->
+      <button class="pg-btn-generate" id="generateBtn">
         ⚡ Generate BTEUP Paper
       </button>
     </div>
 
-    <div class="error-msg" id="errorMsg">
+    <!-- ═══ ERROR ═══ -->
+    <div class="pg-error" id="errorMsg">
       <div id="errorText"></div>
-      <button class="error-retry" onclick="generatePaper()">🔄 Try Again</button>
+      <button class="pg-error-retry" onclick="generatePaper()">🔄 Try Again</button>
     </div>
 
-    <div class="loading" id="loadingSection">
-      <div class="spinner"></div>
-      <div class="loading-text" id="loadingTitle">Generating authentic paper...</div>
-      <div class="loading-sub">This takes 8-15 seconds</div>
-    </div>
-
-    <div class="paper-output" id="paperOutput">
-      <div class="output-actions">
-        <button class="btn-print" onclick="window.print()">🖨️ Print Paper</button>
-        <button onclick="copyPaper()">📋 Copy Text</button>
+    <!-- ═══ PAPER OUTPUT ═══ -->
+    <div class="pg-output" id="paperOutput">
+      <div class="pg-output-actions">
+        <button class="btn-print" onclick="printPaper()">🖨️ Print Paper</button>
+        <button class="btn-copy" onclick="copyPaper()">📋 Copy Text</button>
         <button onclick="generateAnother()">🔄 Generate Another</button>
       </div>
-      <div class="paper-sheet" id="paperSheet"></div>
+      <div class="bteup-paper" id="paperSheet"></div>
     </div>
   </div>
 
-  <script>
-    let selectedLang = 'english';
+  <!-- ═══ FULLSCREEN LOADING OVERLAY ═══ -->
+  <div class="pg-loading-overlay" id="loadingOverlay">
+    <!-- Animated Paper Preview -->
+    <div class="pg-loading-paper">
+      <div class="paper-lines">
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+        <div class="paper-line"></div>
+      </div>
+    </div>
 
-    function setLang(lang) {
-      selectedLang = lang;
-      document.getElementById('langEn').classList.toggle('active', lang === 'english');
-      document.getElementById('langHi').classList.toggle('active', lang === 'hindi');
-      document.getElementById('langHint').textContent = lang === 'hindi'
-        ? 'पेपर हिन्दी में जनरेट होगा' : 'Paper will be generated in English';
-    }
+    <!-- Progress -->
+    <div class="pg-progress-container">
+      <div class="pg-progress-bar">
+        <div class="pg-progress-fill"></div>
+      </div>
+      <div class="pg-stage-text">Initializing...</div>
+      <div class="pg-stage-sub"></div>
+    </div>
 
-    // ── Template Renderer — builds authentic BTEUP paper HTML ──
-    function renderPaper(data) {
-      const { code, subject, branch, semester, totalMarks, time, partA, partB, partC, partD } = data;
+    <!-- Topic Chips -->
+    <div class="pg-topic-chips">
+      <!-- Populated dynamically based on selected subject -->
+    </div>
+  </div>
 
-      function renderQuestions(questions, startNum) {
-        return questions.map((q, i) => {
-          const num = startNum ? (startNum + i) : (i + 1);
-          // Check if question has MCQ options inline
-          const optMatch = q.match(/\(a\)\s*.+\(b\)\s*.+\(c\)\s*.+\(d\)\s*.+/i);
-          let qText = q;
-          let optionsHtml = '';
-          if (optMatch) {
-            qText = q.substring(0, optMatch.index).trim();
-            optionsHtml = `<span class="q-options">${optMatch[0]}</span>`;
-          }
-          return `<li><span class="q-num">${num}.</span>${escHtml(qText)}${optionsHtml}</li>`;
-        }).join('');
-      }
-
-      function escHtml(s) {
-        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      }
-
-      return `
-        <div class="bteup-header">
-          <div class="bteup-code">Code No.: ${code}</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:2px">BOARD OF TECHNICAL EDUCATION UTTAR PRADESH, LUCKNOW</div>
-          <div class="bteup-subject">${subject}</div>
-          <div class="bteup-meta">
-            <span>Branch: ${branch}</span>
-            <span>Semester: ${semester}</span>
-          </div>
-          <div class="bteup-meta-row">
-            <span>Time Allowed : ${time}</span>
-            <span>Maximum Marks : ${totalMarks}</span>
-          </div>
-          <div class="bteup-meta-row">
-            <span></span>
-            <span>Minimum Marks : ${Math.ceil(totalMarks * 0.283)}</span>
-          </div>
-        </div>
-
-        <div class="bteup-notes">
-          <p><strong>Notes:</strong></p>
-          <p>(i) Attempt All questions. All questions carry equal marks unless stated otherwise.</p>
-          <p>(ii) Students are advised to specially check the numerical data of question paper in both versions.</p>
-          <p>(iii) Use of Pager and Mobile Phone by students is not allowed.</p>
-        </div>
-
-        <div class="part-header">PART – A (Objective Type Questions)</div>
-        <div class="part-instruction">Attempt all questions.</div>
-        <div class="part-marks">10 × 1 = 10</div>
-        <ol class="question-list">${renderQuestions(partA)}</ol>
-
-        <div class="part-header">PART – B (Very Short Answer Questions)</div>
-        <div class="part-instruction">Attempt any five questions out of seven.</div>
-        <div class="part-marks">5 × 2 = 10</div>
-        <ol class="question-list">${renderQuestions(partB)}</ol>
-
-        <div class="part-header">PART – C (Short Answer Questions)</div>
-        <div class="part-instruction">Attempt any eight questions out of ten.</div>
-        <div class="part-marks">8 × 2½ = 20</div>
-        <ol class="question-list">${renderQuestions(partC)}</ol>
-
-        <div class="part-header">PART – D (Long Answer / Numerical Questions)</div>
-        <div class="part-instruction">Attempt any four questions out of six.</div>
-        <div class="part-marks">4 × 5 = 20</div>
-        <ol class="question-list">${renderQuestions(partD)}</ol>
-
-        <div class="paper-footer">— × —</div>
-      `;
-    }
-
-    // ── Generate Paper ──
-    async function generatePaper() {
-      const branch = document.getElementById('branchSelect').value;
-      const btn = document.getElementById('generateBtn');
-      const loading = document.getElementById('loadingSection');
-      const error = document.getElementById('errorMsg');
-      const output = document.getElementById('paperOutput');
-
-      error.classList.remove('show');
-      output.classList.remove('show');
-      btn.disabled = true;
-      btn.textContent = '⏳ Generating...';
-      loading.classList.add('show');
-
-      try {
-        const r = await fetch('/api/generate-polytechnic-paper', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ branch, language: selectedLang })
-        });
-
-        const d = await r.json();
-
-        if (!r.ok || !d.success) {
-          throw new Error(d.error || 'Generation failed. Please try again.');
-        }
-
-        if (!d.paper || !d.paper.partA || d.paper.partA.length < 5) {
-          throw new Error('Paper was incomplete. Please try again.');
-        }
-
-        // Render with template
-        document.getElementById('paperSheet').innerHTML = renderPaper(d.paper);
-        output.classList.add('show');
-        output.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      } catch (err) {
-        if (err.message.includes('quota') || err.message.includes('wait') || err.message.includes('Too many')) {
-          document.getElementById('errorText').innerHTML =
-            err.message + '<br><span id="countdown" style="font-size:.75rem;opacity:.7">Retry in 60s...</span>';
-          error.classList.add('show');
-          let s = 60;
-          const cd = setInterval(() => {
-            s--;
-            const el = document.getElementById('countdown');
-            if (el) el.textContent = s > 0 ? `Retry in ${s}s...` : 'Ready!';
-            if (s <= 0) clearInterval(cd);
-          }, 1000);
-        } else {
-          document.getElementById('errorText').textContent = err.message;
-          error.classList.add('show');
-        }
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '⚡ Generate BTEUP Paper';
-        loading.classList.remove('show');
-      }
-    }
-
-    function copyPaper() {
-      const text = document.getElementById('paperSheet').innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        const btns = document.querySelectorAll('.output-actions button');
-        btns[1].textContent = '✅ Copied!';
-        setTimeout(() => btns[1].textContent = '📋 Copy Text', 2000);
-      });
-    }
-
-    function generateAnother() {
-      document.getElementById('paperOutput').classList.remove('show');
-      document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
-    }
-  </script>
+  <script src="/js/polytechnic-generator.js"></script>
 </body>
 </html>
