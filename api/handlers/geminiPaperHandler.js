@@ -548,7 +548,10 @@ async function callGeminiJSON(prompt, maxTokens, temperature = 0.6) {
 
 async function callGroqJSON(prompt, maxTokens) {
   const { key, url } = getGroqConfig();
-  if (!key) return null;
+  if (!key) {
+    console.warn('[GROQ] No GROQ_API_KEY configured');
+    return null;
+  }
 
   try {
     const res = await fetch(url, {
@@ -557,33 +560,43 @@ async function callGroqJSON(prompt, maxTokens) {
       body: JSON.stringify({
         model: "llama-3.3-70b-versatile",
         messages: [
-          { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No explanations." },
+          { role: "system", content: "You are a BTEUP Polytechnic paper setter. Output ONLY valid JSON. No explanations. No markdown code blocks." },
           { role: "user", content: prompt }
         ],
         temperature: 0.6,
-        max_tokens: maxTokens,
-        response_format: { type: "json_object" }
+        max_tokens: Math.min(maxTokens, 4000)  // Groq free tier limit
+        // NOTE: response_format NOT used — llama models may not support json_object mode
       })
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error(`[GROQ] ${res.status}:`, errText.substring(0, 100));
+      console.error(`[GROQ] HTTP ${res.status}:`, errText.substring(0, 200));
       return null;
     }
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
-    if (!text || text.length < 10) return null;
-    return JSON.parse(text);
+    if (!text || text.length < 10) {
+      console.warn('[GROQ] Empty response text');
+      return null;
+    }
+    // Extract JSON — handle markdown code blocks and raw JSON
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/) ||
+                      text.match(/(\{[\s\S]*\})/);
+    const raw = jsonMatch ? (jsonMatch[1] || jsonMatch[0]).trim() : text.trim();
+    return JSON.parse(raw);
   } catch (e) {
-    console.error("[GROQ] Fallback failed:", e.message);
+    console.error("[GROQ] Failed:", e.message);
     return null;
   }
 }
 
 async function callDeepSeekJSON(prompt, maxTokens) {
   const { key, url } = getDeepSeekConfig();
-  if (!key) return null;
+  if (!key) {
+    console.warn('[DEEPSEEK] No DEEPSEEK_API_KEY configured');
+    return null;
+  }
 
   try {
     const res = await fetch(url, {
@@ -597,23 +610,25 @@ async function callDeepSeekJSON(prompt, maxTokens) {
         ],
         temperature: 0.6,
         max_tokens: maxTokens,
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" }  // DeepSeek supports this
       })
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error(`[DEEPSEEK] ${res.status}:`, errText.substring(0, 100));
+      console.error(`[DEEPSEEK] HTTP ${res.status}:`, errText.substring(0, 200));
       return null;
     }
     const data = await res.json();
     const text = data?.choices?.[0]?.message?.content || "";
-    if (!text || text.length < 10) return null;
-    // DeepSeek sometimes wraps in markdown
+    if (!text || text.length < 10) {
+      console.warn('[DEEPSEEK] Empty response text');
+      return null;
+    }
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     return JSON.parse(jsonMatch ? jsonMatch[0] : text);
   } catch (e) {
-    console.error("[DEEPSEEK] Fallback failed:", e.message);
+    console.error("[DEEPSEEK] Failed:", e.message);
     return null;
   }
 }
