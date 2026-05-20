@@ -2,6 +2,161 @@
   'use strict';
 
   const SUBJECTS_DB = {
+    // ── SEMESTER-1 — Fully isolated from Semester-2 ──
+    semester1: [
+      {
+        id: 9, name: 'Mathematics-I', code: '4101', renderer: 'PATTERN_MATH', marks: 60, semester: 1,
+        topics: ['Algebra','Trigonometry','Coordinate Geometry','Differential Calculus-I','Statistics & Probability'],
+        importantTopics: ['Trigonometric identities','Quadratic equations','Compound angles','Permutation & Combination','Differentiation rules','Straight lines','Binomial theorem'],
+        profile: { style: 'symbolic', keyVerbs: ['Find','Solve','Evaluate','Prove'] },
+        pattern: [
+          { part: 'Part A', type: 'Objective (MCQ + Fill + True/False)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Part B', type: 'Very Short Answer (Numericals/Formula)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Part C', type: 'Short Answer (Derivations/Proofs)', attempt: 'Attempt any 8 of 10', marks: '8 × 2½ = 20' },
+          { part: 'Part D', type: 'Long Answer (Full Problems)', attempt: 'Attempt any 4 of 6', marks: '4 × 5 = 20' }
+        ],
+        units: [
+          { no: 1, name: 'Algebra', weight: 22 },
+          { no: 2, name: 'Trigonometry', weight: 28 },
+          { no: 3, name: 'Coordinate Geometry', weight: 20 },
+          { no: 4, name: 'Differential Calculus-I', weight: 22 },
+          { no: 5, name: 'Statistics & Probability', weight: 8 }
+        ]
+      },
+      {
+        id: 10, name: 'Applied Physics-I', code: '4102', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        topics: ['Units & Dimensions','Motion','Newton\'s Laws','Work & Energy','Rotational Motion','Heat & Thermodynamics','Elasticity'],
+        importantTopics: ['Equations of motion','Newton\'s 3 laws','Work-energy theorem','Specific heat calorimetry','Moment of inertia','Young\'s modulus'],
+        profile: { style: 'conceptual_numerical', keyVerbs: ['Define','Derive','Calculate','State and prove'], numericalPct: 50 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/1-word)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Definitions/Notes)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Theory + Diagrams)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Numerical Problems', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Units, Dimensions & Motion', weight: 25 },
+          { no: 2, name: 'Newton\'s Laws & Work-Energy', weight: 28 },
+          { no: 3, name: 'Rotational Motion', weight: 18 },
+          { no: 4, name: 'Heat & Thermodynamics', weight: 20 },
+          { no: 5, name: 'Elasticity & Properties of Matter', weight: 9 }
+        ]
+      },
+      {
+        id: 11, name: 'Applied Chemistry', code: '4103', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        topics: ['Atomic Structure','Chemical Bonding','Acids & Bases','Water Treatment','Fuels','Lubricants','Polymers'],
+        importantTopics: ['Bohr model','Ionic & covalent bonding','Hard water treatment','pH calculation','Calorific value','Polymer classification'],
+        profile: { style: 'theory_application', keyVerbs: ['Define','Explain','Differentiate','Write short note on'], numericalPct: 20 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Define)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Definitions/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Theory/Applications)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Theory / Industrial Applications', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Atomic Structure & Chemical Bonding', weight: 20 },
+          { no: 2, name: 'Acids, Bases & Electrochemistry', weight: 20 },
+          { no: 3, name: 'Water & Its Treatment', weight: 22 },
+          { no: 4, name: 'Fuels & Lubricants', weight: 20 },
+          { no: 5, name: 'Polymers & Modern Materials', weight: 18 }
+        ]
+      },
+      {
+        id: 12, name: 'Communication Skills in English', code: '4104', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        topics: ['Grammar','Letter Writing','Comprehension','Precis Writing','Report Writing','Essay Writing','Vocabulary'],
+        importantTopics: ['Formal letter format','Job application letter','Precis writing','Grammar correction','Essay writing','Comprehension passage'],
+        profile: { style: 'language_practical', keyVerbs: ['Write','Explain','Correct','Draft'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/Grammar/Vocabulary)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Grammar/Comprehension)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Writing — Letters/Reports/Precis', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long Writing — Essay/Detailed Letter/Report', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Grammar & Vocabulary', weight: 22 },
+          { no: 2, name: 'Reading & Comprehension', weight: 15 },
+          { no: 3, name: 'Letter & Email Writing', weight: 25 },
+          { no: 4, name: 'Reports & Precis Writing', weight: 20 },
+          { no: 5, name: 'Essays & Functional Writing', weight: 18 }
+        ]
+      },
+      {
+        id: 13, name: 'Engineering Mechanics', code: '4105', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        topics: ['Force System','Lami\'s Theorem','Moments','Friction','Centroid','Simple Machines','Equilibrium'],
+        importantTopics: ['Lami\'s theorem','Resultant of forces','Varignon\'s theorem','Coefficient of friction','Centroid of composite figures','MA & VR of machines'],
+        profile: { style: 'numerical_mechanics', keyVerbs: ['Find','Calculate','State and prove','Derive'], numericalPct: 65 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Define)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Derivations/Theorems)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Numerical Problems (Medium)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long Numericals & Proofs', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Force System & Resultants', weight: 25 },
+          { no: 2, name: 'Moments & Couples', weight: 20 },
+          { no: 3, name: 'Equilibrium & Friction', weight: 25 },
+          { no: 4, name: 'Centroid & Centre of Gravity', weight: 20 },
+          { no: 5, name: 'Simple Lifting Machines', weight: 10 }
+        ]
+      },
+      {
+        id: 14, name: 'Environmental Science', code: '4106', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1,
+        topics: ['Ecosystem','Air Pollution','Water Pollution','Global Warming','Ozone Depletion','Renewable Energy','Waste Management'],
+        importantTopics: ['Pollution types causes effects','Greenhouse effect','Ozone layer depletion','Food chain food web','Renewable energy sources','3R principle'],
+        profile: { style: 'awareness_theory', keyVerbs: ['Define','Explain','What are causes of','Write short note on'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (MCQ/Fill/True-False/Define)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Causes/Effects/Definitions)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Pollution/Environment)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Theory / Environmental Issues', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Environment & Ecosystem', weight: 18 },
+          { no: 2, name: 'Pollution — Types & Control', weight: 28 },
+          { no: 3, name: 'Global Environmental Issues', weight: 22 },
+          { no: 4, name: 'Natural Resources & Renewable Energy', weight: 18 },
+          { no: 5, name: 'Waste Management & Sustainability', weight: 14 }
+        ]
+      },
+      {
+        id: 15, name: 'Engineering Workshop Practice', code: '4107', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1, optional: true,
+        topics: ['Carpentry','Fitting','Welding','Smithy','Foundry','Lathe Machine','Workshop Safety'],
+        importantTopics: ['Types of welding','Welding joints','Fitting tools','Carpentry joints','PPE safety rules','Lathe machine parts'],
+        profile: { style: 'practical_workshop', keyVerbs: ['Name','State','Explain','Draw and label'], numericalPct: 0 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (Tool ID/True-False/Fill)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Safety/Tools/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Long Answer (Processes with diagrams)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Detailed Process / Workshop Operations', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Carpentry & Wood Working', weight: 20 },
+          { no: 2, name: 'Fitting & Sheet Metal', weight: 22 },
+          { no: 3, name: 'Welding', weight: 25 },
+          { no: 4, name: 'Smithy & Foundry', weight: 18 },
+          { no: 5, name: 'Machine Shop & Safety', weight: 15 }
+        ]
+      },
+      {
+        id: 16, name: 'Engineering Graphics', code: '4108', renderer: 'PATTERN_GENERAL', marks: 60, semester: 1, optional: true,
+        topics: ['Drawing Instruments','Scales','Projection of Points','Projection of Lines','Orthographic Projection','Isometric Projection','Sectional Views'],
+        importantTopics: ['Orthographic three views','First/Third angle projection','Projection of lines','Isometric drawing','Sectional views','Plain scale construction'],
+        profile: { style: 'drawing_oriented', keyVerbs: ['Draw','Construct','Project','Find true length'], numericalPct: 10 },
+        pattern: [
+          { part: 'Section A', type: 'Very Short (Definitions/True-False/Fill)', attempt: 'Attempt all', marks: '10 × 1 = 10' },
+          { part: 'Section B', type: 'Short Answer (Theory/RF/Differences)', attempt: 'Attempt any 5 of 7', marks: '5 × 2 = 10' },
+          { part: 'Section C', type: 'Drawing Problems (Projections)', attempt: 'Attempt any 4 of 5', marks: '4 × 4 = 16' },
+          { part: 'Section D', type: 'Long Drawing Problems (Ortho/Isometric)', attempt: 'Attempt any 4 of 5', marks: '4 × 6 = 24' }
+        ],
+        units: [
+          { no: 1, name: 'Introduction & Drawing Instruments', weight: 15 },
+          { no: 2, name: 'Projection of Points & Lines', weight: 22 },
+          { no: 3, name: 'Projection of Planes & Solids', weight: 22 },
+          { no: 4, name: 'Orthographic & Isometric Projection', weight: 28 },
+          { no: 5, name: 'Sectional Views', weight: 13 }
+        ]
+      }
+    ],
     semester2: [
       {
         id: 1, name: 'Mathematics-II', code: '4201', renderer: 'PATTERN_MATH', marks: 60,
@@ -195,7 +350,11 @@
   function populateSemesters() {
     const sel = document.getElementById('semesterSelect');
     if (!sel) return;
-    sel.innerHTML = '<option value="2">2nd Semester</option>';
+    sel.innerHTML = `
+      <option value="1">Semester-I (1st Semester)</option>
+      <option value="2">Semester-II (2nd Semester)</option>
+    `;
+    sel.value = '1'; // default to Semester-1 per PRD
   }
 
   function populateSubjects() {
@@ -286,8 +445,18 @@
         <span class="inst-unit-pct">${u.weight}%</span>
       </div>`).join('');
 
+    // Important topics block (Sem-1 subjects have importantTopics)
+    const importantBlock = s.importantTopics?.length
+      ? `<div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">🔥 Important Topics (High PYQ Weight)</div>
+         <div class="inst-important-chips">${s.importantTopics.map(t => `<span class="inst-imp-chip">${t}</span>`).join('')}</div>`
+      : '';
+
+    const semBadge = s.semester === 1
+      ? '<span class="sem-badge sem1-badge">1st Semester</span>'
+      : '<span class="sem-badge sem2-badge">2nd Semester</span>';
+
     content.innerHTML = `
-      <div class="inst-section-label" style="margin-bottom:6px">Paper Structure — ${s.name} (${s.code})</div>
+      <div class="inst-section-label" style="margin-bottom:6px">Paper Structure — ${s.name} (${s.code}) ${semBadge}</div>
       <table class="inst-pattern-table">
         <thead>
           <tr>
@@ -306,6 +475,8 @@
       <div class="inst-section-label" style="margin-top:12px;margin-bottom:6px">Unit Weightage (PYQ Based)</div>
       ${unitBars}
 
+      ${importantBlock}
+
       <div class="inst-mode-info" id="previewModeInfo">
         <strong>${MODE_INFO[selectedMode].label}:</strong> ${MODE_INFO[selectedMode].hint}
       </div>
@@ -314,6 +485,10 @@
         <strong>Generation Style:</strong>
         ${s.profile.style === 'symbolic'
           ? 'Mathematical · Symbolic · Short board-style phrasing (Find, Solve, Evaluate, Derive)'
+          : s.profile.style === 'language_practical'
+          ? 'Language Practical · Letter/Essay writing · Grammar correction (No bilingual)'
+          : s.profile.style === 'drawing_oriented'
+          ? 'Drawing Oriented · Projection problems · Cannot generate actual sketches (describe only)'
           : 'Descriptive · Diploma-practical · Theory-based (Explain, Differentiate, Write notes)'}
       </div>`;
   }

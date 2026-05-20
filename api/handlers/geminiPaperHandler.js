@@ -368,7 +368,7 @@ const SUBJECT_CONFIGS = {
   },
 
   engg_graphics: {
-    name: 'Engineering Graphics',
+    name: 'Engineering Graphics (Semester-2)',
     content_mix:   { numericals: 10, theory: 30, applications: 10, diagrams: 50 },
     bloom_mix:     { remember: 25, understand: 30, apply: 35, analyze: 10 },
     priority_topics: ['Orthographic projection three views', 'First angle third angle projection',
@@ -384,6 +384,224 @@ const SUBJECT_CONFIGS = {
       secD: ['Draw the three views of', 'Draw the isometric view of', 'Find the true shape of section']
     },
     numerical_topics: ['representative fraction calculation', 'scale construction']
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SEMESTER-1 SUBJECT CONFIGS — FULLY ISOLATED FROM SEMESTER-2
+  // Namespace prefix: *1 suffix or unique names (chemistry, comm_english)
+  // NEVER share configs between sem1 and sem2 subjects
+  // ═══════════════════════════════════════════════════════════════
+
+  math1: {
+    // Math-I is handled by PATTERN_MATH renderer — this config is NOT used directly
+    // by buildGeneralPrompt. It exists for reference and override logic only.
+    name: 'Mathematics-I (Semester-1)',
+    content_mix:   { numericals: 70, theory: 15, applications: 10, diagrams: 5 },
+    bloom_mix:     { remember: 20, understand: 25, apply: 40, analyze: 15 },
+    priority_topics: [
+      'Quadratic equations formula', 'Permutation nPr formula', 'Combination nCr formula',
+      'Binomial theorem expansion', 'Trigonometric identities sin cos tan',
+      'Compound angle formulae sin A+B', 'Multiple angle sin2A cos2A',
+      'Straight line equation slope intercept', 'Distance formula two points',
+      'Limits lim x→a standard results', 'Differentiation basic rules chain rule',
+      'Mean median mode calculation', 'Probability basic problems'
+    ],
+    forbidden_topics: ['Integration', 'Differential equations', 'Matrices determinants',
+      'Partial differentiation', 'Eulers theorem', 'Beta gamma functions',
+      'Leibnitz theorem', 'Coordinate geometry 3D', 'Vector algebra'],
+    question_styles: {
+      secA: ['Find the value of', 'Evaluate', 'State', 'Define', 'True/False'],
+      secB: ['Find', 'Solve', 'Evaluate', 'Prove'],
+      secC: ['Solve', 'Find', 'Prove that', 'Evaluate using'],
+      secD: ['Solve the following', 'Find the value', 'Prove and apply', 'Find using formula']
+    },
+    numerical_topics: ['quadratic formula problems', 'trigonometric calculation', 'permutation problems',
+      'binomial expansion', 'differentiation problems', 'probability calculation']
+  },
+
+  physics1: {
+    name: 'Applied Physics-I (Semester-1)',
+    content_mix:   { numericals: 50, theory: 30, applications: 10, diagrams: 10 },
+    bloom_mix:     { remember: 25, understand: 30, apply: 35, analyze: 10 },
+    priority_topics: [
+      'SI units dimensional formula', 'Equations of motion v=u+at s=ut+½at²',
+      'Newtons first law inertia', 'Newtons second law F=ma',
+      'Newtons third law action reaction', 'Work energy theorem W=Fd',
+      'Law of conservation of energy', 'Power P=W/t',
+      'Moment of inertia definition formula', 'Specific heat calorimetry Q=mcT',
+      'Latent heat definition formula', 'First law thermodynamics dU=dQ-dW',
+      'Youngs modulus stress strain', 'Surface tension capillarity'
+    ],
+    forbidden_topics: ['Wave optics', 'Laser theory advanced', 'Semiconductor band theory',
+      'Electromagnetic induction Faraday', 'AC circuits phasor', 'Quantum mechanics',
+      'Nuclear physics', 'Relativistic mechanics', 'Kirchhoff laws'],
+    question_styles: {
+      secA: ['Define', 'State', 'Write SI unit of', 'What is', 'True/False'],
+      secB: ['State and explain', 'Differentiate between', 'Define and give formula for', 'Give two applications of'],
+      secC: ['Explain with diagram', 'Derive the expression for', 'State and prove', 'Explain the working of'],
+      secD: ['A body of mass... find', 'Calculate', 'A particle moves... find', 'Derive and find']
+    },
+    numerical_topics: ['equations of motion problems', 'work energy numerical', 'moment of inertia calculation',
+      'calorimetry heat transfer', 'Youngs modulus problems', 'Newton law force problems']
+  },
+
+  chemistry: {
+    name: 'Applied Chemistry (Semester-1)',
+    content_mix:   { numericals: 20, theory: 45, applications: 25, diagrams: 10 },
+    bloom_mix:     { remember: 35, understand: 30, apply: 25, analyze: 10 },
+    priority_topics: [
+      'Bohr model postulates atomic structure', 'Ionic bond with example NaCl',
+      'Covalent bond with example H2O', 'pH definition and calculation',
+      'Arrhenius theory of acids bases', 'Electrolysis Faradays first second law',
+      'Hard water types temporary permanent', 'Lime soda softening process',
+      'Zeolite ion exchange process', 'Calorific value types higher lower',
+      'LPG CNG composition uses', 'Petroleum refining distillation',
+      'Thermoplastic thermosetting polymer examples', 'Corrosion types galvanic'
+    ],
+    forbidden_topics: ['Organic chemistry mechanisms', 'Advanced electrochemistry EMF cells complex',
+      'Quantum chemistry', 'Spectroscopy advanced', 'Nuclear chemistry',
+      'Chemical kinetics rate constants', 'Thermodynamic functions advanced'],
+    question_styles: {
+      secA: ['Define', 'Give example of', 'What is', 'Expand', 'True/False'],
+      secB: ['Differentiate between', 'Give two applications of', 'Define and explain', 'Write short note on'],
+      secC: ['Explain in detail', 'What are types of', 'Explain with equation', 'Describe the process of'],
+      secD: ['Write detailed note on', 'Explain the process of', 'Discuss the industrial importance of', 'Explain with diagram']
+    },
+    numerical_topics: ['pH calculation problems', 'Faraday electrolysis numerical', 'calorific value problems']
+  },
+
+  comm_english: {
+    name: 'Communication Skills in English (Semester-1)',
+    content_mix:   { numericals: 0, theory: 20, applications: 60, diagrams: 20 },
+    bloom_mix:     { remember: 25, understand: 25, apply: 40, analyze: 10 },
+    priority_topics: [
+      'Grammar error correction sentences', 'Formal letter writing format',
+      'Job application letter structure', 'Complaint letter format',
+      'Precis writing one-third length', 'Comprehension unseen passage',
+      'Essay writing topics pollution environment technology',
+      'Report writing technical format', 'Vocabulary synonym antonym',
+      'Tense correction exercises', 'Parts of speech identification',
+      'Business letter official correspondence'
+    ],
+    forbidden_topics: ['Literature poetry analysis', 'Advanced linguistics theory', 'Phonetics IPA symbols',
+      'Morphology and syntax theory', 'Literary devices advanced', 'Shakespearean text analysis',
+      'Idioms advanced figurative language', 'Translation theory'],
+    question_styles: {
+      secA: ['Define', 'Fill in the blank', 'Choose the correct option', 'Correct the sentence', 'Match the column'],
+      secB: ['Write short note on', 'What is the difference between', 'Explain with example', 'Give two examples of'],
+      secC: ['Write a formal letter to', 'Write a report on', 'Write a precis of the following passage'],
+      secD: ['Write an essay on', 'Write a detailed letter to', 'Write a comprehensive report on']
+    },
+    numerical_topics: []
+  },
+
+  mechanics1: {
+    name: 'Engineering Mechanics (Semester-1)',
+    content_mix:   { numericals: 65, theory: 20, applications: 5, diagrams: 10 },
+    bloom_mix:     { remember: 20, understand: 20, apply: 45, analyze: 15 },
+    priority_topics: [
+      'Lamis theorem three concurrent forces', 'Resolution of force into components',
+      'Resultant of coplanar concurrent forces', 'Free body diagram drawing',
+      'Varignons theorem moment', 'Couple definition and moment',
+      'Static friction kinetic friction difference', 'Laws of friction Coulombs laws',
+      'Coefficient of friction formula', 'Angle of friction repose relation',
+      'Centroid of triangle rectangle semicircle', 'Centroid of composite L-section T-section',
+      'Mechanical advantage velocity ratio formula', 'Efficiency of machine formula',
+      'Screw jack mechanical advantage'
+    ],
+    forbidden_topics: ['Dynamics advanced', 'Vibration analysis', 'Torsion theory',
+      'Fluid statics', 'Virtual work principle advanced', 'Impact of jets',
+      'Advanced beam theory SFD BMD', 'Strain energy advanced'],
+    question_styles: {
+      secA: ['Define', 'State', 'Write the formula for', 'What is', 'Fill in blank'],
+      secB: ['State and prove', 'Differentiate between', 'Define and explain', 'Derive the formula for'],
+      secC: ['Three forces act on a body... find', 'Calculate the resultant', 'Find the centroid of',
+             'A body rests on surface... find'],
+      secD: ['A machine has VR... find MA and efficiency', 'Find centroid of composite figure',
+             'A ladder rests... find reaction', 'Find the centroid by integration']
+    },
+    numerical_topics: ['Lamis theorem numerical', 'resultant of concurrent forces', 'friction force calculation',
+      'centroid of composite figure', 'mechanical advantage problems', 'moment of force numerical']
+  },
+
+  env_science1: {
+    name: 'Environmental Science (Semester-1)',
+    content_mix:   { numericals: 0, theory: 60, applications: 25, diagrams: 15 },
+    bloom_mix:     { remember: 35, understand: 30, apply: 25, analyze: 10 },
+    priority_topics: [
+      'Ecosystem components biotic abiotic', 'Food chain food web examples',
+      'Air pollution causes sources effects control', 'Water pollution causes effects treatment',
+      'Soil pollution causes effects control', 'Noise pollution effects control measures',
+      'Greenhouse effect global warming causes', 'Ozone layer depletion CFC',
+      'Acid rain causes effects', 'Renewable energy solar wind biogas',
+      'Waste management 3R Reduce Reuse Recycle', 'Biodiversity types conservation',
+      'Sustainable development definition goals', 'Water conservation methods'
+    ],
+    forbidden_topics: ['Advanced ecology equations', 'Environmental law acts detailed', 'Biochemistry reactions',
+      'Genetic modification GMO', 'Environmental chemistry advanced', 'Toxicology detailed'],
+    question_styles: {
+      secA: ['Define', 'What is', 'Expand the abbreviation', 'Give one example of', 'True/False'],
+      secB: ['What are causes of', 'What are effects of', 'Write short note on', 'Differentiate between', 'List the types of'],
+      secC: ['Explain in detail the causes and effects of', 'What preventive measures can be taken for',
+             'Explain the concept of', 'Discuss the importance of'],
+      secD: ['Write a detailed note on', 'Discuss the major problems of', 'Explain with diagram', 'Elaborate on the role of']
+    },
+    numerical_topics: []
+  },
+
+  workshop1: {
+    name: 'Engineering Workshop Practice (Semester-1)',
+    content_mix:   { numericals: 0, theory: 30, applications: 45, diagrams: 25 },
+    bloom_mix:     { remember: 30, understand: 30, apply: 30, analyze: 10 },
+    priority_topics: [
+      'Workshop safety rules PPE', 'Types of welding arc gas MIG TIG',
+      'Welding joints butt lap fillet', 'Welding defects types',
+      'Fitting tools files types cut', 'Hacksaw blade specification',
+      'Carpentry tools saw chisel plane', 'Types of joints tenon mortise dovetail',
+      'Soldering brazing difference temperature',
+      'Smithy tools anvil hammer tongs', 'Types of forge furnace',
+      'Lathe machine parts functions', 'Vernier caliper micrometer reading',
+      'Sheet metal operations bending punching'
+    ],
+    forbidden_topics: ['CNC programming G-code M-code', 'Industrial PLC automation',
+      'CAD CAM software', 'Gear cutting hobbing', 'Jigs fixtures advanced',
+      'Precision metrology CMM', 'Advanced manufacturing processes'],
+    question_styles: {
+      secA: ['Name the tool', 'What is', 'Define', 'True/False', 'Fill in blank'],
+      secB: ['Name and describe five tools used in', 'State safety precautions for',
+             'Differentiate between', 'Write short note on', 'List the types of'],
+      secC: ['Explain the process of', 'Draw and label the neat sketch of',
+             'What are types of', 'Explain with neat diagram'],
+      secD: ['Explain in detail the workshop process of', 'State all safety rules for',
+             'Draw and explain the complete process of', 'Compare and contrast']
+    },
+    numerical_topics: []
+  },
+
+  graphics1: {
+    name: 'Engineering Graphics (Semester-1)',
+    content_mix:   { numericals: 10, theory: 25, applications: 5, diagrams: 60 },
+    bloom_mix:     { remember: 20, understand: 25, apply: 45, analyze: 10 },
+    priority_topics: [
+      'First angle vs third angle projection difference', 'Orthographic projection three views',
+      'Projection of point in 4 quadrants', 'Projection of line inclined to both planes',
+      'True length and traces of line', 'Projection of prism in various positions',
+      'Projection of cylinder inclined to HP', 'Isometric drawing from orthographic views',
+      'Isometric projection isometric scale', 'Full section half section drawing',
+      'Plain scale construction RF', 'Dimensioning types aligned unidirectional',
+      'BIS conventions line types'
+    ],
+    forbidden_topics: ['AutoCAD commands', 'CAD software', 'Computer-generated drawing',
+      '3D modeling software', 'Perspective projection advanced', 'Animation rendering'],
+    question_styles: {
+      secA: ['Define', 'What is RF', 'State', 'Differentiate between first and third angle', 'True/False'],
+      secB: ['Differentiate between', 'Define and explain', 'What are types of', 'State the conventions for'],
+      secC: ['Draw the projection of a point', 'Draw and find true length of line',
+             'Construct a plain scale', 'Draw the projection of'],
+      secD: ['Draw the three views of the given solid', 'Draw the isometric view of',
+             'Find the true shape of section', 'Draw the sectional view of']
+    },
+    numerical_topics: ['representative fraction calculation', 'scale construction problems']
   }
 };
 
@@ -474,7 +692,7 @@ ${
 CRITICAL RULES:
 1. Output ONLY valid JSON. No text before or after.
 2. ${langRule}
-3. UPBTE diploma level ONLY — Polytechnic 2nd semester. NOT degree-level complexity.
+3. UPBTE diploma level ONLY — Polytechnic Semester ${subject.semester || ''}. NOT degree-level complexity.
 4. No repeated concepts across questions.
 5. Questions must feel human-made — not AI-generated. Use real exam wording patterns.
 6. Difficulty bias: ${modeModifier.difficulty_bias}

@@ -712,3 +712,63 @@ body.polytechnic-generator {
   .inst-subheader-meta { display: none; }
   .inst-form-row { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════
+   SEMESTER-1 UI ADDITIONS
+   Semester badges, important topic chips
+   ═══════════════════════════════════ */
+
+/* Semester selector — styled to stand out */
+#semesterSelect {
+  font-weight: 700;
+  border-color: var(--govt-navy);
+}
+
+/* Semester badges in the preview panel */
+.sem-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 0;
+  vertical-align: middle;
+  margin-left: 6px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.sem1-badge {
+  background: #e8f0fc;
+  color: #1a3a6b;
+  border: 1px solid #2a5298;
+}
+.sem2-badge {
+  background: #f4e8e8;
+  color: #6b1010;
+  border: 1px solid #8b1a1a;
+}
+
+/* Important topics — chip row */
+.inst-important-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 0;
+}
+.inst-imp-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #fff8e8;
+  border: 1px solid #d4b86a;
+  font-size: 10px;
+  color: #5a3e00;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Navbar badge when both semesters active */
+#semesterBadge {
+  font-weight: 700;
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.35);
+  color: #fff;
+}
