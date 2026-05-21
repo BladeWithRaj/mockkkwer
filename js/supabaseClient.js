@@ -238,7 +238,16 @@ function rotateAttemptId() {
 window.rotateAttemptId = rotateAttemptId;
 
 // ── Core seeded Fisher-Yates (inline — browser has no import) ──
-function _seededBalancedShuffle(optionsEN, optionsHI, correctIndex, rng, distCounts) {
+//
+// Distribution balance — TOLERANCE-BASED (not hard-swap):
+//   Only corrects when imbalance delta > MAX_BALANCE_DELTA.
+//   Prevents overcorrection on small papers and entropy loss.
+//   Disabled entirely for papers < MIN_BALANCE_SIZE questions.
+//
+const MAX_BALANCE_DELTA  = 2;  // allow ±2 before correcting
+const MIN_BALANCE_SIZE   = 12; // disable balancing for tiny papers
+
+function _seededBalancedShuffle(optionsEN, optionsHI, correctIndex, rng, distCounts, totalQuestions) {
   const n = optionsEN.length;
   const hi = Array.isArray(optionsHI) && optionsHI.length === n ? optionsHI : optionsEN;
 
@@ -252,15 +261,20 @@ function _seededBalancedShuffle(optionsEN, optionsHI, correctIndex, rng, distCou
   let newHI      = indices.map(i => hi[i]);
   let newCorrect = indices.indexOf(correctIndex);
 
-  // Distribution balance: find most underused position
-  if (distCounts) {
+  // ── TOLERANCE-BASED distribution balance ──
+  // Skip: small paper OR no tracker
+  const useBalance = distCounts && (totalQuestions || Infinity) >= MIN_BALANCE_SIZE;
+  if (useBalance) {
     const sorted = [0, 1, 2, 3].sort((a, b) => distCounts[a] - distCounts[b]);
-    const target = sorted[0]; // most underused
-    if (newCorrect !== target) {
-      // Swap correct to target position
-      [newEN[newCorrect],  newEN[target]]  = [newEN[target],  newEN[newCorrect]];
-      [newHI[newCorrect],  newHI[target]]  = [newHI[target],  newHI[newCorrect]];
-      newCorrect = target;
+    const mostUnder  = sorted[0];
+    const mostOver   = sorted[sorted.length - 1];
+    const delta      = distCounts[mostOver] - distCounts[mostUnder];
+
+    // Only correct if imbalance exceeds tolerance threshold
+    if (delta > MAX_BALANCE_DELTA && newCorrect !== mostUnder) {
+      [newEN[newCorrect],  newEN[mostUnder]]  = [newEN[mostUnder],  newEN[newCorrect]];
+      [newHI[newCorrect],  newHI[mostUnder]]  = [newHI[mostUnder],  newHI[newCorrect]];
+      newCorrect = mostUnder;
     }
     distCounts[newCorrect]++;
   }
@@ -268,12 +282,14 @@ function _seededBalancedShuffle(optionsEN, optionsHI, correctIndex, rng, distCou
   return { newEN, newHI, newCorrect };
 }
 
+
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
 
-  const isHi = typeof Lang !== 'undefined' && Lang.current === "hi";
-  const attemptId  = _getAttemptId();
-  const distCounts = [0, 0, 0, 0]; // tracks A/B/C/D usage across this paper
+  const isHi         = typeof Lang !== 'undefined' && Lang.current === "hi";
+  const attemptId    = _getAttemptId();
+  const distCounts   = [0, 0, 0, 0]; // A/B/C/D usage counter
+  const totalQuestions = data.length; // used for small-paper balance decision
 
   return data.map(q => {
     if (!q || !q.id) return null;
@@ -333,12 +349,13 @@ function mapDBToUI(data) {
 
     // ★ SEEDED BALANCED SHUFFLE — per question, per attempt
     //   seed = f(attemptId, questionId) → different each attempt, stable within attempt
-    //   distCounts → balanced A/B/C/D distribution across paper
+    //   totalQuestions → disable balancing for small papers (< 12)
     const seed = _makeSeed(attemptId, q.id);
     const rng  = _createRNG(seed);
     const { newEN, newHI, newCorrect } = _seededBalancedShuffle(
-      optionsEN, optionsHI, correctIndex, rng, distCounts
+      optionsEN, optionsHI, correctIndex, rng, distCounts, totalQuestions
     );
+
 
     return {
       id: q.id,

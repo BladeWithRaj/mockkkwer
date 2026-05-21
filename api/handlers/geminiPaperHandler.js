@@ -15,6 +15,7 @@ import { retrySection }                        from '../engine/retryManager.js';
 import { createBudgetTracker, logTokenUsage }  from '../engine/tokenBudgetManager.js';
 import { generatePracticalPaper }             from '../engine/practicalGenerator.js';
 import { generateQualifyingPaper }            from '../engine/qualifyingGenerator.js';
+import { validatePaperDistractors, DISTRACTOR_PASS_SCORE } from '../engine/distractorValidator.js';
 
 // ── Generation Mode Modifiers ──
 // Each mode injects specific behavioral instructions into the AI prompt.
@@ -701,6 +702,20 @@ CRITICAL RULES:
 7. ${isHindi ? 'Hindi technical terms: use standard diploma Hindi — e.g. "विद्युत धारा", "चुम्बकीय क्षेत्र", "पारितंत्र"' : 'English: use short mechanical phrasing — "State", "Define", "Explain", "Calculate", "Draw and label".'}
 8. Every question must be answerable from the given syllabus. Nothing beyond it.
 9. For diagram-required questions: add note in English "(Draw a neat labelled diagram)" at end.
+${section.key === 'secA' ? `
+MCQ DISTRACTOR QUALITY RULES (strictly enforced):
+D1. All 4 options MUST be from the SAME conceptual domain as the question.
+    WRONG: ["Ohm", "Banana", "Delhi", "Car"]  ← never do this
+    RIGHT: ["Ohm", "Volt", "Watt", "Ampere"]  ← plausible, same-domain
+D2. All options MUST be ROUGHLY EQUAL in length (±30% of average).
+    The longest option must NOT always be the correct one.
+D3. All 3 wrong options (distractors) MUST be:
+    - Believable to a student who studied but forgot
+    - Conceptually related (not obviously absurd)
+    - Different from each other (not near-duplicates)
+D4. DO NOT use placeholder letters (a, b, c, d) as option content.
+D5. For numerical MCQs: all options must be numbers in the same order of magnitude.
+D6. Correct answer should be at a RANDOM position — NOT always first.` : ''}
 
 GENERATE NOW:`;
 }
@@ -973,6 +988,13 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
     const paperValidation = validatePaper(paperData, failedSections);
     const budgetSummary   = budget.getSummary();
 
+    // ── Distractor quality check — runs on all Section A MCQs ──
+    const secAQuestions = (paperData.secA || paperData.partA || []);
+    const distractorReport = validatePaperDistractors(secAQuestions);
+    if (distractorReport.failCount > 0) {
+      console.warn(`[DISTRACTOR] ${distractorReport.failCount} MCQ(s) failed quality check (passRate: ${distractorReport.passRate}%)`);
+    }
+
     // ── Send final paper data ──
     sendSSE(res, 'complete', {
       success: true,
@@ -1000,6 +1022,13 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
         warnings:     paperValidation.warnings,
         success_rate: paperValidation.successRate
       },
+      distractor_quality: {
+        pass_rate:   distractorReport.passRate,
+        fail_count:  distractorReport.failCount,
+        warn_count:  distractorReport.warnCount,
+        total_mcqs:  distractorReport.totalMCQs,
+        pass_score:  DISTRACTOR_PASS_SCORE
+      },
       generation_stats: {
         total_tokens:    budgetSummary.total_tokens,
         total_cost_usd:  budgetSummary.total_cost_usd,
@@ -1008,6 +1037,7 @@ export async function handleGeneratePolytechnicPaper(supabase, req, res) {
       },
       generated_at: new Date().toISOString()
     });
+
 
     res.end();
 
