@@ -186,6 +186,24 @@ async function checkAdminRole(userId) {
 // Supports BOTH schemas:
 //   Normalized: questions + options table (joined via select("*, options(*)"))
 //   Flat: options_en/options_hi/correct_index in questions table
+//
+// ★ OPTION SHUFFLE: Options are Fisher-Yates shuffled here.
+//   correctIndex is recalculated AFTER shuffle.
+//   This prevents Option-A always being correct (DB insert order bias).
+
+function _shuffleOptions(optionsEN, optionsHI, correctIndex) {
+  const n = optionsEN.length;
+  // Build index array [0,1,2,3], shuffle it, remap
+  const indices = optionsEN.map((_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  const newEN      = indices.map(i => optionsEN[i]);
+  const newHI      = indices.map(i => optionsHI[i]);
+  const newCorrect = indices.indexOf(correctIndex); // where did the correct one land?
+  return { newEN, newHI, newCorrect };
+}
 
 function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
@@ -248,23 +266,27 @@ function mapDBToUI(data) {
 
     if (!optionsHI || optionsHI.length === 0) optionsHI = optionsEN;
 
+    // ★ SHUFFLE OPTIONS — prevent Option-A always being correct
+    const { newEN, newHI, newCorrect } = _shuffleOptions(optionsEN, optionsHI, correctIndex);
+
     return {
       id: q.id,
       subject: (q.subject || "general").toLowerCase(),
-      correct: correctIndex,
+      correct: newCorrect,          // ← post-shuffle correct index
 
       // Bilingual storage (for language toggle)
       questionEN: q.question_en,
       questionHI: q.question_hi || q.question_en,
-      optionsEN,
-      optionsHI,
+      optionsEN: newEN,
+      optionsHI: newHI,
 
       // Active display (changes on language toggle)
       question: isHi ? (q.question_hi || q.question_en) : q.question_en,
-      options: isHi ? optionsHI : optionsEN
+      options: isHi ? newHI : newEN
     };
   }).filter(Boolean);
 }
+
 
 // ── ADD QUESTION (Admin → DB) ─────────────
 

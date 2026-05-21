@@ -4,9 +4,10 @@
 // ═══════════════════════════════════════════════
 
 import { verifyTOTPLogin, verifyAdminToken, adminLogout, setupTOTP, verifyTOTPSetup, resetTOTP } from "../_lib/adminAuth.js";
-import { validateExamConfig } from "../_lib/examConfigValidator.js";
-import { auditLog, getAuditLogs } from "../_lib/auditLogger.js";
-import { generateQuestionHash, backfillQuestionHashes } from "../_lib/questionHash.js";
+import { validateExamConfig }                                                                   from "../_lib/examConfigValidator.js";
+import { auditLog, getAuditLogs }                                                              from "../_lib/auditLogger.js";
+import { generateQuestionHash, backfillQuestionHashes }                                        from "../_lib/questionHash.js";
+import { shuffleQuestionOptions, shuffleAllRows }                                              from "../_lib/optionShuffler.js";
 
 function extractToken(req) {
   const auth = req.headers.authorization || "";
@@ -190,12 +191,14 @@ export async function handleAdminData(supabase, req, res) {
         if (!q.question_en || !Array.isArray(q.options_en) || q.options_en.length < 2) return res.status(400).json({ error: "question_en and options_en[] required" });
         if (typeof q.correct_index !== "number") return res.status(400).json({ error: "correct_index required" });
 
-        const qHash = generateQuestionHash(q.question_en, q.options_en);
+        // ★ Shuffle options before saving — prevents Option-A always correct
+        const shuffled = shuffleQuestionOptions(q.options_en, q.options_hi, q.correct_index);
+        const qHash = generateQuestionHash(q.question_en, shuffled.options_en);
 
         const row = {
           question_en: q.question_en.trim(), question_hi: (q.question_hi || "").trim() || null,
-          options_en: q.options_en, options_hi: Array.isArray(q.options_hi) ? q.options_hi : null,
-          correct_index: q.correct_index, subject: (q.subject || "general").toLowerCase(),
+          options_en: shuffled.options_en, options_hi: shuffled.options_hi,
+          correct_index: shuffled.correct_index, subject: (q.subject || "general").toLowerCase(),
           difficulty: (q.difficulty || "medium").toLowerCase(), exam: q.exam || null,
           board: q.board || null, topic: q.topic || null, year: q.year || null, source: q.source || null, marks: q.marks || null,
           question_hash: qHash, moderation_status: "approved"
@@ -277,9 +280,12 @@ export async function handleAdminData(supabase, req, res) {
           });
         }
 
+        // ★ Shuffle all options before DB insert (double defence)
+        const shuffledRows = shuffleAllRows(rows);
+
         // Insert in batches to catch duplicates gracefully
         let imported = 0;
-        for (const row of rows) {
+        for (const row of shuffledRows) {
           const { error: iErr } = await supabase.from("questions").insert([row]);
           if (iErr) {
             if (iErr.code === "23505") { duplicates.push(row.question_en.substring(0, 60)); }
