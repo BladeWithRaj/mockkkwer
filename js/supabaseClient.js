@@ -187,21 +187,84 @@ async function checkAdminRole(userId) {
 //   Normalized: questions + options table (joined via select("*, options(*)"))
 //   Flat: options_en/options_hi/correct_index in questions table
 //
-// ★ OPTION SHUFFLE: Options are Fisher-Yates shuffled here.
-//   correctIndex is recalculated AFTER shuffle.
-//   This prevents Option-A always being correct (DB insert order bias).
+// ★ OPTION SHUFFLE — 3-layer defence:
+//   Layer 1: DB stored pre-shuffled at INSERT time (adminHandlers)
+//   Layer 2: Per-attempt seeded shuffle here (different order every attempt)
+//   Layer 3: Balanced distribution — A/B/C/D roughly equal across paper
+//
+// REVIEW SCREEN: q.correct is always POST-SHUFFLE index.
+//   analysis.js:   if (oi === q.correct)   ← ✅ correct
+//   testEngine.js: answer === q.correct    ← ✅ correct
 
-function _shuffleOptions(optionsEN, optionsHI, correctIndex) {
+// ── Seeded PRNG (mulberry32, inline — no import needed in browser) ──
+function _createRNG(seed) {
+  let s = (seed >>> 0);
+  return function () {
+    s += 0x6D2B79F5;
+    let z = s;
+    z = Math.imul(z ^ (z >>> 15), z | 1);
+    z ^= z + Math.imul(z ^ (z >>> 7), z | 61);
+    return ((z ^ (z >>> 14)) >>> 0) / 0x100000000;
+  };
+}
+
+function _makeSeed(attemptId, questionId) {
+  let hash = 5381;
+  const str = String(attemptId) + ':' + String(questionId);
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) ^ ((questionId * 1000003) & 0x7FFFFFFF);
+}
+
+// ── Per-attempt ID (stable within tab session, new each test) ──
+function _getAttemptId() {
+  let id = sessionStorage.getItem('_cbt_attempt_id');
+  if (!id) {
+    id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    sessionStorage.setItem('_cbt_attempt_id', id);
+  }
+  return id;
+}
+
+// Call this at test START to rotate the attemptId so same question
+// gets a fresh shuffle on next attempt.
+function rotateAttemptId() {
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  sessionStorage.setItem('_cbt_attempt_id', id);
+  return id;
+}
+window.rotateAttemptId = rotateAttemptId;
+
+// ── Core seeded Fisher-Yates (inline — browser has no import) ──
+function _seededBalancedShuffle(optionsEN, optionsHI, correctIndex, rng, distCounts) {
   const n = optionsEN.length;
-  // Build index array [0,1,2,3], shuffle it, remap
-  const indices = optionsEN.map((_, i) => i);
+  const hi = Array.isArray(optionsHI) && optionsHI.length === n ? optionsHI : optionsEN;
+
+  const indices = Array.from({ length: n }, (_, i) => i);
   for (let i = n - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-  const newEN      = indices.map(i => optionsEN[i]);
-  const newHI      = indices.map(i => optionsHI[i]);
-  const newCorrect = indices.indexOf(correctIndex); // where did the correct one land?
+
+  let newEN      = indices.map(i => optionsEN[i]);
+  let newHI      = indices.map(i => hi[i]);
+  let newCorrect = indices.indexOf(correctIndex);
+
+  // Distribution balance: find most underused position
+  if (distCounts) {
+    const sorted = [0, 1, 2, 3].sort((a, b) => distCounts[a] - distCounts[b]);
+    const target = sorted[0]; // most underused
+    if (newCorrect !== target) {
+      // Swap correct to target position
+      [newEN[newCorrect],  newEN[target]]  = [newEN[target],  newEN[newCorrect]];
+      [newHI[newCorrect],  newHI[target]]  = [newHI[target],  newHI[newCorrect]];
+      newCorrect = target;
+    }
+    distCounts[newCorrect]++;
+  }
+
   return { newEN, newHI, newCorrect };
 }
 
@@ -209,6 +272,8 @@ function mapDBToUI(data) {
   if (!Array.isArray(data)) return [];
 
   const isHi = typeof Lang !== 'undefined' && Lang.current === "hi";
+  const attemptId  = _getAttemptId();
+  const distCounts = [0, 0, 0, 0]; // tracks A/B/C/D usage across this paper
 
   return data.map(q => {
     if (!q || !q.id) return null;
@@ -266,8 +331,14 @@ function mapDBToUI(data) {
 
     if (!optionsHI || optionsHI.length === 0) optionsHI = optionsEN;
 
-    // ★ SHUFFLE OPTIONS — prevent Option-A always being correct
-    const { newEN, newHI, newCorrect } = _shuffleOptions(optionsEN, optionsHI, correctIndex);
+    // ★ SEEDED BALANCED SHUFFLE — per question, per attempt
+    //   seed = f(attemptId, questionId) → different each attempt, stable within attempt
+    //   distCounts → balanced A/B/C/D distribution across paper
+    const seed = _makeSeed(attemptId, q.id);
+    const rng  = _createRNG(seed);
+    const { newEN, newHI, newCorrect } = _seededBalancedShuffle(
+      optionsEN, optionsHI, correctIndex, rng, distCounts
+    );
 
     return {
       id: q.id,

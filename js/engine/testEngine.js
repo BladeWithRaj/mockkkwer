@@ -22,6 +22,10 @@ const TestEngine = {
       dailyQuestions = null
     } = config;
 
+    // ★ Rotate attempt seed — ensures same question gets
+    //   a DIFFERENT option order in this attempt vs previous ones.
+    if (window.rotateAttemptId) window.rotateAttemptId();
+
     let selected = [];
 
     if (isDaily && dailyQuestions && Array.isArray(dailyQuestions)) {
