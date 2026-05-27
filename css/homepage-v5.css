@@ -3,10 +3,10 @@
 /* Hero */
 .hp5-hero { position: relative; padding: 80px 24px 48px; text-align: center; overflow: hidden; }
 .hp5-hero-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.hp5-hero-orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .1; animation: hp5float 10s ease-in-out infinite; }
+.hp5-hero-orb { position: absolute; border-radius: 50%; filter: blur(40px); opacity: .08; }
 .hp5-orb-1 { width: 500px; height: 500px; background: #4F6EF7; top: -150px; left: -100px; }
-.hp5-orb-2 { width: 400px; height: 400px; background: #8B5CF6; top: -80px; right: -80px; animation-delay: 3s; }
-.hp5-orb-3 { width: 300px; height: 300px; background: #FF8C00; bottom: -60px; left: 40%; animation-delay: 5s; }
+.hp5-orb-2 { width: 400px; height: 400px; background: #8B5CF6; top: -80px; right: -80px; }
+.hp5-orb-3 { width: 300px; height: 300px; background: #FF8C00; bottom: -60px; left: 40%; }
 .hp5-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px); background-size: 64px 64px; }
 .hp5-hero-content { position: relative; max-width: 720px; margin: 0 auto; }
 @keyframes hp5float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(20px,-20px); } }
@@ -151,7 +151,7 @@
 [data-theme="light"] .hp5-board-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.06), 0 0 0 1px color-mix(in srgb, var(--bc) 40%, transparent); }
 [data-theme="light"] .hp5-poly { background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(245,243,255,.95)); }
 [data-theme="light"] .hp5-mode-card, [data-theme="light"] .hp5-popular-card, [data-theme="light"] .hp5-feature-card, [data-theme="light"] .hp5-info-card { background: #fff; }
-[data-theme="light"] .header { background: rgba(255,255,255,.92); }
+[data-theme="light"] .header { background: rgba(255,255,255,.98); }
 [data-theme="light"] .hp5-hero-stats { background: rgba(0,0,0,.02); border-color: rgba(0,0,0,.06); }
 
 /* ═══ RESPONSIVE ═══ */

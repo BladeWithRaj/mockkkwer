@@ -88,6 +88,20 @@
     <div class="splash-spinner"></div>
   </div>
 
+  <!-- Particle Background -->
+  <canvas id="particleCanvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.6"></canvas>
+
+  <style>
+    /* Satoshi heading overrides for home page */
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .hp5-title, .hp5-poly-title, .hp5-section-head h2,
+    .hp5-board-name, .hp5-mode-title, .hp5-feature-card h3,
+    .hp5-pop-name, .hp5-footer-logo, .hp5-info-big {
+      font-family: 'Satoshi', 'Inter', -apple-system, sans-serif !important;
+    }
+    #app { position: relative; z-index: 1; }
+  </style>
+
   <!-- App Mount Point -->
   <div id="app"></div>
 
@@ -181,6 +195,38 @@
         console.log('[PWA] New version available, reloading...');
       });
     }
+  </script>
+
+  <!-- Particle Background — Static (zero CPU cost after initial paint) -->
+  <script>
+  (function(){
+    if(window.innerWidth<768)return;
+    const c=document.getElementById('particleCanvas');
+    if(!c)return;
+    const ctx=c.getContext('2d');
+    function paint(){
+      const W=c.width=window.innerWidth;
+      const H=c.height=window.innerHeight;
+      const N=80;
+      for(let i=0;i<N;i++){
+        const s=Math.random();
+        const r=s<0.5?0.5+Math.random()*0.4:1+Math.random()*0.6;
+        const o=s<0.5?0.07+Math.random()*0.05:0.18+Math.random()*0.1;
+        const x=Math.random()*W;
+        const y=Math.random()*H;
+        ctx.beginPath();
+        ctx.arc(x,y,r,0,6.283);
+        ctx.fillStyle='rgba(79,110,247,'+o+')';
+        ctx.fill();
+      }
+    }
+    paint();
+    let resizeTimer;
+    window.addEventListener('resize',function(){
+      clearTimeout(resizeTimer);
+      resizeTimer=setTimeout(paint,300);
+    });
+  })();
   </script>
 </body>
 

@@ -53,7 +53,6 @@
   background: var(--bg-glass);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  backdrop-filter: blur(10px);
 }
 .btn-secondary:hover {
   background: var(--bg-glass-hover);
@@ -117,7 +116,6 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  backdrop-filter: blur(16px);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
@@ -155,8 +153,7 @@
   position: sticky;
   top: 0;
   z-index: var(--z-sticky);
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(15, 23, 42, 0.98);
   border-bottom: 1px solid var(--border-color);
   height: var(--header-height);
 }
@@ -675,7 +672,6 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(20px);
   opacity: 0;
   visibility: hidden;
   transform: translateY(-8px) scale(0.96);
