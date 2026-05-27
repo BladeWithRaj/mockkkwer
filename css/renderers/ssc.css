@@ -1,7 +1,9 @@
 /* ============================================
-   SSC RENDERER CSS — TCS iON Exact Clone
-   Flat blue #1565C0, white, grey #F5F5F5
+   SSC RENDERER CSS — TCS iON 2025 CBT Clone
+   Flat blue #1565C0, white, grey #F0F2F5
    Arial/system fonts. Radio circles.
+   2025 update: zoom controls, answered counter,
+   action buttons near question info bar.
    Boring, official, clinical. NO animations.
    ============================================ */
 
@@ -29,9 +31,9 @@
   min-height: 100vh;
   -webkit-user-select: none;
   user-select: none;
-  /* Watermark feel */
+  /* Subtle diagonal watermark — government exam feel */
   background-image: repeating-linear-gradient(45deg, transparent, transparent 200px,
-      rgba(21, 101, 192, 0.01) 200px, rgba(21, 101, 192, 0.01) 400px);
+      rgba(21, 101, 192, 0.012) 200px, rgba(21, 101, 192, 0.012) 400px);
 }
 
 .ssc-mode * {
@@ -298,15 +300,18 @@
 /* Question Content */
 .ssc-question-content {
   flex: 1;
-  padding: 16px 20px;
+  padding: 20px 24px;
   background: var(--ssc-surface);
   margin: 8px 12px;
   border: 1px solid var(--ssc-border-light);
   overflow-y: auto;
+  /* Authentic TCS iON: slightly larger padding for readability */
 }
 
 .ssc-q-number-line {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #F5F5F5;
 }
 
 .ssc-q-number {
@@ -315,18 +320,55 @@
   color: var(--ssc-blue);
 }
 
+/* 2025 TCS iON: answered counter badge */
+.ssc-answered-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(46, 125, 50, 0.08);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ssc-green);
+  margin-left: 10px;
+}
+
 .ssc-question-text {
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 16px;
+  line-height: 1.75;
   color: var(--ssc-text);
-  margin-bottom: 16px;
-  font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+  margin-bottom: 18px;
+  font-family: 'Noto Sans Devanagari', Arial, 'Segoe UI', sans-serif;
+  /* TCS iON uses slightly larger text for readability */
 }
 
 .ssc-question-text,
 .ssc-option-text {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* 2025 TCS iON: Zoom controls */
+.ssc-zoom-controls {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.ssc-zoom-btn {
+  width: 24px; height: 24px;
+  border: 1px solid var(--ssc-border);
+  background: var(--ssc-surface);
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ssc-text-muted);
+}
+.ssc-zoom-btn:hover {
+  background: var(--ssc-blue-light);
+  color: var(--ssc-blue);
+  border-color: var(--ssc-blue);
 }
 
 /* ── Options — Radio Circle Style ── */
@@ -396,8 +438,9 @@
 
 .ssc-option-text {
   flex: 1;
-  line-height: 1.5;
-  font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+  line-height: 1.6;
+  font-size: 15px;
+  font-family: 'Noto Sans Devanagari', Arial, 'Segoe UI', sans-serif;
 }
 
 /* ── Action Bar ── */

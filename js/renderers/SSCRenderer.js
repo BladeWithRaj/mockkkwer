@@ -311,11 +311,16 @@ const SSCRenderer = {
             <div class="ssc-q-left">
               <span class="ssc-q-type">Single Choice</span>
               <span class="ssc-q-section-label">${q.subject}</span>
+              <span class="ssc-answered-counter" id="ssc-ans-counter">Answered: ${stats.answered}/${stats.total}</span>
             </div>
             <div class="ssc-q-right">
               <span class="ssc-q-marks-info">
-                Marks for correct answer: <strong class="ssc-marks-positive">+${preset?.marksPerQuestion || 1}</strong>
-                | Negative marks: <strong class="ssc-marks-negative">${preset?.negativeMarking ? '-' + preset.negativeValue : '0'}</strong>
+                Marks: <strong class="ssc-marks-positive">+${preset?.marksPerQuestion || 1}</strong>
+                | Negative: <strong class="ssc-marks-negative">${preset?.negativeMarking ? '-' + preset.negativeValue : '0'}</strong>
+              </span>
+              <span class="ssc-zoom-controls">
+                <button class="ssc-zoom-btn" onclick="SSCRenderer.zoomOut()" title="Zoom Out">−</button>
+                <button class="ssc-zoom-btn" onclick="SSCRenderer.zoomIn()" title="Zoom In">+</button>
               </span>
             </div>
           </div>
@@ -511,6 +516,12 @@ const SSCRenderer = {
       ).length;
       legendDots[4].textContent = markedAnswered;
     }
+
+    // Update answered counter badge (2025 TCS iON)
+    const ansCounter = document.getElementById('ssc-ans-counter');
+    if (ansCounter) {
+      ansCounter.textContent = `Answered: ${stats.answered}/${stats.total}`;
+    }
   },
 
   // ════════════════════════════════════════════
@@ -604,6 +615,29 @@ const SSCRenderer = {
       </div>
     `;
     RendererBase.injectModal('ssc-container', html);
+  },
+
+  // ════════════════════════════════════════════
+  //  ZOOM — 2025 TCS iON feature
+  // ════════════════════════════════════════════
+
+  _zoomLevel: 100,
+
+  zoomIn() {
+    this._zoomLevel = Math.min(this._zoomLevel + 10, 150);
+    this._applyZoom();
+  },
+
+  zoomOut() {
+    this._zoomLevel = Math.max(this._zoomLevel - 10, 80);
+    this._applyZoom();
+  },
+
+  _applyZoom() {
+    const content = document.getElementById('cbt-question-content');
+    if (content) {
+      content.style.fontSize = this._zoomLevel + '%';
+    }
   }
 };
 window.SSCRenderer = SSCRenderer;

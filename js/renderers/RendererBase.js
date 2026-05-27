@@ -19,8 +19,15 @@ const RendererBase = {
 
   _getCandidateName() {
     try {
-      const u = localStorage.getItem('mock_user') || localStorage.getItem('username');
-      return u || 'Candidate';
+      const raw = localStorage.getItem('mock_user') || localStorage.getItem('username');
+      if (!raw) return 'Candidate';
+      // Try parsing as JSON (mock_user stores {id, username, name})
+      try {
+        const obj = JSON.parse(raw);
+        return obj.name || obj.username || raw;
+      } catch {
+        return raw; // plain string
+      }
     } catch { return 'Candidate'; }
   },
 

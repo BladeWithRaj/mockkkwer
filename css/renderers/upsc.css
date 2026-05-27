@@ -177,6 +177,7 @@
   text-align: justify;
   hyphens: auto;
   max-width: 650px;
+  font-family: 'Noto Sans Devanagari', 'Georgia', 'Times New Roman', serif;
 }
 
 /* Options — clean, minimal like OMR sheet choices */
@@ -230,8 +231,11 @@
 
 .upsc-option-text {
   flex: 1;
+  font-size: 16px;
+  line-height: 1.75;
   -webkit-user-select: text;
   user-select: text;
+  font-family: 'Noto Sans Devanagari', 'Georgia', 'Times New Roman', serif;
 }
 
 /* ── Action Bar ── */

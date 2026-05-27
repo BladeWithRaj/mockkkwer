@@ -1,7 +1,9 @@
 /* ============================================
-   RAILWAY RENDERER CSS — RRB CBT Clone
-   Green palette, larger palette buttons,
-   compact timer, different layout
+   RAILWAY RENDERER CSS — RRB CBT 2025 Clone
+   Green palette #1B5E20, larger readable fonts,
+   Noto Sans Devanagari for Hindi, compact timer,
+   section-wise layout, candidate photo area.
+   Authentic CDACat/TCS exam feel.
    ============================================ */
 
 .rrb-mode {
@@ -21,14 +23,14 @@
   --rrb-not-visited: #90A4AE;
   background: var(--rrb-bg) !important;
   color: var(--rrb-text) !important;
-  font-family: Arial, 'Segoe UI', system-ui, sans-serif !important;
+  font-family: 'Noto Sans Devanagari', Arial, Verdana, 'Segoe UI', system-ui, sans-serif !important;
   font-size: 14px;
   min-height: 100vh;
   -webkit-user-select: none; user-select: none;
-  /* Subtle rail-track pattern */
+  /* Subtle horizontal rail-track pattern */
   background-image: repeating-linear-gradient(
     0deg, transparent, transparent 150px,
-    rgba(27,94,32,0.015) 150px, rgba(27,94,32,0.015) 152px
+    rgba(27,94,32,0.018) 150px, rgba(27,94,32,0.018) 152px
   );
 }
 
@@ -101,9 +103,10 @@
   overflow-y: auto;
 }
 .rrb-question-text {
-  font-size: 15px; line-height: 1.7; color: var(--rrb-text);
-  margin-bottom: 16px; font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+  font-size: 16px; line-height: 1.8; color: var(--rrb-text);
+  margin-bottom: 18px; font-family: 'Noto Sans Devanagari', Arial, Verdana, sans-serif;
   -webkit-user-select: text; user-select: text;
+  /* Railway uses slightly larger text — candidates sit further from screen */
 }
 
 /* Options */
@@ -122,9 +125,9 @@
 }
 .rrb-radio.checked { border-color: var(--rrb-green); background: var(--rrb-green); }
 .rrb-radio.checked::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: white; }
-.rrb-option-label { font-weight: 600; color: var(--rrb-text-muted); min-width: 18px; }
+.rrb-option-label { font-weight: 700; color: var(--rrb-text-muted); min-width: 18px; font-size: 15px; }
 .rrb-option.selected .rrb-option-label { color: var(--rrb-green); }
-.rrb-option-text { flex: 1; line-height: 1.5; font-family: 'Noto Sans Devanagari', Arial, sans-serif; -webkit-user-select: text; user-select: text; }
+.rrb-option-text { flex: 1; line-height: 1.6; font-size: 15px; font-family: 'Noto Sans Devanagari', Arial, Verdana, sans-serif; -webkit-user-select: text; user-select: text; }
 
 /* Action bar */
 .rrb-action-bar {

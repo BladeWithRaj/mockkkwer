@@ -1,7 +1,9 @@
 /* ============================================
-   BANKING RENDERER CSS — IBPS Style
-   Corporate blue-grey, clean modern sans,
-   on-screen calculator, professional feel
+   BANKING RENDERER CSS — IBPS 2025 Style
+   Navy blue-grey #1A237E, clean Segoe UI,
+   Noto Sans Devanagari for Hindi, on-screen
+   calculator, section timers, keyboard nav,
+   professional corporate banking feel.
    ============================================ */
 
 .ibps-mode {
@@ -19,10 +21,10 @@
   --ibps-grey: #78909C;
   background: var(--ibps-bg) !important;
   color: var(--ibps-text) !important;
-  font-family: 'Segoe UI', Roboto, Arial, sans-serif !important;
+  font-family: 'Segoe UI', 'Noto Sans Devanagari', Roboto, Arial, sans-serif !important;
   font-size: 14px; min-height: 100vh;
   -webkit-user-select: none; user-select: none;
-  /* Subtle grid pattern for enterprise feel */
+  /* Professional grid pattern for enterprise/banking feel */
   background-image:
     linear-gradient(rgba(26,35,126,0.02) 1px, transparent 1px),
     linear-gradient(90deg, rgba(26,35,126,0.02) 1px, transparent 1px);
@@ -82,8 +84,8 @@
 .ibps-q-section { color: var(--ibps-text-muted); }
 .ibps-q-marks { color: var(--ibps-text-muted); font-size: 11px; }
 
-.ibps-question-content { flex: 1; padding: 16px 20px; background: white; margin: 8px 12px; border: 1px solid var(--ibps-border); overflow-y: auto; }
-.ibps-question-text { font-size: 15px; line-height: 1.7; margin-bottom: 16px; -webkit-user-select: text; user-select: text; }
+.ibps-question-content { flex: 1; padding: 20px 24px; background: white; margin: 8px 12px; border: 1px solid var(--ibps-border); overflow-y: auto; }
+.ibps-question-text { font-size: 16px; line-height: 1.75; margin-bottom: 18px; -webkit-user-select: text; user-select: text; font-family: 'Noto Sans Devanagari', 'Segoe UI', Arial, sans-serif; }
 
 .ibps-options { display: flex; flex-direction: column; gap: 4px; }
 .ibps-option { display: flex; align-items: flex-start; gap: 8px; padding: 8px 12px; border: 1px solid var(--ibps-border); cursor: pointer; font-size: 14px; }
@@ -92,9 +94,9 @@
 .ibps-radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ibps-border); flex-shrink: 0; margin-top: 2px; display: inline-flex; align-items: center; justify-content: center; }
 .ibps-radio.checked { border-color: var(--ibps-blue); background: var(--ibps-blue); }
 .ibps-radio.checked::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: white; }
-.ibps-option-label { font-weight: 600; color: var(--ibps-text-muted); min-width: 18px; }
+.ibps-option-label { font-weight: 700; color: var(--ibps-text-muted); min-width: 18px; font-size: 15px; }
 .ibps-option.selected .ibps-option-label { color: var(--ibps-blue); }
-.ibps-option-text { flex: 1; line-height: 1.5; -webkit-user-select: text; user-select: text; }
+.ibps-option-text { flex: 1; line-height: 1.6; font-size: 15px; -webkit-user-select: text; user-select: text; font-family: 'Noto Sans Devanagari', 'Segoe UI', Arial, sans-serif; }
 
 .ibps-action-bar { background: white; border-top: 1px solid var(--ibps-border); padding: 8px 20px; display: flex; justify-content: space-between; }
 .ibps-action-left, .ibps-action-right { display: flex; gap: 6px; }
