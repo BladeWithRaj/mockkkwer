@@ -299,6 +299,52 @@ const HomePage = {
           </div>
         </section>
 
+        <!-- ═══════════ EXAM DASHBOARDS (Direct Links) ═══════════ -->
+        <section class="hp5-container">
+          <div class="hp5-section-head">
+            <h2>📋 Exam Dashboards</h2>
+            <p>Complete exam info, selection stages, syllabus & mock tests</p>
+          </div>
+
+          <div class="hp5-modes-grid">
+            <div class="hp5-mode-card" onclick="window.location.href='/ssc/cgl/'" id="dash-ssc-cgl" style="cursor:pointer">
+              <div class="hp5-mode-icon">🎯</div>
+              <div class="hp5-mode-body">
+                <div class="hp5-mode-title">SSC CGL 2026</div>
+                <div class="hp5-mode-meta">Tier 1 · Tier 2 · DEST · CPT · PYQs</div>
+              </div>
+              <div class="hp5-mode-action">Open →</div>
+            </div>
+
+            <div class="hp5-mode-card" onclick="window.location.href='/ssc/'" id="dash-ssc" style="cursor:pointer">
+              <div class="hp5-mode-icon">📘</div>
+              <div class="hp5-mode-body">
+                <div class="hp5-mode-title">SSC All Exams</div>
+                <div class="hp5-mode-meta">CGL · CHSL · MTS · GD · Stenographer</div>
+              </div>
+              <div class="hp5-mode-action">Open →</div>
+            </div>
+
+            <div class="hp5-mode-card" onclick="window.location.href='/railway/'" id="dash-railway" style="cursor:pointer">
+              <div class="hp5-mode-icon">🚆</div>
+              <div class="hp5-mode-body">
+                <div class="hp5-mode-title">Railway Exams</div>
+                <div class="hp5-mode-meta">NTPC · Group D · ALP · JE · RPF</div>
+              </div>
+              <div class="hp5-mode-action">Open →</div>
+            </div>
+
+            <div class="hp5-mode-card" onclick="window.location.href='/banking/'" id="dash-banking" style="cursor:pointer">
+              <div class="hp5-mode-icon">🏦</div>
+              <div class="hp5-mode-body">
+                <div class="hp5-mode-title">Banking Exams</div>
+                <div class="hp5-mode-meta">IBPS PO · SBI Clerk · RBI Assistant</div>
+              </div>
+              <div class="hp5-mode-action">Open →</div>
+            </div>
+          </div>
+        </section>
+
         <!-- ═══════════ WHY US ═══════════ -->
         <section class="hp5-container">
           <div class="hp5-section-head">
@@ -382,6 +428,14 @@ const HomePage = {
                 <a href="#battle">Rival Battle</a>
                 <a href="#profile">Profile & Rewards</a>
                 <a href="#analytics">Analytics</a>
+              </div>
+              <div class="hp5-footer-col">
+                <h4>Dashboards</h4>
+                <a href="/ssc/cgl/">SSC CGL</a>
+                <a href="/ssc/">SSC</a>
+                <a href="/railway/">Railway</a>
+                <a href="/banking/">Banking</a>
+                <a href="/exams/">All Exams</a>
               </div>
             </div>
           </div>
