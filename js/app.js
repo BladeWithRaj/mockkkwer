@@ -64,7 +64,8 @@ const App = {
     leaderboard: LeaderboardPage,
     analytics: AnalyticsPage,
     profile: ProfilePage,
-    battle: BattlePage
+    battle: BattlePage,
+    exam: ExamDetailPage
   },
 
   async init() {
