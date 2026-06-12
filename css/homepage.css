@@ -2038,6 +2038,35 @@
 .bp-tip-title { font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
 .bp-tip-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0; }
 
+/* ── Live Stage: Clickable ── */
+.bp-stage-live-clickable {
+  transition: all 0.25s ease;
+  border-left: 3px solid var(--board-color, #2563EB);
+}
+.bp-stage-live-clickable:hover {
+  background: color-mix(in srgb, var(--board-color, #2563EB) 8%, var(--bg-card));
+  border-color: var(--board-color, #2563EB);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+}
+.bp-stage-start-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--board-color, #2563EB);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.bp-stage-start-btn:hover {
+  filter: brightness(1.15);
+  transform: scale(1.05);
+}
+
 /* ── Mobile ── */
 @media (max-width: 640px) {
   .bp-section { padding: 0 16px 24px; }
@@ -2048,4 +2077,5 @@
   .bp-stage-icon { font-size: 22px; }
   .bp-stage-name { font-size: 14px; }
   .bp-tips-grid { grid-template-columns: 1fr; }
+  .bp-stage-start-btn { width: 100%; text-align: center; padding: 10px; }
 }

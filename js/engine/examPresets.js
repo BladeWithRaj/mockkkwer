@@ -59,7 +59,9 @@ const ExamPresets = {
       name: s.name,
       subject: s.subject,
       questions: s.questions,
-      ...(s.sectionTime ? { sectionTime: s.sectionTime } : {})
+      ...(s.sectionTime ? { sectionTime: s.sectionTime } : {}),
+      ...(s.v2StageId ? { v2StageId: s.v2StageId } : {}),
+      ...(s.v2ExamId ? { v2ExamId: s.v2ExamId } : {})
     }));
 
     return {

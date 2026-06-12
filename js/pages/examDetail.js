@@ -283,7 +283,9 @@ const ExamDetailPage = {
 
           <div class="bp-stages-list">
             ${exam.stages.map((stage, i) => `
-              <div class="bp-stage-card ${stage.status === 'coming' ? 'bp-stage-coming' : ''}" style="animation: hp-fadeUp 0.4s ${0.06 * i}s ease both;">
+              <div class="bp-stage-card ${stage.status === 'coming' ? 'bp-stage-coming' : 'bp-stage-live-clickable'}"
+                   style="animation: hp-fadeUp 0.4s ${0.06 * i}s ease both;${stage.status === 'live' ? 'cursor:pointer;' : ''}"
+                   ${stage.status === 'live' ? `onclick="HomePage.startPresetExam('${examId}')"` : ''}>
                 <div class="bp-stage-left">
                   <span class="bp-stage-icon">${stage.icon}</span>
                   <div>
@@ -292,9 +294,10 @@ const ExamDetailPage = {
                   </div>
                 </div>
                 <div class="bp-stage-right">
-                  <span class="bp-stage-badge ${stage.status === 'live' ? 'bp-badge-live' : 'bp-badge-soon'}">
-                    ${stage.status === 'live' ? '🟢 Live' : '🔜 Coming Soon'}
-                  </span>
+                  ${stage.status === 'live'
+                    ? `<button class="bp-stage-start-btn" style="--board-color: ${exam.color};">▶ Start Test</button>`
+                    : `<span class="bp-stage-badge bp-badge-soon">🔜 Coming Soon</span>`
+                  }
                 </div>
               </div>
             `).join('')}

@@ -86,10 +86,31 @@ async function fetchSectionWiseQuestions(config = {}) {
   try {
     const used = JSON.parse(localStorage.getItem("used_ids") || "[]");
     let allSelected = [];
+    let usedV2 = false;
 
     for (const section of sections) {
       const subjectFilter = section.subject;
       const needed = section.questions || 25;
+
+      // ── V2 SOURCE: If section has v2StageId, fetch from questions_v2 ──
+      if (section.v2StageId) {
+        const v2Data = await _fetchV2ByStage(section.v2StageId, section.v2ExamId || 1);
+        if (v2Data && v2Data.length > 0) {
+          const fresh = v2Data.filter(q => !used.includes('v2_' + q.id));
+          const base = fresh.length >= needed ? fresh : v2Data;
+          const shuffled = _shuffle(base);
+          const selected = shuffled.slice(0, needed);
+          // Map v2 → UI format inline
+          const mapped = mapV2ToUI(selected);
+          // Override subject for section identification
+          mapped.forEach(q => { q.subject = subjectFilter; });
+          allSelected.push(...mapped);
+          usedV2 = true;
+          console.log(`Section ${subjectFilter} (v2 stage ${section.v2StageId}): ${mapped.length}/${needed} questions`);
+          continue;
+        }
+        // fallthrough to v1 if v2 empty
+      }
 
       // Skip 'all' subject — handled differently
       if (subjectFilter === 'all') {
@@ -139,6 +160,18 @@ async function fetchSectionWiseQuestions(config = {}) {
 
     console.log(`SECTION FETCH: ${allSelected.length} total (target: ${totalQuestions})`);
 
+    // If all data came from v2, it's already mapped; otherwise map v1 data
+    if (usedV2) {
+      // allSelected is a mix — v2 items are already mapped, v1 items need mapping
+      // v2 items have ._isV2Mapped flag, v1 items don't
+      const v1Items = allSelected.filter(q => !q._isV2Mapped);
+      const v2Items = allSelected.filter(q => q._isV2Mapped);
+      const mappedV1 = mapDBToUI(v1Items);
+      // Clean the flag
+      v2Items.forEach(q => delete q._isV2Mapped);
+      return [...v2Items, ...mappedV1];
+    }
+
     const mapped = mapDBToUI(allSelected);
     return mapped;
 
@@ -146,6 +179,95 @@ async function fetchSectionWiseQuestions(config = {}) {
     console.error("fetchSectionWiseQuestions CRASH:", err);
     return fetchRandomQuestions({ subjects, limit: totalQuestions });
   }
+}
+
+// ── QUESTIONS V2: Fetch from questions_v2 + question_options_v2 ──────
+
+async function _fetchV2ByStage(stageId, examId = 1) {
+  try {
+    const { data, error } = await client
+      .from('questions_v2')
+      .select('*, question_options_v2(*)')
+      .eq('exam_id', examId)
+      .eq('stage_id', stageId)
+      .eq('status', 'approved');
+
+    if (error) {
+      console.error('V2 fetch error:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('V2 fetch crash:', err);
+    return [];
+  }
+}
+
+/**
+ * Map questions_v2 schema → UI format.
+ * V2 uses: english_question, hindi_question, correct_answer (A/B/C/D)
+ * Options in question_options_v2: option_key (A/B/C/D), english_text, hindi_text
+ */
+function mapV2ToUI(data) {
+  if (!Array.isArray(data)) return [];
+
+  const isHi = typeof Lang !== 'undefined' && Lang.current === 'hi';
+  const attemptId = _getAttemptId();
+  const keyMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+  const distCounts = [0, 0, 0, 0];
+  const totalQuestions = data.length;
+
+  return data.map(q => {
+    if (!q || !q.id) return null;
+
+    // Sort options by key (A, B, C, D)
+    const opts = (q.question_options_v2 || []).sort((a, b) =>
+      (a.option_key || '').localeCompare(b.option_key || '')
+    );
+
+    if (opts.length < 2) {
+      console.warn('V2: Too few options for Q:', q.id);
+      return null;
+    }
+
+    const optionsEN = opts.map(o => o.english_text);
+    const optionsHI = opts.map(o => o.hindi_text || o.english_text);
+    const correctKey = (q.correct_answer || '').trim().toUpperCase();
+    const correctIndex = keyMap[correctKey];
+
+    if (correctIndex === undefined) {
+      console.warn('V2: Invalid correct_answer for Q:', q.id, q.correct_answer);
+      return null;
+    }
+
+    // Seeded balanced shuffle (same system as v1)
+    const seed = _makeSeed(attemptId, q.id);
+    const rng = _createRNG(seed);
+    const { newEN, newHI, newCorrect } = _seededBalancedShuffle(
+      optionsEN, optionsHI, correctIndex, rng, distCounts, totalQuestions
+    );
+
+    return {
+      id: 'v2_' + q.id,
+      subject: 'math',
+      correct: newCorrect,
+      _isV2Mapped: true,
+
+      // Bilingual storage
+      questionEN: q.english_question,
+      questionHI: q.hindi_question || q.english_question,
+      optionsEN: newEN,
+      optionsHI: newHI,
+
+      // Explanation (for review)
+      explanationEN: q.english_explanation || '',
+      explanationHI: q.hindi_explanation || '',
+
+      // Active display
+      question: isHi ? (q.hindi_question || q.english_question) : q.english_question,
+      options: isHi ? newHI : newEN
+    };
+  }).filter(Boolean);
 }
 
 /** Fisher-Yates shuffle helper */
@@ -782,6 +904,7 @@ window.fetchSectionWiseQuestions = fetchSectionWiseQuestions;
 window.fetchAdminQuestions = fetchAdminQuestions;
 window.checkAdminRole = checkAdminRole;
 window.mapDBToUI = mapDBToUI;
+window.mapV2ToUI = mapV2ToUI;
 window.addQuestionToDB = addQuestionToDB;
 window.deleteQuestionFromDB = deleteQuestionFromDB;
 window.bulkInsertQuestions = bulkInsertQuestions;
