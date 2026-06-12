@@ -2,8 +2,8 @@
 // ATTEMPT HANDLERS — Submit test, scoring
 // ═══════════════════════════════════════════════
 
-import { extractUserToken } from "../_lib/userSession.js";
-import { verifyUserSession } from "../_lib/userSession.js";
+import { extractUserToken } from "../userSession.js";
+import { verifyUserSession } from "../userSession.js";
 
 // ── Scoring utility — index-based (no text matching) ──
 function calculateResult(questions, answers) {

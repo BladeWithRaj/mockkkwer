@@ -3,11 +3,11 @@
 // No cookies. No CSRF. Authenticator-based.
 // ═══════════════════════════════════════════════
 
-import { verifyTOTPLogin, verifyAdminToken, adminLogout, setupTOTP, verifyTOTPSetup, resetTOTP } from "../_lib/adminAuth.js";
-import { validateExamConfig }                                                                   from "../_lib/examConfigValidator.js";
-import { auditLog, getAuditLogs }                                                              from "../_lib/auditLogger.js";
-import { generateQuestionHash, backfillQuestionHashes }                                        from "../_lib/questionHash.js";
-import { shuffleQuestionOptions, shuffleAllRows }                                              from "../_lib/optionShuffler.js";
+import { verifyTOTPLogin, verifyAdminToken, adminLogout, setupTOTP, verifyTOTPSetup, resetTOTP } from "../adminAuth.js";
+import { validateExamConfig }                                                                   from "../examConfigValidator.js";
+import { auditLog, getAuditLogs }                                                              from "../auditLogger.js";
+import { generateQuestionHash, backfillQuestionHashes }                                        from "../questionHash.js";
+import { shuffleQuestionOptions, shuffleAllRows }                                              from "../optionShuffler.js";
 
 function extractToken(req) {
   const auth = req.headers.authorization || "";

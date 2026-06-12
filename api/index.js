@@ -8,14 +8,14 @@ import "./_lib/env.js";  // Fail-fast env validation on cold start
 import { logRequest, logError, errorResponse } from "./_lib/logger.js";
 
 // Handler modules
-import { handleSubmit } from "./handlers/attemptHandlers.js";
-import { handleTrack, handleAnalytics } from "./handlers/trackingHandlers.js";
-import { handleLeaderboard, handleAvatar, handleProfile, handleStreak, handleWallet, handleRewards, handleProfileSummary } from "./handlers/profileHandlers.js";
-import { handleUserLogin, handleUserVerify, handleUserLogout } from "./handlers/authHandlers.js";
-import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus, handleAdminResetTOTP } from "./handlers/adminHandlers.js";
-import { handleExams } from "./handlers/examHandlers.js";
-import { handlePolytechnic } from "./handlers/polytechnicHandlers.js";
-import { handleGeneratePolytechnicPaper } from "./handlers/geminiPaperHandler.js";
+import { handleSubmit } from "./_lib/handlers/attemptHandlers.js";
+import { handleTrack, handleAnalytics } from "./_lib/handlers/trackingHandlers.js";
+import { handleLeaderboard, handleAvatar, handleProfile, handleStreak, handleWallet, handleRewards, handleProfileSummary } from "./_lib/handlers/profileHandlers.js";
+import { handleUserLogin, handleUserVerify, handleUserLogout } from "./_lib/handlers/authHandlers.js";
+import { handleAdminLogin, handleAdminVerify, handleAdminLogout, handleAdminData, handleTOTPSetup, handleTOTPStatus, handleAdminResetTOTP } from "./_lib/handlers/adminHandlers.js";
+import { handleExams } from "./_lib/handlers/examHandlers.js";
+import { handlePolytechnic } from "./_lib/handlers/polytechnicHandlers.js";
+import { handleGeneratePolytechnicPaper } from "./_lib/handlers/geminiPaperHandler.js";
 
 // ── Supabase Admin (service role) ─────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;

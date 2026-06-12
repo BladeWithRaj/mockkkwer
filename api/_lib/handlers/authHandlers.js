@@ -5,7 +5,7 @@
 import {
   createUserSession, verifyUserSession, destroyUserSession,
   extractUserToken, buildUserCookie, clearUserCookie
-} from "../_lib/userSession.js";
+} from "../userSession.js";
 
 export async function handleUserLogin(supabase, req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });

@@ -3,7 +3,7 @@
 // Wallet, Rewards, ProfileSummary, Leaderboard
 // ═══════════════════════════════════════════════
 
-import { extractUserToken, verifyUserSession } from "../_lib/userSession.js";
+import { extractUserToken, verifyUserSession } from "../userSession.js";
 
 export async function handleLeaderboard(supabase, req, res) {
   try {

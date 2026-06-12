@@ -3,8 +3,8 @@
 // Routes: /api/polytechnic/*
 // ═══════════════════════════════════════════════
 
-import { generatePaper, savePaper } from "../_lib/paperGenerator.js";
-import { renderPaperHTML } from "../_lib/paperRenderer.js";
+import { generatePaper, savePaper } from "../paperGenerator.js";
+import { renderPaperHTML } from "../paperRenderer.js";
 
 /**
  * Master polytechnic handler — routes sub-paths
