@@ -168,7 +168,7 @@ const HomePage = {
             <div class="hp5-poly-inner">
               <div class="hp5-poly-left">
                 <div class="hp5-poly-badge">📄 BTEUP AUTHENTIC</div>
-                <h2 class="hp5-poly-title">Mathematics-II Paper Generator</h2>
+                <h2 class="hp5-poly-title">Polytechnic Paper Generator</h2>
                 <p class="hp5-poly-desc">Real BTEUP format · 60 Marks · Part A-D · All units covered · Print-ready A4</p>
                 <div class="hp5-poly-chips">
                   <span>✓ Real BTEUP Format</span>
@@ -186,7 +186,7 @@ const HomePage = {
                   <div style="position:absolute;bottom:-6px;left:-6px;font-size:14px;animation:hp5pulse 2s .5s infinite">💫</div>
                   <div class="hp5-poly-paper">
                     <div class="hp5-pp-header">BOARD OF TECHNICAL EDUCATION</div>
-                    <div class="hp5-pp-sub">MATHEMATICS-II</div>
+                    <div class="hp5-pp-sub">POLYTECHNIC EXAM</div>
                     <div class="hp5-pp-line"></div>
                     <div class="hp5-pp-q">Part A ··· 10 × 1 = 10</div>
                     <div class="hp5-pp-q dim">Part B ··· 5 × 2 = 10</div>

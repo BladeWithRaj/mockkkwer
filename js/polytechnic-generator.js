@@ -472,14 +472,17 @@
       </tr>`).join('');
 
     // Unit weightage bars
-    let unitBars = s.units.map(u => `
+    let unitBars = s.units.map(u => {
+      const isHigh = u.weight >= 22;
+      return `
       <div class="inst-unit-row">
-        <span class="inst-unit-name">Unit ${u.no}</span>
+        <span class="inst-unit-name" title="${u.name}">U${u.no} · ${u.name}</span>
         <div class="inst-unit-bar-wrap">
-          <div class="inst-unit-bar-fill" style="width:${u.weight}%"></div>
+          <div class="inst-unit-bar-fill${isHigh ? ' high-weight' : ''}" style="width:${u.weight}%"></div>
         </div>
         <span class="inst-unit-pct">${u.weight}%</span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     // Important topics block (Sem-1 subjects have importantTopics)
     const importantBlock = s.importantTopics?.length
@@ -605,7 +608,7 @@
 
     errorEl?.classList.remove('show');
     outputEl?.classList.remove('show');
-    if (genBtn) { genBtn.disabled = true; genBtn.textContent = '⏳ Generating...'; }
+    if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Generating...'; }
     showLoadingOverlay(currentSubject);
 
     try {
@@ -650,7 +653,7 @@
       hideLoadingOverlay();
       showError(err.message);
     } finally {
-      if (genBtn) { genBtn.disabled = false; genBtn.textContent = '▶ Generate BTEUP Paper'; }
+      if (genBtn) { genBtn.disabled = false; genBtn.textContent = 'Generate Predicted Paper'; }
     }
   }
   window.generatePaper = generatePaper;

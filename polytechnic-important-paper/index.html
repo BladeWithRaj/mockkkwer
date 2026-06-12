@@ -3,166 +3,453 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Polytechnic Important Paper Generator — Semester Exam Questions</title>
-  <meta name="description" content="Generate important question papers for BTEUP Polytechnic semester exams. Semester-1 & Semester-2: Mathematics, Physics, Chemistry, Mechanics, Environmental Science and more. Board pattern with PYQ weighted topics.">
+  <title>BTEUP Paper Predictor — MockTestPro</title>
+  <meta name="description" content="AI-powered BTEUP exam paper predictor. Trained on 12,000+ PYQs and board patterns.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/polytechnic-paper.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/gen-minimal.css">
 </head>
-<body class="polytechnic-generator">
+<body>
 
-  <!-- ═══ TOP NAVBAR ═══ -->
-  <div class="inst-navbar">
-    <div class="inst-navbar-left">
-      <div class="inst-navbar-title">
-        📄 Polytechnic Important Paper Generator
-        <span>Semester Exam Preparation — 2025-26</span>
-      </div>
-    </div>
-    <div class="inst-navbar-right">
-      <div class="inst-session-badge" id="semesterBadge">Sem I &amp; II</div>
-      <a href="/" class="inst-navbar-link">← MockTestPro</a>
-    </div>
+  <!-- Ambient Lights -->
+  <div class="gn-lights">
+    <div class="gn-light gn-light-1"></div>
+    <div class="gn-light gn-light-2"></div>
+    <div class="gn-light gn-light-3"></div>
   </div>
 
-  <!-- ═══ MAIN 2-COLUMN LAYOUT ═══ -->
-  <div class="inst-layout">
+  <!-- Particle Canvas -->
+  <canvas id="particleCanvas"></canvas>
 
-    <!-- ─── LEFT PANEL: Configuration Form ─── -->
-    <div class="inst-panel" id="formPanel">
-      <div class="inst-panel-head">📋 Paper Configuration</div>
-      <div class="inst-panel-body">
+  <!-- Nav -->
+  <nav class="gn-nav">
+    <a href="/" class="gn-logo">
+      <span class="gn-logo-mark">⚡</span>
+      MockTestPro
+    </a>
+    <a href="/" class="gn-nav-link">Home</a>
+  </nav>
 
-        <!-- Row 1: Branch + Semester -->
-        <div class="inst-form-row">
-          <div class="inst-field">
-            <label class="inst-label" for="branchSelect">Branch <span class="req">*</span></label>
-            <select class="inst-select" id="branchSelect"></select>
-          </div>
-          <div class="inst-field">
-            <label class="inst-label" for="semesterSelect">Semester <span class="req">*</span></label>
-            <select class="inst-select" id="semesterSelect"></select>
-          </div>
+  <!-- Main Stage: Two Column -->
+  <main class="gn-stage">
+
+    <!-- LEFT: Controls -->
+    <div class="gn-controls">
+      <div class="gn-header">
+        <h1>Predict Your<br><span class="gn-grad">BTEUP Paper</span></h1>
+        <p>AI trained on PYQs, board patterns, unit weightage, and repeated concepts.</p>
+        <div class="gn-trust">
+          <span>12,000+ PYQs</span>
+          <span>Board-pattern trained</span>
+          <span>High-frequency focus</span>
         </div>
-
-        <!-- Row 2: Subject -->
-        <div class="inst-form-row full">
-          <div class="inst-field">
-            <label class="inst-label" for="subjectSelect">Subject <span class="req">*</span></label>
-            <select class="inst-select" id="subjectSelect">
-              <option value="">-- Select Subject --</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="inst-divider"></div>
-
-        <!-- Paper Language -->
-        <div class="inst-section-label">Paper Language</div>
-        <div class="inst-radio-group" role="radiogroup" aria-label="Paper Language">
-          <label class="inst-radio-row">
-            <input type="radio" name="paperLang" id="langEn" value="english" checked>
-            <span class="inst-radio-label">
-              English
-              <small>Questions in English — Board standard format</small>
-            </span>
-          </label>
-          <label class="inst-radio-row">
-            <input type="radio" name="paperLang" id="langHi" value="hindi">
-            <span class="inst-radio-label">
-              हिन्दी (Hindi)
-              <small>प्रश्न हिन्दी में — Board Hindi format</small>
-            </span>
-          </label>
-        </div>
-
-        <div class="inst-divider"></div>
-
-        <!-- Generation Strategy -->
-        <div class="inst-section-label">Generation Strategy</div>
-        <div class="inst-radio-group" role="radiogroup" aria-label="Generation Strategy">
-          <label class="inst-radio-row">
-            <input type="radio" name="genMode" id="modeImportant" value="important" checked>
-            <span class="inst-radio-label">
-              🔥 Important Questions
-              <small>High-frequency concepts from past 6 years — most likely to appear</small>
-            </span>
-          </label>
-          <label class="inst-radio-row">
-            <input type="radio" name="genMode" id="modeBoardPattern" value="board_pattern">
-            <span class="inst-radio-label">
-              📘 Board Pattern
-              <small>Strict official BTEUP wording and question style</small>
-            </span>
-          </label>
-          <label class="inst-radio-row">
-            <input type="radio" name="genMode" id="modePYQ" value="pyq_weighted">
-            <span class="inst-radio-label">
-              🧠 PYQ Weighted
-              <small>Topics ranked by historical repetition frequency</small>
-            </span>
-          </label>
-          <label class="inst-radio-row">
-            <input type="radio" name="genMode" id="modePass" value="pass_guaranteed">
-            <span class="inst-radio-label">
-              🎯 Pass-Guaranteed
-              <small>Easy-to-medium scoring questions — minimum marks focus</small>
-            </span>
-          </label>
-        </div>
-
-        <!-- Error message -->
-        <div class="pg-error" id="errorMsg" role="alert">
-          <div id="errorText"></div>
-          <button class="pg-error-retry" onclick="generatePaper()">Retry</button>
-        </div>
-
-        <!-- Generate Button -->
-        <button class="inst-btn-generate" id="generateBtn" onclick="generatePaper()">
-          ▶ Generate BTEUP Paper
-        </button>
-
       </div>
-    </div><!-- /left panel -->
 
-    <!-- ─── RIGHT PANEL: Pattern Preview ─── -->
-    <div class="inst-panel" id="previewPanel">
-      <div class="inst-panel-head">📊 Paper Pattern &amp; Subject Info</div>
-      <div class="inst-panel-body" id="previewBody">
-        <div class="inst-preview-placeholder" id="previewPlaceholder">
-          Select a subject to view paper pattern, marks distribution, and unit weightage.
+      <div class="gn-surface">
+        <!-- Semester -->
+        <div class="gn-section">
+          <label class="gn-label">Semester</label>
+          <div class="gn-chips" id="semPills">
+            <button class="gn-chip active" data-sem="1" onclick="pickSem(1)">Semester I</button>
+            <button class="gn-chip" data-sem="2" onclick="pickSem(2)">Semester II</button>
+          </div>
         </div>
-        <!-- Populated by JS when subject is selected -->
-        <div id="previewContent" style="display:none"></div>
+
+        <!-- Subject -->
+        <div class="gn-section" style="position:relative">
+          <label class="gn-label">Subject</label>
+          <button class="gn-subject-trigger" id="subjectTrigger" onclick="toggleSubjectPanel()">
+            <span class="gn-st-icon">⌕</span>
+            <span id="triggerText">Select a subject…</span>
+            <span class="gn-st-hint">⌘K</span>
+          </button>
+          <div class="gn-subject-panel" id="subjectPanel">
+            <input type="text" class="gn-sp-search" id="subjectSearch" placeholder="Search subjects…" autocomplete="off">
+            <div class="gn-sp-list" id="subjectList"></div>
+          </div>
+          <div class="gn-subject-info" id="subjectInfo"></div>
+        </div>
+
+        <!-- Mode -->
+        <div class="gn-section">
+          <label class="gn-label">Prediction Mode</label>
+          <div class="gn-chips" id="modePills">
+            <button class="gn-chip active" data-mode="important" onclick="pickMode('important',this)">Important</button>
+            <button class="gn-chip" data-mode="board_pattern" onclick="pickMode('board_pattern',this)">Board Pattern</button>
+            <button class="gn-chip" data-mode="pass_guaranteed" onclick="pickMode('pass_guaranteed',this)">Pass Safe</button>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="gn-error" id="errorMsg">
+          <span id="errorText"></span>
+          <button onclick="generatePaper()">Retry</button>
+        </div>
+
+        <!-- CTA -->
+        <button class="gn-generate" id="generateBtn" onclick="generatePaper()">Generate predicted paper</button>
+
+        <div class="gn-footer-note">
+          <span onclick="toggleLang()" class="gn-lang-toggle" id="langToggle">English</span>
+          <span class="gn-dot">·</span>
+          <span>Powered by Gemini AI</span>
+        </div>
       </div>
     </div>
 
-  </div><!-- /inst-layout -->
+    <!-- RIGHT: AI Visualization -->
+    <div class="gn-viz">
+      <!-- Subject intel -->
+      <div class="gn-viz-card gn-tilt" id="vizSubject">
+        <div class="gn-viz-title"><span class="gn-vt-dot"></span> Subject Intelligence</div>
+        <div id="vizContent">
+          <div class="gn-viz-empty">
+            <div class="gn-viz-empty-icon">◇</div>
+            Select a subject to see PYQ analysis
+          </div>
+        </div>
+      </div>
 
-  <!-- ═══ PAPER OUTPUT ═══ -->
-  <div class="pg-output" id="paperOutput">
-    <div class="pg-output-actions">
-      <button class="btn-print" onclick="printPaper()">🖨 Print / Save PDF</button>
-      <button onclick="copyPaper()">📋 Copy Text</button>
-      <button onclick="generateAnother()">↺ Generate Another</button>
-      <span style="margin-left:auto;font-size:10px;color:#666;" id="paperMeta"></span>
+      <!-- Neural graph -->
+      <div class="gn-viz-card gn-tilt" id="vizGraph" style="display:none">
+        <div class="gn-viz-title"><span class="gn-vt-dot"></span> Topic Network</div>
+        <canvas class="gn-neural-canvas" id="neuralCanvas"></canvas>
+      </div>
+
+      <!-- AI Memory -->
+      <div class="gn-viz-card gn-tilt" id="vizMemory" style="display:none">
+        <div class="gn-viz-title"><span class="gn-vt-dot"></span> AI Memory</div>
+        <div id="memoryContent"></div>
+      </div>
+
+      <!-- Generation stages -->
+      <div class="gn-viz-card" id="vizStages" style="display:none">
+        <div class="gn-viz-title"><span class="gn-vt-dot"></span> AI Generation Pipeline</div>
+        <div class="gn-stages" id="stagesList">
+          <div class="gn-stage-item" data-stage="1"><span class="gn-stage-icon">⌕</span><span class="gn-stage-text">Scanning PYQ database…</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="2"><span class="gn-stage-icon">◈</span><span class="gn-stage-text">Matching board patterns…</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="3"><span class="gn-stage-icon">▦</span><span class="gn-stage-text">Scoring topic frequency…</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="4"><span class="gn-stage-icon">◉</span><span class="gn-stage-text">Constructing paper…</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="5"><span class="gn-stage-icon">✦</span><span class="gn-stage-text">Confidence scoring…</span><span class="gn-stage-status"></span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Output -->
+  <section class="gn-output" id="paperOutput">
+    <div class="gn-output-bar">
+      <button class="gn-out-primary" onclick="printPaper()">Print / Save PDF</button>
+      <button onclick="copyPaper()">Copy</button>
+      <button onclick="generateAnother()">Generate another</button>
+      <span class="gn-out-meta" id="paperMeta"></span>
     </div>
     <div class="bteup-paper" id="paperSheet"></div>
+  </section>
+
+  <!-- Loading -->
+  <div class="gn-loading" id="loadingOverlay" role="status">
+    <div class="gn-loading-card">
+      <div class="gn-loading-spinner"></div>
+      <div class="gn-loading-title" id="stageText">Analyzing syllabus…</div>
+      <div class="gn-progress"><div class="gn-progress-fill" id="progressFill"></div></div>
+    </div>
   </div>
 
-  <!-- ═══ LOADING OVERLAY ═══ -->
-  <div class="pg-loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
-    <div class="pg-loading-box">
-      <div class="pg-loading-title">Generating BTEUP Paper...</div>
-      <div class="pg-progress-bar">
-        <div class="pg-progress-fill" id="progressFill"></div>
-      </div>
-      <div class="pg-stage-text" id="stageText">Initializing...</div>
-      <div class="pg-stage-sub" id="stageSub"></div>
-    </div>
-    <div class="pg-topic-chips" id="topicChips"></div>
-  </div>
+  <!-- Hidden compat -->
+  <select id="branchSelect" hidden></select>
+  <select id="semesterSelect" hidden><option value="1">Semester-I</option><option value="2">Semester-II</option></select>
+  <select id="subjectSelect" hidden><option value="">--</option></select>
 
   <script src="/js/polytechnic-generator.js"></script>
+  <script>
+  // ═══ PARTICLE ENGINE — Lean 30fps ═══
+  (function(){
+    if(window.innerWidth<768)return; // No particles on mobile
+    const c=document.getElementById('particleCanvas'),ctx=c.getContext('2d');
+    let W,H,mouse={x:-999,y:-999};
+    const N=120,REPEL=60,REPEL2=REPEL*REPEL,GLOW=100,GLOW2=GLOW*GLOW;
+    const dots=[];
+    let last=0,interval=1000/30; // 30fps cap
+
+    function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight}
+    window.addEventListener('resize',resize);resize();
+
+    for(let i=0;i<N;i++){
+      const s=Math.random();
+      dots.push({
+        x:Math.random()*W,y:Math.random()*H,
+        vx:(Math.random()-0.5)*0.15,vy:(Math.random()-0.5)*0.15,
+        r:s<0.5?0.5+Math.random()*0.4:1+Math.random()*0.6,
+        bo:s<0.5?0.07+Math.random()*0.05:0.18+Math.random()*0.1,
+        o:0
+      });
+      dots[i].o=dots[i].bo;
+    }
+
+    document.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+    document.addEventListener('mouseleave',()=>{mouse.x=-999;mouse.y=-999});
+
+    function frame(ts){
+      requestAnimationFrame(frame);
+      if(ts-last<interval)return;
+      last=ts;
+      ctx.clearRect(0,0,W,H);
+      for(let i=0;i<N;i++){
+        const p=dots[i];
+        const dx=p.x-mouse.x,dy=p.y-mouse.y,d2=dx*dx+dy*dy;
+        const tgt=d2<GLOW2?p.bo+0.25*(1-Math.sqrt(d2)/GLOW):p.bo;
+        p.o+=(tgt-p.o)*0.06;
+        if(d2<REPEL2&&d2>1){const d=Math.sqrt(d2);const f=(REPEL-d)/REPEL*0.4;p.vx+=dx/d*f;p.vy+=dy/d*f}
+        p.vx*=0.99;p.vy*=0.99;
+        p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);
+        ctx.fillStyle=`rgba(124,92,255,${p.o})`;ctx.fill();
+      }
+    }
+    requestAnimationFrame(frame);
+  })();
+
+  // ═══ APP STATE ═══
+  let _sem=1,_lang='english',_mode='important',_subjectId=null;
+  let _subjects=[],_panelOpen=false;
+
+  function pickSem(n){
+    _sem=n;
+    document.querySelectorAll('#semPills .gn-chip').forEach(b=>b.classList.toggle('active',+b.dataset.sem===n));
+    const sel=document.getElementById('semesterSelect');
+    if(sel){sel.value=String(n);sel.dispatchEvent(new Event('change'))}
+    _subjectId=null;
+    document.getElementById('triggerText').textContent='Select a subject…';
+    document.getElementById('subjectTrigger').classList.remove('has-value');
+    document.getElementById('subjectInfo').innerHTML='';
+    resetViz();closeSubjectPanel();buildSubjects();
+  }
+  function toggleLang(){const el=document.getElementById('langToggle');_lang=_lang==='english'?'hindi':'english';el.textContent=_lang==='english'?'English':'हिन्दी'}
+  function pickMode(v,el){_mode=v;document.querySelectorAll('#modePills .gn-chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');if(typeof selectedMode!=='undefined')selectedMode=v}
+
+  // ═══ COMMAND PALETTE ═══
+  function toggleSubjectPanel(){_panelOpen?closeSubjectPanel():openSubjectPanel()}
+  function openSubjectPanel(){document.getElementById('subjectPanel').classList.add('open');_panelOpen=true;const s=document.getElementById('subjectSearch');s.value='';renderSubjectList('');setTimeout(()=>s.focus(),50)}
+  function closeSubjectPanel(){document.getElementById('subjectPanel').classList.remove('open');_panelOpen=false}
+  function selectSubject(id,name){
+    _subjectId=id;
+    document.getElementById('triggerText').textContent=name;
+    document.getElementById('subjectTrigger').classList.add('has-value');
+    const sel=document.getElementById('subjectSelect');
+    if(sel){sel.value=id;sel.dispatchEvent(new Event('change'))}
+    closeSubjectPanel();showSubjectInfo(id);updateViz(id);
+  }
+  function buildSubjects(){const sel=document.getElementById('subjectSelect');if(!sel)return;_subjects=[];sel.querySelectorAll('optgroup').forEach(g=>{g.querySelectorAll('option[value]').forEach(o=>{if(!o.value)return;const name=o.textContent.replace(/\s*\[.*?\]/g,'').replace(/\s*\(\d+\)$/,'').trim();_subjects.push({id:o.value,name,data:o.dataset.subject||null})})});renderSubjectList('')}
+  function renderSubjectList(q){const list=document.getElementById('subjectList');const query=q.toLowerCase().trim();const f=query?_subjects.filter(s=>s.name.toLowerCase().includes(query)):_subjects;if(!f.length){list.innerHTML='<div class="gn-sp-empty">No subjects found</div>';return}list.innerHTML=f.map(s=>`<div class="gn-sp-item${_subjectId===s.id?' active':''}" data-id="${s.id}" onclick="selectSubject('${s.id}','${s.name.replace(/'/g,"\\'")}')">${s.name}</div>`).join('')}
+  function showSubjectInfo(id){const info=document.getElementById('subjectInfo');const opt=document.querySelector(`#subjectSelect option[value="${id}"]`);if(!info||!opt?.dataset?.subject){info.innerHTML='';return}try{const s=JSON.parse(opt.dataset.subject);const top=s.units?.filter(u=>u.weight>=20).map(u=>u.name).slice(0,3)||[];info.innerHTML=`<span class="gn-si-name">${s.name}</span><span class="gn-si-sep">·</span><span>${s.units?.length||5} units</span><span class="gn-si-sep">·</span><span>${s.marks||60} marks</span>${top.length?`<span class="gn-si-sep">·</span><span class="gn-si-hot">${top.join(', ')}</span>`:''}`}catch(e){info.innerHTML=''}}
+
+  // ═══ AI VISUALIZATION — Neural Graph ═══
+  let _neuralNodes=[],_neuralAnim=null;
+  function resetViz(){
+    document.getElementById('vizContent').innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>Select a subject to see PYQ analysis</div>';
+    document.getElementById('vizStages').style.display='none';
+    document.getElementById('vizGraph').style.display='none';
+    if(_neuralAnim){cancelAnimationFrame(_neuralAnim);_neuralAnim=null}
+  }
+  function updateViz(id){
+    const opt=document.querySelector(`#subjectSelect option[value="${id}"]`);
+    const vc=document.getElementById('vizContent');
+    if(!opt?.dataset?.subject){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>No data available</div>';return}
+    try{
+      const s=JSON.parse(opt.dataset.subject);
+      const units=s.units||[];
+      // Stats + minimal bars
+      let html=`<div class="gn-units">`;
+      units.forEach((u,i)=>{
+        const pct=Math.round((u.weight||20)/60*100);
+        const cls=u.weight>=25?'high':u.weight>=18?'mid':'low';
+        html+=`<div class="gn-unit-row" style="animation:fadeUp .3s ${i*0.06}s both">
+          <span class="gn-unit-name">${u.name}</span>
+          <div class="gn-unit-bar"><div class="gn-unit-fill ${cls}" style="width:${pct}%"></div></div>
+          <span class="gn-unit-pct">${u.weight||20}%</span>
+        </div>`;
+      });
+      html+=`</div>`;
+      html+=`<div class="gn-viz-stats" style="margin-top:14px">
+        <div class="gn-vstat"><div class="gn-vstat-val">${units.length}</div><div class="gn-vstat-label">Units</div></div>
+        <div class="gn-vstat"><div class="gn-vstat-val">${s.marks||60}</div><div class="gn-vstat-label">Marks</div></div>
+        <div class="gn-vstat"><div class="gn-vstat-val">${Math.round(units.reduce((a,u)=>a+(u.weight||20),0)/units.length)}%</div><div class="gn-vstat-label">Avg Weight</div></div>
+      </div>`;
+      vc.innerHTML=html;
+      // Neural graph
+      drawNeuralGraph(units,s.name);
+      // AI Memory
+      showMemory(s.name);
+    }catch(e){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>Parse error</div>'}
+  }
+
+  // ═══ NEURAL TOPIC GRAPH ═══
+  function drawNeuralGraph(units,subjectName){
+    const cvs=document.getElementById('neuralCanvas');
+    const wrap=document.getElementById('vizGraph');
+    if(!cvs||!wrap)return;
+    wrap.style.display='block';
+    const ctx=cvs.getContext('2d');
+    const W=cvs.width=cvs.offsetWidth*2;const H=cvs.height=cvs.offsetHeight*2;
+    ctx.scale(2,2);
+    const cw=W/2,ch=H/2;
+    // Create nodes in circle + center
+    _neuralNodes=[];
+    const cx=cw/2,cy=ch/2,radius=Math.min(cx,cy)*0.65;
+    units.forEach((u,i)=>{
+      const angle=(Math.PI*2/units.length)*i - Math.PI/2;
+      _neuralNodes.push({x:cx+Math.cos(angle)*radius,y:cy+Math.sin(angle)*radius,
+        r:6+u.weight*0.2,name:u.name.split(' ')[0],weight:u.weight,
+        baseX:cx+Math.cos(angle)*radius,baseY:cy+Math.sin(angle)*radius,
+        phase:Math.random()*Math.PI*2,glow:0});
+    });
+    // Center node
+    _neuralNodes.push({x:cx,y:cy,r:10,name:subjectName.split('-')[0],weight:100,baseX:cx,baseY:cy,phase:0,glow:0.3,isCenter:true});
+    let mouse={x:-999,y:-999};
+    cvs.addEventListener('mousemove',e=>{const r=cvs.getBoundingClientRect();mouse.x=(e.clientX-r.left);mouse.y=(e.clientY-r.top)});
+    cvs.addEventListener('mouseleave',()=>{mouse.x=-999;mouse.y=-999});
+    if(_neuralAnim)cancelAnimationFrame(_neuralAnim);
+    let t=0;
+    function animate(){
+      t+=0.01;
+      ctx.clearRect(0,0,cw,ch);
+      const center=_neuralNodes[_neuralNodes.length-1];
+      // Draw connections
+      for(let i=0;i<_neuralNodes.length-1;i++){
+        const n=_neuralNodes[i];
+        // To center
+        ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(center.x,center.y);
+        const pulse=0.04+0.03*Math.sin(t*2+n.phase);
+        ctx.strokeStyle=`rgba(124,92,255,${pulse+n.glow*0.05})`;ctx.lineWidth=0.8+n.glow;ctx.stroke();
+        // To neighbors
+        for(let j=i+1;j<_neuralNodes.length-1;j++){
+          const m=_neuralNodes[j];
+          const d=Math.hypot(n.x-m.x,n.y-m.y);
+          if(d<radius*1.5){ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(m.x,m.y);ctx.strokeStyle=`rgba(124,92,255,${0.02+0.01*Math.sin(t*3+i+j)})`;ctx.lineWidth=0.4;ctx.stroke()}
+        }
+      }
+      // Draw nodes
+      _neuralNodes.forEach(n=>{
+        // Floating
+        n.x=n.baseX+Math.sin(t+n.phase)*2;
+        n.y=n.baseY+Math.cos(t*0.7+n.phase)*2;
+        // Mouse proximity glow
+        const md=Math.hypot(n.x-mouse.x,n.y-mouse.y);
+        const targetGlow=md<60?1-md/60:0;
+        n.glow+=(targetGlow-n.glow)*0.08;
+        // Outer glow
+        if(n.glow>0.05||n.isCenter){
+          ctx.beginPath();ctx.arc(n.x,n.y,n.r+8,0,Math.PI*2);
+          ctx.fillStyle=`rgba(124,92,255,${0.06+n.glow*0.12})`;ctx.fill();
+        }
+        // Node
+        ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+        const alpha=n.isCenter?0.5:0.15+n.weight*0.006+n.glow*0.3;
+        ctx.fillStyle=n.isCenter?`rgba(77,163,255,${0.3+n.glow*0.3})`:`rgba(124,92,255,${alpha})`;ctx.fill();
+        ctx.strokeStyle=`rgba(124,92,255,${0.15+n.glow*0.4})`;ctx.lineWidth=0.8;ctx.stroke();
+        // Label
+        ctx.fillStyle=`rgba(160,160,184,${0.5+n.glow*0.5})`;ctx.font='500 9px Inter';ctx.textAlign='center';
+        ctx.fillText(n.name,n.x,n.y+n.r+14);
+      });
+      _neuralAnim=requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // ═══ AI MEMORY ═══
+  function showMemory(subjectName){
+    const wrap=document.getElementById('vizMemory');
+    const mc=document.getElementById('memoryContent');
+    if(!wrap||!mc)return;
+    const key='mtp_last_gen';
+    const prev=localStorage.getItem(key);
+    if(prev){
+      try{
+        const d=JSON.parse(prev);
+        const ago=Math.round((Date.now()-d.ts)/60000);
+        const timeStr=ago<60?`${ago}m ago`:ago<1440?`${Math.round(ago/60)}h ago`:`${Math.round(ago/1440)}d ago`;
+        wrap.style.display='block';
+        mc.innerHTML=`<div style="font-size:12px;color:var(--ink3);line-height:1.7">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="color:var(--ink2);font-weight:500">${d.subject}</span>
+            <span style="font-size:10px;color:var(--ink4);font-family:var(--mono)">${timeStr}</span>
+          </div>
+          <div style="font-size:11px;color:var(--ink4)">Last generated · ${d.mode||'important'} mode</div>
+        </div>`;
+      }catch(e){wrap.style.display='none'}
+    }else{wrap.style.display='none'}
+  }
+  // Save on generate
+  const _origGen=window.generatePaper;
+  if(_origGen){window.generatePaper=function(){const subName=document.getElementById('triggerText')?.textContent;if(subName&&subName!=='Select a subject…'){localStorage.setItem('mtp_last_gen',JSON.stringify({subject:subName,mode:_mode,ts:Date.now()}))}return _origGen.apply(this,arguments)}}
+
+  // ═══ CINEMATIC GENERATION STAGES ═══
+  const _stageLabels=['Scanning PYQ database…','Matching board patterns…','Scoring topic frequency…','Constructing paper…','Confidence scoring…'];
+  let _stageInterval=null;
+  function startCinematicStages(){
+    const panel=document.getElementById('vizStages');
+    panel.style.display='block';
+    const items=panel.querySelectorAll('.gn-stage-item');
+    items.forEach(it=>{it.classList.remove('active','done');it.querySelector('.gn-stage-status').innerHTML=''});
+    let idx=0;
+    function next(){
+      if(idx>0){
+        const prev=items[idx-1];prev.classList.remove('active');prev.classList.add('done');
+        prev.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">✓</span>';
+      }
+      if(idx<items.length){
+        items[idx].classList.add('active');
+        items[idx].querySelector('.gn-stage-status').innerHTML='<div class="gn-stage-spinner"></div>';
+        idx++;
+        _stageInterval=setTimeout(next,1800+Math.random()*1200);
+      }
+    }
+    next();
+  }
+  function stopCinematicStages(){
+    if(_stageInterval)clearTimeout(_stageInterval);
+    const items=document.querySelectorAll('.gn-stage-item');
+    items.forEach(it=>{it.classList.remove('active');it.classList.add('done');it.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">✓</span>'});
+  }
+
+  // Hook into existing loading overlay to trigger stages
+  const _origShowLoading=window.showLoadingOverlay;
+  window.showLoadingOverlay=function(){if(_origShowLoading)_origShowLoading();startCinematicStages()};
+  const _origHideLoading=window.hideLoadingOverlay;
+  window.hideLoadingOverlay=function(){if(_origHideLoading)_origHideLoading();stopCinematicStages()};
+
+  // ═══ CARD TILT ═══
+  document.querySelectorAll('.gn-tilt').forEach(card=>{
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width-0.5;
+      const y=(e.clientY-r.top)/r.height-0.5;
+      card.style.transform=`perspective(600px) rotateY(${x*4}deg) rotateX(${-y*4}deg)`;
+    });
+    card.addEventListener('mouseleave',()=>{card.style.transform=''});
+  });
+
+  // ═══ INIT ═══
+  document.addEventListener('DOMContentLoaded',()=>{
+    pickSem(1);
+    document.getElementById('subjectSearch').addEventListener('input',e=>renderSubjectList(e.target.value));
+    document.addEventListener('click',e=>{if(_panelOpen&&!e.target.closest('.gn-section'))closeSubjectPanel()});
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'&&_panelOpen)closeSubjectPanel();
+      if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();toggleSubjectPanel()}
+    });
+    const sel=document.getElementById('subjectSelect');
+    if(sel)new MutationObserver(()=>setTimeout(buildSubjects,30)).observe(sel,{childList:true,subtree:true});
+  });
+
+  // Scroll reveal animation
+  const style=document.createElement('style');
+  style.textContent=`@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
+  document.head.appendChild(style);
+  </script>
 </body>
 </html>
