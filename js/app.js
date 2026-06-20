@@ -7,12 +7,12 @@ const ThemeManager = {
   STORAGE_KEY: 'mocktest_theme',
 
   init() {
-    // Light is default — only switch to dark if explicitly saved
+    // Dark (ultra-black) is default — only switch to light if explicitly saved
     const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (saved === 'dark') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
+    if (saved === 'light') {
       document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
   },
 
