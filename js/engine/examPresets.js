@@ -92,6 +92,7 @@ const ExamPresets = {
    */
   _loadFallback() {
     this._presets = {
+      // ─── Quick Modes ───
       'quick-10': {
         id: 'quick-10', name: 'Quick 10', fullName: '10-Question Speed Round',
         category: 'Quick', icon: '⚡', totalQuestions: 10, totalTime: 300,
@@ -109,6 +110,94 @@ const ExamPresets = {
           { name: 'GK', subject: 'gk', questions: 5 }
         ],
         description: '15 questions, 10 min', renderer: 'ssc'
+      },
+
+      // ─── SSC CGL ───
+      'ssc-cgl': {
+        id: 'ssc-cgl', name: 'SSC CGL', fullName: 'SSC CGL Tier 1 — 2026',
+        category: 'SSC', icon: '🎯', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.50, marksPerQuestion: 2,
+        sections: [
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 25 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 25 },
+          { name: 'English Language', subject: 'english', questions: 25 },
+          { name: 'General Awareness', subject: 'gk', questions: 25 }
+        ],
+        description: '100 questions, 60 min', renderer: 'ssc',
+        sortOrder: 1
+      },
+
+      // ─── SSC CHSL ───
+      'ssc-chsl': {
+        id: 'ssc-chsl', name: 'SSC CHSL', fullName: 'SSC CHSL Tier 1 — 2026',
+        category: 'SSC', icon: '📝', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.50, marksPerQuestion: 2,
+        sections: [
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 25 },
+          { name: 'General Intelligence', subject: 'reasoning', questions: 25 },
+          { name: 'English Language', subject: 'english', questions: 25 },
+          { name: 'General Awareness', subject: 'gk', questions: 25 }
+        ],
+        description: '100 questions, 60 min', renderer: 'ssc',
+        sortOrder: 2
+      },
+
+      // ─── SSC MTS ───
+      'ssc-mts': {
+        id: 'ssc-mts', name: 'SSC MTS', fullName: 'SSC MTS CBT — 2026',
+        category: 'SSC', icon: '📋', totalQuestions: 90, totalTime: 5400,
+        negativeMarking: true, negativeValue: 1.00, marksPerQuestion: 3,
+        sections: [
+          { name: 'Numerical Aptitude', subject: 'math', questions: 20 },
+          { name: 'Reasoning & GI', subject: 'reasoning', questions: 20 },
+          { name: 'English Language', subject: 'english', questions: 25 },
+          { name: 'General Awareness', subject: 'gk', questions: 25 }
+        ],
+        description: '90 questions, 90 min', renderer: 'ssc',
+        sortOrder: 3
+      },
+
+      // ─── SSC GD ───
+      'ssc-gd': {
+        id: 'ssc-gd', name: 'SSC GD Constable', fullName: 'SSC GD Constable CBT — 2026',
+        category: 'SSC', icon: '🛡️', totalQuestions: 80, totalTime: 3600,
+        negativeMarking: false, negativeValue: 0, marksPerQuestion: 2,
+        sections: [
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 20 },
+          { name: 'General Knowledge & GA', subject: 'gk', questions: 20 },
+          { name: 'Elementary Mathematics', subject: 'math', questions: 20 },
+          { name: 'English / Hindi', subject: 'english', questions: 20 }
+        ],
+        description: '80 questions, 60 min, no negative', renderer: 'ssc',
+        sortOrder: 4
+      },
+
+      // ─── RRB NTPC ───
+      'rrb-ntpc': {
+        id: 'rrb-ntpc', name: 'RRB NTPC', fullName: 'RRB NTPC CBT 1 — 2026',
+        category: 'Railway', icon: '🚆', totalQuestions: 100, totalTime: 5400,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 1,
+        sections: [
+          { name: 'Mathematics', subject: 'math', questions: 30 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 30 },
+          { name: 'General Awareness', subject: 'gk', questions: 40 }
+        ],
+        description: '100 questions, 90 min', renderer: 'railway',
+        sortOrder: 1
+      },
+
+      // ─── IBPS PO ───
+      'ibps-po': {
+        id: 'ibps-po', name: 'IBPS PO', fullName: 'IBPS PO Prelims — 2026',
+        category: 'Banking', icon: '🏦', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'English Language', subject: 'english', questions: 30 },
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 35 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
+        ],
+        description: '100 questions, 60 min', renderer: 'banking',
+        sortOrder: 1
       }
     };
     this._loaded = true;

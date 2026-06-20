@@ -12,7 +12,10 @@ const Auth = {
 
   async init() {
     // ── No-Login Mode: Set guest user IMMEDIATELY so pages never crash ──
-    this._currentUser = { id: 'guest_user', username: 'Guest', name: 'Guest' };
+    // Use UUID-format ID so Supabase doesn't reject it
+    const guestId = localStorage.getItem('mocktest_guest_uuid') || crypto.randomUUID();
+    localStorage.setItem('mocktest_guest_uuid', guestId);
+    this._currentUser = { id: guestId, username: 'Guest', name: 'Guest' };
     this._ready = true;
 
     // Try local cache first for returning users
