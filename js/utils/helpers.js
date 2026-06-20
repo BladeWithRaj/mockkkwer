@@ -235,18 +235,19 @@ const Helpers = {
    */
   getSubjectIcon(subject) {
     const s = (subject || '').toLowerCase();
-    const icons = {
-      'math': '🔢',
-      'gk': '🌍',
-      'reasoning': '🧩',
-      'english': '📝',
-      'hindi': '📖',
-      'science': '🔬',
-      'polity': '⚖️',
-      'geography': '🗺️',
-      'history': '📜'
+    const iconMap = {
+      'math': 'hash',
+      'gk': 'globe',
+      'reasoning': 'puzzle',
+      'english': 'pencilLine',
+      'hindi': 'bookMarked',
+      'science': 'flask',
+      'polity': 'scale',
+      'geography': 'mapPin',
+      'history': 'scroll'
     };
-    return icons[s] || '📋';
+    const iconName = iconMap[s] || 'clipboard';
+    return typeof Icons !== 'undefined' ? Icons.get(iconName, 16) : '';
   },
 
   /**
@@ -274,9 +275,10 @@ const Helpers = {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    const iconMap = { success: '✅', error: '❌', info: 'ℹ️' };
+    const iconMap = { success: 'checkCircle', error: 'xCircle', info: 'info' };
+    const iconSvg = typeof Icons !== 'undefined' ? Icons.get(iconMap[type] || 'info', 16) : '';
     toast.innerHTML = `
-      <span>${iconMap[type] || 'ℹ️'}</span>
+      <span class="toast-icon">${iconSvg}</span>
       <span class="toast-message">${message}</span>
     `;
 

@@ -744,6 +744,227 @@
   color: var(--danger);
 }
 
+/* ============================================
+   V3 — Precision Prep Component Extensions
+   ============================================ */
+
+/* ── Icon System ── */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+  color: currentColor;
+}
+.icon svg {
+  width: 1em;
+  height: 1em;
+}
+.icon--xs { font-size: 14px; }
+.icon--sm { font-size: 18px; }
+.icon--md { font-size: 24px; }
+.icon--lg { font-size: 32px; }
+.icon--xl { font-size: 48px; }
+
+.icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+}
+.icon-box--sm { width: 32px; height: 32px; font-size: 16px; }
+.icon-box--md { width: 40px; height: 40px; font-size: 20px; }
+.icon-box--lg { width: 48px; height: 48px; font-size: 24px; }
+
+/* ── Spinner (unified — replaces inline spinner copies) ── */
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner--xs { width: 14px; height: 14px; border-width: 1.5px; }
+.spinner--sm { width: 18px; height: 18px; border-width: 2px; }
+.spinner--lg { width: 32px; height: 32px; border-width: 3px; }
+.spinner--xl { width: 48px; height: 48px; border-width: 3px; }
+
+/* Centered spinner block */
+.spinner-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16) 0;
+}
+
+/* ── Badge System v3 (status-communicating) ── */
+.badge-v3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.badge-v3--success { color: var(--success); background: var(--success-subtle); border-color: rgba(16, 185, 129, 0.2); }
+.badge-v3--warning { color: var(--warning); background: var(--warning-subtle); border-color: rgba(245, 158, 11, 0.2); }
+.badge-v3--danger  { color: var(--danger);  background: var(--danger-subtle);  border-color: rgba(239, 68, 68, 0.2); }
+.badge-v3--info    { color: var(--primary); background: rgba(79, 110, 247, 0.06); border-color: rgba(79, 110, 247, 0.2); }
+.badge-v3--neutral { color: var(--text-secondary); background: var(--bg-glass); border-color: var(--border-color); }
+.badge-v3--live    { color: var(--success); background: var(--success-subtle); border-color: rgba(16, 185, 129, 0.2); }
+.badge-v3--live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Section Header v3 ── */
+.section-header-v3 {
+  margin-bottom: var(--space-6);
+  padding: 0 var(--page-gutter);
+  max-width: var(--max-content);
+  margin-left: auto;
+  margin-right: auto;
+}
+.section-header-v3__overline {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: var(--space-2);
+}
+.section-header-v3__title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: var(--space-1);
+}
+.section-header-v3__desc {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 560px;
+}
+
+/* ── Card v3 (explicit modifiers) ── */
+.card-v3 {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--card-padding);
+  transition: border-color var(--duration-fast) var(--ease-inout),
+              transform var(--duration-fast) var(--ease-inout),
+              box-shadow var(--duration-fast) var(--ease-inout);
+}
+.card-v3:hover {
+  border-color: var(--border-active);
+}
+.card-v3--interactive {
+  cursor: pointer;
+}
+.card-v3--interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.card-v3--flush { padding: 0; }
+.card-v3--accent { border-left: 3px solid var(--primary); }
+
+/* ── Empty State v3 (icon-based, not emoji) ── */
+.empty-v3 {
+  text-align: center;
+  padding: var(--space-16) var(--space-8);
+}
+.empty-v3__icon {
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+  opacity: 0.4;
+}
+.empty-v3__icon svg { width: 48px; height: 48px; stroke-width: 1.5; }
+.empty-v3__title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
+.empty-v3__desc {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.empty-v3__action {
+  margin-top: var(--space-6);
+}
+
+/* ── Page Enter Animation (unified) ── */
+.page-enter-v3 {
+  animation: page-enter-v3 var(--duration-normal) var(--ease-out) both;
+}
+@keyframes page-enter-v3 {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Mono/Data Text ── */
+.text-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ── Truncate ── */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Visually Hidden (a11y) ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .modal {

@@ -25,23 +25,23 @@ const BattlePage = {
     return `
       <div class="battle-setup page-enter">
         <div class="battle-setup-card animate-scaleIn">
-          <div class="battle-setup-icon">⚔️</div>
+          <div class="battle-setup-icon">${Icons.get('swords', 40)}</div>
           <h1 class="battle-setup-title">Rival Battle</h1>
           <p class="battle-setup-desc">Challenge an AI rival in a fast-paced practice battle with instant feedback!</p>
 
           <div class="battle-difficulty-grid">
             <button class="battle-diff-card" onclick="BattlePage.startBattle('beginner')" id="diff-beginner">
-              <div class="diff-emoji">🌱</div>
+              <div class="diff-emoji">${Icons.get('sprout', 28)}</div>
               <div class="diff-name">Beginner</div>
               <div class="diff-desc">Relaxed pace, lower accuracy</div>
             </button>
             <button class="battle-diff-card" onclick="BattlePage.startBattle('medium')" id="diff-medium">
-              <div class="diff-emoji">⚡</div>
+              <div class="diff-emoji">${Icons.get('zap', 28)}</div>
               <div class="diff-name">Medium</div>
               <div class="diff-desc">Balanced challenge</div>
             </button>
             <button class="battle-diff-card" onclick="BattlePage.startBattle('expert')" id="diff-expert">
-              <div class="diff-emoji">🔥</div>
+              <div class="diff-emoji">${Icons.get('flame', 28)}</div>
               <div class="diff-name">Expert</div>
               <div class="diff-desc">Fast & deadly accurate</div>
             </button>
@@ -128,7 +128,7 @@ const BattlePage = {
       <!-- Battle Header (no normal header) -->
       <div class="battle-header">
         <div class="battle-timer" id="battle-timer">
-          <span class="battle-timer-icon">⏱</span>
+          <span class="battle-timer-icon">${Icons.get('timer', 16)}</span>
           <span id="battle-time-value">${this._formatTime(this._state.timeRemaining)}</span>
         </div>
         <div class="battle-progress-text">${this._state.currentIdx + 1} / ${total}</div>
@@ -137,17 +137,17 @@ const BattlePage = {
       <!-- Score Bar -->
       <div class="battle-score-bar" id="battle-score-bar">
         <div class="battle-score-user">
-          <span class="bsu-emoji">🧑</span>
+          <span class="bsu-emoji">${Icons.get('user', 18)}</span>
           <span class="bsu-label">YOU</span>
           <span class="bsu-score" id="user-score">${this._userScore}/${total}</span>
-          ${this._userStreak >= 3 ? `<span class="bsu-streak">🔥${this._userStreak}</span>` : ''}
+          ${this._userStreak >= 3 ? `<span class="bsu-streak">${Icons.get('flame', 12)}${this._userStreak}</span>` : ''}
         </div>
         <div class="battle-vs">VS</div>
         <div class="battle-score-rival">
           <span class="bsr-score" id="rival-score">${rivalStatus.score}/${total}</span>
           <span class="bsr-label">${rivalStatus.name.split(' ')[0]}</span>
-          <span class="bsr-emoji">${rivalStatus.emoji}</span>
-          ${rivalStatus.streak >= 3 ? `<span class="bsr-streak">🔥${rivalStatus.streak}</span>` : ''}
+          <span class="bsr-emoji">${Icons.get('user', 18)}</span>
+          ${rivalStatus.streak >= 3 ? `<span class="bsr-streak">${Icons.get('flame', 12)}${rivalStatus.streak}</span>` : ''}
         </div>
       </div>
 
@@ -312,16 +312,16 @@ const BattlePage = {
 
     let streakText, streakClass;
     if (this._userStreak >= 10) {
-      streakText = `🔥🔥🔥 ${this._userStreak}x UNSTOPPABLE!`;
+      streakText = `${this._userStreak}x UNSTOPPABLE!`;
       streakClass = 'streak-epic';
     } else if (this._userStreak >= 7) {
-      streakText = `🔥🔥 ${this._userStreak}x ON FIRE!`;
+      streakText = `${this._userStreak}x ON FIRE!`;
       streakClass = 'streak-fire';
     } else if (this._userStreak >= 5) {
-      streakText = `🔥 ${this._userStreak}x Streak!`;
+      streakText = `${this._userStreak}x Streak!`;
       streakClass = 'streak-hot';
     } else {
-      streakText = `✨ ${this._userStreak}x Streak`;
+      streakText = `${this._userStreak}x Streak`;
       streakClass = 'streak-warm';
     }
 
@@ -394,20 +394,20 @@ const BattlePage = {
     // Re-render score bar for streak badges
     const bar = document.getElementById('battle-score-bar');
     if (bar) {
-      const rs = rivalStatus || { score: 0, streak: 0, name: 'Rival', emoji: '👨' };
+      const rs = rivalStatus || { score: 0, streak: 0, name: 'Rival' };
       bar.innerHTML = `
         <div class="battle-score-user">
-          <span class="bsu-emoji">🧑</span>
+          <span class="bsu-emoji">${Icons.get('user', 18)}</span>
           <span class="bsu-label">YOU</span>
           <span class="bsu-score">${this._userScore}/${total}</span>
-          ${this._userStreak >= 3 ? `<span class="bsu-streak">🔥${this._userStreak}</span>` : ''}
+          ${this._userStreak >= 3 ? `<span class="bsu-streak">${Icons.get('flame', 12)}${this._userStreak}</span>` : ''}
         </div>
         <div class="battle-vs">VS</div>
         <div class="battle-score-rival">
           <span class="bsr-score">${rs.score}/${total}</span>
           <span class="bsr-label">${rs.name.split(' ')[0]}</span>
-          <span class="bsr-emoji">${rs.emoji}</span>
-          ${rs.streak >= 3 ? `<span class="bsr-streak">🔥${rs.streak}</span>` : ''}
+          <span class="bsr-emoji">${Icons.get('user', 18)}</span>
+          ${rs.streak >= 3 ? `<span class="bsr-streak">${Icons.get('flame', 12)}${rs.streak}</span>` : ''}
         </div>
       `;
     }
@@ -509,7 +509,7 @@ const BattlePage = {
         <div class="battle-result-card animate-scaleIn">
           <!-- Winner Banner -->
           <div class="br-banner ${isWin ? 'br-win' : isDraw ? 'br-draw' : 'br-lose'}">
-            <div class="br-banner-emoji">${isWin ? '🏆' : isDraw ? '🤝' : '💪'}</div>
+            <div class="br-banner-emoji">${isWin ? Icons.get('trophy', 40) : isDraw ? Icons.get('handshake', 40) : Icons.get('zap', 40)}</div>
             <div class="br-banner-text">${isWin ? 'Victory!' : isDraw ? 'Draw!' : 'Close Battle!'}</div>
             <div class="br-banner-sub">${isWin ? 'You defeated ' + battleResult.rival.name : isDraw ? 'Evenly matched!' : 'Try again against another rival'}</div>
           </div>
@@ -517,35 +517,35 @@ const BattlePage = {
           <!-- Score Comparison -->
           <div class="br-comparison">
             <div class="br-player br-you">
-              <div class="br-player-emoji">🧑</div>
+              <div class="br-player-emoji">${Icons.get('user', 28)}</div>
               <div class="br-player-name">You</div>
               <div class="br-player-score">${battleResult.userScore}/${total}</div>
               <div class="br-player-acc">${battleResult.userAccuracy}%</div>
-              <div class="br-player-streak">🔥 ${battleResult.userMaxStreak}x best streak</div>
+              <div class="br-player-streak">${Icons.get('flame', 14)} ${battleResult.userMaxStreak}x best streak</div>
             </div>
             <div class="br-vs-divider">VS</div>
             <div class="br-player br-rival">
-              <div class="br-player-emoji">${battleResult.rival.emoji}</div>
+              <div class="br-player-emoji">${Icons.get('user', 28)}</div>
               <div class="br-player-name">${battleResult.rival.name}</div>
               <div class="br-player-score">${battleResult.rivalScore}/${total}</div>
               <div class="br-player-acc">${battleResult.rivalAccuracy}%</div>
-              <div class="br-player-streak">🔥 ${battleResult.rivalMaxStreak}x best streak</div>
+              <div class="br-player-streak">${Icons.get('flame', 14)} ${battleResult.rivalMaxStreak}x best streak</div>
             </div>
           </div>
 
           <!-- Rewards -->
           <div class="br-rewards">
             <div class="br-reward-item">
-              <span>💰</span>
+              <span>${Icons.get('coins', 16)}</span>
               <span>+${coinsEarned} Coins</span>
             </div>
             <div class="br-reward-item">
-              <span>⚡</span>
+              <span>${Icons.get('zap', 16)}</span>
               <span>+${xpEarned} XP</span>
             </div>
             ${battleResult.userMaxStreak >= 5 ? `
               <div class="br-reward-item br-streak-bonus">
-                <span>🔥</span>
+                <span>${Icons.get('flame', 16)}</span>
                 <span>${battleResult.userMaxStreak}x Streak Bonus!</span>
               </div>
             ` : ''}
@@ -553,8 +553,8 @@ const BattlePage = {
 
           <!-- Actions -->
           <div class="br-actions">
-            <button class="btn btn-primary btn-lg" onclick="App.navigate('battle')" style="flex:1;">⚔️ Battle Again</button>
-            <button class="btn btn-secondary btn-lg" onclick="App.navigate('home')" style="flex:1;">🏠 Home</button>
+            <button class="btn btn-primary btn-lg" onclick="App.navigate('battle')" style="flex:1;">${Icons.get('swords', 16)} Battle Again</button>
+            <button class="btn btn-secondary btn-lg" onclick="App.navigate('home')" style="flex:1;">${Icons.get('home', 16)} Home</button>
           </div>
         </div>
       </div>

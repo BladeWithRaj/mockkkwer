@@ -47,7 +47,7 @@ const TestPage = {
       return `
         <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
           <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-icon">${Icons.get('fileText', 40)}</div>
             <div class="empty-state-title">${Lang.t('test_no_active')}</div>
             <p style="color: var(--text-muted); margin-bottom: var(--space-6);">${Lang.t('test_no_active_desc')}</p>
             <button class="btn btn-primary" onclick="App.navigate('setup')">${Lang.t('test_go_setup')}</button>
@@ -112,12 +112,12 @@ const TestPage = {
           <div style="display:flex;align-items:center;gap:var(--space-2);">
             ${!noTimer ? `
               <div class="timer-display" id="timer-display">
-                <span class="timer-icon">⏱️</span>
+                <span class="timer-icon">${Icons.get('timer', 14)}</span>
                 <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
               </div>
             ` : ''}
             <button class="btn btn-ghost btn-sm" onclick="TestPage.toggleFullscreen()" id="fullscreen-btn" title="Fullscreen (F11)">
-              🖥️
+              ${Icons.get('monitor', 16)}
             </button>
             <button class="btn btn-danger btn-sm" onclick="TestPage.confirmSubmit()" id="submit-test-btn">
               ${Lang.t('test_submit_btn')}
@@ -633,7 +633,7 @@ const TestPage = {
 
     const el = document.createElement('div');
     el.className = 'combo-indicator' + (combo >= 10 ? ' epic' : '');
-    el.innerHTML = `🔥 ${combo}x Combo!`;
+    el.innerHTML = `${Icons.get('flame', 16)} ${combo}x Combo!`;
     document.body.appendChild(el);
     requestAnimationFrame(() => el.classList.add('show'));
     setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 2000);
@@ -645,7 +645,7 @@ const TestPage = {
 
     const el = document.createElement('div');
     el.className = 'motivation-toast';
-    el.innerHTML = `${motivation.emoji} ${motivation.msg}`;
+    el.innerHTML = `${motivation.icon ? Icons.get(motivation.icon, 14) : ''} ${motivation.msg}`;
     document.body.appendChild(el);
     requestAnimationFrame(() => el.classList.add('show'));
     setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 3000);
@@ -664,7 +664,7 @@ const TestPage = {
 
     const unansweredWarning = summary.unanswered > 0
       ? `<p style="font-size: var(--text-sm); color: var(--warning); margin-top: var(--space-3);">
-           ⚠️ You have <strong>${summary.unanswered}</strong> unanswered question${summary.unanswered > 1 ? 's' : ''}. Submit anyway?
+           ${Icons.get('alertTriangle', 14)} You have <strong>${summary.unanswered}</strong> unanswered question${summary.unanswered > 1 ? 's' : ''}. Submit anyway?
          </p>`
       : '';
 

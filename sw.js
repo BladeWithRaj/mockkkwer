@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v22';
-const STATIC_CACHE = 'mtp-static-v19';
-const API_CACHE = 'mtp-api-v19';
+const CACHE_NAME = 'mtp-v23';
+const STATIC_CACHE = 'mtp-static-v20';
+const API_CACHE = 'mtp-api-v20';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -37,7 +37,6 @@ const PRECACHE_URLS = [
   '/js/lang.js',
   '/js/pages/home.js',
   '/js/pages/boardPage.js',
-  '/css/homepage.css',
   '/css/homepage-v5.css',
   '/css/cbtEngine.css',
   '/js/pages/setup.js',

@@ -230,47 +230,47 @@ const ProgressEngine = {
 
     // First Test
     if (progress.totalTests === 1 && !progress.badges.includes('first_test')) {
-      newBadges.push({ id: 'first_test', icon: '🎯', name: 'First Step', desc: 'Completed your first test' });
+      newBadges.push({ id: 'first_test', iconKey: 'target', name: 'First Step', desc: 'Completed your first test' });
     }
 
     // 10 Tests
     if (progress.totalTests >= 10 && !progress.badges.includes('test_10')) {
-      newBadges.push({ id: 'test_10', icon: '🔟', name: 'Dedicated', desc: 'Completed 10 tests' });
+      newBadges.push({ id: 'test_10', iconKey: 'listChecks', name: 'Dedicated', desc: 'Completed 10 tests' });
     }
 
     // 50 Tests
     if (progress.totalTests >= 50 && !progress.badges.includes('test_50')) {
-      newBadges.push({ id: 'test_50', icon: '🏅', name: 'Veteran', desc: 'Completed 50 tests' });
+      newBadges.push({ id: 'test_50', iconKey: 'medal', name: 'Veteran', desc: 'Completed 50 tests' });
     }
 
     // Speed Demon (< 30 sec avg)
     const avgTime = result.timeTaken ? result.timeTaken / (result.correct + result.wrong + result.skipped) : 0;
     if (avgTime > 0 && avgTime < 30 && !progress.badges.includes('speed_demon')) {
-      newBadges.push({ id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Under 30s average per question' });
+      newBadges.push({ id: 'speed_demon', iconKey: 'zap', name: 'Speed Demon', desc: 'Under 30s average per question' });
     }
 
     // Accuracy Master (>= 90%)
     if ((result.accuracy || 0) >= 90 && !progress.badges.includes('accuracy_master')) {
-      newBadges.push({ id: 'accuracy_master', icon: '🎯', name: 'Accuracy Master', desc: '90%+ accuracy in a test' });
+      newBadges.push({ id: 'accuracy_master', iconKey: 'target', name: 'Accuracy Master', desc: '90%+ accuracy in a test' });
     }
 
     // Perfect Score
     if ((result.accuracy || 0) === 100 && !progress.badges.includes('perfect')) {
-      newBadges.push({ id: 'perfect', icon: '💯', name: 'Perfect!', desc: '100% accuracy' });
+      newBadges.push({ id: 'perfect', iconKey: 'checkCircle', name: 'Perfect!', desc: '100% accuracy' });
     }
 
     // Streak badges
     if (progress.currentStreak >= 7 && !progress.badges.includes('streak_7')) {
-      newBadges.push({ id: 'streak_7', icon: '🔥', name: '7-Day Streak', desc: '7 consecutive days of practice' });
+      newBadges.push({ id: 'streak_7', iconKey: 'flame', name: '7-Day Streak', desc: '7 consecutive days of practice' });
     }
     if (progress.currentStreak >= 30 && !progress.badges.includes('streak_30')) {
-      newBadges.push({ id: 'streak_30', icon: '🏆', name: 'Monthly Champion', desc: '30-day streak!' });
+      newBadges.push({ id: 'streak_30', iconKey: 'trophy', name: 'Monthly Champion', desc: '30-day streak!' });
     }
 
     // Improvement
     const improvement = this.getImprovement(result);
     if (improvement && improvement.accuracyDelta >= 10 && !progress.badges.includes('improver')) {
-      newBadges.push({ id: 'improver', icon: '📈', name: 'Rising Star', desc: '10%+ accuracy improvement' });
+      newBadges.push({ id: 'improver', iconKey: 'trendingUp', name: 'Rising Star', desc: '10%+ accuracy improvement' });
     }
 
     newBadges.forEach(b => progress.badges.push(b.id));
@@ -279,7 +279,7 @@ const ProgressEngine = {
     if (newBadges.length > 0 && typeof Helpers !== 'undefined') {
       newBadges.forEach(b => {
         setTimeout(() => {
-          Helpers.showToast(`${b.icon} Badge Unlocked: ${b.name}`, 'success');
+          Helpers.showToast(`${typeof Icons !== 'undefined' && b.iconKey ? Icons.get(b.iconKey, 14) : ''} Badge Unlocked: ${b.name}`, 'success');
         }, 1500);
       });
     }
@@ -291,15 +291,15 @@ const ProgressEngine = {
   getBadges() {
     const progress = this.getProgress();
     const allBadges = [
-      { id: 'first_test', icon: '🎯', name: 'First Step', desc: 'Completed your first test' },
-      { id: 'test_10', icon: '🔟', name: 'Dedicated', desc: 'Completed 10 tests' },
-      { id: 'test_50', icon: '🏅', name: 'Veteran', desc: 'Completed 50 tests' },
-      { id: 'speed_demon', icon: '⚡', name: 'Speed Demon', desc: 'Under 30s per question' },
-      { id: 'accuracy_master', icon: '🎯', name: 'Accuracy Master', desc: '90%+ accuracy' },
-      { id: 'perfect', icon: '💯', name: 'Perfect!', desc: '100% accuracy' },
-      { id: 'streak_7', icon: '🔥', name: '7-Day Streak', desc: '7 days in a row' },
-      { id: 'streak_30', icon: '🏆', name: 'Monthly Champion', desc: '30-day streak' },
-      { id: 'improver', icon: '📈', name: 'Rising Star', desc: '10%+ improvement' }
+      { id: 'first_test', iconKey: 'target', name: 'First Step', desc: 'Completed your first test' },
+      { id: 'test_10', iconKey: 'listChecks', name: 'Dedicated', desc: 'Completed 10 tests' },
+      { id: 'test_50', iconKey: 'medal', name: 'Veteran', desc: 'Completed 50 tests' },
+      { id: 'speed_demon', iconKey: 'zap', name: 'Speed Demon', desc: 'Under 30s per question' },
+      { id: 'accuracy_master', iconKey: 'target', name: 'Accuracy Master', desc: '90%+ accuracy' },
+      { id: 'perfect', iconKey: 'checkCircle', name: 'Perfect!', desc: '100% accuracy' },
+      { id: 'streak_7', iconKey: 'flame', name: '7-Day Streak', desc: '7 days in a row' },
+      { id: 'streak_30', iconKey: 'trophy', name: 'Monthly Champion', desc: '30-day streak' },
+      { id: 'improver', iconKey: 'trendingUp', name: 'Rising Star', desc: '10%+ improvement' }
     ];
 
     return allBadges.map(b => ({
@@ -318,17 +318,17 @@ const ProgressEngine = {
       {
         text: 'Complete 1 Mock Test',
         done: testsToday >= 1,
-        icon: '📝'
+        icon: Icons.get('fileText', 14)
       },
       {
         text: 'Score above 50% accuracy',
         done: result ? (result.accuracy || 0) >= 50 : false,
-        icon: '🎯'
+        icon: Icons.get('target', 14)
       },
       {
         text: 'Answer 50+ questions',
         done: result ? (result.correct + result.wrong) >= 50 : false,
-        icon: '💪'
+        icon: Icons.get('zap', 14)
       }
     ];
   }

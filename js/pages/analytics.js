@@ -15,7 +15,7 @@ const AnalyticsPage = {
         </div>
         <div id="analytics-content" style="display: none;">
           <div class="analytics-header" style="margin-bottom: 30px;">
-            <h1 style="font-size: 28px; margin-bottom: 8px;">📊 Growth Dashboard</h1>
+            <h1 style="font-size: 28px; margin-bottom: 8px;">${Icons.get('barChart', 24)} Growth Dashboard</h1>
             <p style="color: var(--text-secondary);">Last 7 days performance</p>
           </div>
 
@@ -96,7 +96,7 @@ const AnalyticsPage = {
       if (gate) {
         gate.innerHTML = `
           <div style="text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
+            <div style="font-size: 48px; margin-bottom: 16px;">${Icons.get('lock', 40)}</div>
             <h2 style="color: var(--danger); margin-bottom: 8px;">Access Denied</h2>
             <p style="color: var(--text-muted); margin-bottom: 24px;">Admin privileges required to view this page.</p>
             <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>

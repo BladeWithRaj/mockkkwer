@@ -34,7 +34,7 @@ const DashboardPage = {
       if (container) {
         container.innerHTML = `
           <div class="dash-error">
-            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+            <div style="font-size: 48px; margin-bottom: 16px;">${Icons.get('alertTriangle', 40)}</div>
             <h2>Failed to load Dashboard</h2>
             <p>${err.message}</p>
             <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
@@ -84,10 +84,10 @@ const DashboardPage = {
     if (!stats && recentProgress.length === 0) {
       container.innerHTML = `
         <div class="dash-empty animate-fadeInUp">
-          <div style="font-size: 72px; margin-bottom: 20px;">📊</div>
+          <div style="font-size: 72px; margin-bottom: 20px;">${Icons.get('barChart', 48)}</div>
           <h2>No Tests Taken Yet</h2>
           <p>Take your first mock test to unlock your performance dashboard.</p>
-          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')" style="margin-top: 16px;">🚀 Start First Test</button>
+          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')" style="margin-top: 16px;">${Icons.get('rocket', 16)} Start First Test</button>
         </div>
       `;
       return;
@@ -101,7 +101,7 @@ const DashboardPage = {
 
     // Improvement trend
     const impRate = stats ? stats.improvementRate : 0;
-    const trendIcon = impRate > 0 ? '📈' : (impRate < 0 ? '📉' : '➡️');
+    const trendIcon = impRate > 0 ? Icons.get('trendingUp', 16) : (impRate < 0 ? Icons.get('trendingDown', 16) : Icons.get('arrowRight', 16));
     const trendColor = impRate > 0 ? 'var(--success)' : (impRate < 0 ? 'var(--danger)' : 'var(--warning)');
     const trendText = impRate > 0 ? `+${impRate}%` : (impRate < 0 ? `${impRate}%` : '0%');
 
@@ -125,12 +125,12 @@ const DashboardPage = {
         <div class="dash-profile-left">
           <div class="dash-avatar">${avatarEmoji}</div>
           <div class="dash-greeting">
-            <h2>Hey, ${username}! 👋</h2>
+            <h2>Hey, ${username}!</h2>
             <p>${this._getGreeting()}</p>
           </div>
         </div>
         <div class="dash-streak-badge ${streakAlive ? 'alive' : 'dead'}">
-          <span class="dash-streak-fire">${streakAlive ? '🔥' : '❄️'}</span>
+          <span class="dash-streak-fire">${streakAlive ? Icons.get('flame', 18) : Icons.get('snowflake', 18)}</span>
           <div>
             <div class="dash-streak-num">${streak.current}</div>
             <div class="dash-streak-label">day streak</div>
@@ -141,7 +141,7 @@ const DashboardPage = {
       <!-- Quick Stats Cards -->
       <div class="dash-stats-grid animate-fadeInUp stagger-1">
         <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #60A5FA;">📝</div>
+          <div class="dash-stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #60A5FA;">${Icons.get('fileText', 20)}</div>
           <div class="dash-stat-info">
             <div class="dash-stat-value">${totalTests}</div>
             <div class="dash-stat-label">Tests Done</div>
@@ -155,14 +155,14 @@ const DashboardPage = {
           </div>
         </div>
         <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #FBBF24;">🏆</div>
+          <div class="dash-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #FBBF24;">${Icons.get('trophy', 20)}</div>
           <div class="dash-stat-info">
             <div class="dash-stat-value">${bestScore}%</div>
             <div class="dash-stat-label">Best Score</div>
           </div>
         </div>
         <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #F87171;">⚠️</div>
+          <div class="dash-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #F87171;">${Icons.get('alertTriangle', 20)}</div>
           <div class="dash-stat-info">
             <div class="dash-stat-value" style="font-size: 14px; text-transform: capitalize;">${weakArea}</div>
             <div class="dash-stat-label">Weak Area</div>
@@ -175,7 +175,7 @@ const DashboardPage = {
         <!-- Today's Goal -->
         <div class="dash-today-card">
           <div class="dash-today-header">
-            <span>📅 Today's Progress</span>
+            <span>${Icons.get('calendar', 16)} Today's Progress</span>
             <span class="dash-today-pct">${goalPct}%</span>
           </div>
           <div class="dash-goal-bar-wrap">
@@ -219,16 +219,16 @@ const DashboardPage = {
       <div class="dash-row-3 animate-fadeInUp stagger-3">
         <!-- Topic Heatmap -->
         <div class="dash-heatmap-card">
-          <h3>🗺️ Topic Strength</h3>
+          <h3>${Icons.get('map', 18)} Topic Strength</h3>
           ${heatmap.length > 0 ? `
             <div class="dash-topics">
               ${heatmap.map(t => {
                 const barColor = t.accuracy >= 70 ? '#10B981' : t.accuracy >= 40 ? '#F59E0B' : '#EF4444';
-                const emoji = t.accuracy >= 70 ? '🟢' : t.accuracy >= 40 ? '🟡' : '🔴';
+                const statusDot = t.accuracy >= 70 ? '●' : t.accuracy >= 40 ? '●' : '●';
                 return `
                   <div class="dash-topic-row">
                     <div class="dash-topic-head">
-                      <span class="dash-topic-name">${emoji} ${t.subject}</span>
+                      <span class="dash-topic-name"><span style="color: ${barColor}; font-size: 10px;">${statusDot}</span> ${t.subject}</span>
                       <span class="dash-topic-acc" style="color: ${barColor};">${t.accuracy}%</span>
                     </div>
                     <div class="dash-topic-bar-bg">
@@ -248,7 +248,7 @@ const DashboardPage = {
 
         <!-- Mistake Patterns -->
         <div class="dash-patterns-card">
-          <h3>🧠 Smart Insights</h3>
+          <h3>${Icons.get('brain', 18)} Smart Insights</h3>
           ${patterns.length > 0 ? `
             <div class="dash-patterns">
               ${patterns.map(p => {
@@ -273,8 +273,8 @@ const DashboardPage = {
 
           <!-- Quick Actions -->
           <div class="dash-quick-actions">
-            <button class="btn btn-primary" onclick="App.navigate('setup')" style="width: 100%;">🚀 Start Practice</button>
-            <button class="btn btn-outline" onclick="App.navigate('leaderboard')" style="width: 100%;">🏆 Leaderboard</button>
+            <button class="btn btn-primary" onclick="App.navigate('setup')" style="width: 100%;">${Icons.get('rocket', 14)} Start Practice</button>
+            <button class="btn btn-outline" onclick="App.navigate('leaderboard')" style="width: 100%;">${Icons.get('trophy', 14)} Leaderboard</button>
           </div>
         </div>
       </div>
@@ -283,7 +283,7 @@ const DashboardPage = {
       <!-- Streak History -->
       <div class="dash-streak-history animate-fadeInUp stagger-4">
         <div class="dash-streak-best">
-          <span>🏅 Best Streak: <strong>${streak.best} days</strong></span>
+          <span>${Icons.get('award', 14)} Best Streak: <strong>${streak.best} days</strong></span>
           <span style="color: var(--text-muted); font-size: 12px;">Current: ${streak.current} days</span>
         </div>
       </div>
@@ -305,9 +305,9 @@ const DashboardPage = {
 
   _getGreeting() {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning! Ready for practice? ☀️';
-    if (hour < 17) return 'Good afternoon! Keep the momentum going 💪';
-    if (hour < 21) return 'Good evening! Perfect time for a test 🌙';
-    return 'Night owl mode! 🦉 Stay focused!';
+    if (hour < 12) return 'Good morning! Ready for practice?';
+    if (hour < 17) return 'Good afternoon! Keep the momentum going.';
+    if (hour < 21) return 'Good evening! Perfect time for a test.';
+    return 'Night owl mode — stay focused!';
   }
 };

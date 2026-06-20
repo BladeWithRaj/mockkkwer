@@ -5,16 +5,17 @@
 // ============================================
 
 const AVATAR_EMOJIS = {
-  default: '👤', boy1: '👦', boy2: '🧑', boy3: '👨',
-  girl1: '👧', girl2: '👩', girl3: '👱‍♀️',
-  ninja: '🥷', astronaut: '🧑‍🚀', robot: '🤖',
-  cat: '🐱', dog: '🐶', panda: '🐼', fox: '🦊'
+  default: null, boy1: null, boy2: null, boy3: null,
+  girl1: null, girl2: null, girl3: null,
+  ninja: null, astronaut: null, robot: null,
+  cat: null, dog: null, panda: null, fox: null,
+  _get(key) { return Icons.get('user', 20); }
 };
 
 const RANK_BADGES = {
-  1: { emoji: '🥇', label: 'Champion', color: '#FFD700', glow: 'rgba(255, 215, 0, 0.3)' },
-  2: { emoji: '🥈', label: 'Runner Up', color: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.3)' },
-  3: { emoji: '🥉', label: 'Bronze', color: '#CD7F32', glow: 'rgba(205, 127, 50, 0.3)' }
+  1: { icon: 'crown', label: 'Champion', color: '#FFD700', glow: 'rgba(255, 215, 0, 0.3)' },
+  2: { icon: 'award', label: 'Runner Up', color: '#C0C0C0', glow: 'rgba(192, 192, 192, 0.3)' },
+  3: { icon: 'medal', label: 'Bronze', color: '#CD7F32', glow: 'rgba(205, 127, 50, 0.3)' }
 };
 
 const LeaderboardPage = {
@@ -24,7 +25,7 @@ const LeaderboardPage = {
     return `
       <div class="leaderboard-page page-enter">
         <div class="leaderboard-header">
-          <h1 class="animate-fadeInDown">🏆 ${Lang.t('nav_leaderboard')}</h1>
+          <h1 class="animate-fadeInDown">${Icons.get('trophy', 24)} ${Lang.t('nav_leaderboard')}</h1>
           <p class="animate-fadeInDown stagger-1" style="color: var(--text-secondary); margin-top: var(--space-2);">
             Compete with all players. Can you reach the top?
           </p>
@@ -33,13 +34,13 @@ const LeaderboardPage = {
         <!-- Filter Tabs -->
         <div class="leaderboard-filters animate-fadeInUp stagger-1" style="display: flex; gap: 8px; justify-content: center; margin-top: 20px;">
           <button class="lb-filter-btn ${this._currentMode === 'alltime' ? 'active' : ''}" onclick="LeaderboardPage.switchMode('alltime', this)">
-            🌟 All Time
+            ${Icons.get('star', 14)} All Time
           </button>
           <button class="lb-filter-btn ${this._currentMode === 'weekly' ? 'active' : ''}" onclick="LeaderboardPage.switchMode('weekly', this)">
-            📅 This Week
+            ${Icons.get('calendar', 14)} This Week
           </button>
           <button class="lb-filter-btn ${this._currentMode === 'daily' ? 'active' : ''}" onclick="LeaderboardPage.switchMode('daily', this)">
-            ⚡ Today
+            ${Icons.get('zap', 14)} Today
           </button>
         </div>
 
@@ -91,10 +92,10 @@ const LeaderboardPage = {
         const modeLabel = mode === 'daily' ? 'today' : mode === 'weekly' ? 'this week' : 'yet';
         container.innerHTML = `
           <div style="text-align:center; padding: 40px;">
-            <div style="font-size: 64px; margin-bottom: 16px;">🏆</div>
+            <div style="font-size: 64px; margin-bottom: 16px;">${Icons.get('trophy', 48)}</div>
             <p style="color: var(--text-secondary); margin-bottom: 8px; font-size: 16px; font-weight: 600;">No scores ${modeLabel}</p>
             <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Take a test to be the first on the board!</p>
-            <button class="btn btn-primary" onclick="App.navigate('setup')">🚀 Start a Test</button>
+            <button class="btn btn-primary" onclick="App.navigate('setup')">${Icons.get('rocket', 14)} Start a Test</button>
           </div>
         `;
         return;
@@ -118,16 +119,16 @@ const LeaderboardPage = {
         podiumOrder.forEach((user, idx) => {
           if (!user) return;
           const badge = RANK_BADGES[user.rank];
-          const avatarEmoji = AVATAR_EMOJIS[user.avatar] || AVATAR_EMOJIS.default;
+          const avatarIcon = Icons.get('user', 20);
           const isMe = user.username === myUsername;
 
           html += `
             <div class="podium-card ${podiumClasses[idx]} ${isMe ? 'podium-me' : ''}">
-              <div class="podium-rank-badge" style="color: ${badge.color};">${badge.emoji}</div>
-              <div class="podium-avatar">${avatarEmoji}</div>
+              <div class="podium-rank-badge" style="color: ${badge.color};">${Icons.get(badge.icon, 28)}</div>
+              <div class="podium-avatar">${avatarIcon}</div>
               <div class="podium-name ${isMe ? 'is-me' : ''}">${user.username}${isMe ? ' (You)' : ''}</div>
               <div class="podium-score" style="color: ${badge.color};">${Math.round(user.best_score)}%</div>
-              ${user.streak > 0 ? `<div class="podium-streak">🔥 ${user.streak}d streak</div>` : ''}
+              ${user.streak > 0 ? `<div class="podium-streak">${Icons.get('flame', 12)} ${user.streak}d streak</div>` : ''}
               <div class="podium-tests">${user.total_tests || 0} tests</div>
             </div>
           `;
@@ -148,7 +149,7 @@ const LeaderboardPage = {
             </div>
             <div class="my-rank-right">
               <div class="my-rank-score">${Math.round(myEntry.best_score)}%</div>
-              ${myEntry.streak > 0 ? `<div class="my-rank-streak">🔥 ${myEntry.streak}d</div>` : ''}
+              ${myEntry.streak > 0 ? `<div class="my-rank-streak">${Icons.get('flame', 12)} ${myEntry.streak}d</div>` : ''}
             </div>
           </div>
         `;
@@ -161,7 +162,7 @@ const LeaderboardPage = {
 
         leaderboard.slice(listStart).forEach(user => {
           const isMe = user.username === myUsername;
-          const avatarEmoji = AVATAR_EMOJIS[user.avatar] || AVATAR_EMOJIS.default;
+          const avatarIcon = Icons.get('user', 18);
           const scoreColor = user.best_score >= 80 ? 'var(--success-light)' :
             user.best_score >= 60 ? 'var(--warning)' : 'var(--danger-light)';
 
@@ -175,7 +176,7 @@ const LeaderboardPage = {
             <div class="lb-row ${isMe ? 'lb-row-me' : ''} ${tierClass}">
               <div class="lb-row-left">
                 <div class="lb-rank">${user.rank}</div>
-                <div class="lb-avatar">${avatarEmoji}</div>
+                <div class="lb-avatar">${avatarIcon}</div>
                 <div class="lb-info">
                   <div class="lb-name">
                     ${user.username}
@@ -183,7 +184,7 @@ const LeaderboardPage = {
                   </div>
                   <div class="lb-meta">
                     ${user.total_tests || 0} tests
-                    ${user.streak > 0 ? `· 🔥${user.streak}d` : ''}
+                    ${user.streak > 0 ? `· ${Icons.get('flame', 10)}${user.streak}d` : ''}
                   </div>
                 </div>
               </div>
@@ -202,7 +203,7 @@ const LeaderboardPage = {
     } catch (err) {
       container.innerHTML = `
         <div style="text-align:center; padding: 40px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+          <div style="font-size: 48px; margin-bottom: 16px;">${Icons.get('alertTriangle', 40)}</div>
           <p style="color: var(--text-secondary);">Failed to load leaderboard.</p>
           <button class="btn btn-secondary" onclick="LeaderboardPage.afterRender()" style="margin-top: 12px;">Retry</button>
         </div>

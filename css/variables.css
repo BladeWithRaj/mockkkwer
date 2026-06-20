@@ -1,15 +1,19 @@
 /* ============================================
-   MOCK TEST PLATFORM — Design Tokens
+   MOCK TEST PLATFORM — Design Tokens v3
+   "Precision Prep" Design System
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700&display=swap');
 
 :root {
-  /* ── Colors (PRD v2 — multi-layered dark) ── */
+  /* ── Colors (v3 — Precision Prep multi-layered dark) ── */
   --bg-primary: #0F172A;
   --bg-secondary: #141C2F;
   --bg-surface: #1E293B;
+  --bg-elevated: #243044;
+  --bg-sunken: #0B1120;
   --bg-card: rgba(30, 41, 59, 0.9);
   --bg-card-hover: rgba(42, 55, 76, 0.95);
   --bg-glass: rgba(255, 255, 255, 0.04);
@@ -35,14 +39,27 @@
   --success: #10B981;
   --success-light: #34D399;
   --success-bg: rgba(16, 185, 129, 0.1);
+  --success-subtle: rgba(16, 185, 129, 0.06);
   --warning: #F59E0B;
   --warning-light: #FBBF24;
   --warning-bg: rgba(245, 158, 11, 0.1);
+  --warning-subtle: rgba(245, 158, 11, 0.06);
   --danger: #EF4444;
   --danger-light: #F87171;
   --danger-bg: rgba(239, 68, 68, 0.1);
+  --danger-subtle: rgba(239, 68, 68, 0.06);
   --info: #06B6D4;
   --info-bg: rgba(6, 182, 212, 0.1);
+  --info-subtle: rgba(6, 182, 212, 0.06);
+
+  /* Board Identity */
+  --board-ssc: #2563EB;
+  --board-railway: #059669;
+  --board-banking: #7C3AED;
+  --board-upsc: #9333EA;
+  --board-teaching: #0891B2;
+  --board-defence: #DC2626;
+  --board-state: #D97706;
 
   /* Text */
   --text-primary: #F1F3F9;
@@ -50,9 +67,10 @@
   --text-muted: #4A5068;
   --text-accent: #6B8AFF;
 
-  /* ── Typography ── */
+  /* ── Typography (v3 — Satoshi headings, Inter body, JetBrains Mono data) ── */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-heading: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -107,11 +125,23 @@
   --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.25);
   --shadow-glow-danger: 0 0 20px rgba(239, 68, 68, 0.25);
 
-  /* ── Transitions ── */
+  /* ── Transitions (legacy — kept for backward compat) ── */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Motion System (v3 — Precision Prep) ── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-instant: 100ms;
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --motion-enter: var(--duration-normal) var(--ease-out);
+  --motion-exit: var(--duration-fast) var(--ease-in);
+  --motion-state: var(--duration-fast) var(--ease-inout);
 
   /* ── Z-Index ── */
   --z-dropdown: 100;
@@ -126,6 +156,15 @@
   --container-lg: 1024px;
   --container-xl: 1200px;
   --header-height: 64px;
+
+  /* ── Component Tokens (v3) ── */
+  --page-gutter: clamp(16px, 4vw, 24px);
+  --section-gap: clamp(48px, 8vw, 80px);
+  --card-padding: clamp(16px, 3vw, 24px);
+  --card-gap: 16px;
+  --max-content: 1120px;
+  --max-narrow: 720px;
+  --max-wide: 1400px;
 }
 
 /* ── LIGHT THEME (Default) ── */

@@ -11,7 +11,7 @@ const ResultPage = {
       return `
         <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
           <div class="empty-state">
-            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-icon">${Icons.get('barChart', 40)}</div>
             <div class="empty-state-title">${Lang.t('result_title')}</div>
             <p style="color: var(--text-muted); margin-bottom: var(--space-6);">${Lang.t('dash_no_tests')}</p>
             <button class="btn btn-primary" onclick="App.navigate('setup')">${Lang.t('nav_new_test')}</button>
@@ -24,11 +24,11 @@ const ResultPage = {
     const offset = circumference - (result.accuracy / 100) * circumference;
 
     // Performance band
-    let band, bandClass, bandEmoji, bandMsg;
-    if (result.accuracy >= 80) { band = 'Excellent!'; bandClass = 'excellent'; bandEmoji = '🏆'; bandMsg = 'You\'re exam ready!'; }
-    else if (result.accuracy >= 60) { band = 'Good Effort!'; bandClass = 'good'; bandEmoji = '👍'; bandMsg = 'Almost there, keep pushing!'; }
-    else if (result.accuracy >= 40) { band = 'Keep Going!'; bandClass = 'average'; bandEmoji = '💪'; bandMsg = 'Focus on weak areas below'; }
-    else { band = 'Needs Practice'; bandClass = 'weak'; bandEmoji = '📚'; bandMsg = 'Daily practice will help a lot'; }
+    let band, bandClass, bandIcon, bandMsg;
+    if (result.accuracy >= 80) { band = 'Excellent!'; bandClass = 'excellent'; bandIcon = 'trophy'; bandMsg = 'You\'re exam ready!'; }
+    else if (result.accuracy >= 60) { band = 'Good Effort!'; bandClass = 'good'; bandIcon = 'trendingUp'; bandMsg = 'Almost there, keep pushing!'; }
+    else if (result.accuracy >= 40) { band = 'Keep Going!'; bandClass = 'average'; bandIcon = 'flame'; bandMsg = 'Focus on weak areas below'; }
+    else { band = 'Needs Practice'; bandClass = 'weak'; bandIcon = 'bookOpen'; bandMsg = 'Daily practice will help a lot'; }
 
     // Strong/weak subjects
     const subjectEntries = Object.entries(result.subjectWise);
@@ -52,7 +52,7 @@ const ResultPage = {
         <!-- Performance Band -->
         <div class="result-header animate-fadeInDown">
           <div class="result-band ${bandClass}">
-            <span class="result-band-emoji">${bandEmoji}</span>
+            <span class="result-band-emoji">${Icons.get(bandIcon, 24)}</span>
             <div>
               <span class="result-band-text">${band}</span>
               <span class="result-band-msg">${bandMsg}</span>
@@ -87,9 +87,9 @@ const ResultPage = {
           </div>
 
           <!-- Accuracy -->
-          <div style="text-align: center; margin-top: var(--space-4);">
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-extrabold); color: ${scoreColor};" id="accuracy-value">0</div>
-            <div style="font-size: var(--text-sm); color: var(--text-muted);">Accuracy</div>
+          <div class="result-accuracy-wrap">
+            <div class="result-accuracy-value" style="color: ${scoreColor};" id="accuracy-value">0</div>
+            <div class="result-accuracy-label">Accuracy</div>
           </div>
 
           <div class="result-stats">
@@ -112,22 +112,22 @@ const ResultPage = {
           </div>
 
           ${result.negativeMarking ? `
-            <div class="scoring-breakdown" style="margin-top: var(--space-4); padding: var(--space-4); border-top: 1px solid var(--border-color); background: rgba(59,130,246,0.04); border-radius: var(--radius-md);">
-              <div style="font-size: var(--text-sm); font-weight: var(--font-semibold); margin-bottom: var(--space-3); color: var(--text-primary);">📊 Score Breakdown</div>
-              <div style="display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-sm);">
-                <div style="display: flex; justify-content: space-between; color: var(--success);">
+            <div class="scoring-breakdown">
+              <div class="scoring-breakdown-title">${Icons.get('barChart', 16)} Score Breakdown</div>
+              <div class="scoring-breakdown-rows">
+                <div class="scoring-row correct-row">
                   <span>✓ Correct: ${result.correct} × +${result.marksPerQuestion || 1}</span>
-                  <span style="font-weight: var(--font-bold);">+${result.positiveScore || (result.correct * (result.marksPerQuestion || 1))}</span>
+                  <span class="scoring-row-value">+${result.positiveScore || (result.correct * (result.marksPerQuestion || 1))}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; color: var(--danger);">
+                <div class="scoring-row wrong-row">
                   <span>✗ Wrong: ${result.wrong} × -${result.negativeValue}</span>
-                  <span style="font-weight: var(--font-bold);">-${result.negativeDeduction || (result.wrong * result.negativeValue).toFixed(2)}</span>
+                  <span class="scoring-row-value">-${result.negativeDeduction || (result.wrong * result.negativeValue).toFixed(2)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; color: var(--text-muted);">
+                <div class="scoring-row skipped-row">
                   <span>⊘ Skipped: ${result.skipped}</span>
                   <span>0</span>
                 </div>
-                <div style="border-top: 1px solid var(--border-color); padding-top: var(--space-2); display: flex; justify-content: space-between; font-weight: var(--font-bold); font-size: var(--text-base); color: var(--text-primary);">
+                <div class="scoring-row total-row">
                   <span>Final Score</span>
                   <span>${result.totalMarks} / ${result.maxMarks}</span>
                 </div>
@@ -136,26 +136,26 @@ const ResultPage = {
           ` : ''}
         </div>
 
-        <!-- 📈 PROGRESS PSYCHOLOGY — Percentile + Improvement -->
+        <!-- Progress Psychology -->
         ${this._renderProgressSection(result)}
 
-        <!-- 🎯 DAILY GOALS -->
+        <!-- Daily Goals -->
         ${this._renderDailyGoals(result)}
 
-        <!-- 🏅 BADGES -->
+        <!-- Badges -->
         ${this._renderBadges()}
 
-        <!-- 💰 GAMIFICATION REWARDS SUMMARY (only in rival-battle) -->
+        <!-- Gamification Rewards (rival-battle only) -->
         ${(result._isRivalBattle || window._currentTestMode === 'rival-battle') ? this._renderRewardsSummary(result) : ''}
 
-        <!-- 🔥 SMART INSIGHTS — Game Changer Section -->
+        <!-- Smart Insights -->
         <div class="insights-section animate-fadeInUp stagger-2">
-          <h3 class="insight-section-title">🧠 Smart Insights</h3>
+          <h3 class="insight-section-title">${Icons.get('brain', 18)} Smart Insights</h3>
 
           <div class="insights-cards-grid">
             <!-- Speed Analysis -->
             <div class="insight-card speed-card">
-              <div class="insight-card-icon">⚡</div>
+              <div class="insight-card-icon">${Icons.get('zap', 20)}</div>
               <div class="insight-card-body">
                 <div class="insight-card-label">Avg Speed</div>
                 <div class="insight-card-value">${insights.avgSpeed}s <span class="insight-sub">per question</span></div>
@@ -165,7 +165,7 @@ const ResultPage = {
 
             <!-- Accuracy Rate -->
             <div class="insight-card accuracy-card">
-              <div class="insight-card-icon">🎯</div>
+              <div class="insight-card-icon">${Icons.get('target', 20)}</div>
               <div class="insight-card-body">
                 <div class="insight-card-label">Attempt Rate</div>
                 <div class="insight-card-value">${insights.attemptRate}%</div>
@@ -175,7 +175,7 @@ const ResultPage = {
 
             <!-- Time Wasted -->
             <div class="insight-card timewaste-card">
-              <div class="insight-card-icon">⏰</div>
+              <div class="insight-card-icon">${Icons.get('clock', 20)}</div>
               <div class="insight-card-body">
                 <div class="insight-card-label">Time Wasted</div>
                 <div class="insight-card-value">${insights.timeWasted} <span class="insight-sub">on wrong answers</span></div>
@@ -185,7 +185,7 @@ const ResultPage = {
 
             <!-- Easy Mistakes -->
             <div class="insight-card mistake-card">
-              <div class="insight-card-icon">😤</div>
+              <div class="insight-card-icon">${Icons.get('alertTriangle', 20)}</div>
               <div class="insight-card-body">
                 <div class="insight-card-label">Easy Mistakes</div>
                 <div class="insight-card-value">${insights.easyMistakes} <span class="insight-sub">questions</span></div>
@@ -198,7 +198,7 @@ const ResultPage = {
         <!-- Weak Topics -->
         ${insights.weakTopics.length > 0 ? `
         <div class="weak-section animate-fadeInUp stagger-3">
-          <h3 class="insight-section-title">⚠️ Weak Topics — Focus Here</h3>
+          <h3 class="insight-section-title">${Icons.get('alertCircle', 18)} Weak Topics — Focus Here</h3>
           <div class="weak-topics-grid">
             ${insights.weakTopics.map(wt => `
               <div class="weak-topic-card">
@@ -224,7 +224,7 @@ const ResultPage = {
         <!-- Time Wasted Questions -->
         ${insights.slowestQuestions.length > 0 ? `
         <div class="timewaste-section animate-fadeInUp stagger-4">
-          <h3 class="insight-section-title">🐌 Slowest Questions — Time Wasted</h3>
+          <h3 class="insight-section-title">${Icons.get('timer', 18)} Slowest Questions — Time Wasted</h3>
           <div class="slow-questions-list">
             ${insights.slowestQuestions.map((sq, i) => `
               <div class="slow-question-item">
@@ -232,7 +232,7 @@ const ResultPage = {
                 <div class="slow-q-info">
                   <div class="slow-q-text">${(sq.question.question || '').substring(0, 80)}...</div>
                   <div class="slow-q-meta">
-                    <span class="chip ${sq.isCorrect ? 'chip-success' : sq.isSkipped ? '' : 'chip-danger'}">${sq.isCorrect ? '✓ Correct' : sq.isSkipped ? '⊘ Skipped' : '✗ Wrong'}</span>
+                    <span class="chip ${sq.isCorrect ? 'chip-success' : sq.isSkipped ? '' : 'chip-danger'}">${sq.isCorrect ? 'Correct' : sq.isSkipped ? 'Skipped' : 'Wrong'}</span>
                     <span class="chip chip-primary">${sq.question.subject}</span>
                   </div>
                 </div>
@@ -245,21 +245,21 @@ const ResultPage = {
 
         <!-- Strong / Weak Areas -->
         ${subjectEntries.length > 0 ? `
-        <div class="animate-fadeInUp stagger-4" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-6);">
+        <div class="strength-weakness-grid animate-fadeInUp stagger-4">
           ${strongArea ? `
-          <div class="card strength-card" style="padding: var(--space-4); border-left: 3px solid var(--success);">
-            <div style="font-size: 20px; margin-bottom: var(--space-2);">💪</div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Strongest</div>
-            <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${strongArea.name}</div>
-            <div style="font-size: var(--text-sm); color: var(--success); font-weight: var(--font-semibold);">${strongArea.acc}%</div>
+          <div class="area-card strong">
+            <div class="area-card-icon">${Icons.get('trendingUp', 20)}</div>
+            <div class="area-card-label">Strongest</div>
+            <div class="area-card-name">${strongArea.name}</div>
+            <div class="area-card-pct strong">${strongArea.acc}%</div>
           </div>
           ` : ''}
           ${weakArea && weakArea.name !== (strongArea && strongArea.name) ? `
-          <div class="card weakness-card" style="padding: var(--space-4); border-left: 3px solid var(--danger);">
-            <div style="font-size: 20px; margin-bottom: var(--space-2);">⚠️</div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-1);">Weakest</div>
-            <div style="font-size: var(--text-base); font-weight: var(--font-bold); color: var(--text-primary);">${weakArea.name}</div>
-            <div style="font-size: var(--text-sm); color: var(--danger); font-weight: var(--font-semibold);">${weakArea.acc}%</div>
+          <div class="area-card weak">
+            <div class="area-card-icon">${Icons.get('trendingDown', 20)}</div>
+            <div class="area-card-label">Weakest</div>
+            <div class="area-card-name">${weakArea.name}</div>
+            <div class="area-card-pct weak">${weakArea.acc}%</div>
           </div>
           ` : ''}
         </div>
@@ -267,19 +267,19 @@ const ResultPage = {
 
         <!-- Subject-wise Breakdown -->
         ${subjectEntries.length > 0 ? `
-        <div class="card animate-fadeInUp stagger-5" style="margin-top: var(--space-6);">
-          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">📊 Subject-wise Breakdown</h3>
-          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+        <div class="subject-breakdown-card animate-fadeInUp stagger-5">
+          <h3 class="subject-breakdown-title">${Icons.get('barChart', 18)} Subject-wise Breakdown</h3>
+          <div class="subject-breakdown-list">
             ${subjectEntries.map(([subject, data]) => {
               const subjectAcc = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
               const barColor = subjectAcc >= 70 ? 'var(--success)' : subjectAcc >= 40 ? 'var(--warning)' : 'var(--danger)';
               return `
                 <div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-1); font-size: var(--text-sm);">
-                    <span style="font-weight: var(--font-semibold);">${Helpers.getSubjectIcon(subject)} ${subject}</span>
-                    <span style="color: ${barColor}; font-weight: var(--font-bold);">${subjectAcc}% <span style="color: var(--text-muted); font-weight: normal;">(${data.correct}/${data.total})</span></span>
+                  <div class="subject-row-header">
+                    <span class="subject-row-name">${Helpers.getSubjectIcon(subject)} ${subject}</span>
+                    <span class="subject-row-pct" style="color: ${barColor};">${subjectAcc}% <span class="subject-row-ratio">(${data.correct}/${data.total})</span></span>
                   </div>
-                  <div style="height: 8px; background: var(--bg-glass); border-radius: var(--radius-full); overflow: hidden;">
+                  <div class="subject-row-bar">
                     <div class="accuracy-bar-anim" style="height: 100%; width: 0%; background: ${barColor}; border-radius: var(--radius-full); transition: width 0.8s ease-out;" data-target="${subjectAcc}"></div>
                   </div>
                 </div>
@@ -290,19 +290,19 @@ const ResultPage = {
         ` : ''}
 
         <!-- View Analysis Button -->
-        <div class="animate-fadeInUp stagger-6" style="margin-top: var(--space-6);">
-          <button class="btn btn-secondary btn-lg btn-block" onclick="App.navigate('analysis')" style="background: rgba(139, 92, 246, 0.1); color: var(--secondary-light); border: 1px solid rgba(139, 92, 246, 0.3);">
+        <div class="result-analysis-btn animate-fadeInUp stagger-6">
+          <button class="btn btn-secondary btn-lg btn-block" onclick="App.navigate('analysis')">
             ${Lang.t('result_analysis')}
           </button>
         </div>
 
         <!-- Actions -->
         <div class="result-actions animate-fadeInUp stagger-7">
-          <div style="display: flex; gap: var(--space-3); width: 100%;">
-            <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
+          <div class="result-actions-row">
+            <button class="btn btn-secondary btn-lg" onclick="ResultPage.retrySameTest()" id="retry-same-btn">
               ${Lang.t('result_retry')}
             </button>
-            <button class="btn btn-secondary btn-lg" style="flex: 1;" onclick="App.navigate('setup')" id="retry-new-btn">
+            <button class="btn btn-secondary btn-lg" onclick="App.navigate('setup')" id="retry-new-btn">
               ${Lang.t('result_new')}
             </button>
           </div>
@@ -325,8 +325,8 @@ const ResultPage = {
 
     // Speed verdict
     let speedVerdict;
-    if (avgSpeed <= 30) speedVerdict = { text: 'Great speed! ⚡', cls: 'verdict-good' };
-    else if (avgSpeed <= 60) speedVerdict = { text: 'Good pace 👍', cls: 'verdict-ok' };
+    if (avgSpeed <= 30) speedVerdict = { text: 'Great speed!', cls: 'verdict-good' };
+    else if (avgSpeed <= 60) speedVerdict = { text: 'Good pace', cls: 'verdict-ok' };
     else if (avgSpeed <= 90) speedVerdict = { text: 'A bit slow — practice more', cls: 'verdict-warn' };
     else speedVerdict = { text: 'Too slow — work on speed', cls: 'verdict-bad' };
 
@@ -334,9 +334,9 @@ const ResultPage = {
     const attempted = total - result.skipped;
     const attemptRate = total > 0 ? Math.round((attempted / total) * 100) : 0;
     let attemptVerdict;
-    if (attemptRate >= 90) attemptVerdict = { text: 'Great coverage! 🎯', cls: 'verdict-good' };
+    if (attemptRate >= 90) attemptVerdict = { text: 'Great coverage!', cls: 'verdict-good' };
     else if (attemptRate >= 70) attemptVerdict = { text: 'Good, attempt more', cls: 'verdict-ok' };
-    else attemptVerdict = { text: 'Too many skipped ⚠️', cls: 'verdict-warn' };
+    else attemptVerdict = { text: 'Too many skipped', cls: 'verdict-warn' };
 
     // Time wasted on wrong answers
     const wrongQuestions = qr.filter(q => !q.isCorrect && !q.isSkipped);
@@ -344,16 +344,16 @@ const ResultPage = {
     const timeWasted = Helpers.formatDuration(timeOnWrong);
     let timeWasteVerdict;
     const wasteRatio = totalTimeSpent > 0 ? timeOnWrong / totalTimeSpent : 0;
-    if (wasteRatio <= 0.2) timeWasteVerdict = { text: 'Efficient! ✅', cls: 'verdict-good' };
+    if (wasteRatio <= 0.2) timeWasteVerdict = { text: 'Efficient!', cls: 'verdict-good' };
     else if (wasteRatio <= 0.4) timeWasteVerdict = { text: 'Some waste — review', cls: 'verdict-ok' };
-    else timeWasteVerdict = { text: 'Too much time lost! 🔥', cls: 'verdict-bad' };
+    else timeWasteVerdict = { text: 'Too much time lost!', cls: 'verdict-bad' };
 
     // Easy mistakes (answered wrong but spent < 30 seconds — likely careless)
     const easyMistakes = wrongQuestions.filter(q => (q.timeSpent || 0) < 30).length;
     let easyMistakeVerdict;
-    if (easyMistakes === 0) easyMistakeVerdict = { text: 'No careless errors! 🎉', cls: 'verdict-good' };
+    if (easyMistakes === 0) easyMistakeVerdict = { text: 'No careless errors!', cls: 'verdict-good' };
     else if (easyMistakes <= 3) easyMistakeVerdict = { text: 'A few — read carefully', cls: 'verdict-ok' };
-    else easyMistakeVerdict = { text: 'Too many! Slow down 🛑', cls: 'verdict-bad' };
+    else easyMistakeVerdict = { text: 'Too many! Slow down', cls: 'verdict-bad' };
 
     // Weak topics
     const weakTopics = (result.weakTopics || []).slice(0, 5);
@@ -384,7 +384,7 @@ const ResultPage = {
 
     return `
       <div class="rewards-summary animate-fadeInUp stagger-1">
-        <div class="rewards-summary-title">🎁 Rewards Earned</div>
+        <div class="rewards-summary-title">${Icons.get('award', 18)} Rewards Earned</div>
         ${gam.rewards.map(r => `
           <div class="reward-line">
             <div class="reward-line-left">
@@ -392,7 +392,7 @@ const ResultPage = {
               <span>${r.label}</span>
             </div>
             <div class="reward-line-right">
-              <span class="reward-coins-badge">+${r.coins} 💰</span>
+              <span class="reward-coins-badge">${Icons.get('coins', 12)} +${r.coins}</span>
               <span class="reward-xp-badge">+${r.xp} XP</span>
             </div>
           </div>
@@ -400,17 +400,17 @@ const ResultPage = {
         <div class="rewards-total">
           <span>Total Earned</span>
           <div style="display:flex;gap:var(--space-4);">
-            <span class="rewards-total-coins">+${gam.totalCoins} 💰</span>
-            <span class="rewards-total-xp">+${gam.totalXP} XP</span>
+            <span class="rewards-total-coins">${Icons.get('coins', 14)} +${gam.totalCoins}</span>
+            <span class="rewards-total-xp">${Icons.get('zap', 14)} +${gam.totalXP} XP</span>
           </div>
         </div>
         ${gam.combo >= 5 ? `
           <div style="margin-top:var(--space-3);text-align:center;font-size:var(--text-sm);color:var(--text-secondary);">
-            🔥 Best Combo: ${gam.combo}x in a row!
+            ${Icons.get('flame', 14)} Best Combo: ${gam.combo}x in a row!
           </div>
         ` : ''}
         <div style="margin-top:var(--space-3);text-align:center;">
-          <span class="xp-level-badge">${gam.level.icon || '⭐'} ${gam.level.title} — Tier ${gam.level.level}/5</span>
+          <span class="xp-level-badge">${Icons.get('star', 14)} ${gam.level.title} — Tier ${gam.level.level}/5</span>
           <div class="xp-bar-wrap" style="margin-top:var(--space-2);width:100%;">
             <div class="xp-bar-fill" style="width:${gam.level.progress}%"></div>
           </div>
@@ -429,7 +429,7 @@ const ResultPage = {
     }
 
     const btn = document.getElementById('retry-same-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Loading...'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;"></span> Loading...'; }
 
     try {
       const questions = await window.fetchRandomQuestions({
@@ -453,7 +453,7 @@ const ResultPage = {
       App.navigate('test');
     } catch (err) {
       Helpers.showToast(err.message, 'error');
-      if (btn) { btn.disabled = false; btn.innerHTML = '🔄 Retry Same'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = Icons.get('refresh', 14) + ' Retry Same'; }
     }
   },
 
@@ -518,73 +518,73 @@ const ResultPage = {
     if (progress.totalTests <= 0 && !improvement) return '';
 
     const trendIcon = improvement
-      ? improvement.trend === 'up' ? '📈' : improvement.trend === 'down' ? '📉' : '➡️'
-      : '🆕';
+      ? improvement.trend === 'up' ? Icons.get('trendingUp', 14) : improvement.trend === 'down' ? Icons.get('trendingDown', 14) : Icons.get('arrowRight', 14)
+      : Icons.get('sparkles', 14);
     const trendColor = improvement
       ? improvement.trend === 'up' ? 'var(--success)' : improvement.trend === 'down' ? 'var(--danger)' : 'var(--text-muted)'
       : 'var(--primary)';
     const deltaSign = improvement && improvement.accuracyDelta > 0 ? '+' : '';
 
     return `
-      <div class="card animate-fadeInUp stagger-1" style="margin-top: var(--space-4); padding: var(--space-5);">
-        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4); display:flex; align-items:center; gap:8px;">
-          📊 Your Progress
-          <span style="font-size: var(--text-xs); color: var(--text-muted); font-weight: normal;">
-            Test #${progress.totalTests + 1}
-          </span>
-        </h3>
+      <div class="progress-section animate-fadeInUp stagger-1">
+        <div class="progress-section-inner">
+          <h3 class="progress-section-title">
+            ${Icons.get('activity', 18)} Your Progress
+            <span class="test-num">Test #${progress.totalTests + 1}</span>
+          </h3>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4);">
-          ${percentile !== null ? `
-          <div style="text-align:center; padding: var(--space-3); background: rgba(99,102,241,0.1); border-radius: var(--radius-lg);">
-            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--primary-light);">${percentile}%</div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted);">Percentile</div>
-          </div>
-          ` : ''}
-
-          ${improvement ? `
-          <div style="text-align:center; padding: var(--space-3); background: ${improvement.trend === 'up' ? 'rgba(16,185,129,0.1)' : improvement.trend === 'down' ? 'rgba(239,68,68,0.1)' : 'rgba(148,163,184,0.1)'}; border-radius: var(--radius-lg);">
-            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: ${trendColor};">
-              ${trendIcon} ${deltaSign}${improvement.accuracyDelta}%
+          <div class="progress-stats-grid">
+            ${percentile !== null ? `
+            <div class="progress-stat-card percentile">
+              <div class="progress-stat-val" style="color: var(--primary-light);">${percentile}%</div>
+              <div class="progress-stat-label">Percentile</div>
             </div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted);">vs Last Test</div>
-          </div>
-          ` : ''}
+            ` : ''}
 
-          <div style="text-align:center; padding: var(--space-3); background: rgba(245,158,11,0.1); border-radius: var(--radius-lg);">
-            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--warning-light);">
-              🔥 ${progress.currentStreak}
+            ${improvement ? `
+            <div class="progress-stat-card ${improvement.trend === 'up' ? 'trend-up' : improvement.trend === 'down' ? 'trend-down' : 'trend-flat'}">
+              <div class="progress-stat-val" style="color: ${trendColor};">
+                ${trendIcon} ${deltaSign}${improvement.accuracyDelta}%
+              </div>
+              <div class="progress-stat-label">vs Last Test</div>
             </div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted);">Day Streak</div>
-          </div>
+            ` : ''}
 
-          <div style="text-align:center; padding: var(--space-3); background: rgba(16,185,129,0.1); border-radius: var(--radius-lg);">
-            <div style="font-size: var(--text-2xl); font-weight: var(--font-extrabold); color: var(--success-light);">
-              ${progress.bestAccuracy}%
+            <div class="progress-stat-card streak">
+              <div class="progress-stat-val" style="color: var(--warning-light);">
+                ${Icons.get('flame', 16)} ${progress.currentStreak}
+              </div>
+              <div class="progress-stat-label">Day Streak</div>
             </div>
-            <div style="font-size: var(--text-xs); color: var(--text-muted);">Best Accuracy</div>
-          </div>
-        </div>
 
-        ${timeline.length >= 2 ? `
-        <div style="margin-top: var(--space-3);">
-          <div style="font-size: var(--text-xs); color: var(--text-muted); margin-bottom: var(--space-2);">Accuracy Timeline</div>
-          <div style="display: flex; align-items: flex-end; gap: 4px; height: 60px; padding-top: 4px;">
-            ${timeline.map((t, i) => {
-              const barColor = t.accuracy >= 70 ? 'var(--success)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
-              const isLast = i === timeline.length - 1;
-              return `
-                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;">
-                  <span style="font-size:9px; color: ${isLast ? 'var(--text-primary)' : 'var(--text-muted)'}; font-weight:${isLast ? '700' : '400'};">${t.accuracy}%</span>
-                  <div style="width:100%; background: var(--bg-glass); border-radius: 3px; height: 48px; display:flex; align-items:flex-end; overflow:hidden;">
-                    <div class="timeline-bar-fill" data-target="${t.accuracy}" style="width:100%; height:0%; background: ${barColor}; border-radius: 3px; transition: height 0.8s ease-out ${i * 80}ms;"></div>
+            <div class="progress-stat-card best-accuracy">
+              <div class="progress-stat-val" style="color: var(--success-light);">
+                ${progress.bestAccuracy}%
+              </div>
+              <div class="progress-stat-label">Best Accuracy</div>
+            </div>
+          </div>
+
+          ${timeline.length >= 2 ? `
+          <div class="timeline-section">
+            <div class="timeline-label">Accuracy Timeline</div>
+            <div class="timeline-bars">
+              ${timeline.map((t, i) => {
+                const barColor = t.accuracy >= 70 ? 'var(--success)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
+                const isLast = i === timeline.length - 1;
+                return `
+                  <div class="timeline-bar-col">
+                    <span class="timeline-bar-pct ${isLast ? 'current' : ''}">${t.accuracy}%</span>
+                    <div class="timeline-bar-track">
+                      <div class="timeline-bar-fill" data-target="${t.accuracy}" style="width:100%; height:0%; background: ${barColor}; border-radius: 3px; transition: height 0.8s ease-out ${i * 80}ms;"></div>
+                    </div>
                   </div>
-                </div>
-              `;
-            }).join('')}
+                `;
+              }).join('')}
+            </div>
           </div>
+          ` : ''}
         </div>
-        ` : ''}
       </div>
     `;
   },
@@ -596,19 +596,19 @@ const ResultPage = {
     const allDone = goals.every(g => g.done);
 
     return `
-      <div class="card animate-fadeInUp stagger-1" style="margin-top: var(--space-3); padding: var(--space-4);">
-        <h3 style="font-size: var(--text-sm); margin-bottom: var(--space-3); display:flex; align-items:center; gap:8px;">
-          🎯 Today's Goals ${allDone ? '<span style="color: var(--success); font-size: var(--text-xs);">All Complete! 🎉</span>' : ''}
-        </h3>
-        <div style="display: flex; flex-direction: column; gap: var(--space-2);">
-          ${goals.map(g => `
-            <div style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); background: ${g.done ? 'rgba(16,185,129,0.08)' : 'transparent'}; border-radius: var(--radius-md); font-size: var(--text-sm);">
-              <span style="font-size: 16px;">${g.done ? '☑' : '⬜'}</span>
-              <span style="color: ${g.done ? 'var(--success-light)' : 'var(--text-secondary)'}; ${g.done ? 'text-decoration: line-through; opacity: 0.7;' : ''}">
-                ${g.icon} ${g.text}
-              </span>
-            </div>
-          `).join('')}
+      <div class="daily-goals-section animate-fadeInUp stagger-1">
+        <div class="daily-goals-inner">
+          <h3 class="daily-goals-title">
+            ${Icons.get('target', 18)} Today's Goals ${allDone ? '<span style="color: var(--success); font-size: var(--text-xs);">All Complete!</span>' : ''}
+          </h3>
+          <div class="daily-goals-list">
+            ${goals.map(g => `
+              <div class="daily-goal-item ${g.done ? 'done' : ''}">
+                <span class="daily-goal-check">${g.done ? Icons.get('checkCircle', 14) : Icons.get('target', 14)}</span>
+                <span class="daily-goal-text">${g.icon} ${g.text}</span>
+              </div>
+            `).join('')}
+          </div>
         </div>
       </div>
     `;
@@ -622,21 +622,23 @@ const ResultPage = {
     if (earned.length === 0) return '';
 
     return `
-      <div class="card animate-fadeInUp stagger-2" style="margin-top: var(--space-3); padding: var(--space-4);">
-        <h3 style="font-size: var(--text-sm); margin-bottom: var(--space-3);">🏅 Badges Earned</h3>
-        <div style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
-          ${earned.map(b => `
-            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: var(--font-semibold);">
-              <span>${b.icon}</span>
-              <span style="color: var(--primary-light);">${b.name}</span>
-            </div>
-          `).join('')}
-        </div>
-        ${badges.filter(b => !b.earned).length > 0 ? `
-          <div style="margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted);">
-            ${badges.filter(b => !b.earned).length} more badges to unlock
+      <div class="badges-section animate-fadeInUp stagger-2">
+        <div class="badges-inner">
+          <h3 class="badges-title">${Icons.get('award', 18)} Badges Earned</h3>
+          <div class="badges-grid">
+            ${earned.map(b => `
+              <div class="badge-pill">
+                <span>${b.icon}</span>
+                <span>${b.name}</span>
+              </div>
+            `).join('')}
           </div>
-        ` : ''}
+          ${badges.filter(b => !b.earned).length > 0 ? `
+            <div class="badges-remaining">
+              ${badges.filter(b => !b.earned).length} more badges to unlock
+            </div>
+          ` : ''}
+        </div>
       </div>
     `;
   }

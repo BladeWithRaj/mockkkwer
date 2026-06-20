@@ -11,7 +11,7 @@ const AnalysisPage = {
       return `
         <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
           <div class="empty-state">
-            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-icon">${Icons.get('barChart', 40)}</div>
             <div class="empty-state-title">No Analysis Available</div>
             <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Complete a test to see detailed analysis</p>
             <button class="btn btn-primary" onclick="App.navigate('setup')">Start a Test</button>
@@ -49,7 +49,7 @@ const AnalysisPage = {
 
         <!-- Time Analysis Card -->
         <div class="card animate-fadeInUp stagger-1" style="margin-bottom: var(--space-6);">
-          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">⏱️ Time Analysis</h3>
+          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">${Icons.get('timer', 18)} Time Analysis</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-4);">
             <div class="result-stat">
               <div class="result-stat-value time">${Helpers.formatDuration(result.timeTaken)}</div>
@@ -85,15 +85,15 @@ const AnalysisPage = {
           </button>
           <button class="analysis-tab ${this.activeTab === 'correct' ? 'active' : ''}"
                   onclick="AnalysisPage.setTab('correct')">
-            ✅ Correct (${result.correct})
+            ${Icons.get('checkCircle', 14)} Correct (${result.correct})
           </button>
           <button class="analysis-tab ${this.activeTab === 'wrong' ? 'active' : ''}"
                   onclick="AnalysisPage.setTab('wrong')">
-            ❌ Wrong (${result.wrong})
+            ${Icons.get('xCircle', 14)} Wrong (${result.wrong})
           </button>
           <button class="analysis-tab ${this.activeTab === 'skipped' ? 'active' : ''}"
                   onclick="AnalysisPage.setTab('skipped')">
-            ⏭️ Skipped (${result.skipped})
+            ${Icons.get('skipForward', 14)} Skipped (${result.skipped})
           </button>
         </div>
 
@@ -101,14 +101,14 @@ const AnalysisPage = {
         <div id="question-review-list">
           ${filteredQuestions.length === 0 ? `
             <div class="empty-state" style="padding: var(--space-8);">
-              <div class="empty-state-icon">📝</div>
+              <div class="empty-state-icon">${Icons.get('fileText', 32)}</div>
               <div class="empty-state-title">No questions in this category</div>
             </div>
           ` : ''}
           ${filteredQuestions.map((qr, i) => {
             const q = qr.question;
             const statusClass = qr.isCorrect ? 'correct-card' : qr.isSkipped ? 'skipped-card' : 'wrong-card';
-            const statusIcon = qr.isCorrect ? '✅' : qr.isSkipped ? '⏭️' : '❌';
+            const statusIcon = qr.isCorrect ? Icons.get('checkCircle', 14) : qr.isSkipped ? Icons.get('skipForward', 14) : Icons.get('xCircle', 14);
             const qIndex = result.questionResults.indexOf(qr);
 
             return `
@@ -142,7 +142,7 @@ const AnalysisPage = {
 
                 ${q.explanation ? `
                   <div class="explanation-box" style="margin-top: var(--space-4);">
-                    <div class="explanation-title">💡 Explanation</div>
+                    <div class="explanation-title">${Icons.get('lightbulb', 14)} Explanation</div>
                     <div class="explanation-text">${q.explanation}</div>
                   </div>
                 ` : ''}
@@ -153,7 +153,7 @@ const AnalysisPage = {
 
         <div style="text-align: center; padding: var(--space-8) 0;">
           <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')">
-            🔄 Take Another Test
+            ${Icons.get('refresh', 14)} Take Another Test
           </button>
         </div>
       </div>
@@ -166,7 +166,7 @@ const AnalysisPage = {
 
     return `
       <div class="card animate-fadeInUp stagger-2" style="margin-bottom: var(--space-6);">
-        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">📈 Performance Trend</h3>
+        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">${Icons.get('trendingUp', 18)} Performance Trend</h3>
         <canvas id="trend-chart" width="800" height="200" style="width: 100%; height: 200px;"></canvas>
       </div>
     `;

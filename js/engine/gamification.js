@@ -11,27 +11,27 @@ const Gamification = {
   // ═══════════════════════════════════════════
 
   TIERS: [
-    { level: 1, title: 'Beginner', xpRequired: 0,     icon: '🌱' },
-    { level: 2, title: 'Learner',  xpRequired: 500,   icon: '📖' },
-    { level: 3, title: 'Skilled',  xpRequired: 2000,  icon: '⚡' },
-    { level: 4, title: 'Advanced', xpRequired: 5000,  icon: '🔥' },
-    { level: 5, title: 'Elite',    xpRequired: 12000, icon: '👑' }
+    { level: 1, title: 'Beginner', xpRequired: 0,     iconKey: 'sprout' },
+    { level: 2, title: 'Learner',  xpRequired: 500,   iconKey: 'bookOpen' },
+    { level: 3, title: 'Skilled',  xpRequired: 2000,  iconKey: 'zap' },
+    { level: 4, title: 'Advanced', xpRequired: 5000,  iconKey: 'flame' },
+    { level: 5, title: 'Elite',    xpRequired: 12000, iconKey: 'crown' }
   ],
 
   // Badge definitions (kept to 12, no explosion)
   BADGE_DEFS: [
-    { id: 'streak_3', title: '🔥 3 Day Warrior', desc: '3 day streak' },
-    { id: 'streak_7', title: '🏅 Week Champion', desc: '7 day streak' },
-    { id: 'streak_15', title: '💎 Fortnight King', desc: '15 day streak' },
-    { id: 'streak_30', title: '👑 Monthly Legend', desc: '30 day streak' },
-    { id: 'tests_5', title: '📝 5 Tests Done', desc: 'Complete 5 tests' },
-    { id: 'tests_25', title: '🎯 25 Tests Done', desc: 'Complete 25 tests' },
-    { id: 'tests_100', title: '🏆 Century Club', desc: 'Complete 100 tests' },
-    { id: 'perfect', title: '💯 Perfect Score', desc: '100% in any test' },
-    { id: 'speed_demon', title: '⚡ Speed Demon', desc: 'Finish test in <50% time' },
-    { id: 'combo_10', title: '🔥 Combo Master', desc: '10 correct in a row' },
-    { id: 'tier_3', title: '⚡ Skilled Tier', desc: 'Reach Skilled tier' },
-    { id: 'tier_5', title: '👑 Elite Tier', desc: 'Reach Elite tier' }
+    { id: 'streak_3', title: '3 Day Warrior', iconKey: 'flame', desc: '3 day streak' },
+    { id: 'streak_7', title: 'Week Champion', iconKey: 'award', desc: '7 day streak' },
+    { id: 'streak_15', title: 'Fortnight King', iconKey: 'star', desc: '15 day streak' },
+    { id: 'streak_30', title: 'Monthly Legend', iconKey: 'crown', desc: '30 day streak' },
+    { id: 'tests_5', title: '5 Tests Done', iconKey: 'fileText', desc: 'Complete 5 tests' },
+    { id: 'tests_25', title: '25 Tests Done', iconKey: 'target', desc: 'Complete 25 tests' },
+    { id: 'tests_100', title: 'Century Club', iconKey: 'trophy', desc: 'Complete 100 tests' },
+    { id: 'perfect', title: 'Perfect Score', iconKey: 'checkCircle', desc: '100% in any test' },
+    { id: 'speed_demon', title: 'Speed Demon', iconKey: 'zap', desc: 'Finish test in <50% time' },
+    { id: 'combo_10', title: 'Combo Master', iconKey: 'flame', desc: '10 correct in a row' },
+    { id: 'tier_3', title: 'Skilled Tier', iconKey: 'zap', desc: 'Reach Skilled tier' },
+    { id: 'tier_5', title: 'Elite Tier', iconKey: 'crown', desc: 'Reach Elite tier' }
   ],
 
   KEYS: {
@@ -129,7 +129,8 @@ const Gamification = {
     return {
       level: tierNum,
       title: tier.title,
-      icon: tier.icon,
+      icon: (typeof Icons !== 'undefined' ? Icons.get(tier.iconKey, 16) : ''),
+      iconKey: tier.iconKey,
       xp,
       nextTierXP: nextTier.xpRequired,
       currentTierXP: tier.xpRequired,
@@ -247,7 +248,7 @@ const Gamification = {
     weakSubjects.forEach(s => {
       recommendations.push({
         type: 'weak_subject',
-        icon: '⚠️',
+        icon: Icons.get('alertTriangle', 14),
         title: `Weak in ${s.subject}`,
         desc: `${s.accuracy}% accuracy — Focus practice here`,
         priority: 'high',
@@ -265,7 +266,7 @@ const Gamification = {
       if (recentAvg < olderAvg - 5) {
         recommendations.push({
           type: 'declining',
-          icon: '📉',
+          icon: Icons.get('trendingDown', 14),
           title: 'Accuracy Declining',
           desc: `Dropped from ${olderAvg}% to ${recentAvg}% — Revise basics`,
           priority: 'high'
@@ -273,7 +274,7 @@ const Gamification = {
       } else if (recentAvg > olderAvg + 5) {
         recommendations.push({
           type: 'improving',
-          icon: '📈',
+          icon: Icons.get('trendingUp', 14),
           title: 'You\'re Improving!',
           desc: `Up from ${olderAvg}% to ${recentAvg}% — Keep going!`,
           priority: 'positive'
@@ -286,7 +287,7 @@ const Gamification = {
     if (strongSubjects.length > 0) {
       recommendations.push({
         type: 'strong',
-        icon: '💪',
+        icon: Icons.get('zap', 14),
         title: `Strong in ${strongSubjects.map(s => s.subject).join(', ')}`,
         desc: `${strongSubjects[0].accuracy}%+ accuracy — Great work!`,
         priority: 'positive'
@@ -304,14 +305,14 @@ const Gamification = {
     const { questionsAnswered, totalQuestions, combo } = context;
     const progress = (questionsAnswered / totalQuestions) * 100;
 
-    if (combo >= 10) return { emoji: '🔥🔥🔥', msg: `${combo}x COMBO! Unstoppable!`, type: 'fire' };
-    if (combo >= 7) return { emoji: '🔥🔥', msg: `${combo}x Combo! On fire!`, type: 'fire' };
-    if (combo >= 5) return { emoji: '🔥', msg: `${combo}x Combo streak!`, type: 'combo' };
+    if (combo >= 10) return { icon: 'flame', msg: `${combo}x COMBO! Unstoppable!`, type: 'fire' };
+    if (combo >= 7) return { icon: 'flame', msg: `${combo}x Combo! On fire!`, type: 'fire' };
+    if (combo >= 5) return { icon: 'flame', msg: `${combo}x Combo streak!`, type: 'combo' };
 
-    if (progress >= 90) return { emoji: '🏁', msg: 'Almost done! Finish strong!', type: 'finish' };
-    if (progress >= 75) return { emoji: '💪', msg: '75% done! Keep pushing!', type: 'progress' };
-    if (progress >= 50) return { emoji: '⚡', msg: 'Halfway there!', type: 'milestone' };
-    if (progress >= 25) return { emoji: '🎯', msg: 'Great start! Keep going!', type: 'encourage' };
+    if (progress >= 90) return { icon: 'checkCircle', msg: 'Almost done! Finish strong!', type: 'finish' };
+    if (progress >= 75) return { icon: 'zap', msg: '75% done! Keep pushing!', type: 'progress' };
+    if (progress >= 50) return { icon: 'zap', msg: 'Halfway there!', type: 'milestone' };
+    if (progress >= 25) return { icon: 'target', msg: 'Great start! Keep going!', type: 'encourage' };
 
     return null;
   },
@@ -348,7 +349,7 @@ const Gamification = {
   _showCoinPopup(amount, reason) {
     const popup = document.createElement('div');
     popup.className = 'coin-earn-popup';
-    popup.innerHTML = `<span class="coin-icon">💰</span> +${amount} <span class="coin-reason">${reason}</span>`;
+    popup.innerHTML = `<span class="coin-icon">${Icons.get('coins', 16)}</span> +${amount} <span class="coin-reason">${reason}</span>`;
     document.body.appendChild(popup);
     setTimeout(() => popup.classList.add('show'), 10);
     setTimeout(() => { popup.classList.remove('show'); setTimeout(() => popup.remove(), 300); }, 2500);
@@ -363,7 +364,7 @@ const Gamification = {
           <h3 class="level-up-title">Tier Up!</h3>
           <div class="level-up-number">${tier.title}</div>
           <div class="level-up-name">Tier ${tier.level} of 5</div>
-          <button class="btn btn-primary" onclick="document.getElementById('level-modal').remove()">Let's Go! 🚀</button>
+          <button class="btn btn-primary" onclick="document.getElementById('level-modal').remove()">${Icons.get('rocket', 14)} Let's Go!</button>
         </div>
       </div>
     `;
@@ -374,12 +375,12 @@ const Gamification = {
     const html = `
       <div class="modal-backdrop" id="grace-modal" onclick="if(event.target===this)this.remove()" style="z-index:10000;">
         <div class="level-up-modal" style="max-width:340px;">
-          <div class="level-up-icon">🛡️</div>
+          <div class="level-up-icon">${Icons.get('shield', 32)}</div>
           <h3 class="level-up-title">Grace Day Used!</h3>
           <div class="level-up-name" style="font-size:14px;color:var(--text-muted);">
             You missed yesterday, but your grace day saved your streak!
           </div>
-          <button class="btn btn-primary" onclick="document.getElementById('grace-modal').remove()" style="margin-top:16px;">Awesome! 🎉</button>
+          <button class="btn btn-primary" onclick="document.getElementById('grace-modal').remove()" style="margin-top:16px;">${Icons.get('sparkles', 14)} Awesome!</button>
         </div>
       </div>
     `;
@@ -395,8 +396,8 @@ const Gamification = {
           <h3 class="reward-modal-title">Reward Unlocked!</h3>
           <p class="reward-modal-name">${reward.title}</p>
           <p class="reward-modal-desc">${reward.desc}</p>
-          ${reward.coins ? `<div class="reward-coins">+${reward.coins} 💰</div>` : ''}
-          <button class="btn btn-primary" onclick="document.getElementById('reward-modal').remove()">Awesome! 🎉</button>
+          ${reward.coins ? `<div class="reward-coins">+${reward.coins} ${Icons.get('coins', 14)}</div>` : ''}
+          <button class="btn btn-primary" onclick="document.getElementById('reward-modal').remove()">${Icons.get('sparkles', 14)} Awesome!</button>
         </div>
       </div>
     `;

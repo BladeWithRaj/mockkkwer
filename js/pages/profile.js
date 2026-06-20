@@ -13,7 +13,7 @@ const ProfilePage = {
     const userName = user?.username || user?.name || Storage.getUsername() || 'User';
     const tier = data.level;
 
-    const avatarHTML = '👤';
+    const avatarHTML = Icons.get('user', 32);
 
     return `
       <div class="profile-page container page-enter">
@@ -27,19 +27,19 @@ const ProfilePage = {
           <div class="profile-stats-grid">
             <div class="profile-stat">
               <div class="profile-stat-value">${data.streak.current}</div>
-              <div class="profile-stat-label">🔥 Streak</div>
+              <div class="profile-stat-label">${Icons.get('flame', 12)} Streak</div>
             </div>
             <div class="profile-stat">
               <div class="profile-stat-value">${data.coins}</div>
-              <div class="profile-stat-label">💰 Coins</div>
+              <div class="profile-stat-label">${Icons.get('coins', 12)} Coins</div>
             </div>
             <div class="profile-stat">
               <div class="profile-stat-value">${data.totalTests}</div>
-              <div class="profile-stat-label">📝 Tests</div>
+              <div class="profile-stat-label">${Icons.get('fileText', 12)} Tests</div>
             </div>
             <div class="profile-stat">
               <div class="profile-stat-value">${data.avgAccuracy}%</div>
-              <div class="profile-stat-label">🎯 Avg Acc.</div>
+              <div class="profile-stat-label">${Icons.get('target', 12)} Avg Acc.</div>
             </div>
           </div>
         </div>
@@ -59,7 +59,7 @@ const ProfilePage = {
           </div>
           ${data.graceDays > 0 ? `
             <div style="margin-top:var(--space-2);font-size:var(--text-xs);color:var(--text-muted);">
-              🛡️ ${data.graceDays} Grace Day${data.graceDays > 1 ? 's' : ''} available
+              ${Icons.get('shield', 14)} ${data.graceDays} Grace Day${data.graceDays > 1 ? 's' : ''} available
             </div>
           ` : ''}
         </div>
@@ -79,8 +79,8 @@ const ProfilePage = {
 
         <!-- Actions -->
         <div class="animate-fadeInUp stagger-5" style="display:flex;gap:var(--space-3);margin-top:var(--space-4);">
-          <button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.navigate('home')">🏠 Home</button>
-          <button class="btn btn-secondary btn-lg" style="flex:1;" onclick="App.navigate('dashboard')">📊 Dashboard</button>
+          <button class="btn btn-primary btn-lg" style="flex:1;" onclick="App.navigate('home')">${Icons.get('home', 16)} Home</button>
+          <button class="btn btn-secondary btn-lg" style="flex:1;" onclick="App.navigate('dashboard')">${Icons.get('barChart', 16)} Dashboard</button>
         </div>
       </div>
     `;
@@ -144,24 +144,24 @@ const ProfilePage = {
         </div>
         <div class="card" style="padding:var(--space-4);text-align:center;">
           <div style="font-size:var(--text-2xl);font-weight:var(--font-extrabold);color:var(--text-primary);">${data.streak.best}</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);">🏆 Best Streak</div>
+          <div style="font-size:var(--text-xs);color:var(--text-muted);">${Icons.get('trophy', 12)} Best Streak</div>
         </div>
         <div class="card" style="padding:var(--space-4);text-align:center;">
           <div style="font-size:var(--text-2xl);font-weight:var(--font-extrabold);color:var(--text-primary);">${data.graceDays}</div>
-          <div style="font-size:var(--text-xs);color:var(--text-muted);">🛡️ Grace Days</div>
+          <div style="font-size:var(--text-xs);color:var(--text-muted);">${Icons.get('shield', 12)} Grace Days</div>
         </div>
       </div>
 
       ${weakSubjects.length > 0 ? `
         <div class="card" style="padding:var(--space-4);border-left:3px solid var(--danger);margin-bottom:var(--space-3);">
-          <div style="font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--danger);margin-bottom:var(--space-1);">⚠️ Needs Work</div>
+          <div style="font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--danger);margin-bottom:var(--space-1);">${Icons.get('alertTriangle', 14)} Needs Work</div>
           <div style="font-size:var(--text-sm);color:var(--text-muted);">${weakSubjects.map(s => `${s.subject} (${s.accuracy}%)`).join(', ')}</div>
         </div>
       ` : ''}
 
       ${strongSubjects.length > 0 ? `
         <div class="card" style="padding:var(--space-4);border-left:3px solid var(--success);">
-          <div style="font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--success);margin-bottom:var(--space-1);">💪 Strong Areas</div>
+          <div style="font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--success);margin-bottom:var(--space-1);">${Icons.get('zap', 14)} Strong Areas</div>
           <div style="font-size:var(--text-sm);color:var(--text-muted);">${strongSubjects.map(s => `${s.subject} (${s.accuracy}%)`).join(', ')}</div>
         </div>
       ` : ''}
@@ -176,8 +176,8 @@ const ProfilePage = {
           const unlocked = data.rewards.includes(r.id);
           return `
             <div class="badge-card ${unlocked ? 'unlocked' : 'locked'}">
-              <div class="badge-icon">${r.title.split(' ')[0]}</div>
-              <div class="badge-name">${r.title.substring(r.title.indexOf(' ') + 1)}</div>
+              <div class="badge-icon">${Icons.get(r.iconKey, 28)}</div>
+              <div class="badge-name">${r.title}</div>
               <div class="badge-desc">${r.desc}</div>
             </div>
           `;
@@ -195,7 +195,7 @@ const ProfilePage = {
     // Use coin transactions from cached profile if available
     return `
       <div class="card" style="padding:var(--space-5);text-align:center;margin-bottom:var(--space-4);">
-        <div style="font-size:40px;margin-bottom:var(--space-2);">💰</div>
+        <div style="font-size:40px;margin-bottom:var(--space-2);">${Icons.get('wallet', 40)}</div>
         <div style="font-size:var(--text-3xl);font-weight:var(--font-extrabold);color:var(--text-primary);">${data.coins}</div>
         <div style="font-size:var(--text-sm);color:var(--text-muted);">Current Balance</div>
       </div>
@@ -227,7 +227,7 @@ const ProfilePage = {
     return `
       <!-- Trend Chart -->
       <div class="card" style="padding:var(--space-4);margin-bottom:var(--space-4);">
-        <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">📈 Score Trend (Last 15 Tests)</h4>
+        <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">${Icons.get('trendingUp', 16)} Score Trend (Last 15 Tests)</h4>
         ${trends.length >= 2 ? `
           <div style="height:160px;position:relative;">
             <canvas id="profile-trend-chart" style="width:100%;height:100%;display:block;"></canvas>
@@ -242,15 +242,15 @@ const ProfilePage = {
       <!-- Subject Breakdown -->
       ${subjects.length > 0 ? `
         <div class="card" style="padding:var(--space-4);margin-bottom:var(--space-4);">
-          <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">📊 Subject Analytics</h4>
+          <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">${Icons.get('barChart', 16)} Subject Analytics</h4>
           <div style="display:flex;flex-direction:column;gap:var(--space-3);">
             ${subjects.map(s => {
               const barColor = s.accuracy >= 70 ? 'var(--success)' : s.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
-              const emoji = s.accuracy >= 70 ? '🟢' : s.accuracy >= 40 ? '🟡' : '🔴';
+              const statusDot = s.accuracy >= 70 ? '●' : s.accuracy >= 40 ? '●' : '●';
               return `
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-1);font-size:var(--text-sm);">
-                    <span style="font-weight:var(--font-semibold);">${emoji} ${s.subject}</span>
+                    <span style="font-weight:var(--font-semibold);"><span style="color:${barColor};font-size:10px;">${statusDot}</span> ${s.subject}</span>
                     <span style="color:${barColor};font-weight:var(--font-bold);">${s.accuracy}%
                       <span style="color:var(--text-muted);font-weight:normal;">(${s.correct}/${(s.correct || 0) + (s.wrong || 0)})</span>
                     </span>
@@ -268,7 +268,7 @@ const ProfilePage = {
       <!-- Smart Recommendations -->
       ${recommendations.length > 0 ? `
         <div class="card" style="padding:var(--space-4);">
-          <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">🧠 Recommendations</h4>
+          <h4 style="font-size:var(--text-sm);font-weight:var(--font-semibold);margin-bottom:var(--space-3);">${Icons.get('brain', 16)} Recommendations</h4>
           <div style="display:flex;flex-direction:column;gap:var(--space-3);">
             ${recommendations.map(r => {
               const borderColor = r.priority === 'high' ? 'var(--danger)' : r.priority === 'positive' ? 'var(--success)' : 'var(--warning)';

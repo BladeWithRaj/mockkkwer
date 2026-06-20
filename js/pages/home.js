@@ -1,25 +1,26 @@
 // ============================================
-// HOME PAGE V5 — Premium SaaS-Level Exam Platform
-// Stunning visuals, all features, Polytechnic restored
+// HOME PAGE V6 — Precision Prep Design System
+// Satoshi headings · Lucide icons · No orbs
 // ============================================
 
 const HomePage = {
   _expandedCategory: null,
 
-  // ── Board design tokens (fallback for styling) ──
+  // ── Board design tokens ──
   _boardDesignTokens: {
-    'SSC': { color: '#2563EB', gradient: 'linear-gradient(135deg, #2563EB, #3B82F6)', label: 'SSC', desc: 'Staff Selection Commission' },
-    'Railway': { color: '#059669', gradient: 'linear-gradient(135deg, #059669, #10B981)', label: 'Railway', desc: 'Railway Recruitment Board' },
-    'Banking': { color: '#7C3AED', gradient: 'linear-gradient(135deg, #7C3AED, #8B5CF6)', label: 'Banking', desc: 'IBPS & Bank Exams' },
-    'UPSC': { color: '#9333EA', gradient: 'linear-gradient(135deg, #9333EA, #A855F7)', label: 'UPSC', desc: 'Union Public Service Commission' },
-    'Teaching': { color: '#0891B2', gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)', label: 'Teaching', desc: 'CTET & Teaching Exams' },
-    'Defence': { color: '#DC2626', gradient: 'linear-gradient(135deg, #DC2626, #EF4444)', label: 'Defence', desc: 'CDS, NDA & Defence Exams' },
-    'State': { color: '#D97706', gradient: 'linear-gradient(135deg, #D97706, #F59E0B)', label: 'State Exams', desc: 'State Level Examinations' },
-    'Quick': { color: '#F59E0B', gradient: 'linear-gradient(135deg, #F59E0B, #FBBF24)', label: 'Quick Modes' },
-    'Daily': { color: '#EF4444', gradient: 'linear-gradient(135deg, #EF4444, #F87171)', label: 'Daily' }
+    'SSC': { color: 'var(--board-ssc)', icon: 'clipboard', label: 'SSC', desc: 'Staff Selection Commission' },
+    'Railway': { color: 'var(--board-railway)', icon: 'train', label: 'Railway', desc: 'Railway Recruitment Board' },
+    'Banking': { color: 'var(--board-banking)', icon: 'landmark', label: 'Banking', desc: 'IBPS & Bank Exams' },
+    'UPSC': { color: 'var(--board-upsc)', icon: 'scale', label: 'UPSC', desc: 'Union Public Service Commission' },
+    'Teaching': { color: 'var(--board-teaching)', icon: 'graduationCap', label: 'Teaching', desc: 'CTET & Teaching Exams' },
+    'Defence': { color: 'var(--board-defence)', icon: 'shield', label: 'Defence', desc: 'CDS, NDA & Defence Exams' },
+    'State': { color: 'var(--board-state)', icon: 'building', label: 'State Exams', desc: 'State Level Examinations' },
+    'Quick': { color: '#F59E0B', icon: 'zap', label: 'Quick Modes' },
+    'Daily': { color: '#EF4444', icon: 'flame', label: 'Daily' }
   },
 
   _fallbackColors: ['#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6', '#06B6D4', '#84CC16'],
+  _fallbackIcons: ['fileText', 'bookOpen', 'brain', 'target', 'listChecks', 'activity', 'graduationCap'],
 
   _getBoards() {
     const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
@@ -29,9 +30,8 @@ const HomePage = {
     for (const preset of allPresets) {
       const cat = preset.category || 'Other';
       if (cat === 'Quick' || cat === 'Daily') continue;
-      if (!boardMap[cat]) boardMap[cat] = { id: cat, exams: [], icons: new Set() };
+      if (!boardMap[cat]) boardMap[cat] = { id: cat, exams: [] };
       boardMap[cat].exams.push(preset);
-      if (preset.icon && preset.icon !== '📝') boardMap[cat].icons.add(preset.icon);
     }
 
     let colorIdx = 0;
@@ -44,9 +44,8 @@ const HomePage = {
         .join(' · ');
       return {
         id: board.id,
-        icon: [...board.icons][0] || board.exams[0]?.icon || '📝',
+        icon: tokens.icon || this._fallbackIcons[colorIdx % this._fallbackIcons.length],
         color: tokens.color || this._fallbackColors[colorIdx++ % this._fallbackColors.length],
-        gradient: tokens.gradient || `linear-gradient(135deg, ${tokens.color || '#6366F1'}, ${tokens.color || '#8B5CF6'})`,
         label: tokens.label || board.id,
         desc: tokens.desc || '',
         exams: examNames,
@@ -58,26 +57,32 @@ const HomePage = {
 
   _getDefaultBoards() {
     return [
-      { id: 'SSC', icon: '🎯', color: '#2563EB', gradient: 'linear-gradient(135deg, #2563EB, #3B82F6)', label: 'SSC', desc: 'Staff Selection Commission', exams: 'CGL · CHSL · MTS · GD · Stenographer', count: 5 },
-      { id: 'Railway', icon: '🚆', color: '#059669', gradient: 'linear-gradient(135deg, #059669, #10B981)', label: 'Railway', desc: 'Railway Recruitment Board', exams: 'NTPC · Group D · ALP · JE', count: 4 },
-      { id: 'Banking', icon: '🏦', color: '#7C3AED', gradient: 'linear-gradient(135deg, #7C3AED, #8B5CF6)', label: 'Banking', desc: 'IBPS & Bank Exams', exams: 'IBPS PO · SBI Clerk · RBI Assistant', count: 3 },
-      { id: 'UPSC', icon: '🏛️', color: '#9333EA', gradient: 'linear-gradient(135deg, #9333EA, #A855F7)', label: 'UPSC', desc: 'Union Public Service Commission', exams: 'Prelims · CSAT · NDA', count: 3 },
-      { id: 'Teaching', icon: '📚', color: '#0891B2', gradient: 'linear-gradient(135deg, #0891B2, #06B6D4)', label: 'Teaching', desc: 'CTET & Teaching Exams', exams: 'CTET · SUPER TET · KVS', count: 3 },
-      { id: 'Defence', icon: '🎖️', color: '#DC2626', gradient: 'linear-gradient(135deg, #DC2626, #EF4444)', label: 'Defence', desc: 'CDS, NDA & Defence Exams', exams: 'CDS · NDA · AFCAT', count: 3 }
+      { id: 'SSC', icon: 'clipboard', color: 'var(--board-ssc)', label: 'SSC', desc: 'Staff Selection Commission', exams: 'CGL · CHSL · MTS · GD · Stenographer', count: 5 },
+      { id: 'Railway', icon: 'train', color: 'var(--board-railway)', label: 'Railway', desc: 'Railway Recruitment Board', exams: 'NTPC · Group D · ALP · JE', count: 4 },
+      { id: 'Banking', icon: 'landmark', color: 'var(--board-banking)', label: 'Banking', desc: 'IBPS & Bank Exams', exams: 'IBPS PO · SBI Clerk · RBI Assistant', count: 3 },
+      { id: 'UPSC', icon: 'scale', color: 'var(--board-upsc)', label: 'UPSC', desc: 'Union Public Service Commission', exams: 'Prelims · CSAT · NDA', count: 3 },
+      { id: 'Teaching', icon: 'graduationCap', color: 'var(--board-teaching)', label: 'Teaching', desc: 'CTET & Teaching Exams', exams: 'CTET · SUPER TET · KVS', count: 3 },
+      { id: 'Defence', icon: 'shield', color: 'var(--board-defence)', label: 'Defence', desc: 'CDS, NDA & Defence Exams', exams: 'CDS · NDA · AFCAT', count: 3 }
     ];
   },
 
   _getPopularExams() {
     const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
+    const iconMap = { SSC: 'clipboard', Railway: 'train', Banking: 'landmark', UPSC: 'scale', Teaching: 'graduationCap', Defence: 'shield' };
     return allPresets
       .filter(p => p.category !== 'Quick' && p.category !== 'Daily')
       .slice(0, 6)
       .map(p => ({
         id: p.id,
         name: p.name,
-        icon: p.icon || '📝',
+        icon: iconMap[p.category] || 'fileText',
         meta: `${p.totalQuestions}Q · ${Math.round(p.totalTime / 60)} min · ${p.negativeMarking ? '-' + p.negativeValue : 'No neg'}`
       }));
+  },
+
+  _boardIcon(name, color) {
+    const svg = Icons.get(name);
+    return `<div class="hp5-board-icon" style="--bc: ${color}">${svg}</div>`;
   },
 
   render() {
@@ -92,14 +97,11 @@ const HomePage = {
     const totalQuestions = allPresets.reduce((sum, p) => sum + (p.totalQuestions || 0), 0);
 
     return `
-      <div class="page-enter hp-v5">
+      <div class="page-enter-v3 hp-v5">
 
-        <!-- ═══════════ HERO ═══════════ -->
+        <!-- ═══ HERO ═══ -->
         <section class="hp5-hero">
           <div class="hp5-hero-bg">
-            <div class="hp5-hero-orb hp5-orb-1"></div>
-            <div class="hp5-hero-orb hp5-orb-2"></div>
-            <div class="hp5-hero-orb hp5-orb-3"></div>
             <div class="hp5-hero-grid"></div>
           </div>
 
@@ -110,20 +112,21 @@ const HomePage = {
             </div>
 
             <h1 class="hp5-title">
-              Real <span class="hp5-gradient-text">CBT Simulation</span> for Government Exams
+              Practice with <em>real exam interfaces</em> before the real day
             </h1>
 
             <p class="hp5-subtitle">
-              Practice SSC, Railway, Banking & UPSC mock tests with exam-center interfaces. Feel the pressure before the real day.
+              CBT simulation for SSC, Railway, Banking & UPSC. Same interface, same pressure, better preparation.
             </p>
 
             <div class="hp5-hero-actions">
-              <button class="hp5-btn-glow" onclick="document.getElementById('board-section').scrollIntoView({behavior:'smooth'})" id="hero-explore-btn">
+              <button class="hp5-btn-primary" onclick="document.getElementById('board-section').scrollIntoView({behavior:'smooth'})" id="hero-explore-btn">
                 <span>Explore Exams</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                ${Icons.get('arrowRight', 18)}
               </button>
-              <button class="hp5-btn-glass" onclick="App.navigate('setup')" id="hero-custom-btn">
-                <span>⚡ Quick Test</span>
+              <button class="hp5-btn-secondary" onclick="App.navigate('setup')" id="hero-custom-btn">
+                ${Icons.get('zap', 16)}
+                <span>Quick Test</span>
               </button>
             </div>
 
@@ -131,12 +134,12 @@ const HomePage = {
             <div class="hp5-resume">
               <button class="hp5-resume-btn" onclick="App.navigate('test')">
                 <span class="hp5-resume-pulse"></span>
-                Continue Your Test →
+                Continue Your Test
+                ${Icons.get('arrowRight', 14)}
               </button>
             </div>
             ` : ''}
 
-            <!-- Stats -->
             <div class="hp5-hero-stats">
               <div class="hp5-hstat">
                 <span class="hp5-hstat-num">${totalQuestions || 500}+</span>
@@ -161,29 +164,26 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══════════ POLYTECHNIC FLAGSHIP ═══════════ -->
+        <!-- ═══ POLYTECHNIC ═══ -->
         <section class="hp5-container">
           <div class="hp5-poly" onclick="window.location.href='/polytechnic-important-paper/'" id="polytechnic-feature-card">
-            <div class="hp5-poly-glow"></div>
             <div class="hp5-poly-inner">
               <div class="hp5-poly-left">
-                <div class="hp5-poly-badge">📄 BTEUP AUTHENTIC</div>
+                <div class="hp5-poly-badge">${Icons.get('fileText', 14)} BTEUP Authentic</div>
                 <h2 class="hp5-poly-title">Polytechnic Paper Generator</h2>
                 <p class="hp5-poly-desc">Real BTEUP format · 60 Marks · Part A-D · All units covered · Print-ready A4</p>
                 <div class="hp5-poly-chips">
-                  <span>✓ Real BTEUP Format</span>
-                  <span>✓ 60 Marks Paper</span>
-                  <span>✓ Hindi / English</span>
-                  <span>✓ Print Ready</span>
+                  <span>${Icons.get('check', 12)} Real Format</span>
+                  <span>${Icons.get('check', 12)} 60 Marks</span>
+                  <span>${Icons.get('check', 12)} Hindi / English</span>
+                  <span>${Icons.get('check', 12)} Print Ready</span>
                 </div>
                 <button class="hp5-poly-cta" onclick="event.stopPropagation(); window.location.href='/polytechnic-important-paper/'">
-                  Generate Paper →
+                  Generate Paper ${Icons.get('arrowRight', 14)}
                 </button>
               </div>
               <div class="hp5-poly-right">
-                <div class="hp5-poly-visual" style="position:relative">
-                  <div style="position:absolute;top:-8px;right:-8px;font-size:16px;animation:hp5pulse 2s infinite">✨</div>
-                  <div style="position:absolute;bottom:-6px;left:-6px;font-size:14px;animation:hp5pulse 2s .5s infinite">💫</div>
+                <div class="hp5-poly-visual">
                   <div class="hp5-poly-paper">
                     <div class="hp5-pp-header">BOARD OF TECHNICAL EDUCATION</div>
                     <div class="hp5-pp-sub">POLYTECHNIC EXAM</div>
@@ -199,7 +199,7 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══════════ BOARD GRID ═══════════ -->
+        <!-- ═══ BOARD GRID ═══ -->
         <section class="hp5-container" id="board-section">
           <div class="hp5-section-head">
             <h2>Choose Your Board</h2>
@@ -207,27 +207,27 @@ const HomePage = {
           </div>
 
           <div class="hp5-board-grid">
-            ${this._getBoards().map((board, i) => `
+            ${this._getBoards().map(board => `
               <div class="hp5-board-card"
-                   style="--bc: ${board.color}; --bg: ${board.gradient}; animation-delay: ${0.06 * i}s;"
+                   style="--bc: ${board.color}; --bg: ${board.color};"
                    onclick="App.navigate('board', {id: '${board.id}'})"
                    id="board-card-${board.id}">
                 <div class="hp5-board-top">
-                  <div class="hp5-board-icon">${board.icon}</div>
-                  <div class="hp5-board-arrow">→</div>
+                  <div class="hp5-board-icon">${Icons.get(board.icon, 22)}</div>
+                  <div class="hp5-board-arrow">${Icons.get('arrowRight', 16)}</div>
                 </div>
                 <div class="hp5-board-name">${board.label}</div>
                 <div class="hp5-board-desc">${board.desc || board.exams}</div>
                 <div class="hp5-board-tags">${board.exams}</div>
                 <div class="hp5-board-footer">
-                  <span class="hp5-board-count">${board.count} Exams Available</span>
+                  <span class="hp5-board-count">${board.count} Exams</span>
                 </div>
               </div>
             `).join('')}
           </div>
         </section>
 
-        <!-- ═══════════ QUICK PRACTICE ═══════════ -->
+        <!-- ═══ QUICK PRACTICE ═══ -->
         <section class="hp5-container">
           <div class="hp5-section-head">
             <h2>Quick Practice</h2>
@@ -235,19 +235,17 @@ const HomePage = {
           </div>
 
           <div class="hp5-modes-grid">
-            <!-- Daily Challenge -->
             <div class="hp5-mode-card hp5-mode-daily" ${dailyDone ? '' : 'onclick="HomePage.startDailyChallenge()"'} id="action-daily">
-              <div class="hp5-mode-icon">🔥</div>
+              <div class="hp5-mode-icon" style="color: var(--warning)">${Icons.get('flame', 20)}</div>
               <div class="hp5-mode-body">
                 <div class="hp5-mode-title">Daily Challenge</div>
                 <div class="hp5-mode-meta">15 Questions · 10 Minutes</div>
               </div>
-              <div class="hp5-mode-action ${dailyDone ? 'done' : ''}">${dailyDone ? '✅ Done' : 'Start →'}</div>
+              <div class="hp5-mode-action ${dailyDone ? 'done' : ''}">${dailyDone ? Icons.get('check', 14) + ' Done' : 'Start →'}</div>
             </div>
 
-            <!-- Quick 10 -->
             <div class="hp5-mode-card hp5-mode-quick" onclick="HomePage.startQuickMode('quick-10')" id="action-quick10">
-              <div class="hp5-mode-icon">⚡</div>
+              <div class="hp5-mode-icon" style="color: var(--primary)">${Icons.get('zap', 20)}</div>
               <div class="hp5-mode-body">
                 <div class="hp5-mode-title">Quick 10</div>
                 <div class="hp5-mode-meta">10 Mixed Questions · 5 Minutes</div>
@@ -255,9 +253,8 @@ const HomePage = {
               <div class="hp5-mode-action">Start →</div>
             </div>
 
-            <!-- Custom Test -->
             <div class="hp5-mode-card hp5-mode-custom" onclick="App.navigate('setup')" id="action-custom">
-              <div class="hp5-mode-icon">🎯</div>
+              <div class="hp5-mode-icon" style="color: var(--secondary)">${Icons.get('target', 20)}</div>
               <div class="hp5-mode-body">
                 <div class="hp5-mode-title">Custom Test</div>
                 <div class="hp5-mode-meta">Pick subjects, time & difficulty</div>
@@ -265,9 +262,8 @@ const HomePage = {
               <div class="hp5-mode-action">Create →</div>
             </div>
 
-            <!-- Rival Battle -->
             <div class="hp5-mode-card hp5-mode-battle" onclick="App.navigate('battle')" id="action-battle">
-              <div class="hp5-mode-icon">⚔️</div>
+              <div class="hp5-mode-icon" style="color: var(--danger)">${Icons.get('swords', 20)}</div>
               <div class="hp5-mode-body">
                 <div class="hp5-mode-title">Rival Battle</div>
                 <div class="hp5-mode-meta">5 Rounds · AI Opponent · Ranked</div>
@@ -277,7 +273,7 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══════════ POPULAR EXAMS ═══════════ -->
+        <!-- ═══ POPULAR EXAMS ═══ -->
         <section class="hp5-container">
           <div class="hp5-section-head">
             <h2>Popular Exams</h2>
@@ -288,7 +284,7 @@ const HomePage = {
             ${this._getPopularExams().map((exam, i) => `
               <div class="hp5-popular-card" onclick="HomePage.startPresetExam('${exam.id}')" id="popular-${exam.id}">
                 <div class="hp5-pop-rank">${i + 1}</div>
-                <div class="hp5-pop-icon">${exam.icon}</div>
+                <div class="hp5-pop-icon">${Icons.get(exam.icon, 20)}</div>
                 <div class="hp5-pop-info">
                   <div class="hp5-pop-name">${exam.name}</div>
                   <div class="hp5-pop-meta">${exam.meta}</div>
@@ -299,53 +295,7 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══════════ EXAM DASHBOARDS (Direct Links) ═══════════ -->
-        <section class="hp5-container">
-          <div class="hp5-section-head">
-            <h2>📋 Exam Dashboards</h2>
-            <p>Complete exam info, selection stages, syllabus & mock tests</p>
-          </div>
-
-          <div class="hp5-modes-grid">
-            <div class="hp5-mode-card" onclick="App.navigate('exam', {id: 'ssc-cgl'})" id="dash-ssc-cgl" style="cursor:pointer">
-              <div class="hp5-mode-icon">🎯</div>
-              <div class="hp5-mode-body">
-                <div class="hp5-mode-title">SSC CGL 2026</div>
-                <div class="hp5-mode-meta">Tier 1 · Tier 2 · DEST · CPT · PYQs</div>
-              </div>
-              <div class="hp5-mode-action">Open →</div>
-            </div>
-
-            <div class="hp5-mode-card" onclick="App.navigate('exam', {id: 'ssc-chsl'})" id="dash-ssc-chsl" style="cursor:pointer">
-              <div class="hp5-mode-icon">📝</div>
-              <div class="hp5-mode-body">
-                <div class="hp5-mode-title">SSC CHSL 2026</div>
-                <div class="hp5-mode-meta">Tier 1 · Tier 2 · DEST · Skill Test</div>
-              </div>
-              <div class="hp5-mode-action">Open →</div>
-            </div>
-
-            <div class="hp5-mode-card" onclick="App.navigate('exam', {id: 'rrb-ntpc'})" id="dash-rrb-ntpc" style="cursor:pointer">
-              <div class="hp5-mode-icon">🚆</div>
-              <div class="hp5-mode-body">
-                <div class="hp5-mode-title">RRB NTPC 2026</div>
-                <div class="hp5-mode-meta">CBT 1 · CBT 2 · Typing · Medical</div>
-              </div>
-              <div class="hp5-mode-action">Open →</div>
-            </div>
-
-            <div class="hp5-mode-card" onclick="App.navigate('exam', {id: 'ibps-po'})" id="dash-ibps-po" style="cursor:pointer">
-              <div class="hp5-mode-icon">🏦</div>
-              <div class="hp5-mode-body">
-                <div class="hp5-mode-title">IBPS PO 2026</div>
-                <div class="hp5-mode-meta">Prelims · Mains · Interview</div>
-              </div>
-              <div class="hp5-mode-action">Open →</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ═══════════ WHY US ═══════════ -->
+        <!-- ═══ WHY US ═══ -->
         <section class="hp5-container">
           <div class="hp5-section-head">
             <h2>Why Mock24hr?</h2>
@@ -354,34 +304,33 @@ const HomePage = {
 
           <div class="hp5-features-grid">
             <div class="hp5-feature-card">
-              <div class="hp5-feat-icon" style="--fc: #3B82F6;">🖥️</div>
+              <div class="hp5-feat-icon" style="--fc: #3B82F6;">${Icons.get('monitor', 22)}</div>
               <h3>Real CBT Interface</h3>
               <p>Exact replica of TCS iON, RRB, IBPS exam screens</p>
             </div>
             <div class="hp5-feature-card">
-              <div class="hp5-feat-icon" style="--fc: #8B5CF6;">📝</div>
+              <div class="hp5-feat-icon" style="--fc: #8B5CF6;">${Icons.get('fileText', 22)}</div>
               <h3>PYQ Based Questions</h3>
               <p>Previous year patterns with updated syllabus coverage</p>
             </div>
             <div class="hp5-feature-card">
-              <div class="hp5-feat-icon" style="--fc: #10B981;">📊</div>
+              <div class="hp5-feat-icon" style="--fc: #10B981;">${Icons.get('barChart', 22)}</div>
               <h3>Deep Analytics</h3>
               <p>Section-wise analysis, accuracy trends & time insights</p>
             </div>
             <div class="hp5-feature-card">
-              <div class="hp5-feat-icon" style="--fc: #F59E0B;">📱</div>
+              <div class="hp5-feat-icon" style="--fc: #F59E0B;">${Icons.get('smartphone', 22)}</div>
               <h3>Works Everywhere</h3>
               <p>Mobile optimized. Install as app. Zero downloads.</p>
             </div>
           </div>
         </section>
 
-        <!-- ═══════════ STREAK + PROGRESS ═══════════ -->
+        <!-- ═══ STREAK + PROGRESS ═══ -->
         <section class="hp5-container">
           <div class="hp5-twin-row">
-            <!-- Streak -->
-            <div class="hp5-info-card hp5-streak-card">
-              <div class="hp5-info-icon">${streakAlive ? '🔥' : '❄️'}</div>
+            <div class="hp5-info-card">
+              <div class="hp5-info-icon" style="color: ${streakAlive ? 'var(--warning)' : 'var(--text-muted)'}">${Icons.get(streakAlive ? 'flame' : 'clock', 24)}</div>
               <div class="hp5-info-body">
                 <div class="hp5-info-big">${streak.current}</div>
                 <div class="hp5-info-label">Day Streak</div>
@@ -389,9 +338,8 @@ const HomePage = {
               </div>
             </div>
 
-            <!-- Progress -->
-            <div class="hp5-info-card hp5-progress-card">
-              <div class="hp5-info-icon">📊</div>
+            <div class="hp5-info-card">
+              <div class="hp5-info-icon" style="color: var(--primary)">${Icons.get('target', 24)}</div>
               <div class="hp5-info-body">
                 <div class="hp5-info-big">${this._getAccuracy()}%</div>
                 <div class="hp5-info-label">Overall Accuracy</div>
@@ -401,7 +349,7 @@ const HomePage = {
           </div>
         </section>
 
-        <!-- ═══════════ FOOTER ═══════════ -->
+        <!-- ═══ FOOTER ═══ -->
         <footer class="hp5-footer">
           <div class="hp5-footer-inner">
             <div class="hp5-footer-brand">
@@ -428,14 +376,6 @@ const HomePage = {
                 <a href="#battle">Rival Battle</a>
                 <a href="#profile">Profile & Rewards</a>
                 <a href="#analytics">Analytics</a>
-              </div>
-              <div class="hp5-footer-col">
-                <h4>Dashboards</h4>
-                <a href="#exam?id=ssc-cgl">SSC CGL</a>
-                <a href="#exam?id=ssc-chsl">SSC CHSL</a>
-                <a href="#exam?id=rrb-ntpc">RRB NTPC</a>
-                <a href="#exam?id=ibps-po">IBPS PO</a>
-                <a href="#board?id=SSC">All SSC Exams</a>
               </div>
             </div>
           </div>
@@ -477,7 +417,7 @@ const HomePage = {
   },
 
   async startDailyChallenge() {
-    if (DailySystem.isDailyDone()) { Helpers.showToast('Daily challenge already completed today! 🎉', 'info'); return; }
+    if (DailySystem.isDailyDone()) { Helpers.showToast('Daily challenge already completed today!', 'info'); return; }
     const config = DailySystem.getDailyConfig();
     if (!config) { Helpers.showToast('Could not load daily challenge config', 'error'); return; }
     App.navigate('setup', {
@@ -500,6 +440,6 @@ const HomePage = {
   },
 
   afterRender() {
-    if (window.trackEvent) window.trackEvent("page_view", { page: "home_v5" });
+    if (window.trackEvent) window.trackEvent("page_view", { page: "home_v6" });
   }
 };

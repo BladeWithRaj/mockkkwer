@@ -284,7 +284,7 @@ const ExamDetailPage = {
           <div class="bp-stages-list">
             ${exam.stages.map((stage, i) => `
               <div class="bp-stage-card ${stage.status === 'coming' ? 'bp-stage-coming' : 'bp-stage-live-clickable'}"
-                   style="animation: hp-fadeUp 0.4s ${0.06 * i}s ease both;${stage.status === 'live' ? 'cursor:pointer;' : ''}"
+                   style="animation: fadeInUp 0.4s ${0.06 * i}s ease both;${stage.status === 'live' ? 'cursor:pointer;' : ''}"
                    ${stage.status === 'live' ? `onclick="HomePage.startPresetExam('${examId}')"` : ''}>
                 <div class="bp-stage-left">
                   <span class="bp-stage-icon">${stage.icon}</span>
@@ -311,7 +311,7 @@ const ExamDetailPage = {
           <p class="bp-section-sub">Start a full-length mock test now</p>
           <div class="bp-exam-grid">
             ${matchingPresets.map((preset, i) => `
-              <div class="bp-exam-card" style="animation: hp-fadeUp 0.4s ${0.05 * i}s ease both;">
+              <div class="bp-exam-card" style="animation: fadeInUp 0.4s ${0.05 * i}s ease both;">
                 <div class="bp-exam-top">
                   <span class="bp-exam-icon">${preset.icon || exam.icon}</span>
                   <span class="bp-exam-badge" style="--board-color: ${exam.color};">${preset.category || exam.board}</span>
@@ -410,7 +410,7 @@ const ExamDetailPage = {
 
         <!-- Back -->
         <div style="text-align: center; padding: 0 24px 48px;">
-          <button class="hp-btn-secondary" onclick="App.navigate('board', {id: '${exam.board}'})" style="font-size: 14px;">
+          <button class="hp5-btn-secondary" onclick="App.navigate('board', {id: '${exam.board}'})" style="font-size: 14px;">
             ← Back to ${exam.board} Exams
           </button>
         </div>
