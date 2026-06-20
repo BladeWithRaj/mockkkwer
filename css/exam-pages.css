@@ -38,21 +38,21 @@
   --board-color: #60a5fa;
   --board-color-light: #a4c9ff;
   --board-color-dark: #3b82f6;
-  --board-glow: rgba(96, 165, 250, 0.2);
-  --board-bg: rgba(96, 165, 250, 0.08);
+  --board-glow: rgba(96, 165, 250, 0.08);
+  --board-bg: rgba(96, 165, 250, 0.03);
 
   /* ── Stage type accent colors ── */
   --stage-color: var(--board-color);
 }
 
 /* Board-specific colors */
-[data-board="ssc"]     { --board-color: #3B82F6; --board-color-light: #60A5FA; --board-color-dark: #2563EB; --board-glow: rgba(59,130,246,0.2); --board-bg: rgba(59,130,246,0.06); }
-[data-board="railway"] { --board-color: #10B981; --board-color-light: #34D399; --board-color-dark: #059669; --board-glow: rgba(16,185,129,0.2); --board-bg: rgba(16,185,129,0.06); }
-[data-board="upsc"]    { --board-color: #D946EF; --board-color-light: #E879F9; --board-color-dark: #C026D3; --board-glow: rgba(217,70,239,0.2); --board-bg: rgba(217,70,239,0.06); }
-[data-board="banking"] { --board-color: #8B5CF6; --board-color-light: #A78BFA; --board-color-dark: #7C3AED; --board-glow: rgba(139,92,246,0.2); --board-bg: rgba(139,92,246,0.06); }
-[data-board="defence"] { --board-color: #EF4444; --board-color-light: #F87171; --board-color-dark: #DC2626; --board-glow: rgba(239,68,68,0.2); --board-bg: rgba(239,68,68,0.06); }
-[data-board="teaching"]{ --board-color: #06B6D4; --board-color-light: #22D3EE; --board-color-dark: #0891B2; --board-glow: rgba(6,182,212,0.2); --board-bg: rgba(6,182,212,0.06); }
-[data-board="state"]   { --board-color: #F59E0B; --board-color-light: #FBBF24; --board-color-dark: #D97706; --board-glow: rgba(245,158,11,0.2); --board-bg: rgba(245,158,11,0.06); }
+[data-board="ssc"]     { --board-color: #3B82F6; --board-color-light: #60A5FA; --board-color-dark: #2563EB; --board-glow: rgba(59,130,246,0.08); --board-bg: rgba(59,130,246,0.03); }
+[data-board="railway"] { --board-color: #10B981; --board-color-light: #34D399; --board-color-dark: #059669; --board-glow: rgba(16,185,129,0.08); --board-bg: rgba(16,185,129,0.03); }
+[data-board="upsc"]    { --board-color: #D946EF; --board-color-light: #E879F9; --board-color-dark: #C026D3; --board-glow: rgba(217,70,239,0.08); --board-bg: rgba(217,70,239,0.03); }
+[data-board="banking"] { --board-color: #8B5CF6; --board-color-light: #A78BFA; --board-color-dark: #7C3AED; --board-glow: rgba(139,92,246,0.08); --board-bg: rgba(139,92,246,0.03); }
+[data-board="defence"] { --board-color: #EF4444; --board-color-light: #F87171; --board-color-dark: #DC2626; --board-glow: rgba(239,68,68,0.08); --board-bg: rgba(239,68,68,0.03); }
+[data-board="teaching"]{ --board-color: #06B6D4; --board-color-light: #22D3EE; --board-color-dark: #0891B2; --board-glow: rgba(6,182,212,0.08); --board-bg: rgba(6,182,212,0.03); }
+[data-board="state"]   { --board-color: #F59E0B; --board-color-light: #FBBF24; --board-color-dark: #D97706; --board-glow: rgba(245,158,11,0.08); --board-bg: rgba(245,158,11,0.03); }
 
 body {
   font-family: var(--font-body);

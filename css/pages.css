@@ -19,7 +19,7 @@
   transform: translateX(-50%);
   width: 600px;
   height: 400px;
-  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.12), transparent 70%);
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.04), transparent 70%);
   pointer-events: none;
 }
 
@@ -3353,7 +3353,7 @@
   transform: translateX(-50%);
   width: 400px;
   height: 300px;
-  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.12), transparent 70%);
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.04), transparent 70%);
   pointer-events: none;
 }
 
