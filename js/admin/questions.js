@@ -18,8 +18,9 @@ window.AdminQuestions = {
         headers: { 'Authorization': 'Bearer ' + AdminCore.token } 
       });
       if (r.status === 401) {
-        window.location.href = '/secure-admin-login/';
-        return;
+        console.warn('Backend returned 401, ignored in no-login mode.');
+        // window.location.href = '/secure-admin-login/';
+        // return;
       }
       const d = await r.json();
       if (!d.success) throw new Error(d.error);

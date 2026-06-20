@@ -86,10 +86,10 @@ const App = {
       }
 
       // If no session — show username modal and wait
-      if (!Auth.isAuthenticated()) {
-        const user = await Auth.showUsernameModal();
-        console.log("🎉 Welcome,", user.username);
-      }
+      // if (!Auth.isAuthenticated()) {
+      //   const user = await Auth.showUsernameModal();
+      //   console.log("🎉 Welcome,", user.username);
+      // }
 
       // No full DB fetch on startup for scalability
       window.QUESTION_BANK = [];

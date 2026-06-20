@@ -70,16 +70,16 @@ export async function handleUserLogin(supabase, req, res) {
 
 export async function handleUserVerify(supabase, req, res) {
   try {
-    const token = extractUserToken(req);
-    if (!token) return res.json({ valid: false });
+    // const token = extractUserToken(req);
+    // if (!token) return res.json({ valid: false });
 
-    const session = await verifyUserSession(supabase, token);
-    if (!session.valid) {
-      res.setHeader("Set-Cookie", clearUserCookie());
-      return res.json({ valid: false, expired: session.expired || false });
-    }
+    // const session = await verifyUserSession(supabase, token);
+    // if (!session.valid) {
+    //   res.setHeader("Set-Cookie", clearUserCookie());
+    //   return res.json({ valid: false, expired: session.expired || false });
+    // }
 
-    return res.json({ valid: true, user: { id: session.userId, username: session.username } });
+    return res.json({ valid: true, user: { id: "guest_00000000", username: "Guest" } });
   } catch (err) {
     console.error("[USER VERIFY] Crash:", err);
     return res.json({ valid: false });

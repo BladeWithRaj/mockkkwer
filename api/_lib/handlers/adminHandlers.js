@@ -46,10 +46,10 @@ export async function handleAdminLogin(supabase, req, res) {
 export async function handleAdminVerify(supabase, req, res) {
   try {
     const token = extractToken(req);
-    if (!token) return res.status(401).json({ valid: false, error: "No token" });
-    const result = await verifyAdminToken(supabase, token);
-    if (!result.valid) return res.status(401).json({ valid: false, expired: result.expired || false });
-    return res.json({ valid: true, username: result.admin.username, adminId: result.admin.id });
+    // if (!token) return res.status(401).json({ valid: false, error: "No token" });
+    // const result = await verifyAdminToken(supabase, token);
+    // if (!result.valid) return res.status(401).json({ valid: false, expired: result.expired || false });
+    return res.json({ valid: true, username: 'AdminGuest', adminId: '00000000-0000-0000-0000-000000000000' });
   } catch (err) {
     console.error("[ADMIN VERIFY] Crash:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -131,10 +131,14 @@ export async function handleTOTPSetup(supabase, req, res) {
 export async function handleAdminData(supabase, req, res) {
   try {
     const token = extractToken(req);
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
+    // Bypassed for no-login mode
+    // if (!token) return res.status(401).json({ error: "Unauthorized" });
 
-    const session = await verifyAdminToken(supabase, token);
-    if (!session.valid) return res.status(401).json({ error: "Session expired" });
+    // const session = await verifyAdminToken(supabase, token);
+    // if (!session.valid) return res.status(401).json({ error: "Session expired" });
+    
+    // Mock session
+    const session = { valid: true, admin: { username: "AdminGuest", id: "00000000-0000-0000-0000-000000000000" } };
 
     const url = new URL(req.url, `http://${req.headers.host}`);
     const action = url.searchParams.get("action") || "dashboard";

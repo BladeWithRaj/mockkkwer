@@ -11,45 +11,40 @@ const Auth = {
   // ── Init — Check if user has active session ──
 
   async init() {
+    // ── No-Login Mode: Set guest user IMMEDIATELY so pages never crash ──
+    this._currentUser = { id: 'guest_user', username: 'Guest', name: 'Guest' };
+    this._ready = true;
+
+    // Try local cache first for returning users
+    const cached = this._getLocalCache();
+    if (cached && cached.id && cached.username) {
+      this._currentUser = cached;
+      console.log("✅ Loaded cached user:", cached.username);
+    }
+
+    // Best-effort: try API verify to upgrade identity (non-blocking)
     try {
       const resp = await fetch('/api/user-verify', { credentials: 'include' });
-      const data = await resp.json();
-
-      if (data.valid && data.user) {
-        this._currentUser = {
-          id: data.user.id,
-          username: data.user.username,
-          name: data.user.username
-        };
-        this._ready = true;
-
-        // Sync to localStorage for renderers (display name only)
-        localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
-        localStorage.setItem("mocktest_user_id", this._currentUser.id);
-
-        if (typeof Storage !== 'undefined' && Storage.setUsername) {
-          Storage.setUsername(this._currentUser.username);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.valid && data.user) {
+          this._currentUser = {
+            id: data.user.id,
+            username: data.user.username,
+            name: data.user.username
+          };
+          localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
+          localStorage.setItem("mocktest_user_id", this._currentUser.id);
+          if (typeof Storage !== 'undefined' && Storage.setUsername) {
+            Storage.setUsername(this._currentUser.username);
+          }
+          console.log("✅ Session verified:", this._currentUser.username);
         }
-
-        console.log("✅ Session verified:", this._currentUser.username);
-        return;
       }
     } catch (e) {
-      console.warn("Session verify failed:", e.message);
+      // Silent — guest mode continues
+      console.log("ℹ️ Guest mode active (API unavailable)");
     }
-
-    // No valid session — try local cache for offline display
-    const cached = this._getLocalCache();
-    if (cached) {
-      this._currentUser = cached;
-      this._ready = true;
-      console.log("⚠️ Using cached identity (no active session):", cached.username);
-      return;
-    }
-
-    // No session, no cache — show username modal
-    console.log("🔐 No session. Username modal will be triggered by App.");
-    this._ready = false;
   },
 
   // ── Local cache (display only, NOT for auth) ──
@@ -331,8 +326,8 @@ const Auth = {
 
   // ── Public API ──
 
-  isAuthenticated() { return this._ready && !!this._currentUser; },
-  getUser() { return this._currentUser; },
+  isAuthenticated() { return true; }, // Bypass login
+  getUser() { return this._currentUser || { id: 'guest_user', username: 'Guest', name: 'Guest' }; },
   async getSessionToken() { return null; }, // Cookie-based, no manual token needed
 
   async signOut() {

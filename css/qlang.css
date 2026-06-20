@@ -93,8 +93,8 @@
 
 /* ── Dark theme adjustments ── */
 [data-theme="dark"] .qlang-toggle {
-  background: #1e293b;
-  border-color: #334155;
+  background: #111111;
+  border-color: #222222;
 }
 
 [data-theme="dark"] .qlang-label {
@@ -102,14 +102,14 @@
 }
 
 [data-theme="dark"] .qlang-btn {
-  background: #0f172a;
-  color: #cbd5e1;
-  border-color: #334155;
+  background: #000000;
+  color: #ffffff;
+  border-color: #222222;
 }
 
 [data-theme="dark"] .qlang-btn:hover {
-  background: #1e293b;
-  border-color: #475569;
+  background: #1a1a1a;
+  border-color: #333333;
 }
 
 [data-theme="dark"] .qlang-btn.active {
@@ -119,9 +119,9 @@
 }
 
 [data-theme="dark"] .qlang-btn-mini {
-  background: #0f172a;
-  color: #cbd5e1;
-  border-color: #334155;
+  background: #000000;
+  color: #ffffff;
+  border-color: #222222;
 }
 
 [data-theme="dark"] .qlang-btn-mini.active {

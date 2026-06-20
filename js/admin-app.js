@@ -13,24 +13,24 @@ const AdminApp = {
   sections: ['dashboard', 'questions', 'add', 'bulk-upload', 'analytics'],
 
   async init() {
-    // Role-based Auth Check
+    // Role-based Auth Check Bypassed
     if (window.Auth) {
       await window.Auth.init();
-      if (!Auth.isAuthenticated()) {
-        await Auth.showUsernameModal();
-      }
-      const user = window.Auth.getUser();
-      if (!window.Auth.isVerified() || !user) {
-        window.location.href = "index.html";
-        return;
-      }
-
-      const isAdmin = window.checkAdminRole ? await window.checkAdminRole(user.id) : false;
-      if (!isAdmin) {
-        alert("Unauthorized: Administrator access required.");
-        window.location.href = "index.html";
-        return;
-      }
+      // Bypass modal
+      // if (!Auth.isAuthenticated()) {
+      //   await Auth.showUsernameModal();
+      // }
+      // const user = window.Auth.getUser();
+      // if (!window.Auth.isVerified() || !user) {
+      //   window.location.href = "index.html";
+      //   return;
+      // }
+      // const isAdmin = window.checkAdminRole ? await window.checkAdminRole(user.id) : false;
+      // if (!isAdmin) {
+      //   alert("Unauthorized: Administrator access required.");
+      //   window.location.href = "index.html";
+      //   return;
+      // }
     }
 
     // Show loading state

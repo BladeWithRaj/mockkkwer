@@ -54,24 +54,27 @@
 
   // ── Auth Guard (Bearer token from localStorage) ──
   (async () => {
-    if (!ADMIN_TOKEN) { window.location.href = '/secure-admin-login/'; return; }
+    // Bypassed for no-login mode
+    // if (!ADMIN_TOKEN) { window.location.href = '/secure-admin-login/'; return; }
     try {
-      const r = await fetch('/api/admin-verify', { headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } });
-      const d = await r.json();
-      if (!d.valid) throw 0;
-      adminUser = d;
+      // const r = await fetch('/api/admin-verify', { headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } });
+      // const d = await r.json();
+      // if (!d.valid) throw 0;
+      
+      // Mock admin user
+      adminUser = { username: 'AdminGuest', role: 'admin' };
       
       // Initialize AdminCore for external modules
       window.AdminCore = {
-        token: ADMIN_TOKEN,
+        token: ADMIN_TOKEN || 'dummy-token',
         user: adminUser,
         showToast: showToast
       };
-      document.getElementById('adminName').textContent = d.username;
+      document.getElementById('adminName').textContent = adminUser.username;
       document.getElementById('authGuard').style.display = 'none';
       document.getElementById('adminShell').style.display = 'block';
       loadTab('dashboard');
-    } catch(e) { localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; }
+    } catch(e) { console.error('Admin init error', e); /* localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; */ }
   })();
 
   function switchTab(t) {
@@ -108,7 +111,7 @@
       opts.body = JSON.stringify(body);
     }
     const r = await fetch(url, opts);
-    if (r.status === 401) { localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; throw new Error('Session expired'); }
+    if (r.status === 401) { console.warn('401 ignored for no-login mode'); /* localStorage.removeItem('admin_token'); window.location.href = '/secure-admin-login/'; throw new Error('Session expired'); */ }
     const d = await r.json();
     if (!d.success && d.error) throw new Error(d.error);
     return d;
@@ -145,7 +148,7 @@
     const params = new URLSearchParams({ action:'questions', page:qPage, search:qSearch });
     if (qSubject) params.set('subject', qSubject);
     const r = await fetch(`/api/admin-data?${params}`, { credentials:'include' });
-    if (r.status === 401) return window.location.href = '/secure-admin-login/';
+    if (r.status === 401) { console.warn('401 ignored in no-login mode'); /* return window.location.href = '/secure-admin-login/'; */ }
     const d = await r.json();
     if (!d.success) throw new Error(d.error);
     const labels = ['A','B','C','D'];
@@ -796,7 +799,7 @@
     try { await fetch('/api/admin-logout', { method:'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN } }); } catch(e){}
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
-    window.location.href = '/secure-admin-login/';
+    window.location.href = '/';
   }
 
   function showToast(msg, type='info') {

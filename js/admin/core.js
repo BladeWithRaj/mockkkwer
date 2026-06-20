@@ -13,28 +13,33 @@ window.AdminCore = {
   qSubject: '',
   
   async init() {
-    if (!this.token) {
-      window.location.href = '/secure-admin-login/';
-      return;
-    }
+    // Bypass for no-login mode
+    // if (!this.token) {
+    //   window.location.href = '/secure-admin-login/';
+    //   return;
+    // }
     
     try {
-      const r = await fetch('/api/admin-verify', { 
-        headers: { 'Authorization': 'Bearer ' + this.token } 
-      });
-      const d = await r.json();
+      // const r = await fetch('/api/admin-verify', { 
+      //   headers: { 'Authorization': 'Bearer ' + this.token } 
+      // });
+      // const d = await r.json();
+      // 
+      // if (!d.valid) throw new Error('Invalid token');
       
-      if (!d.valid) throw new Error('Invalid token');
-      
+      const d = { valid: true, username: 'AdminGuest', role: 'admin' };
       this.adminUser = d;
+      this.token = this.token || 'dummy-token';
+      
       document.getElementById('adminName').textContent = d.username;
       document.getElementById('authGuard').style.display = 'none';
       document.getElementById('adminShell').style.display = 'block';
       
       this.loadTab('dashboard');
     } catch (e) {
-      localStorage.removeItem('admin_token');
-      window.location.href = '/secure-admin-login/';
+      console.error(e);
+      // localStorage.removeItem('admin_token');
+      // window.location.href = '/secure-admin-login/';
     }
   },
   
@@ -83,9 +88,10 @@ window.AdminCore = {
     
     const r = await fetch(url, opts);
     if (r.status === 401) {
-      localStorage.removeItem('admin_token');
-      window.location.href = '/secure-admin-login/';
-      throw new Error('Session expired');
+      console.warn('Backend returned 401, ignored in no-login mode.');
+      // localStorage.removeItem('admin_token');
+      // window.location.href = '/secure-admin-login/';
+      // throw new Error('Session expired');
     }
     
     const d = await r.json();
@@ -94,16 +100,16 @@ window.AdminCore = {
   },
   
   async logout() {
-    try {
-      await fetch('/api/admin-logout', { 
-        method: 'POST', 
-        headers: { 'Authorization': 'Bearer ' + this.token } 
-      });
-    } catch(e) {}
+    // try {
+    //   await fetch('/api/admin-logout', { 
+    //     method: 'POST', 
+    //     headers: { 'Authorization': 'Bearer ' + this.token } 
+    //   });
+    // } catch(e) {}
     
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
-    window.location.href = '/secure-admin-login/';
+    window.location.href = '/';
   },
   
   showToast(msg, type = 'info') {
