@@ -50,6 +50,16 @@ const FirebaseAuth = {
         this._handleAuthChange(user);
       });
 
+      // Handle redirect result (fallback when popup is blocked)
+      try {
+        const redirectResult = await this._auth.getRedirectResult();
+        if (redirectResult && redirectResult.user) {
+          console.log('🔁 Redirect sign-in result received:', redirectResult.user.displayName);
+        }
+      } catch (redirectErr) {
+        console.log('ℹ️ No redirect result:', redirectErr.message);
+      }
+
       this._initialized = true;
       console.log('🔥 Firebase Auth initialized');
     } catch (err) {
@@ -236,42 +246,93 @@ const FirebaseAuth = {
     return `${base}_${suffix}`;
   },
 
-  // ── Sign In with Google (popup) ──
+  // ── Sign In with Google ──
   async signInWithGoogle() {
     try {
+      // Auto-initialize if not done yet
       if (!this._auth) {
-        console.error('Firebase not initialized');
-        Helpers.showToast('Login not available right now', 'error');
+        console.log('🔥 Auto-initializing Firebase...');
+        await this.init();
+      }
+
+      if (!this._auth) {
+        console.error('Firebase Auth could not be initialized');
+        if (window.Helpers) Helpers.showToast('Login service unavailable. Try refreshing.', 'error');
         return null;
       }
 
       // Show loading
       this._showLoginLoading(true);
 
-      const result = await this._auth.signInWithPopup(this._provider);
-      const user = result.user;
+      // Detect mobile or cross-origin (use redirect for better compatibility)
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Mobile: always use redirect (popups are unreliable)
+        console.log('📱 Mobile detected — using redirect sign-in');
+        if (window.Helpers) Helpers.showToast('Redirecting to Google...', 'info');
+        await this._auth.signInWithRedirect(this._provider);
+        return null;
+      }
 
-      console.log('🎉 Google Sign-In successful:', user.displayName);
-      Helpers.showToast(`Welcome, ${user.displayName}! 🎉`, 'success');
+      // Desktop: try popup first
+      try {
+        const result = await this._auth.signInWithPopup(this._provider);
+        const user = result.user;
 
-      this._showLoginLoading(false);
-      this._updateLoginUI(true);
+        console.log('🎉 Google Sign-In successful:', user.displayName);
+        if (window.Helpers) Helpers.showToast(`Welcome, ${user.displayName}! 🎉`, 'success');
 
-      return user;
+        this._showLoginLoading(false);
+        this._updateLoginUI(true);
+
+        // Re-render page to reflect login state
+        setTimeout(() => {
+          if (window.App && App.currentPage) {
+            App.navigate(App.currentPage, App.params || {});
+          }
+        }, 300);
+
+        return user;
+      } catch (popupErr) {
+        console.error('Popup sign-in error:', popupErr.code, popupErr.message);
+
+        // Popup blocked → fallback to redirect
+        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+          console.log('Popup blocked, using redirect fallback...');
+          if (window.Helpers) Helpers.showToast('Redirecting to Google Sign-In...', 'info');
+          await this._auth.signInWithRedirect(this._provider);
+          return null;
+        }
+
+        if (popupErr.code === 'auth/popup-closed-by-user') {
+          this._showLoginLoading(false);
+          return null;
+        }
+
+        // Domain not authorized
+        if (popupErr.code === 'auth/unauthorized-domain') {
+          const domain = window.location.hostname;
+          console.error('❌ Domain not authorized:', domain);
+          if (window.Helpers) Helpers.showToast(`Add "${domain}" in Firebase Console → Auth → Settings → Authorized domains`, 'error');
+          this._showLoginLoading(false);
+          return null;
+        }
+
+        // Internal error (often means Google provider not enabled)
+        if (popupErr.code === 'auth/internal-error' || popupErr.code === 'auth/operation-not-allowed') {
+          console.error('❌ Google Sign-In not enabled in Firebase Console');
+          if (window.Helpers) Helpers.showToast('Google Sign-In is not enabled. Contact admin.', 'error');
+          this._showLoginLoading(false);
+          return null;
+        }
+
+        throw popupErr;
+      }
     } catch (err) {
       this._showLoginLoading(false);
-
-      if (err.code === 'auth/popup-closed-by-user') {
-        console.log('Login cancelled by user');
-        return null;
-      }
-      if (err.code === 'auth/popup-blocked') {
-        Helpers.showToast('Popup blocked — please allow popups', 'warning');
-        return null;
-      }
-
-      console.error('Google Sign-In error:', err);
-      Helpers.showToast('Login failed. Please try again.', 'error');
+      console.error('Google Sign-In error:', err.code, err.message);
+      if (window.Helpers) Helpers.showToast('Login failed: ' + (err.message || 'Unknown error'), 'error');
       return null;
     }
   },

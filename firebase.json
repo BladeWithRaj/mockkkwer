@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Mock24hr",
+        "supportEmail": "gulshanrajboy@gmail.com"
+      }
+    }
+  }
+}
