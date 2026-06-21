@@ -1,6 +1,6 @@
 // ============================================
-// RESULT PAGE v2 — Premium Analytics Dashboard
-// Ultra-Black theme with glassmorphism & gradient accents
+// RESULT PAGE v3 — Lumina Analytics Dashboard
+// Stitch-designed ultra-black glassmorphism system
 // ============================================
 
 const ResultPage = {
@@ -492,7 +492,7 @@ const ResultPage = {
         </div>
 
         <!-- Mistake Book Playlist Creator -->
-        <div class="rp-card mistake-book-result-card animate-fadeInUp stagger-3" style="border: 1px solid rgba(239, 68, 68, 0.15); background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(0, 0, 0, 0) 100%);">
+        <div class="rp-card rp-mistake-card animate-fadeInUp stagger-3">
           <div class="rp-card-header">
             <div class="rp-card-icon red">${Icons.get('bookMarked', 18)}</div>
             <div>
@@ -501,10 +501,10 @@ const ResultPage = {
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-            <p style="margin: 0; font-size: var(--text-sm); color: var(--text-secondary); line-height: var(--leading-relaxed);">
+            <p class="rp-mistake-desc">
               You have <strong>${result.wrong + result.skipped}</strong> incorrect or skipped questions in this mock test. Add them to your local <strong>Mistake Book</strong> to generate customized revision tests and strengthen your weak areas.
             </p>
-            <div style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
+            <div class="rp-mistake-actions">
               <button class="btn btn-secondary btn-sm" onclick="ResultPage.saveAllMistakes()" id="save-mistakes-btn" style="border-color: rgba(239, 68, 68, 0.25); color: #f87171; background: rgba(239, 68, 68, 0.05); font-weight: var(--font-medium); height: 36px; display: inline-flex; align-items: center; gap: 8px;">
                 ${Icons.get('plusCircle', 14)} Add Mistakes to Revision Playlist
               </button>
@@ -652,13 +652,13 @@ const ResultPage = {
               <div class="rp-card-subtitle">Custom guidelines for next steps</div>
             </div>
           </div>
-          <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+          <div class="rp-rec-list">
             ${insights.recommendations.map(rec => `
-              <div style="display: flex; gap: var(--space-3); background: rgba(255,255,255,0.01); border: 1px solid var(--border-light); padding: var(--space-4); border-radius: var(--radius-md); border-left: 3px solid ${rec.color};">
-                <div style="color: ${rec.color}; margin-top: 2px;">${Icons.get(rec.icon, 18)}</div>
+              <div class="rp-rec-item" style="border-left: 3px solid ${rec.color};">
+                <div class="rp-rec-icon" style="color: ${rec.color};">${Icons.get(rec.icon, 18)}</div>
                 <div>
-                  <div style="font-weight: var(--font-semibold); font-size: var(--text-sm); color: var(--text-primary); margin-bottom: 2px;">${rec.title}</div>
-                  <div style="font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.4;">${rec.text}</div>
+                  <div class="rp-rec-title">${rec.title}</div>
+                  <div class="rp-rec-text">${rec.text}</div>
                 </div>
               </div>
             `).join('')}
@@ -674,14 +674,14 @@ const ResultPage = {
               <div class="rp-card-subtitle">Click rows to review answers or solutions</div>
             </div>
           </div>
-          <div style="max-height: 350px; overflow-y: auto; border: 1px solid var(--border-light); border-radius: var(--radius-lg); background: var(--bg-glass);">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <div class="rp-review-wrap">
+            <table class="rp-review-table">
               <thead>
-                <tr style="border-bottom: 1px solid var(--border-light); background: rgba(255,255,255,0.02);">
-                  <th style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--text-muted); font-weight: var(--font-semibold);">Q#</th>
-                  <th style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--text-muted); font-weight: var(--font-semibold);">Subject & Topic</th>
-                  <th style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--text-muted); font-weight: var(--font-semibold);">Status</th>
-                  <th style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs); color: var(--text-muted); font-weight: var(--font-semibold); text-align: right;">Time Spent</th>
+                <tr>
+                  <th>Q#</th>
+                  <th>Subject & Topic</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Time Spent</th>
                 </tr>
               </thead>
               <tbody>
@@ -689,19 +689,16 @@ const ResultPage = {
                   const statusColor = q.isCorrect ? 'var(--success)' : q.isSkipped ? 'var(--text-muted)' : 'var(--danger)';
                   const statusLabel = q.isCorrect ? 'Correct' : q.isSkipped ? 'Skipped' : 'Incorrect';
                   return `
-                    <tr style="border-bottom: 1px solid var(--border-light); transition: background var(--transition-fast); cursor: pointer;"
-                        onclick="ResultPage.selectScatterQuestion(${idx});"
-                        onmouseover="this.style.background='rgba(255,255,255,0.01)'"
-                        onmouseout="this.style.background='transparent'">
-                      <td style="padding: var(--space-3) var(--space-4); font-size: var(--text-sm); font-family: var(--font-mono); font-weight: var(--font-medium);">${idx + 1}</td>
-                      <td style="padding: var(--space-3) var(--space-4); font-size: var(--text-sm);">
-                        <div style="font-weight: var(--font-medium); color: var(--text-primary);">${q.question?.subject || 'Subject'}</div>
-                        <div style="font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px;">${q.question?.topic || 'General Topic'}</div>
+                    <tr onclick="ResultPage.selectScatterQuestion(${idx});">
+                      <td>${idx + 1}</td>
+                      <td>
+                        <div class="rp-review-subject">${q.question?.subject || 'Subject'}</div>
+                        <div class="rp-review-topic">${q.question?.topic || 'General Topic'}</div>
                       </td>
-                      <td style="padding: var(--space-3) var(--space-4); font-size: var(--text-xs);">
-                        <span class="chip" style="background: rgba(255,255,255,0.01); border: 1px solid ${statusColor}; color: ${statusColor};">${statusLabel}</span>
+                      <td>
+                        <span class="rp-status-chip" style="border: 1px solid ${statusColor}; color: ${statusColor};">${statusLabel}</span>
                       </td>
-                      <td style="padding: var(--space-3) var(--space-4); font-size: var(--text-sm); font-family: var(--font-mono); text-align: right; font-weight: var(--font-medium);">${q.timeSpent || 0}s</td>
+                      <td>${q.timeSpent || 0}s</td>
                     </tr>
                   `;
                 }).join('')}
@@ -1094,36 +1091,36 @@ const ResultPage = {
         </div>
 
         ${gam.rewards.map(r => `
-          <div class="reward-line" style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-2) 0; border-bottom: 1px solid var(--border-light);">
-            <div class="reward-line-left" style="display: flex; align-items: center; gap: var(--space-2);">
+          <div class="rp-reward-line">
+            <div class="rp-reward-left">
               <span>${r.icon}</span>
-              <span style="font-size: var(--text-sm); font-weight: var(--font-medium);">${r.label}</span>
+              <span>${r.label}</span>
             </div>
-            <div class="reward-line-right" style="display: flex; gap: var(--space-2); align-items: center;">
-              <span class="reward-coins-badge" style="display: inline-flex; align-items: center; gap: 4px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: var(--warning-light); font-size: var(--text-xs); padding: 2px 6px; border-radius: var(--radius-sm); font-family: var(--font-mono);">${Icons.get('coins', 12)} +${r.coins}</span>
-              <span class="reward-xp-badge" style="background: rgba(79,110,247,0.1); border: 1px solid rgba(79,110,247,0.2); color: var(--primary-light); font-size: var(--text-xs); padding: 2px 6px; border-radius: var(--radius-sm); font-family: var(--font-mono);">+${r.xp} XP</span>
+            <div class="rp-reward-right">
+              <span class="rp-coins-badge">${Icons.get('coins', 12)} +${r.coins}</span>
+              <span class="rp-xp-badge">+${r.xp} XP</span>
             </div>
           </div>
         `).join('')}
 
-        <div class="rewards-total" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-4); font-weight: bold; font-size: var(--text-sm);">
+        <div class="rp-rewards-total">
           <span>Total Earned</span>
-          <div style="display:flex; gap:var(--space-2);">
-            <span class="rewards-total-coins" style="color: var(--warning-light); display: flex; align-items: center; gap: 4px;">${Icons.get('coins', 14)} +${gam.totalCoins}</span>
-            <span class="rewards-total-xp" style="color: var(--primary-light); display: flex; align-items: center; gap: 4px;">${Icons.get('zap', 14)} +${gam.totalXP} XP</span>
+          <div class="rp-rewards-total-vals">
+            <span style="color: var(--warning-light); display: flex; align-items: center; gap: 4px;">${Icons.get('coins', 14)} +${gam.totalCoins}</span>
+            <span style="color: var(--primary-light); display: flex; align-items: center; gap: 4px;">${Icons.get('zap', 14)} +${gam.totalXP} XP</span>
           </div>
         </div>
 
         ${gam.combo >= 5 ? `
-          <div style="margin-top:var(--space-3); text-align:center; font-size:var(--text-sm); color:var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <div class="rp-combo-line">
             ${Icons.get('flame', 14)} Best Combo: ${gam.combo}x in a row!
           </div>
         ` : ''}
 
-        <div style="margin-top:var(--space-4); text-align:center; border-top: 1px solid var(--border-light); padding-top: var(--space-3);">
-          <span class="xp-level-badge" style="display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); font-weight: var(--font-semibold); color: var(--success-light);">${Icons.get('star', 14)} ${gam.level.title} — Tier ${gam.level.level}/5</span>
-          <div class="xp-bar-wrap" style="margin-top:var(--space-2); width:100%; height: 6px; background: rgba(255,255,255,0.04); border-radius: var(--radius-full); overflow: hidden;">
-            <div class="xp-bar-fill" style="width:${gam.level.progress}%; height: 100%; background: var(--success); border-radius: var(--radius-full);"></div>
+        <div class="rp-level-footer">
+          <span class="rp-level-badge">${Icons.get('star', 14)} ${gam.level.title} — Tier ${gam.level.level}/5</span>
+          <div class="rp-xp-track">
+            <div class="rp-xp-fill" style="width:${gam.level.progress}%;"></div>
           </div>
         </div>
       </div>
@@ -1159,16 +1156,16 @@ const ResultPage = {
           </div>
         </div>
 
-        <div class="progress-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-6);">
+        <div class="rp-progress-grid">
           ${percentile !== null ? `
-          <div class="rp-stat-box" style="background: rgba(255,255,255,0.01);">
+          <div class="rp-progress-stat">
             <div class="rp-stat-num" style="color: var(--primary-light); font-size: var(--text-lg);">${percentile}%</div>
             <div class="rp-stat-label">Percentile</div>
           </div>
           ` : ''}
 
           ${improvement ? `
-          <div class="rp-stat-box" style="background: rgba(255,255,255,0.01);">
+          <div class="rp-progress-stat">
             <div class="rp-stat-num" style="color: ${trendColor}; font-size: var(--text-lg); display: flex; align-items: center; justify-content: center; gap: 4px;">
               ${trendIcon} ${deltaSign}${improvement.accuracyDelta}%
             </div>
@@ -1176,14 +1173,14 @@ const ResultPage = {
           </div>
           ` : ''}
 
-          <div class="rp-stat-box" style="background: rgba(255,255,255,0.01);">
+          <div class="rp-progress-stat">
             <div class="rp-stat-num" style="color: var(--warning-light); font-size: var(--text-lg); display: flex; align-items: center; justify-content: center; gap: 4px;">
               ${Icons.get('flame', 16)} ${progress.currentStreak}
             </div>
             <div class="rp-stat-label">Day Streak</div>
           </div>
 
-          <div class="rp-stat-box" style="background: rgba(255,255,255,0.01);">
+          <div class="rp-progress-stat">
             <div class="rp-stat-num" style="color: var(--success-light); font-size: var(--text-lg);">
               ${progress.bestAccuracy}%
             </div>
@@ -1192,16 +1189,16 @@ const ResultPage = {
         </div>
 
         ${timeline.length >= 2 ? `
-        <div class="timeline-section" style="border-top: 1px solid var(--border-light); padding-top: var(--space-4);">
-          <div class="rp-card-subtitle" style="margin-bottom: var(--space-4); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;">Accuracy Timeline</div>
-          <div class="timeline-bars" style="display: flex; align-items: flex-end; gap: var(--space-3); height: 100px; justify-content: space-around;">
+        <div class="rp-timeline-section">
+          <div class="rp-timeline-label">Accuracy Timeline</div>
+          <div class="rp-timeline-bars">
             ${timeline.map((t, i) => {
               const barColor = t.accuracy >= 70 ? 'var(--success)' : t.accuracy >= 40 ? 'var(--warning)' : 'var(--danger)';
               const isLast = i === timeline.length - 1;
               return `
-                <div class="timeline-bar-col" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--space-2); height: 100%; justify-content: flex-end;">
-                  <span class="timeline-bar-pct ${isLast ? 'current' : ''}" style="font-size: 10px; font-family: var(--font-mono); color: ${isLast ? 'var(--primary-light)' : 'var(--text-muted)'}; font-weight: ${isLast ? 'bold' : 'normal'};">${t.accuracy}%</span>
-                  <div class="timeline-bar-track" style="width: 100%; max-width: 24px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); flex: 1; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;">
+                <div class="rp-timeline-col">
+                  <span class="rp-timeline-pct ${isLast ? 'current' : ''}">${t.accuracy}%</span>
+                  <div class="rp-timeline-track">
                     <div class="timeline-bar-fill" data-target="${t.accuracy}" style="width:100%; height:0%; background: ${barColor}; border-radius: var(--radius-sm); transition: height 0.8s ease-out ${i * 80}ms;"></div>
                   </div>
                 </div>
@@ -1228,11 +1225,11 @@ const ResultPage = {
             <div class="rp-card-subtitle">${allDone ? '<span style="color: var(--success);">All Complete!</span>' : 'Complete goals to unlock premium bonus XP'}</div>
           </div>
         </div>
-        <div class="daily-goals-list" style="display: flex; flex-direction: column; gap: var(--space-3);">
+        <div class="rp-goals-list">
           ${goals.map(g => `
-            <div class="daily-goal-item ${g.done ? 'done' : ''}" style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01); border: 1px solid var(--border-light); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); opacity: ${g.done ? 0.6 : 1};">
-              <span class="daily-goal-text" style="font-size: var(--text-sm); font-weight: var(--font-medium);">${g.icon} ${g.text}</span>
-              <span class="daily-goal-check" style="color: ${g.done ? 'var(--success)' : 'var(--text-muted)'};">${g.done ? Icons.get('checkCircle', 16) : Icons.get('target', 16)}</span>
+            <div class="rp-goal-item ${g.done ? 'done' : ''}">
+              <span class="rp-goal-text">${g.icon} ${g.text}</span>
+              <span style="color: ${g.done ? 'var(--success)' : 'var(--text-muted)'};">${g.done ? Icons.get('checkCircle', 16) : Icons.get('target', 16)}</span>
             </div>
           `).join('')}
         </div>
@@ -1255,16 +1252,16 @@ const ResultPage = {
             <div class="rp-card-subtitle">${earned.length} achievements unlocked in your career</div>
           </div>
         </div>
-        <div class="badges-grid" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+        <div class="rp-badges-grid">
           ${earned.map(b => `
-            <div class="badge-pill" style="display: flex; align-items: center; gap: var(--space-2); background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15); color: var(--success-light); padding: var(--space-2) var(--space-4); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: var(--font-semibold);">
+            <div class="rp-badge-pill">
               <span>${Icons.get(b.iconKey || 'award', 14)}</span>
               <span>${b.name}</span>
             </div>
           `).join('')}
         </div>
         ${badges.filter(b => !b.earned).length > 0 ? `
-          <div class="badges-remaining" style="margin-top: var(--space-4); font-size: var(--text-xs); color: var(--text-muted); text-align: center;">
+          <div class="rp-badges-remaining">
             ${badges.filter(b => !b.earned).length} more badges to unlock
           </div>
         ` : ''}
