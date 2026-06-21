@@ -253,9 +253,9 @@ const TestEngine = {
       subjectWise[q.subject].total++;
 
       // Track topic-wise
-      const topicKey = `${q.subject} - ${q.topic}`;
+      const topicKey = q.topic ? `${q.subject} - ${q.topic}` : q.subject;
       if (!topicWise[topicKey]) {
-        topicWise[topicKey] = { total: 0, correct: 0, wrong: 0, subject: q.subject, topic: q.topic };
+        topicWise[topicKey] = { total: 0, correct: 0, wrong: 0, subject: q.subject, topic: q.topic || 'General' };
       }
       topicWise[topicKey].total++;
 

@@ -59,6 +59,7 @@ const SetupPage = {
 
     const subjects = ['math', 'gk', 'reasoning', 'english', 'hindi', 'science', 'polity', 'geography', 'history'];
     const preset = this.config.examId ? ExamPresets.get(this.config.examId) : null;
+    const bookCount = Storage.getMistakeBook ? Storage.getMistakeBook().length : 0;
 
     return `
       <div class="setup-page page-enter-v3">
@@ -69,6 +70,34 @@ const SetupPage = {
           <div class="sp-header-icon">${Icons.get('sliders', 28)}</div>
           <h1>${Lang.t('setup_title')}</h1>
           <p>${Lang.t('setup_subtitle')}</p>
+        </div>
+        ` : ''}
+
+        ${!preset && bookCount > 0 ? `
+        <!-- ═══ Mistake Book Card ═══ -->
+        <div class="sp-preset-card mistake-book-card animate-fadeInUp" style="border: 1px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(0, 0, 0, 0) 100%); margin-bottom: 24px; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #ef4444; display: flex; align-items: center;">${Icons.get('bookmark', 18)}</span>
+              <h3 style="margin: 0; font-size: 1.1rem; color: #fff; font-weight: 600;">Mistake Book Playlist</h3>
+            </div>
+            <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; font-family: var(--font-mono);">
+              ${bookCount} Questions
+            </span>
+          </div>
+          <p style="margin: 0; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5;">
+            Practice specifically the questions you answered incorrectly or skipped in previous tests to convert your weaknesses into strengths.
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="sp-start-btn" onclick="SetupPage.startMistakeTest()" style="margin: 0; padding: 8px 16px; font-size: 0.875rem; background: var(--error); border-color: var(--error); color: #fff; width: auto; flex: 1; min-width: 150px; justify-content: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+              ${Icons.get('play', 14)}
+              <span style="margin-left: 6px;">Start Revision Test</span>
+            </button>
+            <button class="sp-back-btn" onclick="SetupPage.clearMistakeBook()" style="margin: 0; padding: 8px 16px; font-size: 0.875rem; width: auto; color: var(--error); border-color: rgba(239, 68, 68, 0.2); justify-content: center;">
+              ${Icons.get('trash', 14)}
+              <span style="margin-left: 6px;">Clear Book</span>
+            </button>
+          </div>
         </div>
         ` : ''}
 
@@ -473,6 +502,50 @@ const SetupPage = {
       Helpers.showToast(err.message, 'error');
       startBtn.disabled = false;
       startBtn.innerHTML = originalText;
+    }
+  },
+
+  startMistakeTest() {
+    const book = Storage.getMistakeBook();
+    if (book.length === 0) {
+      Helpers.showToast('No questions in your Mistake Book', 'error');
+      return;
+    }
+
+    // Shuffle questions
+    const questions = [...book].sort(() => Math.random() - 0.5);
+    
+    // Limit to max 25 questions for revision efficiency
+    const limit = Math.min(questions.length, 25);
+    const selected = questions.slice(0, limit);
+
+    const result = TestEngine.createTest({
+      subjects: Array.from(new Set(selected.map(q => q.subject))),
+      numQuestions: selected.length,
+      questions: selected,
+      timePerQuestion: 60,
+      totalTime: 60 * selected.length,
+      negativeMarking: false,
+      negativeValue: 0.25,
+      marksPerQuestion: 1,
+      examId: 'mistake_book',
+      examName: 'Mistake Book Revision'
+    });
+
+    if (result.error) {
+      Helpers.showToast(result.error, 'error');
+      return;
+    }
+
+    Helpers.showToast(`Started Mistake Revision Test! ${result.questionCount} questions`, 'success');
+    App.navigate('test');
+  },
+
+  clearMistakeBook() {
+    if (confirm('Are you sure you want to clear your Mistake Book? All saved incorrect/skipped questions will be deleted.')) {
+      Storage.clearMistakeBook();
+      Helpers.showToast('Mistake Book cleared!', 'success');
+      App.navigate('setup');
     }
   },
 

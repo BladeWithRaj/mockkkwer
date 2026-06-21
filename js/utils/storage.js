@@ -149,6 +149,79 @@ const Storage = {
     }
   },
 
+  // ── Mistake Book (Bookmarked incorrect/skipped questions) ──
+  getMistakeBook() {
+    try {
+      const stored = localStorage.getItem('mocktest_mistake_book');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  isQuestionInMistakeBook(questionId) {
+    if (!questionId) return false;
+    const book = this.getMistakeBook();
+    return book.some(q => q.id === questionId);
+  },
+
+  saveMistakesToBook(questions) {
+    if (!Array.isArray(questions) || questions.length === 0) return 0;
+    try {
+      const book = this.getMistakeBook();
+      const bookIds = new Set(book.map(q => q.id));
+      let addedCount = 0;
+      questions.forEach(q => {
+        if (!bookIds.has(q.id)) {
+          book.push(q);
+          addedCount++;
+        }
+      });
+      localStorage.setItem('mocktest_mistake_book', JSON.stringify(book));
+      return addedCount;
+    } catch(e) {
+      console.error("Could not save to mistake book:", e);
+      return 0;
+    }
+  },
+
+  addSingleMistake(question) {
+    if (!question || !question.id) return false;
+    try {
+      const book = this.getMistakeBook();
+      const exists = book.some(q => q.id === question.id);
+      if (!exists) {
+        book.push(question);
+        localStorage.setItem('mocktest_mistake_book', JSON.stringify(book));
+        return true;
+      }
+      return false;
+    } catch(e) {
+      console.error("Could not save single mistake:", e);
+      return false;
+    }
+  },
+
+  removeSingleMistake(questionId) {
+    if (!questionId) return false;
+    try {
+      const book = this.getMistakeBook();
+      const filtered = book.filter(q => q.id !== questionId);
+      if (filtered.length !== book.length) {
+        localStorage.setItem('mocktest_mistake_book', JSON.stringify(filtered));
+        return true;
+      }
+      return false;
+    } catch(e) {
+      console.error("Could not remove mistake:", e);
+      return false;
+    }
+  },
+
+  clearMistakeBook() {
+    localStorage.removeItem('mocktest_mistake_book');
+  },
+
   // ── Cleanup methods (used by Auth logout) ──
 
   clearHistory() {

@@ -115,10 +115,16 @@ const AnalysisPage = {
               <div class="question-review-card ${statusClass} animate-fadeInUp" style="animation-delay: ${i * 50}ms;">
                 <div class="review-question-header">
                   <span class="review-question-num">Q${qIndex + 1} ${statusIcon}</span>
-                  <div style="display: flex; gap: var(--space-2);">
+                  <div style="display: flex; gap: var(--space-2); align-items: center;">
                     <span class="chip chip-primary">${q.subject}</span>
                     <span class="chip">${q.topic}</span>
                     <span class="chip" style="color: var(--text-muted);">${qr.timeSpent}s</span>
+                    <button class="bookmark-btn ${Storage.isQuestionInMistakeBook(q.id) ? 'bookmarked' : ''}"
+                            onclick="AnalysisPage.toggleBookmark('${q.id}', this)"
+                            style="background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${Storage.isQuestionInMistakeBook(q.id) ? '#f87171' : 'var(--text-muted)'}; transition: color var(--transition-fast);"
+                            title="Save/Remove from Mistake Book">
+                      ${Icons.get('bookmark', 15)}
+                    </button>
                   </div>
                 </div>
 
@@ -170,6 +176,26 @@ const AnalysisPage = {
         <canvas id="trend-chart" width="800" height="200" style="width: 100%; height: 200px;"></canvas>
       </div>
     `;
+  },
+
+  toggleBookmark(qId, btn) {
+    const result = App.lastResult;
+    if (!result) return;
+    const qr = result.questionResults.find(r => r.question && r.question.id === qId);
+    if (!qr || !qr.question) return;
+
+    const inBook = Storage.isQuestionInMistakeBook(qId);
+    if (inBook) {
+      Storage.removeSingleMistake(qId);
+      Helpers.showToast('Question removed from Mistake Book', 'info');
+      btn.style.color = 'var(--text-muted)';
+      btn.classList.remove('bookmarked');
+    } else {
+      Storage.addSingleMistake(qr.question);
+      Helpers.showToast('Question saved to Mistake Book!', 'success');
+      btn.style.color = '#f87171';
+      btn.classList.add('bookmarked');
+    }
   },
 
   setTab(tab) {
