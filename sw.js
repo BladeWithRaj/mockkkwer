@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v27';
-const STATIC_CACHE = 'mtp-static-v24';
-const API_CACHE = 'mtp-api-v24';
+const CACHE_NAME = 'mtp-v28';
+const STATIC_CACHE = 'mtp-static-v25';
+const API_CACHE = 'mtp-api-v25';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -23,6 +23,7 @@ const PRECACHE_URLS = [
   '/css/cbt.css',
   '/js/config.js',
   '/js/supabaseClient.js',
+  '/js/firebase-auth.js',
   '/js/auth.js',
   '/js/utils/helpers.js',
   '/js/utils/storage.js',
@@ -65,6 +66,8 @@ const PRECACHE_URLS = [
   '/js/pages/profile.js',
   '/js/pages/battleMode.js',
   '/js/app.js',
+  '/css/result-page.css',
+  '/css/firebase-auth.css',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
@@ -109,9 +112,12 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip Supabase realtime and external CDNs from caching
+  // Skip Supabase realtime, external CDNs, and Firebase CDN from caching
   if (url.hostname.includes('supabase') ||
-    url.hostname.includes('cdn.jsdelivr.net')) {
+    url.hostname.includes('cdn.jsdelivr.net') ||
+    url.hostname.includes('gstatic.com') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('firebaseapp.com')) {
     return; // Let browser handle these normally
   }
 
