@@ -1,0 +1,311 @@
+/* ============================================
+   FIREBASE AUTH — Google Login UI Styles
+   Premium glassmorphism design for Lumina theme
+   ============================================ */
+
+/* ── Google Sign-In Button ── */
+.fa-google-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  white-space: nowrap;
+}
+
+.fa-google-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+  transform: translateY(-1px);
+}
+
+.fa-google-btn:active {
+  transform: translateY(0);
+}
+
+.fa-google-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fa-google-icon {
+  flex-shrink: 0;
+}
+
+/* ── Login Spinner ── */
+.fa-login-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: fa-spin 0.7s linear infinite;
+}
+
+@keyframes fa-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Logged-in User Card ── */
+.fa-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.fa-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(99, 102, 241, 0.5);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.fa-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.fa-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.fa-user-email {
+  font-size: 11px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+/* ── Logout Button ── */
+.fa-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.fa-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: scale(1.05);
+}
+
+/* ── Login Area Container ── */
+.fa-login-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Profile Page Login Section ── */
+.fa-profile-login {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.06));
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.fa-profile-login p {
+  color: #94a3b8;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.fa-profile-login .fa-google-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 15px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(52, 168, 83, 0.1));
+  border-color: rgba(66, 133, 244, 0.3);
+}
+
+.fa-profile-login .fa-google-btn:hover {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.25), rgba(52, 168, 83, 0.15));
+  box-shadow: 0 4px 24px rgba(66, 133, 244, 0.2);
+}
+
+/* ── Nav Login Button (compact) ── */
+.nav-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.15), rgba(99, 102, 241, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 10px;
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.nav-login-btn:hover {
+  background: linear-gradient(135deg, rgba(66, 133, 244, 0.25), rgba(99, 102, 241, 0.2));
+  border-color: rgba(99, 102, 241, 0.5);
+  color: #c7d2fe;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.15);
+}
+
+.nav-login-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── Nav User Avatar (small) ── */
+.nav-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-user-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.nav-user-pill img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(99, 102, 241, 0.4);
+  object-fit: cover;
+}
+
+.nav-user-pill span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbd5e1;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .fa-google-btn {
+    padding: 9px 16px;
+    font-size: 13px;
+    gap: 8px;
+  }
+  
+  .fa-google-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .fa-user-card {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+
+  .fa-user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .fa-user-name {
+    font-size: 12px;
+    max-width: 100px;
+  }
+
+  .fa-user-email {
+    font-size: 10px;
+    max-width: 100px;
+  }
+  
+  .fa-logout-btn {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ── Light Theme ── */
+[data-theme="light"] .fa-google-btn {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #334155;
+}
+
+[data-theme="light"] .fa-google-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+[data-theme="light"] .fa-user-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .fa-user-name {
+  color: #1e293b;
+}
+
+[data-theme="light"] .fa-user-email {
+  color: #64748b;
+}
+
+[data-theme="light"] .nav-login-btn {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #6366f1;
+}
+
+[data-theme="light"] .nav-user-pill {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .nav-user-pill span {
+  color: #475569;
+}

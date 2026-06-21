@@ -51,6 +51,7 @@
   <!-- Question language toggle -->
   <link rel="stylesheet" href="css/qlang.css?v=20260517">
   <link rel="stylesheet" href="css/result-page.css?v=20260621">
+  <link rel="stylesheet" href="css/firebase-auth.css?v=20260621">
   <!-- Mobile overhaul — loads LAST to override desktop -->
   <link rel="stylesheet" href="css/mobile.css?v=20260517d">
 
@@ -106,13 +107,18 @@
   <!-- App Mount Point -->
   <div id="app"></div>
 
+  <!-- Firebase JS SDK (compat v9 — CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
   <!-- Supabase JS Client CDN (pinned v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Scripts (order matters) — cache-busted -->
   <script src="js/config.js?v=20260514"></script>
   <script src="js/supabaseClient.js?v=20260514"></script>
-  <script src="js/auth.js?v=20260514"></script>
+  <script src="js/firebase-auth.js?v=20260621"></script>
+  <script src="js/auth.js?v=20260621"></script>
   <script src="js/utils/helpers.js?v=20260619b"></script>
   <script src="js/utils/icons.js?v=20260619b"></script>
   <script src="js/utils/storage.js?v=20260503"></script>

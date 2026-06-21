@@ -1,31 +1,45 @@
 // ============================================
-// AUTH MODULE — Session-Based Identity System
-// Backend httpOnly cookie = source of truth.
-// No spoofable localStorage-only identity.
+// AUTH MODULE — Hybrid Identity System
+// Priority: Firebase Google Auth > Username > Guest
+// No-login mode always works. Login is optional.
 // ============================================
 
 const Auth = {
   _currentUser: null,
   _ready: false,
 
-  // ── Init — Check if user has active session ──
-
+  // ── Init — Set up identity layer ──
   async init() {
-    // ── No-Login Mode: Set guest user IMMEDIATELY so pages never crash ──
-    // Use UUID-format ID so Supabase doesn't reject it
+    // ── STEP 1: Instant guest identity (never blocks UI) ──
     const guestId = localStorage.getItem('mocktest_guest_uuid') || crypto.randomUUID();
     localStorage.setItem('mocktest_guest_uuid', guestId);
     this._currentUser = { id: guestId, username: 'Guest', name: 'Guest' };
     this._ready = true;
 
-    // Try local cache first for returning users
+    // ── STEP 2: Restore cached user (returning visitor) ──
     const cached = this._getLocalCache();
     if (cached && cached.id && cached.username) {
       this._currentUser = cached;
       console.log("✅ Loaded cached user:", cached.username);
     }
 
-    // Best-effort: try API verify to upgrade identity (non-blocking)
+    // ── STEP 3: Initialize Firebase Auth (non-blocking) ──
+    try {
+      if (window.FirebaseAuth) {
+        await FirebaseAuth.init();
+
+        // If Firebase user is already signed in, it will update _currentUser
+        // via the _syncToSupabase callback
+        const fbUser = FirebaseAuth.getUser();
+        if (fbUser) {
+          console.log("🔥 Firebase session active:", fbUser.displayName);
+        }
+      }
+    } catch (e) {
+      console.log("ℹ️ Firebase init skipped:", e.message);
+    }
+
+    // ── STEP 4: Best-effort API verify (legacy username system) ──
     try {
       const resp = await fetch('/api/user-verify', { credentials: 'include' });
       if (resp.ok) {
@@ -51,7 +65,6 @@ const Auth = {
   },
 
   // ── Local cache (display only, NOT for auth) ──
-
   _getLocalCache() {
     try {
       const data = localStorage.getItem("mock_user");
@@ -60,8 +73,19 @@ const Auth = {
     } catch { return null; }
   },
 
-  // ── Check username availability (direct Supabase) ──
+  // Legacy helpers for supabaseClient.js compatibility
+  _getSession() {
+    return this._currentUser;
+  },
 
+  _saveSession(data) {
+    if (data) {
+      Object.assign(this._currentUser, data);
+      localStorage.setItem("mock_user", JSON.stringify(this._currentUser));
+    }
+  },
+
+  // ── Check username availability (direct Supabase) ──
   async checkUsername(username) {
     try {
       const { data } = await window.supabaseClient
@@ -77,7 +101,6 @@ const Auth = {
   },
 
   // ── Create User (via backend — gets session cookie) ──
-
   async createUser(username) {
     try {
       const resp = await fetch('/api/user-login', {
@@ -92,7 +115,6 @@ const Auth = {
         return { success: false, message: data.error || 'Creation failed' };
       }
 
-      // Session cookie set by backend — store display data locally
       this._currentUser = {
         id: data.user.id,
         username: data.user.username,
@@ -116,7 +138,6 @@ const Auth = {
   },
 
   // ── Login existing user (via backend — gets session cookie) ──
-
   async loginUser(username) {
     try {
       const resp = await fetch('/api/user-login', {
@@ -154,7 +175,6 @@ const Auth = {
   },
 
   // ── Username Modal ──
-
   showUsernameModal() {
     return new Promise((resolve) => {
       const existing = document.querySelector('.username-modal');
@@ -176,6 +196,17 @@ const Auth = {
 
           <p class="username-subtitle">Choose your username to get started</p>
 
+          <!-- Google Sign-In Option -->
+          <div style="margin-bottom:16px;">
+            ${window.FirebaseAuth ? FirebaseAuth.renderLoginSection() : ''}
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+            <span style="color:#64748b;font-size:12px;font-weight:500;">OR</span>
+            <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
+          </div>
+
           <div class="username-input-wrap">
             <div class="username-input-icon">@</div>
             <input type="text" id="usernameInput" class="username-input"
@@ -196,6 +227,19 @@ const Auth = {
       `;
       document.body.appendChild(modal);
       requestAnimationFrame(() => modal.classList.add('visible'));
+
+      // Listen for Firebase login (if user clicks Google button in modal)
+      if (window.FirebaseAuth) {
+        FirebaseAuth.onAuthChange((user) => {
+          if (user) {
+            modal.classList.remove('visible');
+            setTimeout(() => {
+              modal.remove();
+              resolve(Auth.getUser());
+            }, 300);
+          }
+        });
+      }
 
       const input = document.getElementById('usernameInput');
       const btn = document.getElementById('continueBtn');
@@ -328,12 +372,32 @@ const Auth = {
   },
 
   // ── Public API ──
+  isAuthenticated() { return true; }, // Always true — guest mode is valid
+  
+  isFirebaseUser() {
+    return !!(this._currentUser && this._currentUser.firebase_uid);
+  },
 
-  isAuthenticated() { return true; }, // Bypass login
-  getUser() { return this._currentUser || { id: 'guest_user', username: 'Guest', name: 'Guest' }; },
+  getUser() {
+    return this._currentUser || { id: 'guest_user', username: 'Guest', name: 'Guest' };
+  },
+
+  getAuthProvider() {
+    if (this._currentUser?.provider === 'google') return 'google';
+    if (this._currentUser?.username && this._currentUser.username !== 'Guest') return 'username';
+    return 'guest';
+  },
+
   async getSessionToken() { return null; }, // Cookie-based, no manual token needed
 
   async signOut() {
+    // Sign out of Firebase if active
+    if (window.FirebaseAuth && FirebaseAuth.isLoggedIn()) {
+      await FirebaseAuth.signOut();
+      return; // FirebaseAuth.signOut handles reload
+    }
+
+    // Legacy username logout
     try {
       await fetch('/api/user-logout', { method: 'POST', credentials: 'include' });
     } catch (e) { /* best effort */ }
@@ -347,6 +411,31 @@ const Auth = {
 
   openProfile() {
     if (window.App && App.navigate) App.navigate('profile');
+  },
+
+  // ── Render nav login/user UI ──
+  renderNavAuth() {
+    if (window.FirebaseAuth && FirebaseAuth.isLoggedIn()) {
+      const u = FirebaseAuth.getUser();
+      return `
+        <div class="nav-user-pill" onclick="Auth.openProfile()" title="${u.displayName}">
+          <img src="${u.photoURL || ''}" alt="" onerror="this.style.display='none'" />
+          <span>${(u.displayName || 'User').split(' ')[0]}</span>
+        </div>
+      `;
+    }
+
+    return `
+      <button class="nav-login-btn" onclick="FirebaseAuth.signInWithGoogle()" title="Sign in with Google">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Login
+      </button>
+    `;
   },
 
   // Legacy stubs
