@@ -1079,6 +1079,7 @@ const ResultPage = {
   _renderRewardsSummary(result) {
     const gam = result._gamification;
     if (!gam || !window.Gamification) return '';
+    const rewards = gam.rewards || [];
 
     return `
       <div class="rp-card animate-fadeInUp stagger-1">
@@ -1090,7 +1091,7 @@ const ResultPage = {
           </div>
         </div>
 
-        ${gam.rewards.map(r => `
+        ${rewards.length > 0 ? rewards.map(r => `
           <div class="rp-reward-line">
             <div class="rp-reward-left">
               <span>${r.icon}</span>
@@ -1101,13 +1102,13 @@ const ResultPage = {
               <span class="rp-xp-badge">+${r.xp} XP</span>
             </div>
           </div>
-        `).join('')}
+        `).join('') : '<div style="color:var(--text-muted);font-size:var(--text-xs);padding:8px 0;">No rewards data available</div>'}
 
         <div class="rp-rewards-total">
           <span>Total Earned</span>
           <div class="rp-rewards-total-vals">
-            <span style="color: var(--warning-light); display: flex; align-items: center; gap: 4px;">${Icons.get('coins', 14)} +${gam.totalCoins}</span>
-            <span style="color: var(--primary-light); display: flex; align-items: center; gap: 4px;">${Icons.get('zap', 14)} +${gam.totalXP} XP</span>
+            <span style="color: var(--warning-light); display: flex; align-items: center; gap: 4px;">${Icons.get('coins', 14)} +${gam.totalCoins || 0}</span>
+            <span style="color: var(--primary-light); display: flex; align-items: center; gap: 4px;">${Icons.get('zap', 14)} +${gam.totalXP || 0} XP</span>
           </div>
         </div>
 
@@ -1117,12 +1118,14 @@ const ResultPage = {
           </div>
         ` : ''}
 
+        ${gam.level ? `
         <div class="rp-level-footer">
-          <span class="rp-level-badge">${Icons.get('star', 14)} ${gam.level.title} — Tier ${gam.level.level}/5</span>
+          <span class="rp-level-badge">${Icons.get('star', 14)} ${gam.level.title || 'Level ' + gam.level.level} — Tier ${gam.level.level}/5</span>
           <div class="rp-xp-track">
-            <div class="rp-xp-fill" style="width:${gam.level.progress}%;"></div>
+            <div class="rp-xp-fill" style="width:${gam.level.progress || 0}%;"></div>
           </div>
         </div>
+        ` : ''}
       </div>
     `;
   },
@@ -1359,14 +1362,26 @@ const ResultPage = {
     }
 
     try {
-      const questions = await window.fetchRandomQuestions({
-        limit: config.numQuestions || config.actualQuestions || 10,
-        subjects: config.subjects || []
-      });
+      const fetchFn = window.fetchRandomQuestions || window.fetchQuestions || null;
+      let questions = [];
+
+      if (fetchFn) {
+        const fetched = await fetchFn({
+          limit: config.numQuestions || config.actualQuestions || 10,
+          subjects: config.subjects || []
+        });
+        questions = fetched || [];
+      } else if (window.QUESTION_BANK && Array.isArray(window.QUESTION_BANK)) {
+        const bank = window.QUESTION_BANK;
+        const shuffled = Helpers.shuffleArray(bank);
+        questions = shuffled.slice(0, config.numQuestions || config.actualQuestions || 10);
+      } else {
+        throw new Error('No question source available. Please try creating a new test.');
+      }
 
       if (!questions || questions.length === 0) throw new Error('No questions found for these filters');
 
-      const result = TestEngine.createTest({
+      const testResult = TestEngine.createTest({
         questions,
         timePerQuestion: 60,
         totalTime: config.totalTime || null,
@@ -1374,9 +1389,9 @@ const ResultPage = {
         negativeValue: config.negativeValue || 0.25
       });
 
-      if (result.error) throw new Error(result.error);
+      if (testResult.error) throw new Error(testResult.error);
 
-      Helpers.showToast(`Retry! ${result.questionCount} questions`, 'success');
+      Helpers.showToast(`Retry! ${testResult.questionCount} questions`, 'success');
       App.navigate('test');
     } catch (err) {
       Helpers.showToast(err.message, 'error');
