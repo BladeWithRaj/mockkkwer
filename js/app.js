@@ -7,30 +7,30 @@ const ThemeManager = {
   STORAGE_KEY: 'mocktest_theme',
 
   init() {
-    // Dark (ultra-black) is default — only switch to light if explicitly saved
+    // Light is default — only switch to dark if explicitly saved
     const saved = localStorage.getItem(this.STORAGE_KEY);
-    if (saved === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
     } else {
       document.documentElement.removeAttribute('data-theme');
     }
   },
 
   toggle() {
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    if (isLight) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
       document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem(this.STORAGE_KEY, 'dark');
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
       localStorage.setItem(this.STORAGE_KEY, 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      localStorage.setItem(this.STORAGE_KEY, 'dark');
     }
     // Update toggle button icon
     this.updateIcon();
   },
 
   isDark() {
-    return document.documentElement.getAttribute('data-theme') !== 'light';
+    return document.documentElement.getAttribute('data-theme') === 'dark';
   },
 
   updateIcon() {
@@ -74,8 +74,8 @@ const App = {
     // Loading State
     appEl.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20px;">
-        <div class="splash-spinner" style="width: 48px; height: 48px; border: 3px solid var(--bg-glass, rgba(255,255,255,0.1)); border-top-color: var(--primary, #6366f1); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-        <p style="color: var(--text-secondary, #94a3b8); font-size: 16px; font-weight: 500;">Loading...</p>
+        <div class="splash-spinner" style="width: 48px; height: 48px; border: 3px solid var(--border-color, #E2E5EA); border-top-color: var(--primary, #2563EB); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+        <p style="color: var(--text-secondary, #4B5563); font-size: 16px; font-weight: 500;">Loading...</p>
       </div>
     `;
 
@@ -244,33 +244,33 @@ const App = {
             <!-- Rewards Widget -->
             <div class="rewards-widget" id="rewards-widget">
               <button class="rewards-trigger" onclick="App._toggleRewards()">
-                <span class="rw-streak ${streak.current > 0 ? 'active' : ''}">🔥 ${streak.current}</span>
+                <span class="rw-streak ${streak.current > 0 ? 'active' : ''}">${streak.current}d streak</span>
                 <span class="rw-sep"></span>
-                <span class="rw-coins">💰 ${coins}</span>
+                <span class="rw-coins">${coins} coins</span>
               </button>
               <div class="rewards-dropdown" id="rewards-dropdown">
                 <div class="rw-drop-item">
-                  <span class="rw-drop-icon">🔥</span>
+                  <span class="rw-drop-icon" style="font-size:14px;color:var(--warning)">&#9632;</span>
                   <div>
                     <div class="rw-drop-label">Streak</div>
                     <div class="rw-drop-value">${streak.current} days</div>
                   </div>
                 </div>
                 <div class="rw-drop-item">
-                  <span class="rw-drop-icon">💰</span>
+                  <span class="rw-drop-icon" style="font-size:14px;color:var(--primary)">&#9679;</span>
                   <div>
                     <div class="rw-drop-label">Coins</div>
                     <div class="rw-drop-value">${coins}</div>
                   </div>
                 </div>
                 <div class="rw-drop-divider"></div>
-                <a href="#profile" class="rw-drop-link">View Rewards →</a>
+                <a href="#profile" class="rw-drop-link">View Rewards</a>
               </div>
             </div>
             `}
 
             <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Light Mode' : 'Dark Mode'}">
-              ${ThemeManager.isDark() ? '🌙' : '☀️'}
+              ${ThemeManager.isDark() ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'}
             </button>
 
             ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() ? '' : `
@@ -288,14 +288,14 @@ const App = {
             <div class="header-user-menu">
               <button class="header-user-btn" onclick="App._toggleUserMenu()" title="${userName}">
                 ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL
-                  ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" class="header-avatar-img" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(99,102,241,0.4);" onerror="this.outerHTML='<span class=header-avatar>${userName.charAt(0).toUpperCase()}</span>'" />`
+                  ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" class="header-avatar-img" style="width:30px;height:30px;border-radius:var(--radius-md);object-fit:cover;" onerror="this.outerHTML='<span class=header-avatar>${userName.charAt(0).toUpperCase()}</span>'" />`
                   : `<span class="header-avatar">${userName.charAt(0).toUpperCase()}</span>`
                 }
               </button>
               <div class="header-user-dropdown" id="user-dropdown">
                 <div class="dropdown-user-info">
                   ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL
-                    ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(99,102,241,0.3);" />`
+                    ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" style="width:34px;height:34px;border-radius:var(--radius-md);object-fit:cover;" />`
                     : `<span class="dropdown-avatar">${userName.charAt(0).toUpperCase()}</span>`
                   }
                   <div>
@@ -357,11 +357,11 @@ const App = {
   _renderError(message) {
     return `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 16px; padding: 24px;">
-        <div style="font-size: 64px;">⚠️</div>
-        <h2 style="color: var(--text-primary, #f1f5f9); font-size: 20px; font-weight: 600; margin: 0;">Failed to Load Questions</h2>
-        <p style="color: var(--text-secondary, #94a3b8); font-size: 14px; text-align: center; max-width: 400px; margin: 0;">${message}</p>
-        <button onclick="location.reload()" style="margin-top: 12px; padding: 10px 24px; background: var(--primary, #6366f1); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;">
-          🔄 Retry
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <h2 style="color: var(--text-primary); font-size: 20px; font-weight: 600; margin: 0;">Failed to Load Questions</h2>
+        <p style="color: var(--text-secondary); font-size: 14px; text-align: center; max-width: 400px; margin: 0;">${message}</p>
+        <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 12px;">
+          Retry
         </button>
       </div>
     `;
@@ -372,10 +372,10 @@ const App = {
       ${this._renderHeader('')}
       <div class="setup-page text-center" style="padding-top: var(--space-16);">
         <div class="empty-state">
-          <div class="empty-state-icon">🔍</div>
+          <div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
           <div class="empty-state-title">Page Not Found</div>
-          <p style="color: var(--text-muted); margin-bottom: var(--space-6);">The page you're looking for doesn't exist</p>
-          <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-6);">This page does not exist.</p>
+          <button class="btn btn-primary" onclick="App.navigate('home')">Back to Home</button>
         </div>
       </div>
     `;
@@ -410,7 +410,7 @@ const App = {
 
     // Navigate to test page
     console.log('Resuming in-progress test:', savedTest.questions.length, 'questions');
-    Helpers.showToast('📝 Resuming your previous test...', 'info');
+    Helpers.showToast('Resuming your previous test...', 'info');
     window.location.hash = 'test';
   },
 
@@ -418,18 +418,18 @@ const App = {
     return `
       <div style="display: flex; align-items: center; justify-content: center; min-height: 60vh; padding: var(--space-8);">
         <div class="card" style="max-width: 500px; text-align: center; padding: var(--space-8);">
-          <div style="font-size: 48px; margin-bottom: var(--space-4);">💥</div>
-          <h2 style="color: var(--danger); margin-bottom: var(--space-2);">Page Crashed</h2>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" style="margin-bottom:var(--space-4)"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <h2 style="color: var(--danger); margin-bottom: var(--space-2);">Page Error</h2>
           <p style="color: var(--text-muted); margin-bottom: var(--space-4);">
-            The "${page}" page encountered an error and couldn't render.
+            The "${page}" page encountered an error.
           </p>
-          <details style="text-align: left; background: var(--bg-glass); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); font-size: var(--text-sm);">
+          <details style="text-align: left; background: var(--bg-input); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-6); font-size: var(--text-sm);">
             <summary style="cursor: pointer; color: var(--text-secondary); margin-bottom: var(--space-2);">Error Details</summary>
-            <pre style="color: var(--danger-light); white-space: pre-wrap; word-break: break-all; margin: 0;">${error.message}\n\n${error.stack || ''}</pre>
+            <pre style="color: var(--danger); white-space: pre-wrap; word-break: break-all; margin: 0;">${error.message}\n\n${error.stack || ''}</pre>
           </details>
           <div style="display: flex; gap: var(--space-3); justify-content: center;">
-            <button class="btn btn-primary" onclick="App.navigate('home')">🏠 Go Home</button>
-            <button class="btn btn-secondary" onclick="location.reload()">🔄 Reload</button>
+            <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
+            <button class="btn btn-secondary" onclick="location.reload()">Reload</button>
           </div>
         </div>
       </div>
