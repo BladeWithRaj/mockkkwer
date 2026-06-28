@@ -62,197 +62,134 @@ const SetupPage = {
     const bookCount = Storage.getMistakeBook ? Storage.getMistakeBook().length : 0;
 
     return `
-      <div class="setup-page page-enter-v3">
+      <div class="setup-page page-enter">
+        <div class="sp-container">
 
-        ${!preset ? `
-        <!-- ═══ Custom Test Header ═══ -->
-        <div class="sp-header">
-          <div class="sp-header-icon">${Icons.get('sliders', 28)}</div>
-          <h1>${Lang.t('setup_title')}</h1>
-          <p>${Lang.t('setup_subtitle')}</p>
-        </div>
-        ` : ''}
+        ${preset ? `
+          <!-- ═══ Preset Exam: Simplified Flow ═══ -->
+          ${this._renderPresetInfo(preset)}
 
-        ${!preset && bookCount > 0 ? `
-        <!-- ═══ Mistake Book Card ═══ -->
-        <div class="sp-preset-card mistake-book-card animate-fadeInUp" style="border: 1px solid rgba(239, 68, 68, 0.25); background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(0, 0, 0, 0) 100%); margin-bottom: 24px; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="color: #ef4444; display: flex; align-items: center;">${Icons.get('bookmark', 18)}</span>
-              <h3 style="margin: 0; font-size: 1.1rem; color: #fff; font-weight: 600;">Mistake Book Playlist</h3>
+          <div class="sp-actions">
+            <button class="btn btn-primary btn-lg btn-block" onclick="SetupPage.startTest()" id="start-test-btn">
+              Start Test →
+            </button>
+            <button class="btn btn-ghost" onclick="App.navigate('home')">
+              ← Back to Home
+            </button>
+          </div>
+        ` : `
+          <!-- ═══ Custom Test Flow ═══ -->
+          <div class="sp-header">
+            <h1>Practice Test</h1>
+            <p>Configure your mock test</p>
+          </div>
+
+          ${bookCount > 0 ? `
+          <div class="card sp-mistake-card">
+            <div class="sp-mistake-top">
+              <div class="sp-mistake-info">
+                <span class="chip chip-danger">${bookCount} Questions</span>
+                <div class="sp-mistake-title">Mistake Book</div>
+                <div class="sp-mistake-desc">Revise questions you got wrong</div>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="SetupPage.startMistakeTest()">Revise →</button>
             </div>
-            <span style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; font-family: var(--font-mono);">
-              ${bookCount} Questions
-            </span>
           </div>
-          <p style="margin: 0; font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5;">
-            Practice specifically the questions you answered incorrectly or skipped in previous tests to convert your weaknesses into strengths.
-          </p>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button class="sp-start-btn" onclick="SetupPage.startMistakeTest()" style="margin: 0; padding: 8px 16px; font-size: 0.875rem; background: var(--error); border-color: var(--error); color: #fff; width: auto; flex: 1; min-width: 150px; justify-content: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
-              ${Icons.get('play', 14)}
-              <span style="margin-left: 6px;">Start Revision Test</span>
-            </button>
-            <button class="sp-back-btn" onclick="SetupPage.clearMistakeBook()" style="margin: 0; padding: 8px 16px; font-size: 0.875rem; width: auto; color: var(--error); border-color: rgba(239, 68, 68, 0.2); justify-content: center;">
-              ${Icons.get('trash', 14)}
-              <span style="margin-left: 6px;">Clear Book</span>
-            </button>
-          </div>
-        </div>
-        ` : ''}
+          ` : ''}
 
-        ${preset ? this._renderPresetInfo(preset) : ''}
-
-        <div class="setup-form">
-          ${!preset ? `
-          <!-- ═══ Subject Selection ═══ -->
+          <!-- Subject Selection -->
           <div class="sp-section">
-            <div class="sp-section-head">
-              ${Icons.get('bookOpen', 16)}
-              <span>${Lang.t('setup_subject')}</span>
-            </div>
+            <div class="sp-section-head">Subjects</div>
             <div class="setup-chips" id="subject-chips">
               <button class="setup-chip ${this.config.subjects.length === 0 ? 'active' : ''}" data-subject="all"
-                      onclick="SetupPage._toggleSubject('all')" id="chip-all">
-                ${Icons.get('dices', 14)}
-                <span>${Lang.t('setup_all_subjects')}</span>
-              </button>
+                      onclick="SetupPage._toggleSubject('all')" id="chip-all">All</button>
               ${subjects.map(s => `
                 <button class="setup-chip ${this.config.subjects.includes(s) ? 'active' : ''}" data-subject="${s}"
-                        onclick="SetupPage._toggleSubject('${s}')" id="chip-${s}">
-                  ${Helpers.getSubjectIcon(s)}
-                  <span>${s.charAt(0).toUpperCase() + s.slice(1)}</span>
-                </button>
+                        onclick="SetupPage._toggleSubject('${s}')" id="chip-${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</button>
               `).join('')}
             </div>
           </div>
-          ` : ''}
 
-          ${!preset ? `
-          <!-- ═══ Question Count ═══ -->
+          <!-- Questions -->
           <div class="sp-section">
-            <div class="sp-section-head">
-              ${Icons.get('listChecks', 16)}
-              <span>${Lang.t('setup_questions')}</span>
-            </div>
-            <div class="sp-control-row">
-              <input type="number" class="sp-number-input"
-                     value="${this.config.numQuestions}"
-                     min="5" max="200" step="1" placeholder="e.g. 25"
-                     onchange="SetupPage._setNumQuestions(this.value)"
-                     id="num-questions-input">
-              <span class="sp-hint">${Lang.t('setup_questions_hint')}</span>
-            </div>
+            <div class="sp-section-head">Questions</div>
             <div class="sp-quick-chips">
-              <button class="sp-qchip" onclick="document.getElementById('num-questions-input').value=10; SetupPage._setNumQuestions(10)">10</button>
-              <button class="sp-qchip" onclick="document.getElementById('num-questions-input').value=25; SetupPage._setNumQuestions(25)">25</button>
-              <button class="sp-qchip" onclick="document.getElementById('num-questions-input').value=50; SetupPage._setNumQuestions(50)">50</button>
-              <button class="sp-qchip" onclick="document.getElementById('num-questions-input').value=100; SetupPage._setNumQuestions(100)">100</button>
+              <button class="sp-qchip ${this.config.numQuestions === 10 ? 'active' : ''}" onclick="SetupPage._setNumQuestions(10)">10</button>
+              <button class="sp-qchip ${this.config.numQuestions === 25 ? 'active' : ''}" onclick="SetupPage._setNumQuestions(25)">25</button>
+              <button class="sp-qchip ${this.config.numQuestions === 50 ? 'active' : ''}" onclick="SetupPage._setNumQuestions(50)">50</button>
+              <button class="sp-qchip ${this.config.numQuestions === 100 ? 'active' : ''}" onclick="SetupPage._setNumQuestions(100)">100</button>
             </div>
           </div>
-          ` : ''}
 
-          ${!preset ? `
-          <!-- ═══ Timer Settings ═══ -->
-          <div class="sp-section">
-            <div class="sp-section-head">
-              ${Icons.get('timer', 16)}
-              <span>${Lang.t('setup_time')}</span>
-            </div>
-            <div class="sp-toggle-row">
-              <label class="switch">
-                <input type="checkbox" ${this.config.timeMode !== 'none' ? 'checked' : ''}
-                       onchange="SetupPage._toggleTimer(this.checked)"
-                       id="timer-toggle">
-                <span class="switch-track"></span>
-              </label>
-              <span class="sp-toggle-label">
-                ${this.config.timeMode !== 'none' ? Lang.t('setup_timer_on') : Lang.t('setup_no_timer')}
-              </span>
-            </div>
-            ${this.config.timeMode !== 'none' ? `
-              <div class="sp-control-row">
-                <input type="number" class="sp-number-input"
-                       value="${this.config.timeMode === 'auto' ? this.config.numQuestions : Math.round((this.config.totalTime || 600) / 60)}"
-                       min="1" max="300" step="1" placeholder="e.g. 30"
-                       onchange="SetupPage._setTime(this.value)"
-                       id="time-minutes-input">
-                <span class="sp-hint">${Lang.t('setup_time_hint')}</span>
-              </div>
-              <div class="sp-quick-chips">
-                <button class="sp-qchip" onclick="document.getElementById('time-minutes-input').value=10; SetupPage._setTime(10)">10m</button>
-                <button class="sp-qchip" onclick="document.getElementById('time-minutes-input').value=30; SetupPage._setTime(30)">30m</button>
-                <button class="sp-qchip" onclick="document.getElementById('time-minutes-input').value=60; SetupPage._setTime(60)">60m</button>
-                <button class="sp-qchip" onclick="document.getElementById('time-minutes-input').value=120; SetupPage._setTime(120)">2h</button>
-              </div>
-            ` : ''}
-          </div>
-          ` : ''}
+          <!-- Advanced Settings (collapsed) -->
+          <details class="sp-advanced">
+            <summary class="sp-advanced-toggle">Advanced Settings</summary>
+            <div class="sp-advanced-body">
 
-          ${!preset ? `
-          <!-- ═══ Negative Marking ═══ -->
-          <div class="sp-section">
-            <div class="sp-section-head">
-              ${Icons.get('minus', 16)}
-              <span>${Lang.t('setup_neg_marking')}</span>
-            </div>
-            <div class="sp-toggle-row">
-              <label class="switch">
-                <input type="checkbox" ${this.config.negativeMarking ? 'checked' : ''}
-                       onchange="SetupPage._toggleNegativeMarking(this.checked)"
-                       id="neg-mark-toggle">
-                <span class="switch-track"></span>
-              </label>
-              <span id="neg-mark-status" class="sp-toggle-label">
-                ${this.config.negativeMarking ? Lang.t('setup_enabled') : Lang.t('setup_disabled')}
-              </span>
-            </div>
-            <div class="neg-mark-options" id="neg-mark-options" style="${this.config.negativeMarking ? '' : 'display:none;'}">
-              <div class="sp-neg-grid">
-                <button class="sp-neg-chip ${this.config.negativeValue === 0.25 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.25)">
-                  <span class="sp-neg-val">${'\u2212'}0.25</span>
-                  <span class="sp-neg-label">SSC</span>
-                </button>
-                <button class="sp-neg-chip ${this.config.negativeValue === 0.33 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.33)">
-                  <span class="sp-neg-val">${'\u2212'}0.33</span>
-                  <span class="sp-neg-label">Railway / UPSC</span>
-                </button>
-                <button class="sp-neg-chip ${this.config.negativeValue === 0.50 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.50)">
-                  <span class="sp-neg-val">${'\u2212'}0.50</span>
-                  <span class="sp-neg-label">Banking</span>
-                </button>
-                <button class="sp-neg-chip ${this.config.negativeValue === 0.66 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.66)">
-                  <span class="sp-neg-val">${'\u2212'}0.66</span>
-                  <span class="sp-neg-label">CTET</span>
-                </button>
-                <button class="sp-neg-chip ${this.config.negativeValue === 1 ? 'active' : ''}" onclick="SetupPage._setNegValue(1.00)">
-                  <span class="sp-neg-val">${'\u2212'}1.00</span>
-                  <span class="sp-neg-label">Full</span>
-                </button>
+              <!-- Timer -->
+              <div class="sp-section">
+                <div class="sp-section-head">Timer</div>
+                <div class="sp-toggle-row">
+                  <label class="switch">
+                    <input type="checkbox" ${this.config.timeMode !== 'none' ? 'checked' : ''}
+                           onchange="SetupPage._toggleTimer(this.checked)" id="timer-toggle">
+                    <span class="switch-track"></span>
+                  </label>
+                  <span class="sp-toggle-label">
+                    ${this.config.timeMode !== 'none' ? 'Timer enabled' : 'No timer'}
+                  </span>
+                </div>
+                ${this.config.timeMode !== 'none' ? `
+                <div class="sp-control-row">
+                  <input type="number" class="sp-number-input" value="${this.config.timeMode === 'auto' ? this.config.numQuestions : Math.round((this.config.totalTime || 600) / 60)}"
+                         min="1" max="300" onchange="SetupPage._setTime(this.value)" id="time-minutes-input">
+                  <span class="sp-hint">minutes</span>
+                </div>
+                ` : ''}
               </div>
-            </div>
-          </div>
-          ` : ''}
 
-          <!-- ═══ Summary ═══ -->
+              <!-- Negative Marking -->
+              <div class="sp-section">
+                <div class="sp-section-head">Negative Marking</div>
+                <div class="sp-toggle-row">
+                  <label class="switch">
+                    <input type="checkbox" ${this.config.negativeMarking ? 'checked' : ''}
+                           onchange="SetupPage._toggleNegativeMarking(this.checked)" id="neg-mark-toggle">
+                    <span class="switch-track"></span>
+                  </label>
+                  <span id="neg-mark-status" class="sp-toggle-label">
+                    ${this.config.negativeMarking ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+                <div class="neg-mark-options" id="neg-mark-options" style="${this.config.negativeMarking ? '' : 'display:none;'}">
+                  <div class="sp-neg-grid">
+                    <button class="sp-neg-chip ${this.config.negativeValue === 0.25 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.25)">−0.25</button>
+                    <button class="sp-neg-chip ${this.config.negativeValue === 0.33 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.33)">−0.33</button>
+                    <button class="sp-neg-chip ${this.config.negativeValue === 0.50 ? 'active' : ''}" onclick="SetupPage._setNegValue(0.50)">−0.50</button>
+                    <button class="sp-neg-chip ${this.config.negativeValue === 1 ? 'active' : ''}" onclick="SetupPage._setNegValue(1.00)">−1.00</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </details>
+
+          <!-- Summary -->
           <div class="sp-summary" id="setup-summary">
             ${this._renderSummary()}
           </div>
 
-        </div>
+          <!-- Actions -->
+          <div class="sp-actions">
+            <button class="btn btn-primary btn-lg btn-block" onclick="SetupPage.startTest()" id="start-test-btn">
+              Start Test →
+            </button>
+            <button class="btn btn-ghost" onclick="App.navigate('home')">
+              ← Back
+            </button>
+          </div>
+        `}
 
-        <!-- ═══ Actions ═══ -->
-        <div class="sp-actions">
-          <button class="sp-start-btn"
-                  onclick="SetupPage.startTest()" id="start-test-btn">
-            ${Icons.get('rocket', 18)}
-            <span>${preset ? 'Start ' + preset.name + ' Test' : Lang.t('setup_start')}</span>
-          </button>
-
-          <button class="sp-back-btn" onclick="App.navigate('home')">
-            ${Icons.get('arrowLeft', 14)}
-            <span>${Lang.t('setup_back')}</span>
-          </button>
         </div>
       </div>
     `;

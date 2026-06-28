@@ -223,15 +223,19 @@ const App = {
     const isTest = activePage === 'test';
     const user = Auth.getUser();
     const userName = user?.name || user?.username || Storage.getUsername() || 'User';
-    const coins = window.Gamification ? Gamification.getCoins() : 0;
-    const streak = window.DailySystem ? DailySystem.getStreak() : { current: 0 };
+
+    const moonIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+    const sunIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>';
+    const userPhoto = window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL;
+    const userEmail = window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.email;
+    const isLoggedIn = window.FirebaseAuth && FirebaseAuth.isLoggedIn();
 
     return `
       <header class="header">
         <div class="header-inner">
           <a href="#home" class="header-logo">
             <div class="logo-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
@@ -241,48 +245,17 @@ const App = {
 
           <nav class="header-nav">
             ${isTest ? '' : `
-              <a href="#home" class="nav-link ${activePage === 'home' ? 'active' : ''}">Home</a>
               <a href="#setup" class="nav-link ${activePage === 'setup' ? 'active' : ''}">Practice</a>
-              <a href="#dashboard" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
               <a href="#leaderboard" class="nav-link ${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
             `}
           </nav>
 
           <div class="header-actions">
-            ${isTest ? '' : `
-            <!-- Rewards Widget -->
-            <div class="rewards-widget" id="rewards-widget">
-              <button class="rewards-trigger" onclick="App._toggleRewards()">
-                <span class="rw-streak ${streak.current > 0 ? 'active' : ''}">${streak.current}d streak</span>
-                <span class="rw-sep"></span>
-                <span class="rw-coins">${coins} coins</span>
-              </button>
-              <div class="rewards-dropdown" id="rewards-dropdown">
-                <div class="rw-drop-item">
-                  <span class="rw-drop-icon" style="font-size:14px;color:var(--warning)">&#9632;</span>
-                  <div>
-                    <div class="rw-drop-label">Streak</div>
-                    <div class="rw-drop-value">${streak.current} days</div>
-                  </div>
-                </div>
-                <div class="rw-drop-item">
-                  <span class="rw-drop-icon" style="font-size:14px;color:var(--primary)">&#9679;</span>
-                  <div>
-                    <div class="rw-drop-label">Coins</div>
-                    <div class="rw-drop-value">${coins}</div>
-                  </div>
-                </div>
-                <div class="rw-drop-divider"></div>
-                <a href="#profile" class="rw-drop-link">View Rewards</a>
-              </div>
-            </div>
-            `}
-
-            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Light Mode' : 'Dark Mode'}">
-              ${ThemeManager.isDark() ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'}
+            <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Light Mode' : 'Dark Mode'}" aria-label="Toggle theme">
+              ${ThemeManager.isDark() ? moonIcon : sunIcon}
             </button>
 
-            ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() ? '' : `
+            ${isLoggedIn ? '' : `
             <button class="nav-login-btn" onclick="FirebaseAuth.signInWithGoogle()" title="Sign in to save progress">
               <svg viewBox="0 0 24 24" width="14" height="14">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -295,29 +268,25 @@ const App = {
             `}
 
             <div class="header-user-menu">
-              <button class="header-user-btn" onclick="App._toggleUserMenu()" title="${userName}">
-                ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL
-                  ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" class="header-avatar-img" style="width:30px;height:30px;border-radius:var(--radius-md);object-fit:cover;" onerror="this.outerHTML='<span class=header-avatar>${userName.charAt(0).toUpperCase()}</span>'" />`
+              <button class="header-user-btn" onclick="App._toggleUserMenu()" title="${userName}" aria-label="User menu">
+                ${userPhoto
+                  ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" class="header-avatar" style="width:30px;height:30px;object-fit:cover;" onerror="this.outerHTML='<span class=header-avatar>${userName.charAt(0).toUpperCase()}</span>'" />`
                   : `<span class="header-avatar">${userName.charAt(0).toUpperCase()}</span>`
                 }
               </button>
               <div class="header-user-dropdown" id="user-dropdown">
                 <div class="dropdown-user-info">
-                  ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL
-                    ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" style="width:34px;height:34px;border-radius:var(--radius-md);object-fit:cover;" />`
+                  ${userPhoto
+                    ? `<img src="${FirebaseAuth.getUser().photoURL}" alt="" class="dropdown-avatar" style="width:34px;height:34px;object-fit:cover;" />`
                     : `<span class="dropdown-avatar">${userName.charAt(0).toUpperCase()}</span>`
                   }
                   <div>
                     <div class="dropdown-name">${userName}</div>
-                    ${window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.email
-                      ? `<div style="font-size:11px;color:#64748b;margin-top:2px;">${FirebaseAuth.getUser().email}</div>`
-                      : ''
-                    }
+                    ${userEmail ? `<div class="dropdown-email">${userEmail}</div>` : ''}
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
-                <button class="dropdown-item" onclick="App.navigate('profile')">Profile & Rewards</button>
-                <button class="dropdown-item" onclick="App.navigate('dashboard')">My Dashboard</button>
+                <button class="dropdown-item" onclick="App.navigate('profile')">Profile</button>
                 <button class="dropdown-item dropdown-signout" onclick="Auth.signOut()">Sign Out</button>
               </div>
             </div>
@@ -337,12 +306,11 @@ const App = {
     `;
 
     return `
-      <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+      <nav class="mobile-bottom-nav" aria-label="Navigation">
         <div class="mobile-bottom-nav-inner">
           ${item('home', 'Home', 'home')}
           ${item('board?id=SSC', 'Exams', 'clipboard')}
-          ${item('setup', 'Tests', 'listChecks')}
-          ${item('analytics', 'Analytics', 'barChart')}
+          ${item('setup', 'Practice', 'listChecks')}
           ${item('profile', 'Profile', 'user')}
         </div>
       </nav>
@@ -367,22 +335,20 @@ const App = {
     }
   },
 
-  _toggleRewards() {
-    const dd = document.getElementById('rewards-dropdown');
-    if (dd) dd.classList.toggle('open');
-    // Close user menu if open
-    document.getElementById('user-dropdown')?.classList.remove('open');
-    if (dd?.classList.contains('open')) {
-      setTimeout(() => {
-        const close = (e) => {
-          if (!e.target.closest('.rewards-widget')) {
-            dd.classList.remove('open');
-            document.removeEventListener('click', close);
-          }
-        };
-        document.addEventListener('click', close);
-      }, 10);
-    }
+  _renderFooter() {
+    return `
+      <footer class="footer">
+        <div class="footer-inner">
+          <div class="footer-brand">Mock<span>24hr</span></div>
+          <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">Contact</a>
+          </div>
+          <div class="footer-copy">&copy; ${new Date().getFullYear()} Mock24hr</div>
+        </div>
+      </footer>
+    `;
   },
 
   _renderError(message) {
