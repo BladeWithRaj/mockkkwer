@@ -1,177 +1,201 @@
-/* ============================================
-   MOCK24HR — Design Tokens v4
-   "Professional Exam Platform" Design System
-   Light-first · Inter · No gradients · No glow
-   ============================================ */
+/* ═══════════════════════════════════════════════════════════
+   MOCK24HR — CSS DESIGN SYSTEM v6 "Midnight Scholar"
+   Google Fonts: Space Grotesk (headings) + Inter (body)
+   ═══════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* ── Colors — Light Mode (Default) ── */
-  --bg-primary: #F5F7FA;
-  --bg-secondary: #EDF0F4;
-  --bg-surface: #FFFFFF;
-  --bg-elevated: #FFFFFF;
-  --bg-sunken: #EBEEF3;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FAFBFC;
-  --bg-input: #F5F7FA;
-  --bg-input-focus: #FFFFFF;
+  /* ── Typography ── */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
 
-  --border-color: #E2E5EA;
-  --border-light: #EDF0F4;
-  --border-active: #2563EB;
-  --border-focus: rgba(37, 99, 235, 0.3);
-
-  /* Primary */
-  --primary: #2563EB;
-  --primary-hover: #1D4FD7;
-  --primary-light: #DBEAFE;
-  --primary-text: #1E40AF;
-  --primary-bg: rgba(37, 99, 235, 0.08);
-
-  /* Semantic */
-  --success: #16A34A;
-  --success-light: #DCFCE7;
-  --success-bg: rgba(22, 163, 74, 0.08);
-  --success-text: #15803D;
-
-  --warning: #EA580C;
-  --warning-light: #FFF7ED;
-  --warning-bg: rgba(234, 88, 12, 0.08);
-  --warning-text: #C2410C;
-
-  --danger: #DC2626;
-  --danger-light: #FEE2E2;
-  --danger-bg: rgba(220, 38, 38, 0.08);
-  --danger-text: #B91C1C;
-
-  --info: #0284C7;
-  --info-light: #E0F2FE;
-  --info-bg: rgba(2, 132, 199, 0.08);
-
-  /* Board Identity — subtle accents per category */
-  --board-ssc: #2563EB;
-  --board-railway: #DC2626;
-  --board-banking: #16A34A;
-  --board-upsc: #475569;
-  --board-teaching: #0284C7;
-  --board-defence: #9333EA;
-  --board-state: #EA580C;
-
-  /* Text */
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --text-muted: #9CA3AF;
-  --text-accent: #2563EB;
-  --text-inverse: #FFFFFF;
-
-  /* ── Typography — Inter only ── */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'Consolas', 'Courier New', monospace;
-
-  --text-xs: 0.75rem;    /* 12px */
-  --text-sm: 0.8125rem;  /* 13px */
-  --text-base: 0.9375rem; /* 15px */
-  --text-lg: 1.125rem;   /* 18px */
-  --text-xl: 1.25rem;    /* 20px */
-  --text-2xl: 1.5rem;    /* 24px */
-  --text-3xl: 2rem;      /* 32px */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
 
   --font-regular: 400;
-  --font-medium: 500;
-  --font-semibold: 600;
-  --font-bold: 700;
-
-  --leading-tight: 1.25;
+  --font-medium:  500;
+  --font-semi:    600;
+  --font-bold:    700;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.65;
+  --leading-tight:  1.25;
+
+  /* ── Color Palette — Light Mode ── */
+  --primary:         #6366F1;
+  --primary-dark:    #4F46E5;
+  --primary-light:   rgba(99, 102, 241, 0.12);
+  --primary-text:    #6366F1;
+  --primary-glow:    rgba(99, 102, 241, 0.35);
+  --primary-bg:      rgba(99, 102, 241, 0.08);
+
+  --accent:          #F59E0B;
+  --accent-dark:     #D97706;
+  --accent-light:    rgba(245, 158, 11, 0.12);
+  --accent-glow:     rgba(245, 158, 11, 0.3);
+
+  --success:         #10B981;
+  --success-dark:    #059669;
+  --success-light:   rgba(16, 185, 129, 0.12);
+
+  --warning:         #F59E0B;
+  --warning-light:   rgba(245, 158, 11, 0.12);
+
+  --danger:          #EF4444;
+  --danger-dark:     #DC2626;
+  --danger-light:    rgba(239, 68, 68, 0.12);
+
+  /* ── Backgrounds — Light Mode ── */
+  --bg-base:         #F0F2FA;
+  --bg-primary:      #F0F2FA;
+  --bg-secondary:    #E4E8F5;
+  --bg-surface:      #FFFFFF;
+  --bg-elevated:     #FFFFFF;
+  --bg-sunken:       #E4E8F5;
+  --bg-card:         #FFFFFF;
+  --bg-card-hover:   #F8F9FF;
+  --bg-input:        #FFFFFF;
+  --bg-input-focus:  #F8F9FF;
+  --bg-overlay:      rgba(0, 0, 0, 0.4);
+
+  /* ── Glassmorphism — Light Mode ── */
+  --glass-bg:        rgba(255, 255, 255, 0.7);
+  --glass-border:    rgba(99, 102, 241, 0.15);
+  --glass-blur:      blur(12px);
+
+  /* ── Text — Light Mode ── */
+  --text-primary:    #0F172A;
+  --text-secondary:  #334155;
+  --text-muted:      #64748B;
+  --text-subtle:     #94A3B8;
+  --text-accent:     #6366F1;
+  --text-inverse:    #FFFFFF;
+
+  /* ── Borders ── */
+  --border-color:    rgba(99, 102, 241, 0.15);
+  --border-light:    rgba(0, 0, 0, 0.06);
+  --border-strong:   rgba(99, 102, 241, 0.3);
+
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg:   0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-xl:   0 20px 50px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 20px var(--primary-glow);
+  --shadow-card: 0 2px 20px rgba(99, 102, 241, 0.1);
 
   /* ── Spacing ── */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
+  --sp-1: 0.25rem; --sp-2: 0.5rem;  --sp-3: 0.75rem;
+  --sp-4: 1rem;    --sp-5: 1.25rem; --sp-6: 1.5rem;
+  --sp-8: 2rem;    --sp-10: 2.5rem; --sp-12: 3rem;
+  --sp-16: 4rem;   --sp-20: 5rem;
 
-  /* ── Border Radius — professional, not bubbly ── */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 8px;
+  /* ── Radius ── */
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* ── Shadows — flat depth, no glow ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.1);
+  /* ── Transitions ── */
+  --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:   120ms;
+  --dur-normal: 200ms;
+  --dur-slow:   350ms;
 
-  /* ── Transitions — fast, functional ── */
-  --transition-fast: 100ms ease;
-  --transition-base: 150ms ease;
+  /* ── Z-index ── */
+  --z-base:    0;
+  --z-above:   1;
+  --z-dropdown: 10;
+  --z-sticky:  20;
+  --z-overlay: 30;
+  --z-modal:   40;
+  --z-toast:   50;
+  --z-splash:  9999;
 
-  /* ── Z-Index ── */
-  --z-dropdown: 100;
-  --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-toast: 500;
-  --z-bottom-nav: 150;
-
-  /* ── Layout ── */
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1140px;
-  --header-height: 56px;
-  --bottom-nav-height: 56px;
-
-  /* ── Component Tokens ── */
-  --page-gutter: clamp(16px, 4vw, 24px);
-  --section-gap: clamp(24px, 4vw, 40px);
-  --card-padding: clamp(14px, 2.5vw, 20px);
-  --card-gap: 12px;
-  --max-content: 1140px;
+  /* ── Board Colors ── */
+  --board-ssc:      #3B82F6;
+  --board-railway:  #EF4444;
+  --board-banking:  #10B981;
+  --board-upsc:     #F59E0B;
+  --board-teaching: #06B6D4;
+  --board-defence:  #8B5CF6;
+  --board-state:    #F97316;
+  --board-poly:     #EC4899;
 }
 
-/* ── DARK MODE (Optional — user toggle) ── */
+/* ═══════════════════════════════════════════════════════════
+   DARK MODE — "Midnight Scholar"
+   ═══════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
-  --bg-primary: #111827;
-  --bg-secondary: #1F2937;
-  --bg-surface: #1F2937;
-  --bg-elevated: #374151;
-  --bg-sunken: #0F172A;
-  --bg-card: #1F2937;
-  --bg-card-hover: #283548;
-  --bg-input: #1F2937;
-  --bg-input-focus: #283548;
+  /* ── Backgrounds ── */
+  --bg-base:         #080B14;
+  --bg-primary:      #080B14;
+  --bg-secondary:    #0D1117;
+  --bg-surface:      #111827;
+  --bg-elevated:     #161F36;
+  --bg-sunken:       #050810;
+  --bg-card:         #111827;
+  --bg-card-hover:   #161F36;
+  --bg-input:        #0D1117;
+  --bg-input-focus:  #111827;
+  --bg-overlay:      rgba(0, 0, 0, 0.7);
 
-  --border-color: #374151;
-  --border-light: #283548;
+  /* ── Glassmorphism — Dark ── */
+  --glass-bg:        rgba(255, 255, 255, 0.04);
+  --glass-border:    rgba(255, 255, 255, 0.08);
+  --glass-blur:      blur(16px);
 
-  --text-primary: #F3F4F6;
-  --text-secondary: #D1D5DB;
-  --text-muted: #6B7280;
-  --text-accent: #60A5FA;
+  /* ── Primary adjustments ── */
+  --primary:         #818CF8;
+  --primary-dark:    #6366F1;
+  --primary-light:   rgba(129, 140, 248, 0.15);
+  --primary-text:    #A5B4FC;
+  --primary-glow:    rgba(99, 102, 241, 0.4);
+  --primary-bg:      rgba(99, 102, 241, 0.1);
 
-  --primary-light: rgba(37, 99, 235, 0.15);
-  --primary-text: #93BBFD;
-  --primary-bg: rgba(37, 99, 235, 0.12);
+  /* ── Text ── */
+  --text-primary:    #F1F5F9;
+  --text-secondary:  #CBD5E1;
+  --text-muted:      #64748B;
+  --text-subtle:     #475569;
+  --text-accent:     #A5B4FC;
+  --text-inverse:    #080B14;
 
-  --success-light: rgba(22, 163, 74, 0.15);
-  --warning-light: rgba(234, 88, 12, 0.15);
-  --danger-light: rgba(220, 38, 38, 0.15);
+  /* ── Borders ── */
+  --border-color:    rgba(255, 255, 255, 0.07);
+  --border-light:    rgba(255, 255, 255, 0.04);
+  --border-strong:   rgba(99, 102, 241, 0.3);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.35);
+  /* ── Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md:   0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:   0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-xl:   0 20px 50px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 30px var(--primary-glow);
+  --shadow-card: 0 2px 20px rgba(0, 0, 0, 0.4);
+
+  /* Keep board colors same */
+  --board-ssc:      #3B82F6;
+  --board-railway:  #EF4444;
+  --board-banking:  #10B981;
+  --board-upsc:     #F59E0B;
+  --board-teaching: #06B6D4;
+  --board-defence:  #8B5CF6;
+  --board-state:    #F97316;
+  --board-poly:     #EC4899;
 }
+
+/* Sync html bg for particle stacking layer */
+html[data-theme="dark"] { background: #080B14 !important; }
+html[data-theme="light"] { background: #F0F2FA !important; }

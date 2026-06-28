@@ -42,6 +42,15 @@ const ThemeManager = {
   }
 };
 
+ThemeManager.updateIcon = function() {
+  const moonIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+  const sunIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>';
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    btn.innerHTML = this.isDark() ? moonIcon : sunIcon;
+    btn.title = this.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+  });
+};
+
 // Apply theme ASAP (before DOM content loaded)
 ThemeManager.init();
 
@@ -315,6 +324,28 @@ const App = {
           </div>
         </div>
       </header>
+      ${isTest ? '' : this._renderMobileBottomNav(activePage)}
+    `;
+  },
+
+  _renderMobileBottomNav(activePage) {
+    const item = (page, label, icon) => `
+      <a href="#${page}" class="mobile-nav-item ${activePage === page ? 'active' : ''}" aria-label="${label}">
+        ${Icons.get(icon, 20)}
+        <span>${label}</span>
+      </a>
+    `;
+
+    return `
+      <nav class="mobile-bottom-nav" aria-label="Primary mobile navigation">
+        <div class="mobile-bottom-nav-inner">
+          ${item('home', 'Home', 'home')}
+          ${item('board?id=SSC', 'Exams', 'clipboard')}
+          ${item('setup', 'Tests', 'listChecks')}
+          ${item('analytics', 'Analytics', 'barChart')}
+          ${item('profile', 'Profile', 'user')}
+        </div>
+      </nav>
     `;
   },
 

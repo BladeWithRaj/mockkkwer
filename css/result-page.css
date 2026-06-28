@@ -1469,3 +1469,206 @@
   .rp-mistake-actions { flex-direction: column; }
   .rp-rec-item { flex-direction: column; gap: var(--space-2); }
 }
+
+/* Result page exam-portal override - removes glass, glow and gradient styling */
+.result-page-v2 {
+  max-width: var(--max-content);
+  padding: 22px var(--page-gutter) 72px;
+}
+
+.rp-bg-glow,
+.rp-banner-glass {
+  display: none;
+}
+
+.rp-banner,
+.rp-card,
+.rp-stat-box,
+.rp-mini-donut,
+.rp-metric,
+.rp-area-box,
+.rp-scatter-wrapper,
+.rp-scatter-detail-box,
+.rp-sdetail-question,
+.rp-sdetail-opt-item,
+.rp-swot-card,
+.rp-bench-tracks,
+.rp-rec-item,
+.rp-progress-stat,
+.rp-goal-item,
+.rp-review-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.rp-banner {
+  text-align: left;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.rp-banner::before {
+  background: var(--primary);
+}
+
+.rp-banner-title,
+.rp-card-title {
+  color: var(--text-primary) !important;
+}
+
+.rp-card {
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: border-color var(--transition-fast);
+}
+
+.rp-card:hover,
+.rp-stat-box:hover,
+.rp-metric:hover,
+.rp-rec-item:hover,
+.rp-progress-stat:hover,
+.rp-swot-card:hover {
+  transform: none;
+  box-shadow: none;
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+}
+
+.rp-card-header {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rp-card-icon.blue,
+.rp-card-icon.purple,
+.rp-card-icon.cyan {
+  background: var(--primary-bg);
+  color: var(--primary);
+}
+
+.rp-card-icon.green { background: var(--success-bg); color: var(--success); }
+.rp-card-icon.orange { background: var(--warning-bg); color: var(--warning); }
+.rp-card-icon.red { background: var(--danger-bg); color: var(--danger); }
+
+.rp-donut-score {
+  color: var(--primary);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+.rp-donut-bg,
+.rp-mini-donut-bg {
+  stroke: var(--border-color);
+}
+
+.rp-donut-fill {
+  stroke: var(--primary);
+}
+
+.rp-stat-box,
+.rp-mini-donut,
+.rp-metric,
+.rp-progress-stat {
+  padding: 12px;
+}
+
+.rp-breakdown-table {
+  border-spacing: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.rp-breakdown-table tr td {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rp-breakdown-table tr td:first-child,
+.rp-breakdown-table tr td:last-child {
+  border-radius: 0;
+}
+
+.rp-breakdown-table tr.total-row td {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+}
+
+.rp-subj-row,
+.rp-sdetail-header,
+.rp-sdetail-time-row,
+.rp-rewards-total,
+.rp-timeline-section,
+.rp-review-table thead tr,
+.rp-review-table tbody tr {
+  border-color: var(--border-color);
+}
+
+.rp-subj-bar-track,
+.rp-bar-track,
+.rp-timeline-track,
+.rp-xp-track {
+  background: var(--bg-input);
+}
+
+.rp-area-box.strong {
+  background: var(--success-bg);
+  border-color: var(--success-light);
+}
+
+.rp-area-box.weak {
+  background: var(--danger-bg);
+  border-color: var(--danger-light);
+}
+
+.rp-scatter-wrapper {
+  min-height: 260px;
+}
+
+.rp-sdot.green,
+.rp-sdot.red {
+  box-shadow: none;
+}
+
+.scatter-dot {
+  animation: none;
+  transition: r var(--transition-fast);
+}
+
+.scatter-dot.selected {
+  filter: none;
+}
+
+.rp-bench-bar.topper,
+.rp-bench-bar.you,
+.rp-bench-bar.avg,
+.rp-mistake-card {
+  background: var(--bg-input) !important;
+}
+
+.rp-bench-bar.you {
+  border-left-color: var(--primary);
+  color: var(--primary);
+}
+
+.rp-bench-bar.topper {
+  border-left-color: var(--info);
+  color: var(--info);
+}
+
+.rp-coins-badge,
+.rp-xp-badge,
+.rp-badge-pill {
+  border-radius: var(--radius-sm);
+}
+
+.animate-fadeInUp,
+.animate-fadeInDown,
+.animate-scaleIn {
+  animation: fadeIn 150ms ease both;
+}

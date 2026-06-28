@@ -235,11 +235,12 @@
 }
 
 .setup-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-6);
-  backdrop-filter: blur(16px);
+  padding: var(--sp-6, 1.5rem);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .setup-section-title {
@@ -258,27 +259,28 @@
 }
 
 .setup-chip {
-  padding: var(--space-3) var(--space-5);
-  background: var(--bg-glass);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  padding: var(--sp-3, 0.75rem) var(--sp-5, 1.25rem);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
   color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--dur-normal) var(--ease);
 }
 
 .setup-chip:hover {
-  border-color: var(--border-active);
-  color: var(--text-primary);
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-bg);
 }
 
 .setup-chip.active {
-  background: var(--accent-gradient);
+  background: linear-gradient(135deg, var(--primary-dark, #4F46E5), var(--primary));
   border-color: transparent;
   color: white;
-  box-shadow: var(--shadow-glow-primary);
+  box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .neg-mark-config {
@@ -4770,10 +4772,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(59, 130, 246, 0.04));
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 16px;
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-light);
+  border-radius: var(--radius-lg);
   margin-bottom: 20px;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .dash-profile-left {
@@ -4783,15 +4787,16 @@
 }
 
 .dash-avatar {
-  font-size: 42px;
-  width: 60px;
-  height: 60px;
+  font-size: 38px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   border-radius: 50%;
-  border: 2px solid rgba(99, 102, 241, 0.25);
+  border: 2px solid var(--primary-light);
+  box-shadow: 0 0 16px var(--primary-glow);
 }
 
 .dash-greeting h2 {
@@ -4846,20 +4851,22 @@
 }
 
 .dash-stat-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-md);
   padding: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: all 0.2s ease;
+  transition: all var(--dur-normal) var(--ease);
 }
 
 .dash-stat-card:hover {
-  border-color: var(--border-active);
+  border-color: var(--primary-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-card);
 }
 
 .dash-stat-icon {
@@ -4895,9 +4902,11 @@
 }
 
 .dash-today-card, .dash-trend-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--radius-md);
   padding: 20px;
 }
 
@@ -4918,7 +4927,7 @@
 
 .dash-goal-bar-wrap {
   height: 8px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-border);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 16px;
