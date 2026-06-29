@@ -1,131 +1,124 @@
 // ============================================
 // HOME PAGE — Clean Scholar v7
-// 3 sections: Continue/Start, Popular Exams, Daily Challenge
+// 4 sections: Hero/Continue, Categories, Popular Tests, Daily Challenge
 // One Primary Action: Start Test
 // ============================================
 
 const HomePage = {
-  _boardDesignTokens: {
-    'SSC': { color: 'var(--board-ssc)', icon: 'clipboard', label: 'SSC', desc: 'Staff Selection Commission' },
-    'Railway': { color: 'var(--board-railway)', icon: 'train', label: 'Railway', desc: 'Railway Recruitment Board' },
-    'Banking': { color: 'var(--board-banking)', icon: 'landmark', label: 'Banking', desc: 'IBPS & bank exams' },
-    'UPSC': { color: 'var(--board-upsc)', icon: 'scale', label: 'UPSC', desc: 'Union Public Service Commission' },
-    'Teaching': { color: 'var(--board-teaching)', icon: 'graduationCap', label: 'Teaching', desc: 'CTET and teaching exams' },
-    'Defence': { color: 'var(--board-defence)', icon: 'shield', label: 'Defence', desc: 'CDS, NDA and defence exams' },
-    'State': { color: 'var(--board-state)', icon: 'building', label: 'State Exams', desc: 'State level examinations' }
+
+  _boardConfig: {
+    SSC:      { icon: '📋', color: 'var(--board-ssc)',      label: 'SSC',         desc: 'CGL · CHSL · MTS',       bg: '#EFF6FF' },
+    Railway:  { icon: '🚆', color: 'var(--board-railway)',  label: 'Railway',     desc: 'NTPC · Group D · ALP',   bg: '#FEF2F2' },
+    Banking:  { icon: '🏦', color: 'var(--board-banking)',  label: 'Banking',     desc: 'IBPS · SBI · RBI',       bg: '#ECFDF5' },
+    UPSC:     { icon: '⚖️', color: 'var(--board-upsc)',     label: 'UPSC',        desc: 'IAS · IPS · IFS',        bg: '#FFFBEB' },
+    Teaching: { icon: '🎓', color: 'var(--board-teaching)', label: 'Teaching',    desc: 'CTET · STET · TET',      bg: '#ECFEFF' },
+    Defence:  { icon: '🛡️', color: 'var(--board-defence)',  label: 'Defence',     desc: 'CDS · NDA · AFCAT',      bg: '#F5F3FF' },
+    State:    { icon: '🏛️', color: 'var(--board-state)',    label: 'State Exams', desc: 'PSC · State level',      bg: '#FFF7ED' }
+  },
+
+  _getBoards() {
+    const allPresets = window.ExamPresets?.getAll ? ExamPresets.getAll() : [];
+    const boardMap = {};
+    for (const p of allPresets) {
+      const cat = p.category || 'Other';
+      if (cat === 'Quick' || cat === 'Daily') continue;
+      if (!boardMap[cat]) boardMap[cat] = 0;
+      boardMap[cat]++;
+    }
+    return Object.keys(boardMap).length
+      ? Object.entries(boardMap).map(([id, count]) => ({ id, count, ...this._boardConfig[id] || { icon: '📝', color: 'var(--primary)', label: id, desc: 'Exam category', bg: '#F8FAFC' } }))
+      : Object.entries(this._boardConfig).map(([id, cfg]) => ({ id, count: 5, ...cfg }));
   },
 
   _getPopularExams() {
-    const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
-    return allPresets
+    if (!window.ExamPresets?.getAll) return [];
+    return ExamPresets.getAll()
       .filter(p => p.category !== 'Quick' && p.category !== 'Daily')
       .slice(0, 6)
       .map(p => ({
         id: p.id,
         name: p.name,
-        category: p.category || 'Exam',
+        category: p.category || '',
         questions: p.totalQuestions || 0,
         minutes: Math.round((p.totalTime || 0) / 60),
-        negative: p.negativeMarking ? `-${p.negativeValue}` : 'No neg.'
+        neg: p.negativeMarking ? `−${p.negativeValue}` : 'No neg.'
       }));
   },
 
-  _getBoards() {
-    const allPresets = ExamPresets.getAll ? ExamPresets.getAll() : [];
-    if (!allPresets.length) return this._getDefaultBoards();
-
-    const boardMap = {};
-    for (const preset of allPresets) {
-      const cat = preset.category || 'Other';
-      if (cat === 'Quick' || cat === 'Daily') continue;
-      if (!boardMap[cat]) boardMap[cat] = { id: cat, count: 0 };
-      boardMap[cat].count++;
-    }
-
-    return Object.values(boardMap).map(board => {
-      const tokens = this._boardDesignTokens[board.id] || {};
-      return {
-        id: board.id,
-        icon: tokens.icon || 'fileText',
-        color: tokens.color || 'var(--primary)',
-        label: tokens.label || board.id,
-        desc: tokens.desc || 'Exam category',
-        count: board.count
-      };
-    });
-  },
-
-  _getDefaultBoards() {
-    return [
-      { id: 'SSC', icon: 'clipboard', color: 'var(--board-ssc)', label: 'SSC', desc: 'Staff Selection Commission', count: 5 },
-      { id: 'Railway', icon: 'train', color: 'var(--board-railway)', label: 'Railway', desc: 'Railway Recruitment Board', count: 4 },
-      { id: 'Banking', icon: 'landmark', color: 'var(--board-banking)', label: 'Banking', desc: 'IBPS and bank exams', count: 3 },
-      { id: 'UPSC', icon: 'scale', color: 'var(--board-upsc)', label: 'UPSC', desc: 'Union Public Service Commission', count: 3 },
-      { id: 'Teaching', icon: 'graduationCap', color: 'var(--board-teaching)', label: 'Teaching', desc: 'CTET and teaching exams', count: 3 },
-      { id: 'Defence', icon: 'shield', color: 'var(--board-defence)', label: 'Defence', desc: 'CDS, NDA and defence exams', count: 3 }
-    ];
-  },
-
   render() {
-    const hasResumeTest = !!Storage.getCurrentTest();
-    const dailyDone = DailySystem.isDailyDone();
-    const streakAlive = DailySystem.isStreakAlive();
+    const hasResume = !!window.Storage?.getCurrentTest?.();
+    const dailyDone = window.DailySystem?.isDailyDone?.() || false;
+    const streak = window.DailySystem?.getStreak?.()?.current || 0;
+    const boards = this._getBoards();
+    const exams = this._getPopularExams();
 
     return `
-      <div class="page-enter hp">
+      <div class="hp page-enter">
         <div class="hp-container">
 
-          <!-- Section 1: Continue / Start -->
-          ${hasResumeTest ? this._renderContinue() : this._renderWelcome()}
+          ${hasResume ? this._renderContinue() : this._renderHero(streak)}
 
-          <!-- Section 2: Exam Categories -->
-          <section class="hp-section">
-            <h2 class="hp-section-title">Exam Categories</h2>
+          <!-- Exam Categories -->
+          <div class="hp-section">
+            <div class="hp-section-title">Choose Your Exam</div>
             <div class="hp-board-grid">
-              ${this._getBoards().map(board => `
-                <a href="#board?id=${board.id}" class="hp-board-card" style="--bc: ${board.color};">
-                  <div class="hp-board-icon" style="color: ${board.color}">
-                    ${Icons.get(board.icon, 18)}
+              ${boards.map(b => `
+                <a href="#board?id=${b.id}" class="hp-board-card" style="--bc:${b.color}">
+                  <div class="hp-board-icon" style="background:${b.bg || 'var(--bg-secondary)'};color:${b.color}">
+                    <span style="font-size:18px;line-height:1">${b.icon || '📝'}</span>
                   </div>
-                  <div class="hp-board-info">
-                    <div class="hp-board-name">${board.label}</div>
-                    <div class="hp-board-desc">${board.desc}</div>
+                  <div style="flex:1;min-width:0">
+                    <div class="hp-board-name">${b.label}</div>
+                    <div class="hp-board-count">${b.desc || b.count + ' tests'}</div>
                   </div>
-                  <span class="hp-board-count">${board.count}</span>
+                  <div class="hp-board-chevron">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
                 </a>
               `).join('')}
             </div>
-          </section>
+          </div>
 
-          <!-- Section 3: Popular Exams -->
-          <section class="hp-section">
-            <h2 class="hp-section-title">Popular Tests</h2>
+          <!-- Popular Tests -->
+          ${exams.length ? `
+          <div class="hp-section">
+            <div class="hp-section-title">Popular Tests</div>
             <div class="hp-exam-list">
-              ${this._getPopularExams().map(exam => `
-                <div class="hp-exam-card" onclick="HomePage.startPresetExam('${exam.id}')">
-                  <div class="hp-exam-info">
-                    <div class="hp-exam-name">${exam.name}</div>
-                    <div class="hp-exam-meta">${exam.questions}Q · ${exam.minutes} min · ${exam.negative}</div>
+              ${exams.map(e => `
+                <div class="hp-exam-card" onclick="HomePage._startExam('${e.id}')">
+                  <div>
+                    <div class="hp-exam-name">${e.name}</div>
+                    <div class="hp-exam-meta">${e.questions} Qs · ${e.minutes} min · ${e.neg}</div>
                   </div>
-                  <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); HomePage.startPresetExam('${exam.id}')">Start</button>
+                  <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();HomePage._startExam('${e.id}')">
+                    Start →
+                  </button>
                 </div>
               `).join('')}
             </div>
-          </section>
+          </div>
+          ` : ''}
 
-          <!-- Section 4: Daily Challenge -->
-          <section class="hp-section">
-            <div class="hp-daily-card ${dailyDone ? 'done' : ''}" ${dailyDone ? '' : 'onclick="HomePage.startDailyChallenge()"'}>
+          <!-- Daily Challenge -->
+          <div class="hp-section">
+            <div class="hp-section-title">Daily Challenge</div>
+            <div class="hp-daily-card ${dailyDone ? 'done' : ''}" ${!dailyDone ? `onclick="HomePage._startDaily()"` : ''}>
               <div class="hp-daily-left">
-                <div class="hp-daily-icon">${Icons.get(streakAlive ? 'flame' : 'clock', 20)}</div>
+                <div class="hp-daily-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                  </svg>
+                </div>
                 <div>
-                  <div class="hp-daily-title">Daily Challenge</div>
-                  <div class="hp-daily-meta">15 Questions · 10 Minutes</div>
+                  <div class="hp-daily-title">Today's Challenge</div>
+                  <div class="hp-daily-meta">15 questions · 10 minutes${streak > 0 ? ` · 🔥 ${streak} day streak` : ''}</div>
                 </div>
               </div>
-              <span class="hp-daily-action">${dailyDone ? 'Done ✓' : 'Start →'}</span>
+              <span class="hp-daily-action">${dailyDone ? '✓ Completed' : 'Start →'}</span>
             </div>
-          </section>
+          </div>
 
         </div>
 
@@ -134,73 +127,51 @@ const HomePage = {
     `;
   },
 
+  _renderHero(streak) {
+    return `
+      <div class="hp-hero">
+        <div class="hp-hero-eyebrow">Free mock tests for competitive exams</div>
+        <h1 class="hp-welcome-title">Prepare smarter.<br>Score higher.</h1>
+        <p class="hp-welcome-text">
+          SSC, Railway, Banking, UPSC — full-length mock tests with real exam patterns and instant results.
+        </p>
+        <div class="hp-hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')">Start Practice Test →</button>
+          <a href="#leaderboard" class="btn btn-secondary">View Leaderboard</a>
+        </div>
+      </div>
+    `;
+  },
+
   _renderContinue() {
     return `
-      <section class="hp-section hp-hero-section">
-        <div class="hp-continue-card">
-          <div class="hp-continue-info">
-            <div class="hp-continue-label">Continue your test</div>
-            <div class="hp-continue-text">You have a test in progress on this device.</div>
-          </div>
-          <button class="btn btn-primary" onclick="App.navigate('test')">
-            Continue →
-          </button>
+      <div class="hp-continue-card">
+        <div>
+          <div class="hp-continue-label">Test in Progress</div>
+          <div class="hp-continue-name">Continue where you left off</div>
+          <div class="hp-continue-meta">Your answers are saved</div>
         </div>
-      </section>
+        <button class="btn btn-primary" onclick="App.navigate('test')">Continue →</button>
+      </div>
     `;
   },
 
-  _renderWelcome() {
-    return `
-      <section class="hp-section hp-hero-section">
-        <div class="hp-welcome">
-          <h1 class="hp-welcome-title">Practice for competitive exams</h1>
-          <p class="hp-welcome-text">SSC, Railway, Banking, UPSC — free mock tests with real exam pattern.</p>
-          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')">
-            Start Mock Test →
-          </button>
-        </div>
-      </section>
-    `;
+  async _startExam(presetId) {
+    if (!window.ExamPresets) return;
+    const cfg = ExamPresets.buildConfig(presetId);
+    if (!cfg) { window.Helpers?.showToast?.('Exam not found', 'error'); return; }
+    App.navigate('setup', { preset: presetId });
   },
 
-  // ── Actions ──
-
-  async startPresetExam(presetId) {
-    const config = ExamPresets.buildConfig(presetId);
-    if (!config) { Helpers.showToast('Exam preset not found', 'error'); return; }
-    App.navigate('setup', {
-      preset: presetId, exam: config.examName,
-      subjects: config.subjects.join(','), questions: config.numQuestions,
-      time: Math.round(config.totalTime / 60),
-      neg: config.negativeMarking ? config.negativeValue : 0
-    });
-  },
-
-  async startDailyChallenge() {
-    if (DailySystem.isDailyDone()) { Helpers.showToast('Daily challenge already completed today', 'info'); return; }
-    const config = DailySystem.getDailyConfig();
-    if (!config) { Helpers.showToast('Could not load daily challenge config', 'error'); return; }
-    App.navigate('setup', {
-      preset: 'daily-challenge', exam: 'Daily Challenge',
-      subjects: config.subjects.join(','), questions: config.numQuestions,
-      time: Math.round(config.totalTime / 60),
-      neg: config.negativeMarking ? config.negativeValue : 0, daily: '1'
-    });
-  },
-
-  async startQuickMode(modeId) {
-    const config = ExamPresets.buildConfig(modeId);
-    if (!config) { Helpers.showToast('Mode not found', 'error'); return; }
-    App.navigate('setup', {
-      preset: modeId, exam: config.examName,
-      subjects: config.subjects.join(','), questions: config.numQuestions,
-      time: Math.round(config.totalTime / 60),
-      neg: config.negativeMarking ? config.negativeValue : 0
-    });
+  async _startDaily() {
+    if (window.DailySystem?.isDailyDone?.()) {
+      window.Helpers?.showToast?.('Daily challenge already completed today', 'info');
+      return;
+    }
+    App.navigate('setup', { preset: 'daily-challenge', daily: '1' });
   },
 
   afterRender() {
-    if (window.trackEvent) window.trackEvent('page_view', { page: 'home' });
+    if (window.trackEvent) trackEvent('page_view', { page: 'home' });
   }
 };

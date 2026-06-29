@@ -310,6 +310,11 @@
   font-size: var(--text-sm);
   color: var(--text-primary);
 }
+.dropdown-email {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
 .dropdown-divider {
   height: 1px;
   background: var(--border-color);
