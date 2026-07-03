@@ -212,7 +212,8 @@ const App = {
       const isBoardMode = page === 'test' && typeof RendererRouter !== 'undefined' && RendererRouter.shouldUseBoardRenderer();
       const isLegacyCBT = page === 'test' && typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT();
       const isTestPage = page === 'test';
-      appEl.innerHTML = (isBoardMode || isLegacyCBT || isTestPage) ? html : (this._renderHeader(page) + html);
+      const footer = (isBoardMode || isLegacyCBT || isTestPage) ? '' : this._renderFooter();
+      appEl.innerHTML = (isBoardMode || isLegacyCBT || isTestPage) ? html : (this._renderHeader(page) + html + footer);
     } catch (renderErr) {
       console.error(`[ERROR BOUNDARY] Page "${page}" render crashed:`, renderErr);
       appEl.innerHTML = this._renderHeader(page) + this._renderCrash(page, renderErr);
@@ -452,17 +453,91 @@ const App = {
   },
 
   _renderFooter() {
+    const year = new Date().getFullYear();
     return `
-      <footer class="footer">
-        <div class="footer-inner">
-          <div class="footer-brand">Mock<span>24hr</span></div>
-          <div class="footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Contact</a>
+      <footer class="site-footer" role="contentinfo">
+
+        <!-- Newsletter Strip -->
+        <div class="footer-newsletter">
+          <div class="footer-newsletter-inner">
+            <div class="footer-newsletter-text">
+              <h4>📬 Stay Updated with Daily Mocks</h4>
+              <p>Get free daily challenges, exam tips &amp; cut-off alerts on Telegram</p>
+            </div>
+            <div class="footer-newsletter-form">
+              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--primary);color:#fff;border-radius:10px;text-decoration:none;font-size:13.5px;font-weight:600;transition:opacity 0.2s;" onmouseover="this.style.opacity=0.88" onmouseout="this.style.opacity=1">
+                <span style="font-size:18px;">✈️</span> Join Telegram Channel
+              </a>
+            </div>
           </div>
-          <div class="footer-copy">&copy; ${new Date().getFullYear()} Mock24hr</div>
         </div>
+
+        <!-- Main Footer Grid -->
+        <div class="footer-top">
+
+          <!-- Brand column -->
+          <div class="footer-brand">
+            <a href="#home" class="footer-logo">Mock<span>24hr</span></a>
+            <p class="footer-tagline">India's most trusted free mock test platform for SSC, Railway, Banking &amp; UPSC. Practice smarter, score higher.</p>
+            <div class="footer-social">
+              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Telegram" aria-label="Telegram">✈️</a>
+              <a href="https://youtube.com/@mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="YouTube" aria-label="YouTube">▶️</a>
+              <a href="https://instagram.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Instagram" aria-label="Instagram">📷</a>
+              <a href="https://twitter.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Twitter/X" aria-label="Twitter">🐦</a>
+            </div>
+          </div>
+
+          <!-- Exams column -->
+          <div>
+            <div class="footer-col-title">Exams</div>
+            <ul class="footer-col-links">
+              <li><a href="#board?id=SSC">SSC (CGL, CHSL, GD)</a></li>
+              <li><a href="#board?id=Railway">Railway (NTPC, Group D)</a></li>
+              <li><a href="#board?id=Banking">Banking (IBPS, SBI)</a></li>
+              <li><a href="#board?id=UPSC">UPSC (Prelims, EPFO)</a></li>
+              <li><a href="#polytechnic">Polytechnic (BTEUP)</a></li>
+            </ul>
+          </div>
+
+          <!-- Features column -->
+          <div>
+            <div class="footer-col-title">Features</div>
+            <ul class="footer-col-links">
+              <li><a href="#setup?preset=daily-challenge&daily=1">Daily Challenge</a></li>
+              <li><a href="#battle">AI Battle Mode</a></li>
+              <li><a href="#dashboard">Dashboard</a></li>
+              <li><a href="#analytics">Analytics</a></li>
+              <li><a href="#profile">My Profile</a></li>
+            </ul>
+          </div>
+
+          <!-- Company column -->
+          <div>
+            <div class="footer-col-title">Company</div>
+            <ul class="footer-col-links">
+              <li><a href="about.html">About Us</a></li>
+              <li><a href="contact.html">Contact Us</a></li>
+              <li><a href="privacy.html">Privacy Policy</a></li>
+              <li><a href="terms.html">Terms of Service</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="footer-divider"></div>
+
+        <!-- Bottom bar -->
+        <div class="footer-bottom">
+          <div class="footer-copyright">
+            &copy; ${year} Mock24hr. All rights reserved. Made with ❤️ in India.
+          </div>
+          <ul class="footer-bottom-links">
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
       </footer>
     `;
   },

@@ -54,6 +54,15 @@ const HomePage = {
           <!-- Hot & Trending Mock Cards -->
           ${this._renderHotMocks()}
 
+          <!-- Features / Why Mock24hr -->
+          ${this._renderFeatures()}
+
+          <!-- Testimonials -->
+          ${this._renderTestimonials()}
+
+          <!-- FAQ -->
+          ${this._renderFAQ()}
+
           <!-- Stats (logged-in only) -->
           ${isLoggedIn ? this._renderStatsStrip(streak) : ''}
 
@@ -303,6 +312,132 @@ const HomePage = {
 
 
   // ── HELPERS ──
+
+  // ── FEATURES SECTION ──
+  _renderFeatures() {
+    const features = [
+      { icon: '🎯', title: 'Real Exam Pattern',      desc: 'Questions modelled exactly on official syllabus & past papers with accurate difficulty.' },
+      { icon: '⏱️', title: 'Timed Mock Tests',       desc: 'Strict countdown timers with auto-submit — just like the real exam environment.' },
+      { icon: '📊', title: 'Deep Analysis',          desc: 'Subject-wise accuracy, time-per-question, percentile rank & improvement tips.' },
+      { icon: '🤖', title: 'AI Battle Mode',         desc: 'Compete 1-on-1 against an AI opponent in real-time to sharpen speed & accuracy.' },
+      { icon: '🔥', title: 'Daily Challenges',       desc: '15 adaptive questions every day to maintain your streak and stay consistent.' },
+      { icon: '📱', title: 'Mobile Friendly',        desc: 'Fully responsive design — practice on phone, tablet or desktop, anywhere anytime.' },
+    ];
+    return `
+      <section style="padding: 56px 0 8px; max-width: 1200px; margin: 0 auto;">
+        <div style="text-align:center; margin-bottom: 36px;">
+          <div style="display:inline-block; background:rgba(99,102,241,0.1); color:var(--primary); font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:5px 14px; border-radius:100px; margin-bottom:12px;">Why Mock24hr?</div>
+          <h2 style="font-size:clamp(22px,4vw,32px); font-weight:800; color:var(--text-primary); letter-spacing:-0.02em; margin:0 0 10px;">Everything You Need to <span style="color:var(--primary);">Crack the Exam</span></h2>
+          <p style="font-size:15px; color:var(--text-secondary); max-width:520px; margin:0 auto;">From practice to analysis, we've got every tool a serious aspirant needs.</p>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; padding:0 16px;">
+          ${features.map((f, i) => `
+            <div style="
+              background:var(--bg-secondary);
+              border:1px solid var(--border-color);
+              border-radius:18px;
+              padding:24px 22px;
+              transition:transform 0.2s, border-color 0.2s;
+              animation: fadeInUp 0.4s ease both;
+              animation-delay:${i * 60}ms;
+            "
+            onmouseover="this.style.transform='translateY(-3px)';this.style.borderColor='var(--primary)'"
+            onmouseout="this.style.transform='';this.style.borderColor='var(--border-color)'">
+              <div style="font-size:28px; margin-bottom:12px;">${f.icon}</div>
+              <div style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:7px;">${f.title}</div>
+              <div style="font-size:13.5px; color:var(--text-secondary); line-height:1.6;">${f.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  },
+
+  // ── TESTIMONIALS ──
+  _renderTestimonials() {
+    const reviews = [
+      { name: 'Amit Kumar',    exam: 'SSC CGL 2024',       score: '★★★★★', text: 'Mock24hr ke regular mocks ne meri speed aur accuracy dono improve ki. Final mein 148/200 mile!', avatar: 'A', clr: '#4F46E5' },
+      { name: 'Priya Sharma',  exam: 'IBPS PO 2024',       score: '★★★★★', text: 'AI Battle mode mujhe bahut pasand hai — isse competitive feel aata hai. Banking mein select ho gayi!', avatar: 'P', clr: '#10B981' },
+      { name: 'Rahul Yadav',   exam: 'RRB NTPC 2024',      score: '★★★★☆', text: 'Analysis section bahut detailed hai — pata chalta hai exact weakness kahan hai. Highly recommend!', avatar: 'R', clr: '#F59E0B' },
+      { name: 'Sneha Singh',   exam: 'SBI PO Prelims',     score: '★★★★★', text: 'Daily Challenge feature ne mere study schedule ko disciplined bana diya. Interview tak pahunch gayi!', avatar: 'S', clr: '#EC4899' },
+    ];
+    return `
+      <section style="padding: 56px 0 8px; background:var(--bg-secondary); margin: 48px -16px 0; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color);">
+        <div style="max-width:1200px; margin:0 auto; padding: 0 16px;">
+          <div style="text-align:center; margin-bottom: 36px;">
+            <div style="display:inline-block; background:rgba(16,185,129,0.1); color:#10B981; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:5px 14px; border-radius:100px; margin-bottom:12px;">Student Reviews</div>
+            <h2 style="font-size:clamp(22px,4vw,30px); font-weight:800; color:var(--text-primary); letter-spacing:-0.02em; margin:0 0 10px;">Toppers Trust <span style="color:#10B981;">Mock24hr</span></h2>
+            <p style="font-size:15px; color:var(--text-secondary);">Real reviews from real aspirants who cracked their exams.</p>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;">
+            ${reviews.map(r => `
+              <div style="background:var(--bg-primary); border:1px solid var(--border-color); border-radius:18px; padding:22px 20px; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+                <div style="color:#F59E0B; font-size:15px; margin-bottom:12px; letter-spacing:1px;">${r.score}</div>
+                <p style="font-size:13.5px; color:var(--text-secondary); line-height:1.65; margin:0 0 16px; font-style:italic;">&ldquo;${r.text}&rdquo;</p>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div style="width:36px;height:36px;border-radius:50%;background:${r.clr};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">${r.avatar}</div>
+                  <div>
+                    <div style="font-size:13.5px;font-weight:700;color:var(--text-primary);">${r.name}</div>
+                    <div style="font-size:11.5px;color:var(--text-muted);">${r.exam}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </section>
+    `;
+  },
+
+  // ── FAQ SECTION ──
+  _renderFAQ() {
+    const faqs = [
+      { q: 'Kya Mock24hr bilkul free hai?',                   a: 'Haan! Mock24hr completely free hai. SSC, Railway, Banking, UPSC ke sare mocks bina kisi payment ke available hain.' },
+      { q: 'Kya questions real exam jaise hote hain?',         a: 'Haan, hamare questions official syllabus aur previous year papers ke basis par bante hain. Difficulty level bhi actual exam jaise hota hai.' },
+      { q: 'Result aur analysis kahan dekhun?',               a: 'Har mock test ke baad detailed analysis milti hai — subject-wise accuracy, time-per-question, rank, aur improvement areas.' },
+      { q: 'Kya mobile pe use kar sakte hain?',                a: 'Bilkul! Mock24hr fully mobile-responsive hai. Android aur iOS dono par browser mein perfectly kaam karta hai.' },
+      { q: 'AI Battle Mode kya hota hai?',                     a: 'AI Battle Mode mein aap ek AI opponent ke against real-time mock test khelti/khelte ho. Speed aur accuracy dono test hoti hai.' },
+      { q: 'Kya mera progress save hota hai?',                 a: 'Haan, Google login ke baad aapka poora progress — tests, scores, streaks — dashboard mein save rehta hai.' },
+    ];
+    return `
+      <section style="padding: 56px 0; max-width: 780px; margin: 0 auto;">
+        <div style="text-align:center; margin-bottom:36px; padding: 0 16px;">
+          <div style="display:inline-block; background:rgba(245,158,11,0.1); color:#D97706; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:5px 14px; border-radius:100px; margin-bottom:12px;">FAQ</div>
+          <h2 style="font-size:clamp(22px,4vw,30px); font-weight:800; color:var(--text-primary); letter-spacing:-0.02em; margin:0 0 10px;">Frequently Asked <span style="color:#D97706;">Questions</span></h2>
+          <p style="font-size:15px; color:var(--text-secondary);">Koi sawaal hai? Yahan dekho.</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; padding: 0 16px;" id="hp-faq">
+          ${faqs.map((f, i) => `
+            <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;overflow:hidden;" id="faq-item-${i}">
+              <button onclick="HomePage._toggleFaq(${i})" style="width:100%;text-align:left;padding:18px 20px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;" aria-expanded="false">
+                <span style="font-size:14px;font-weight:600;color:var(--text-primary);">${f.q}</span>
+                <span id="faq-icon-${i}" style="font-size:18px;color:var(--text-muted);transition:transform 0.2s;flex-shrink:0;">+</span>
+              </button>
+              <div id="faq-body-${i}" style="max-height:0;overflow:hidden;transition:max-height 0.3s ease;">
+                <div style="padding:0 20px 18px;font-size:13.5px;color:var(--text-secondary);line-height:1.7;">${f.a}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+  },
+
+  _toggleFaq(index) {
+    const body = document.getElementById(`faq-body-${index}`);
+    const icon = document.getElementById(`faq-icon-${index}`);
+    if (!body || !icon) return;
+    const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+    // Close all
+    document.querySelectorAll('[id^="faq-body-"]').forEach(b => b.style.maxHeight = '0px');
+    document.querySelectorAll('[id^="faq-icon-"]').forEach(ic => { ic.textContent = '+'; ic.style.transform = ''; });
+    if (!isOpen) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      icon.textContent = '−';
+      icon.style.transform = 'rotate(0deg)';
+    }
+  },
+
   _getBoards() {
     const allPresets = window.ExamPresets?.getAll ? ExamPresets.getAll() : [];
     const boardMap = {};

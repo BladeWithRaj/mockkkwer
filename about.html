@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hi-en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="About Mock24hr - India's free mock test platform for SSC, Railway, Banking and UPSC preparation.">
+  <title>About Us — Mock24hr</title>
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --primary: #4F46E5; --bg: #0F1117; --bg2: #1A1D27; --border: rgba(255,255,255,0.08); --text: #F1F5F9; --muted: #94A3B8; --font: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); max-width: 1100px; margin: 0 auto; }
+    .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; color: var(--primary); text-decoration: none; }
+    .logo span { color: var(--text); }
+    .back-btn { padding: 8px 18px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); background: transparent; cursor: pointer; font-family: var(--font); font-size: 13.5px; text-decoration: none; transition: border-color 0.2s; }
+    .back-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 56px 24px 96px; }
+    /* Hero */
+    .hero { text-align: center; padding: 32px 16px 64px; }
+    .badge { display: inline-block; background: rgba(79,70,229,0.12); color: #818CF8; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
+    h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; letter-spacing: -0.025em; margin-bottom: 16px; }
+    .hero-sub { font-size: 17px; color: var(--muted); max-width: 560px; margin: 0 auto 40px; }
+    /* Stats strip */
+    .stats-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 72px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 28px 20px; text-align: center; }
+    .stat-value { font-size: 32px; font-weight: 800; letter-spacing: -0.03em; color: var(--primary); }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    /* Mission */
+    .section { margin-bottom: 64px; }
+    .section-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 14px; border-radius: 100px; margin-bottom: 14px; }
+    h2 { font-size: clamp(22px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
+    p { font-size: 15px; color: var(--muted); margin-bottom: 16px; max-width: 720px; }
+    /* Values grid */
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+    .value-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 24px 20px; transition: transform 0.2s, border-color 0.2s; }
+    .value-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+    .value-icon { font-size: 28px; margin-bottom: 12px; }
+    .value-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .value-desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+    /* CTA */
+    .cta { background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius: 24px; padding: 56px 32px; text-align: center; }
+    .cta h2 { max-width: 100%; }
+    .cta p { max-width: 480px; margin: 0 auto 28px; }
+    .cta-btn { display: inline-block; padding: 14px 32px; background: var(--primary); color: #fff; border-radius: 12px; text-decoration: none; font-size: 15px; font-weight: 700; transition: opacity 0.2s, transform 0.15s; }
+    .cta-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+    footer { text-align: center; padding: 32px 16px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); margin-top: 32px; }
+    footer a { color: var(--primary); text-decoration: none; }
+    @media (max-width: 700px) { .stats-strip { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 450px) { .stats-strip { grid-template-columns: 1fr 1fr; } .cta { padding: 36px 20px; } }
+  </style>
+</head>
+<body>
+  <div style="max-width:1100px;margin:0 auto;">
+    <nav class="nav">
+      <a href="/" class="logo">Mock<span>24hr</span></a>
+      <a href="/" class="back-btn">← Back to Home</a>
+    </nav>
+  </div>
+
+  <div class="container">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="badge">Our Story</div>
+      <h1>Built for <span style="color:var(--primary);">India's Aspirants</span></h1>
+      <p class="hero-sub">Mock24hr was born from a simple belief: every student deserves access to high-quality mock tests — completely free, forever.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip">
+      <div class="stat-card"><div class="stat-value">2.5M+</div><div class="stat-label">Students Registered</div></div>
+      <div class="stat-card"><div class="stat-value">25M+</div><div class="stat-label">Mocks Attempted</div></div>
+      <div class="stat-card"><div class="stat-value">1.2M+</div><div class="stat-label">Tests Completed</div></div>
+      <div class="stat-card"><div class="stat-value">98.4%</div><div class="stat-label">Success Rate</div></div>
+    </div>
+
+    <!-- Mission -->
+    <div class="section">
+      <div class="section-badge" style="background:rgba(99,102,241,0.1);color:#818CF8;">Our Mission</div>
+      <h2>Democratize Exam Preparation</h2>
+      <p>Cracking India's toughest competitive exams — SSC, Railway, Banking, UPSC — requires consistent practice, smart analysis, and real exam simulation. Yet, quality mock test platforms remain expensive or cluttered with ads.</p>
+      <p>We built Mock24hr to change that. Our platform provides unlimited mock tests, detailed performance analysis, AI-powered insights, and a battle mode — all completely free. No subscriptions. No paywalls. No excuses.</p>
+      <p>Whether you're in a metro city or a small town, Mock24hr gives you the same edge as any premium coaching student.</p>
+    </div>
+
+    <!-- Values -->
+    <div class="section">
+      <div class="section-badge" style="background:rgba(16,185,129,0.1);color:#10B981;">Our Values</div>
+      <h2>What We Stand For</h2>
+      <div class="values-grid">
+        <div class="value-card"><div class="value-icon">🆓</div><div class="value-title">Free Forever</div><div class="value-desc">Core features will always be free. We believe no student should be left behind due to financial constraints.</div></div>
+        <div class="value-card"><div class="value-icon">✅</div><div class="value-title">Quality First</div><div class="value-desc">Every question is carefully curated from official sources, previous year papers, and expert contributors.</div></div>
+        <div class="value-card"><div class="value-icon">🔒</div><div class="value-title">Privacy Respected</div><div class="value-desc">We collect minimal data, never sell it, and give you full control over your information.</div></div>
+        <div class="value-card"><div class="value-icon">⚡</div><div class="value-title">Fast & Reliable</div><div class="value-desc">Our platform is optimized for low-bandwidth connections — because aspirants come from every corner of India.</div></div>
+        <div class="value-card"><div class="value-icon">🤝</div><div class="value-title">Community Driven</div><div class="value-desc">We listen to our students. Features are built based on real feedback from real aspirants.</div></div>
+        <div class="value-card"><div class="value-icon">📈</div><div class="value-title">Always Improving</div><div class="value-desc">New questions, new features, and platform updates are shipped regularly to keep you ahead of the curve.</div></div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+      <div class="badge" style="background:rgba(255,255,255,0.08);color:#94A3B8;">Join Us</div>
+      <h2>Ready to Start <span style="color:var(--primary);">Practicing?</span></h2>
+      <p>Join 2.5 million aspirants who trust Mock24hr for their exam preparation. Start your first free mock test today — no registration required.</p>
+      <a href="/" class="cta-btn">Start Free Test →</a>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 Mock24hr. Made with ❤️ in India. &nbsp;|&nbsp; <a href="/">Home</a> &nbsp;|&nbsp; <a href="contact.html">Contact</a> &nbsp;|&nbsp; <a href="privacy.html">Privacy</a></p>
+  </footer>
+</body>
+</html>

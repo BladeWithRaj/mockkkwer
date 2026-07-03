@@ -10,6 +10,12 @@
       "destination": "/api/index.js"
     }
   ],
+  "errors": [
+    {
+      "statusCode": 404,
+      "source": "/404.html"
+    }
+  ],
   "headers": [
     {
       "source": "/sw.js",
