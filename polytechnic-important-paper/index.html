@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BTEUP Paper Predictor — Mock24hr</title>
+  <title>BTEUP Paper Predictor � Mock24hr</title>
   <meta name="description" content="AI-powered BTEUP exam paper predictor. Trained on 12,000+ PYQs and board patterns.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
   <!-- Nav -->
   <nav class="gn-nav">
     <a href="/" class="gn-logo">
-      <span class="gn-logo-mark">⚡</span>
+      <span class="gn-logo-mark">?</span>
       Mock24hr
     </a>
     <a href="/" class="gn-nav-link">Home</a>
@@ -60,12 +60,12 @@
         <div class="gn-section" style="position:relative">
           <label class="gn-label">Subject</label>
           <button class="gn-subject-trigger" id="subjectTrigger" onclick="toggleSubjectPanel()">
-            <span class="gn-st-icon">⌕</span>
-            <span id="triggerText">Select a subject…</span>
-            <span class="gn-st-hint">⌘K</span>
+            <span class="gn-st-icon">?</span>
+            <span id="triggerText">Select a subject�</span>
+            <span class="gn-st-hint">?K</span>
           </button>
           <div class="gn-subject-panel" id="subjectPanel">
-            <input type="text" class="gn-sp-search" id="subjectSearch" placeholder="Search subjects…" autocomplete="off">
+            <input type="text" class="gn-sp-search" id="subjectSearch" placeholder="Search subjects�" autocomplete="off">
             <div class="gn-sp-list" id="subjectList"></div>
           </div>
           <div class="gn-subject-info" id="subjectInfo"></div>
@@ -92,7 +92,7 @@
 
         <div class="gn-footer-note">
           <span onclick="toggleLang()" class="gn-lang-toggle" id="langToggle">English</span>
-          <span class="gn-dot">·</span>
+          <span class="gn-dot">�</span>
           <span>Powered by Gemini AI</span>
         </div>
       </div>
@@ -105,7 +105,7 @@
         <div class="gn-viz-title"><span class="gn-vt-dot"></span> Subject Intelligence</div>
         <div id="vizContent">
           <div class="gn-viz-empty">
-            <div class="gn-viz-empty-icon">◇</div>
+            <div class="gn-viz-empty-icon">?</div>
             Select a subject to see PYQ analysis
           </div>
         </div>
@@ -127,11 +127,11 @@
       <div class="gn-viz-card" id="vizStages" style="display:none">
         <div class="gn-viz-title"><span class="gn-vt-dot"></span> AI Generation Pipeline</div>
         <div class="gn-stages" id="stagesList">
-          <div class="gn-stage-item" data-stage="1"><span class="gn-stage-icon">⌕</span><span class="gn-stage-text">Scanning PYQ database…</span><span class="gn-stage-status"></span></div>
-          <div class="gn-stage-item" data-stage="2"><span class="gn-stage-icon">◈</span><span class="gn-stage-text">Matching board patterns…</span><span class="gn-stage-status"></span></div>
-          <div class="gn-stage-item" data-stage="3"><span class="gn-stage-icon">▦</span><span class="gn-stage-text">Scoring topic frequency…</span><span class="gn-stage-status"></span></div>
-          <div class="gn-stage-item" data-stage="4"><span class="gn-stage-icon">◉</span><span class="gn-stage-text">Constructing paper…</span><span class="gn-stage-status"></span></div>
-          <div class="gn-stage-item" data-stage="5"><span class="gn-stage-icon">✦</span><span class="gn-stage-text">Confidence scoring…</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="1"><span class="gn-stage-icon">?</span><span class="gn-stage-text">Scanning PYQ database�</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="2"><span class="gn-stage-icon">?</span><span class="gn-stage-text">Matching board patterns�</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="3"><span class="gn-stage-icon">?</span><span class="gn-stage-text">Scoring topic frequency�</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="4"><span class="gn-stage-icon">?</span><span class="gn-stage-text">Constructing paper�</span><span class="gn-stage-status"></span></div>
+          <div class="gn-stage-item" data-stage="5"><span class="gn-stage-icon">?</span><span class="gn-stage-text">Confidence scoring�</span><span class="gn-stage-status"></span></div>
         </div>
       </div>
     </div>
@@ -153,7 +153,7 @@
   <div class="gn-loading" id="loadingOverlay" role="status">
     <div class="gn-loading-card">
       <div class="gn-loading-spinner"></div>
-      <div class="gn-loading-title" id="stageText">Analyzing syllabus…</div>
+      <div class="gn-loading-title" id="stageText">Analyzing syllabus�</div>
       <div class="gn-progress"><div class="gn-progress-fill" id="progressFill"></div></div>
     </div>
   </div>
@@ -165,7 +165,7 @@
 
   <script src="/js/polytechnic-generator.js"></script>
   <script>
-  // ═══ PARTICLE ENGINE — Lean 30fps ═══
+  // --- PARTICLE ENGINE � Lean 30fps ---
   (function(){
     if(window.innerWidth<768)return; // No particles on mobile
     const c=document.getElementById('particleCanvas'),ctx=c.getContext('2d');
@@ -213,7 +213,7 @@
     requestAnimationFrame(frame);
   })();
 
-  // ═══ APP STATE ═══
+  // --- APP STATE ---
   let _sem=1,_lang='english',_mode='important',_subjectId=null;
   let _subjects=[],_panelOpen=false;
 
@@ -223,15 +223,15 @@
     const sel=document.getElementById('semesterSelect');
     if(sel){sel.value=String(n);sel.dispatchEvent(new Event('change'))}
     _subjectId=null;
-    document.getElementById('triggerText').textContent='Select a subject…';
+    document.getElementById('triggerText').textContent='Select a subject�';
     document.getElementById('subjectTrigger').classList.remove('has-value');
     document.getElementById('subjectInfo').innerHTML='';
     resetViz();closeSubjectPanel();buildSubjects();
   }
-  function toggleLang(){const el=document.getElementById('langToggle');_lang=_lang==='english'?'hindi':'english';el.textContent=_lang==='english'?'English':'हिन्दी'}
+  function toggleLang(){const el=document.getElementById('langToggle');_lang=_lang==='english'?'hindi':'english';el.textContent=_lang==='english'?'English':'??????'}
   function pickMode(v,el){_mode=v;document.querySelectorAll('#modePills .gn-chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');if(typeof selectedMode!=='undefined')selectedMode=v}
 
-  // ═══ COMMAND PALETTE ═══
+  // --- COMMAND PALETTE ---
   function toggleSubjectPanel(){_panelOpen?closeSubjectPanel():openSubjectPanel()}
   function openSubjectPanel(){document.getElementById('subjectPanel').classList.add('open');_panelOpen=true;const s=document.getElementById('subjectSearch');s.value='';renderSubjectList('');setTimeout(()=>s.focus(),50)}
   function closeSubjectPanel(){document.getElementById('subjectPanel').classList.remove('open');_panelOpen=false}
@@ -245,12 +245,12 @@
   }
   function buildSubjects(){const sel=document.getElementById('subjectSelect');if(!sel)return;_subjects=[];sel.querySelectorAll('optgroup').forEach(g=>{g.querySelectorAll('option[value]').forEach(o=>{if(!o.value)return;const name=o.textContent.replace(/\s*\[.*?\]/g,'').replace(/\s*\(\d+\)$/,'').trim();_subjects.push({id:o.value,name,data:o.dataset.subject||null})})});renderSubjectList('')}
   function renderSubjectList(q){const list=document.getElementById('subjectList');const query=q.toLowerCase().trim();const f=query?_subjects.filter(s=>s.name.toLowerCase().includes(query)):_subjects;if(!f.length){list.innerHTML='<div class="gn-sp-empty">No subjects found</div>';return}list.innerHTML=f.map(s=>`<div class="gn-sp-item${_subjectId===s.id?' active':''}" data-id="${s.id}" onclick="selectSubject('${s.id}','${s.name.replace(/'/g,"\\'")}')">${s.name}</div>`).join('')}
-  function showSubjectInfo(id){const info=document.getElementById('subjectInfo');const opt=document.querySelector(`#subjectSelect option[value="${id}"]`);if(!info||!opt?.dataset?.subject){info.innerHTML='';return}try{const s=JSON.parse(opt.dataset.subject);const top=s.units?.filter(u=>u.weight>=20).map(u=>u.name).slice(0,3)||[];info.innerHTML=`<span class="gn-si-name">${s.name}</span><span class="gn-si-sep">·</span><span>${s.units?.length||5} units</span><span class="gn-si-sep">·</span><span>${s.marks||60} marks</span>${top.length?`<span class="gn-si-sep">·</span><span class="gn-si-hot">${top.join(', ')}</span>`:''}`}catch(e){info.innerHTML=''}}
+  function showSubjectInfo(id){const info=document.getElementById('subjectInfo');const opt=document.querySelector(`#subjectSelect option[value="${id}"]`);if(!info||!opt?.dataset?.subject){info.innerHTML='';return}try{const s=JSON.parse(opt.dataset.subject);const top=s.units?.filter(u=>u.weight>=20).map(u=>u.name).slice(0,3)||[];info.innerHTML=`<span class="gn-si-name">${s.name}</span><span class="gn-si-sep">�</span><span>${s.units?.length||5} units</span><span class="gn-si-sep">�</span><span>${s.marks||60} marks</span>${top.length?`<span class="gn-si-sep">�</span><span class="gn-si-hot">${top.join(', ')}</span>`:''}`}catch(e){info.innerHTML=''}}
 
-  // ═══ AI VISUALIZATION — Neural Graph ═══
+  // --- AI VISUALIZATION � Neural Graph ---
   let _neuralNodes=[],_neuralAnim=null;
   function resetViz(){
-    document.getElementById('vizContent').innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>Select a subject to see PYQ analysis</div>';
+    document.getElementById('vizContent').innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">?</div>Select a subject to see PYQ analysis</div>';
     document.getElementById('vizStages').style.display='none';
     document.getElementById('vizGraph').style.display='none';
     if(_neuralAnim){cancelAnimationFrame(_neuralAnim);_neuralAnim=null}
@@ -258,7 +258,7 @@
   function updateViz(id){
     const opt=document.querySelector(`#subjectSelect option[value="${id}"]`);
     const vc=document.getElementById('vizContent');
-    if(!opt?.dataset?.subject){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>No data available</div>';return}
+    if(!opt?.dataset?.subject){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">?</div>No data available</div>';return}
     try{
       const s=JSON.parse(opt.dataset.subject);
       const units=s.units||[];
@@ -284,10 +284,10 @@
       drawNeuralGraph(units,s.name);
       // AI Memory
       showMemory(s.name);
-    }catch(e){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">◇</div>Parse error</div>'}
+    }catch(e){vc.innerHTML='<div class="gn-viz-empty"><div class="gn-viz-empty-icon">?</div>Parse error</div>'}
   }
 
-  // ═══ NEURAL TOPIC GRAPH ═══
+  // --- NEURAL TOPIC GRAPH ---
   function drawNeuralGraph(units,subjectName){
     const cvs=document.getElementById('neuralCanvas');
     const wrap=document.getElementById('vizGraph');
@@ -360,7 +360,7 @@
     animate();
   }
 
-  // ═══ AI MEMORY ═══
+  // --- AI MEMORY ---
   function showMemory(subjectName){
     const wrap=document.getElementById('vizMemory');
     const mc=document.getElementById('memoryContent');
@@ -378,17 +378,17 @@
             <span style="color:var(--ink2);font-weight:500">${d.subject}</span>
             <span style="font-size:10px;color:var(--ink4);font-family:var(--mono)">${timeStr}</span>
           </div>
-          <div style="font-size:11px;color:var(--ink4)">Last generated · ${d.mode||'important'} mode</div>
+          <div style="font-size:11px;color:var(--ink4)">Last generated � ${d.mode||'important'} mode</div>
         </div>`;
       }catch(e){wrap.style.display='none'}
     }else{wrap.style.display='none'}
   }
   // Save on generate
   const _origGen=window.generatePaper;
-  if(_origGen){window.generatePaper=function(){const subName=document.getElementById('triggerText')?.textContent;if(subName&&subName!=='Select a subject…'){localStorage.setItem('mtp_last_gen',JSON.stringify({subject:subName,mode:_mode,ts:Date.now()}))}return _origGen.apply(this,arguments)}}
+  if(_origGen){window.generatePaper=function(){const subName=document.getElementById('triggerText')?.textContent;if(subName&&subName!=='Select a subject�'){localStorage.setItem('mtp_last_gen',JSON.stringify({subject:subName,mode:_mode,ts:Date.now()}))}return _origGen.apply(this,arguments)}}
 
-  // ═══ CINEMATIC GENERATION STAGES ═══
-  const _stageLabels=['Scanning PYQ database…','Matching board patterns…','Scoring topic frequency…','Constructing paper…','Confidence scoring…'];
+  // --- CINEMATIC GENERATION STAGES ---
+  const _stageLabels=['Scanning PYQ database�','Matching board patterns�','Scoring topic frequency�','Constructing paper�','Confidence scoring�'];
   let _stageInterval=null;
   function startCinematicStages(){
     const panel=document.getElementById('vizStages');
@@ -399,7 +399,7 @@
     function next(){
       if(idx>0){
         const prev=items[idx-1];prev.classList.remove('active');prev.classList.add('done');
-        prev.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">✓</span>';
+        prev.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">?</span>';
       }
       if(idx<items.length){
         items[idx].classList.add('active');
@@ -413,7 +413,7 @@
   function stopCinematicStages(){
     if(_stageInterval)clearTimeout(_stageInterval);
     const items=document.querySelectorAll('.gn-stage-item');
-    items.forEach(it=>{it.classList.remove('active');it.classList.add('done');it.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">✓</span>'});
+    items.forEach(it=>{it.classList.remove('active');it.classList.add('done');it.querySelector('.gn-stage-status').innerHTML='<span class="gn-stage-check">?</span>'});
   }
 
   // Hook into existing loading overlay to trigger stages
@@ -422,7 +422,7 @@
   const _origHideLoading=window.hideLoadingOverlay;
   window.hideLoadingOverlay=function(){if(_origHideLoading)_origHideLoading();stopCinematicStages()};
 
-  // ═══ CARD TILT ═══
+  // --- CARD TILT ---
   document.querySelectorAll('.gn-tilt').forEach(card=>{
     card.addEventListener('mousemove',e=>{
       const r=card.getBoundingClientRect();
@@ -433,7 +433,7 @@
     card.addEventListener('mouseleave',()=>{card.style.transform=''});
   });
 
-  // ═══ INIT ═══
+  // --- INIT ---
   document.addEventListener('DOMContentLoaded',()=>{
     pickSem(1);
     document.getElementById('subjectSearch').addEventListener('input',e=>renderSubjectList(e.target.value));
@@ -453,23 +453,22 @@
   </script>
 
   <!-- 3D Rotating Indian Flag Background -->
-  <script src="/js/tiranga.js" defer></script>
   <script>
 /* ================================================================
-   particles.js — Smart Floating Particle Background
-   ✅ Works on ALL pages — home + exam landing pages
-   ✅ Dark mode  → white / blue particles
-   ✅ Light mode → dark / indigo particles
-   ✅ Auto-detects theme + watches for theme changes
-   ✅ Pure CSS animations — zero mouse/cursor interaction
-   ✅ GPU-only (transform + opacity) — minimal CPU load
+   particles.js � Smart Floating Particle Background
+   ? Works on ALL pages � home + exam landing pages
+   ? Dark mode  ? white / blue particles
+   ? Light mode ? dark / indigo particles
+   ? Auto-detects theme + watches for theme changes
+   ? Pure CSS animations � zero mouse/cursor interaction
+   ? GPU-only (transform + opacity) � minimal CPU load
    ================================================================ */
 (function () {
   'use strict';
 
   if (document.getElementById('particles-bg')) return;
 
-  /* ── CSS ── */
+  /* -- CSS -- */
   const css = `
 /* Transfer page background to <html> so body can be transparent.
    This lets particles (z-index:-1) sit ABOVE html bg but BELOW content. */
@@ -481,7 +480,7 @@ body {
   background: transparent !important;
 }
 
-/* Particle container — fixed, in root stacking context */
+/* Particle container � fixed, in root stacking context */
 #particles-bg {
   position: fixed;
   inset: 0;
@@ -506,7 +505,7 @@ body {
   100% { opacity: 0;    transform: translateY(-110vh) scale(1.2);  }
 }
 
-/* ── DARK MODE particles: white / blue / violet ── */
+/* -- DARK MODE particles: white / blue / violet -- */
 #particles-bg.pb-dark span:nth-child(1)  {left:3%;  width:4px;height:4px;animation-duration:18s;animation-delay:-2s;  background:rgba(96,165,250,.6)}
 #particles-bg.pb-dark span:nth-child(2)  {left:7%;  width:3px;height:3px;animation-duration:22s;animation-delay:-7s;  background:rgba(255,255,255,.25)}
 #particles-bg.pb-dark span:nth-child(3)  {left:13%; width:6px;height:6px;animation-duration:16s;animation-delay:-1s;  background:rgba(96,165,250,.4)}
@@ -538,7 +537,7 @@ body {
 #particles-bg.pb-dark span:nth-child(29) {left:62%; width:7px;height:7px;animation-duration:23s;animation-delay:-5s;  background:rgba(96,165,250,.28)}
 #particles-bg.pb-dark span:nth-child(30) {left:92%; width:3px;height:3px;animation-duration:15s;animation-delay:-13s; background:rgba(167,139,250,.42)}
 
-/* ── LIGHT MODE particles: dark blue / indigo / charcoal ── */
+/* -- LIGHT MODE particles: dark blue / indigo / charcoal -- */
 #particles-bg.pb-light span:nth-child(1)  {left:3%;  width:4px;height:4px;animation-duration:18s;animation-delay:-2s;  background:rgba(30,58,138,.3)}
 #particles-bg.pb-light span:nth-child(2)  {left:7%;  width:3px;height:3px;animation-duration:22s;animation-delay:-7s;  background:rgba(15,23,42,.2)}
 #particles-bg.pb-light span:nth-child(3)  {left:13%; width:6px;height:6px;animation-duration:16s;animation-delay:-1s;  background:rgba(37,99,235,.25)}
@@ -574,13 +573,13 @@ body {
   #particles-bg { display: none; }
 }`;
 
-  /* ── Inject style ── */
+  /* -- Inject style -- */
   const styleEl = document.createElement('style');
   styleEl.id = 'particles-style';
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  /* ── Build DOM ── */
+  /* -- Build DOM -- */
   const bg = document.createElement('div');
   bg.id = 'particles-bg';
   bg.setAttribute('aria-hidden', 'true');
@@ -589,7 +588,7 @@ body {
   }
   document.body.insertBefore(bg, document.body.firstChild);
 
-  /* ── Theme detection ── */
+  /* -- Theme detection -- */
   function isDarkMode() {
     const html = document.documentElement;
     const body = document.body;
@@ -614,12 +613,12 @@ body {
 
   applyTheme();
 
-  /* ── Watch for theme changes (home page dark/light toggle) ── */
+  /* -- Watch for theme changes (home page dark/light toggle) -- */
   const observer = new MutationObserver(applyTheme);
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
   observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme', 'class'] });
 
-  /* ── System dark mode change ── */
+  /* -- System dark mode change -- */
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
 
 })();

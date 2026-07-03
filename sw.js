@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v28';
-const STATIC_CACHE = 'mtp-static-v25';
-const API_CACHE = 'mtp-api-v25';
+const CACHE_NAME = 'mtp-v28c';
+const STATIC_CACHE = 'mtp-static-v25c';
+const API_CACHE = 'mtp-api-v25c';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -61,7 +61,6 @@ const PRECACHE_URLS = [
   '/js/pages/result.js',
   '/js/pages/analysis.js',
   '/js/pages/dashboard.js',
-  '/js/pages/leaderboard.js',
   '/js/pages/analytics.js',
   '/js/pages/profile.js',
   '/js/pages/battleMode.js',

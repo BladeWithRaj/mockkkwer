@@ -1,19 +1,20 @@
 // ============================================
-// DASHBOARD PAGE v3 — Premium Design
-// Profile card, stat cards with micro-animations,
-// progress chart, topic heatmap, smart insights
+// DASHBOARD PAGE v4.0 — Premium "Scholar" Design
+// Hero greeting + 4 stat cards + performance chart
+// Subject strength bars + smart insights + quick actions
+// Matches homepage premium quality
 // ============================================
 
 const DashboardPage = {
   _isRendering: false,
+  _chartCtx: null,
 
   render() {
-    // Return loading HTML synchronously
     return `
-      <div class="dash-page page-enter">
-        <div class="dash-loading">
-          <div class="splash-spinner" style="width: 36px; height: 36px; border: 2px solid rgba(255,255,255,0.08); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <p>Loading your analytics...</p>
+      <div class="dp page-enter">
+        <div class="dp-loading">
+          <div class="dp-spinner"></div>
+          <p>Loading your dashboard...</p>
         </div>
       </div>
     `;
@@ -22,25 +23,17 @@ const DashboardPage = {
   async afterRender() {
     try {
       const stats = await Analytics.loadDashboardStats();
-      this._renderContent(stats);
-
-      // Initialize real-time listener
-      if (window.subscribeToResults) {
-        window.subscribeToResults(this._handleRealtimeUpdate.bind(this));
-      }
+      this._buildUI(stats);
     } catch (err) {
-      console.error("Dashboard render error:", err);
-      const container = document.querySelector('.dash-page');
-      if (container) {
-        container.innerHTML = `
-          <div class="dash-error">
-            <div style="font-size: 48px; margin-bottom: 16px;">${Icons.get('alertTriangle', 40)}</div>
-            <h2>Failed to load Dashboard</h2>
-            <p>${err.message}</p>
-            <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
-          </div>
-        `;
-      }
+      console.error('Dashboard error:', err);
+      const el = document.querySelector('.dp');
+      if (el) el.innerHTML = `
+        <div class="dp-error">
+          ${Icons.get('alertTriangle', 36)}
+          <h2>Dashboard failed to load</h2>
+          <p>${err.message}</p>
+          <button class="dp-cta-btn dp-cta-btn--primary" onclick="App.navigate('home')">Go Home</button>
+        </div>`;
     }
   },
 
@@ -49,265 +42,294 @@ const DashboardPage = {
     this._isRendering = true;
     try {
       const stats = await Analytics.loadDashboardStats(true);
-      if (document.querySelector('.dash-page')) {
-        this._renderContent(stats);
-      }
-    } catch (err) {
-      console.error("Realtime refresh failed:", err);
-    } finally {
-      this._isRendering = false;
-    }
+      if (document.querySelector('.dp')) this._buildUI(stats);
+    } catch (e) { console.error('Realtime update failed:', e); }
+    finally { this._isRendering = false; }
   },
 
-  _renderContent(stats) {
-    const container = document.querySelector('.dash-page');
+  _buildUI(stats) {
+    const container = document.querySelector('.dp');
     if (!container) return;
 
-    // Get DailySystem data
-    const streak = typeof DailySystem !== 'undefined' ? DailySystem.getStreak() : { current: 0, best: 0 };
-    const goal = typeof DailySystem !== 'undefined' ? DailySystem.getDailyGoal() : { testsToday: 0, target: 3, questionsToday: 0, accuracyToday: 0 };
-    const heatmap = typeof DailySystem !== 'undefined' ? DailySystem.getTopicHeatmap() : [];
-    const patterns = typeof DailySystem !== 'undefined' ? DailySystem.getMistakePatterns() : [];
-    const recentProgress = typeof DailySystem !== 'undefined' ? DailySystem.getRecentProgress(7) : [];
-    const streakAlive = typeof DailySystem !== 'undefined' ? DailySystem.isStreakAlive() : false;
+    // ── Data ──
+    const streak  = typeof DailySystem !== 'undefined' ? DailySystem.getStreak()          : { current: 0, best: 0 };
+    const goal    = typeof DailySystem !== 'undefined' ? DailySystem.getDailyGoal()        : { testsToday: 0, target: 3, questionsToday: 0, accuracyToday: 0 };
+    const heatmap = typeof DailySystem !== 'undefined' ? DailySystem.getTopicHeatmap()     : [];
+    const patterns= typeof DailySystem !== 'undefined' ? DailySystem.getMistakePatterns()  : [];
+    const recent  = typeof DailySystem !== 'undefined' ? DailySystem.getRecentProgress(7)  : [];
+    const alive   = typeof DailySystem !== 'undefined' ? DailySystem.isStreakAlive()        : false;
 
-    const username = Storage.getUsername() || 'Student';
-    const avatar = localStorage.getItem('mocktest_avatar') || 'default';
-    const avatarMap = {
-      default: '👤', boy1: '👦', boy2: '🧑', boy3: '👨',
-      girl1: '👧', girl2: '👩', girl3: '👱‍♀️',
-      ninja: '🥷', astronaut: '🧑‍🚀', robot: '🤖',
-      cat: '🐱', dog: '🐶', panda: '🐼', fox: '🦊'
-    };
-    const avatarEmoji = avatarMap[avatar] || '👤';
+    const username    = Storage.getUsername() || 'Student';
+    const totalTests  = stats ? stats.totalTests  : recent.length;
+    const avgScore    = stats ? stats.avgScore    : (recent.length ? Math.round(recent.reduce((s,e)=>s+e.accuracy,0)/recent.length) : 0);
+    const bestScore   = stats ? stats.bestScore   : (recent.length ? Math.max(...recent.map(e=>e.accuracy)) : 0);
+    const weakArea    = stats ? stats.weakArea    : (heatmap.length ? heatmap[0].subject : '—');
+    const impRate     = stats ? stats.improvementRate : 0;
+    const goalPct     = Math.min(100, Math.round((goal.testsToday / (goal.target || 3)) * 100));
 
-    if (!stats && recentProgress.length === 0) {
+    const grade = this._grade(avgScore);
+    const hour  = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning! Ready to ace today?' :
+                     hour < 17 ? 'Good afternoon! Keep the momentum.' :
+                     hour < 21 ? 'Good evening! Perfect time for a test.' :
+                                 'Night owl mode — stay sharp!';
+
+    // Empty state
+    if (!stats && recent.length === 0) {
       container.innerHTML = `
-        <div class="dash-empty animate-fadeInUp">
-          <div style="font-size: 72px; margin-bottom: 20px;">${Icons.get('barChart', 48)}</div>
-          <h2>No Tests Taken Yet</h2>
-          <p>Take your first mock test to unlock your performance dashboard.</p>
-          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')" style="margin-top: 16px;">${Icons.get('rocket', 16)} Start First Test</button>
-        </div>
-      `;
+        <div class="dp-empty">
+          <div class="dp-empty-icon">${Icons.get('barChart', 48)}</div>
+          <h2>No tests taken yet</h2>
+          <p>Complete your first mock test to unlock your personal performance dashboard with insights, trends, and subject analysis.</p>
+          <div class="dp-empty-actions">
+            <button class="dp-cta-btn dp-cta-btn--primary" onclick="App.navigate('setup')">${Icons.get('zap',16)} Start First Test</button>
+            <button class="dp-cta-btn dp-cta-btn--outline" onclick="App.navigate('board')">${Icons.get('clipboard',16)} Browse Exams</button>
+          </div>
+        </div>`;
       return;
     }
 
-    // Stats calculations
-    const totalTests = stats ? stats.totalTests : recentProgress.length;
-    const avgScore = stats ? stats.avgScore : (recentProgress.length > 0 ? Math.round(recentProgress.reduce((s, e) => s + e.accuracy, 0) / recentProgress.length) : 0);
-    const bestScore = stats ? stats.bestScore : (recentProgress.length > 0 ? Math.max(...recentProgress.map(e => e.accuracy)) : 0);
-    const weakArea = stats ? stats.weakArea : (heatmap.length > 0 ? heatmap[0].subject : '—');
-
-    // Improvement trend
-    const impRate = stats ? stats.improvementRate : 0;
-    const trendIcon = impRate > 0 ? Icons.get('trendingUp', 16) : (impRate < 0 ? Icons.get('trendingDown', 16) : Icons.get('arrowRight', 16));
-    const trendColor = impRate > 0 ? 'var(--success)' : (impRate < 0 ? 'var(--danger)' : 'var(--warning)');
-    const trendText = impRate > 0 ? `+${impRate}%` : (impRate < 0 ? `${impRate}%` : '0%');
-
-    // Score grade
-    const getGrade = (score) => {
-      if (score >= 90) return { label: 'A+', color: '#10B981', bg: 'rgba(16, 185, 129, 0.12)' };
-      if (score >= 80) return { label: 'A', color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.12)' };
-      if (score >= 70) return { label: 'B+', color: '#8B5CF6', bg: 'rgba(139, 92, 246, 0.12)' };
-      if (score >= 60) return { label: 'B', color: '#F59E0B', bg: 'rgba(245, 158, 11, 0.12)' };
-      if (score >= 40) return { label: 'C', color: '#F97316', bg: 'rgba(249, 115, 22, 0.12)' };
-      return { label: 'D', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.12)' };
-    };
-    const grade = getGrade(avgScore);
-
-    // Goal progress %
-    const goalPct = Math.min(100, Math.round((goal.testsToday / goal.target) * 100));
-
     container.innerHTML = `
-      <!-- Profile + Greeting -->
-      <div class="dash-profile animate-fadeInUp">
-        <div class="dash-profile-left">
-          <div class="dash-avatar">${avatarEmoji}</div>
-          <div class="dash-greeting">
-            <h2>Hey, ${username}!</h2>
-            <p>${this._getGreeting()}</p>
-          </div>
-        </div>
-        <div class="dash-streak-badge ${streakAlive ? 'alive' : 'dead'}">
-          <span class="dash-streak-fire">${streakAlive ? Icons.get('flame', 18) : Icons.get('snowflake', 18)}</span>
-          <div>
-            <div class="dash-streak-num">${streak.current}</div>
-            <div class="dash-streak-label">day streak</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Quick Stats Cards -->
-      <div class="dash-stats-grid animate-fadeInUp stagger-1">
-        <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(59, 130, 246, 0.12); color: #60A5FA;">${Icons.get('fileText', 20)}</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-value">${totalTests}</div>
-            <div class="dash-stat-label">Tests Done</div>
-          </div>
-        </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: ${grade.bg}; color: ${grade.color};">${grade.label}</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-value">${avgScore}%</div>
-            <div class="dash-stat-label">Avg Score</div>
-          </div>
-        </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #FBBF24;">${Icons.get('trophy', 20)}</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-value">${bestScore}%</div>
-            <div class="dash-stat-label">Best Score</div>
-          </div>
-        </div>
-        <div class="dash-stat-card">
-          <div class="dash-stat-icon" style="background: rgba(239, 68, 68, 0.12); color: #F87171;">${Icons.get('alertTriangle', 20)}</div>
-          <div class="dash-stat-info">
-            <div class="dash-stat-value" style="font-size: 14px; text-transform: capitalize;">${weakArea}</div>
-            <div class="dash-stat-label">Weak Area</div>
-          </div>
-        </div>
-      </div>
+      <!-- ═══ HERO GREETING ═══ -->
+      <section class="dp-hero">
+        <div class="dp-hero-left">
+          <div class="dp-hero-badge">${alive ? '🔥' : '📊'} ${alive ? `${streak.current} Day Streak Active` : 'Your Dashboard'}</div>
+          <h1 class="dp-hero-title">Hey, ${username}!</h1>
+          <p class="dp-hero-sub">${greeting}</p>
 
-      <!-- Today's Progress + Trend Row -->
-      <div class="dash-row-2 animate-fadeInUp stagger-2">
-        <!-- Today's Goal -->
-        <div class="dash-today-card">
-          <div class="dash-today-header">
-            <span>${Icons.get('calendar', 16)} Today's Progress</span>
-            <span class="dash-today-pct">${goalPct}%</span>
+          <!-- 4 inline hero stats -->
+          <div class="dp-hero-chips">
+            <div class="dp-hero-chip">
+              <span class="dp-hero-chip-val">${totalTests}</span>
+              <span class="dp-hero-chip-lbl">Tests Done</span>
+            </div>
+            <div class="dp-hero-chip">
+              <span class="dp-hero-chip-val" style="color:${grade.color}">${avgScore}%</span>
+              <span class="dp-hero-chip-lbl">Avg Score</span>
+            </div>
+            <div class="dp-hero-chip">
+              <span class="dp-hero-chip-val">${bestScore}%</span>
+              <span class="dp-hero-chip-lbl">Best Score</span>
+            </div>
+            <div class="dp-hero-chip">
+              <span class="dp-hero-chip-val" style="color:${impRate>=0?'#10B981':'#EF4444'}">${impRate>=0?'+':''}${impRate}%</span>
+              <span class="dp-hero-chip-lbl">Trend</span>
+            </div>
           </div>
-          <div class="dash-goal-bar-wrap">
-            <div class="dash-goal-bar" style="width: ${goalPct}%; background: ${goalPct >= 100 ? 'var(--success)' : 'var(--primary)'};"></div>
-          </div>
-          <div class="dash-today-stats">
-            <div class="dash-today-stat">
-              <span class="dash-ts-num">${goal.testsToday}</span>
-              <span class="dash-ts-label">/ ${goal.target} tests</span>
-            </div>
-            <div class="dash-today-stat">
-              <span class="dash-ts-num">${goal.questionsToday}</span>
-              <span class="dash-ts-label">questions</span>
-            </div>
-            <div class="dash-today-stat">
-              <span class="dash-ts-num">${goal.accuracyToday || 0}%</span>
-              <span class="dash-ts-label">accuracy</span>
-            </div>
+
+          <!-- CTA buttons -->
+          <div class="dp-hero-ctas">
+            <button class="dp-cta-btn dp-cta-btn--primary" onclick="App.navigate('setup')">${Icons.get('zap',16)} Start Practice</button>
+            <button class="dp-cta-btn dp-cta-btn--outline" onclick="App.navigate('analytics')">${Icons.get('barChart',16)} Full Analytics</button>
           </div>
         </div>
 
-        <!-- Trend Card -->
-        <div class="dash-trend-card">
-          <div class="dash-trend-header">
-            <span>${trendIcon} Performance Trend</span>
-            <span class="dash-trend-change" style="color: ${trendColor};">${trendText}</span>
-          </div>
-          ${stats && stats.trendData && stats.trendData.length > 1 ? `
-            <div class="dash-chart-wrap">
-              <canvas id="dashboard-trend-chart" width="800" height="200" style="width: 100%; height: 100%; display: block;"></canvas>
-            </div>
-          ` : `
-            <div class="dash-no-chart">
-              <p>Take 2+ tests to see your accuracy trend graph</p>
-            </div>
-          `}
+        <!-- Study scene image (right side) -->
+        <div class="dp-hero-right">
+          <img src="assets/dashboard-bg.png" alt="Study desk" loading="eager" />
         </div>
-      </div>
 
-      <!-- Topic Heatmap + Patterns Row -->
-      <div class="dash-row-3 animate-fadeInUp stagger-3">
-        <!-- Topic Heatmap -->
-        <div class="dash-heatmap-card">
-          <h3>${Icons.get('map', 18)} Topic Strength</h3>
-          ${heatmap.length > 0 ? `
-            <div class="dash-topics">
-              ${heatmap.map(t => {
-                const barColor = t.accuracy >= 70 ? '#10B981' : t.accuracy >= 40 ? '#F59E0B' : '#EF4444';
-                const statusDot = t.accuracy >= 70 ? '●' : t.accuracy >= 40 ? '●' : '●';
-                return `
-                  <div class="dash-topic-row">
-                    <div class="dash-topic-head">
-                      <span class="dash-topic-name"><span style="color: ${barColor}; font-size: 10px;">${statusDot}</span> ${t.subject}</span>
-                      <span class="dash-topic-acc" style="color: ${barColor};">${t.accuracy}%</span>
+        <!-- Today's goal ring (overlaid on right) -->
+        <div class="dp-hero-goal">
+          <div class="dp-goal-ring-wrap">
+            <svg class="dp-goal-ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--dp-ring-bg)" stroke-width="10"/>
+              <circle cx="60" cy="60" r="50" fill="none"
+                stroke="${goalPct>=100?'#10B981':'#3B82F6'}"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="${2*Math.PI*50}"
+                stroke-dashoffset="${2*Math.PI*50 * (1 - goalPct/100)}"
+                transform="rotate(-90 60 60)"
+                style="transition: stroke-dashoffset 1s ease"/>
+            </svg>
+            <div class="dp-goal-center">
+              <div class="dp-goal-pct">${goalPct}%</div>
+              <div class="dp-goal-lbl">Goal</div>
+            </div>
+          </div>
+          <div class="dp-goal-legend">
+            <div class="dp-gl-item"><span>${goal.testsToday}/${goal.target}</span><small>Tests</small></div>
+            <div class="dp-gl-item"><span>${goal.questionsToday}</span><small>Questions</small></div>
+            <div class="dp-gl-item"><span>${goal.accuracyToday||0}%</span><small>Today's Acc.</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ 4 STAT CARDS ═══ -->
+      <section class="dp-section">
+        <div class="dp-stats-grid">
+          ${this._statCard(Icons.get('fileText',22), totalTests, 'Tests Taken', '#3B82F6', 'rgba(59,130,246,0.12)')}
+          ${this._statCard(`<span style="font-size:18px;font-weight:800;color:${grade.color}">${grade.label}</span>`, avgScore+'%', 'Avg Accuracy', grade.color, grade.bg)}
+          ${this._statCard(Icons.get('trophy',22), bestScore+'%', 'Best Score', '#F59E0B', 'rgba(245,158,11,0.12)')}
+          ${this._statCard(Icons.get('alertTriangle',22), weakArea, 'Weak Subject', '#EF4444', 'rgba(239,68,68,0.12)', true)}
+        </div>
+      </section>
+
+      <!-- ═══ CHART + STREAK ROW ═══ -->
+      <section class="dp-section">
+        <div class="dp-row-2">
+
+          <!-- Performance Chart -->
+          <div class="dp-card dp-chart-card">
+            <div class="dp-card-header">
+              <div class="dp-card-title">${Icons.get('trendingUp',18)} Performance Trend</div>
+              <span class="dp-trend-badge" style="color:${impRate>=0?'#10B981':'#EF4444'};background:${impRate>=0?'rgba(16,185,129,0.1)':'rgba(239,68,68,0.1)'}">
+                ${impRate>=0?'↑':'↓'} ${Math.abs(impRate)}%
+              </span>
+            </div>
+            ${stats && stats.trendData && stats.trendData.length > 1 ? `
+              <div class="dp-chart-container">
+                <canvas id="dp-trend-canvas"></canvas>
+              </div>
+            ` : `
+              <div class="dp-chart-empty">
+                <div class="dp-chart-empty-icon">${Icons.get('activity',32)}</div>
+                <p>Take 2+ tests to see your accuracy trend</p>
+                <button class="dp-cta-btn dp-cta-btn--primary dp-cta-btn--sm" onclick="App.navigate('setup')">${Icons.get('zap',14)} Take a Test Now</button>
+              </div>
+            `}
+          </div>
+
+          <!-- Streak + Recent -->
+          <div class="dp-card dp-streak-card">
+            <div class="dp-card-header">
+              <div class="dp-card-title">${Icons.get('flame',18)} Streak</div>
+              ${alive ? '<span class="dp-alive-dot"></span>' : ''}
+            </div>
+            <div class="dp-streak-hero">
+              <div class="dp-streak-num ${alive?'alive':''}">${streak.current}</div>
+              <div class="dp-streak-unit">day${streak.current!==1?'s':''}</div>
+              ${alive ? '<div class="dp-streak-fire">🔥</div>' : ''}
+            </div>
+            <div class="dp-streak-meta">
+              <div class="dp-sm-row">
+                <span>Best Streak</span>
+                <strong>${streak.best} days</strong>
+              </div>
+              <div class="dp-sm-row">
+                <span>Status</span>
+                <strong style="color:${alive?'#10B981':'#EF4444'}">${alive?'🟢 Active':'🔴 Broken'}</strong>
+              </div>
+            </div>
+            <button class="dp-cta-btn dp-cta-btn--outline dp-cta-btn--full" onclick="HomePage._startDaily()">${Icons.get('zap',14)} Daily Challenge</button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ═══ SUBJECT STRENGTH + INSIGHTS ROW ═══ -->
+      <section class="dp-section">
+        <div class="dp-row-2">
+
+          <!-- Subject Strength Bars -->
+          <div class="dp-card">
+            <div class="dp-card-header">
+              <div class="dp-card-title">${Icons.get('barChart',18)} Subject Strength</div>
+            </div>
+            ${heatmap.length > 0 ? `
+              <div class="dp-subjects">
+                ${heatmap.map(t => {
+                  const c = t.accuracy >= 70 ? '#10B981' : t.accuracy >= 40 ? '#F59E0B' : '#EF4444';
+                  const lbl = t.accuracy >= 70 ? 'Strong' : t.accuracy >= 40 ? 'Average' : 'Weak';
+                  return `
+                    <div class="dp-subj-row">
+                      <div class="dp-subj-top">
+                        <span class="dp-subj-name">${t.subject}</span>
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span class="dp-subj-tag" style="color:${c};background:${c}18">${lbl}</span>
+                          <span class="dp-subj-pct" style="color:${c}">${t.accuracy}%</span>
+                        </div>
+                      </div>
+                      <div class="dp-subj-bar-bg">
+                        <div class="dp-subj-bar" style="width:${t.accuracy}%;background:${c}"></div>
+                      </div>
+                      <div class="dp-subj-meta">${t.correct}/${t.total} correct · ${t.tests} test${t.tests!==1?'s':''}</div>
                     </div>
-                    <div class="dash-topic-bar-bg">
-                      <div class="dash-topic-bar" style="width: ${t.accuracy}%; background: ${barColor};"></div>
-                    </div>
-                    <div class="dash-topic-meta">${t.correct}/${t.total} correct · ${t.tests} tests</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          ` : `
-            <div class="dash-empty-section">
-              <p>Take some tests to see topic breakdown</p>
-            </div>
-          `}
-        </div>
-
-        <!-- Mistake Patterns -->
-        <div class="dash-patterns-card">
-          <h3>${Icons.get('brain', 18)} Smart Insights</h3>
-          ${patterns.length > 0 ? `
-            <div class="dash-patterns">
-              ${patterns.map(p => {
-                const borderColor = p.severity === 'high' ? 'var(--danger)' : p.severity === 'positive' ? 'var(--success)' : 'var(--warning)';
-                const bgColor = p.severity === 'positive' ? 'rgba(16, 185, 129, 0.06)' : p.severity === 'high' ? 'rgba(239, 68, 68, 0.06)' : 'rgba(245, 158, 11, 0.06)';
-                return `
-                  <div class="dash-pattern-item" style="border-left-color: ${borderColor}; background: ${bgColor};">
-                    <div class="dash-pattern-head">
-                      <span>${p.icon}</span>
-                      <span class="dash-pattern-title">${p.title}</span>
-                    </div>
-                    <div class="dash-pattern-desc">${p.desc}</div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          ` : `
-            <div class="dash-empty-section">
-              <p>Take 3+ tests to unlock pattern analysis</p>
-            </div>
-          `}
-
-          <!-- Quick Actions -->
-          <div class="dash-quick-actions">
-            <button class="btn btn-primary" onclick="App.navigate('setup')" style="width: 100%;">${Icons.get('rocket', 14)} Start Practice</button>
-            <button class="btn btn-outline" onclick="App.navigate('leaderboard')" style="width: 100%;">${Icons.get('trophy', 14)} Leaderboard</button>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="dp-card-empty">
+                ${Icons.get('clipboard',28)}
+                <p>Take some tests to see subject breakdown</p>
+              </div>
+            `}
           </div>
-        </div>
-      </div>
 
-      ${streak.best > 1 ? `
-      <!-- Streak History -->
-      <div class="dash-streak-history animate-fadeInUp stagger-4">
-        <div class="dash-streak-best">
-          <span>${Icons.get('award', 14)} Best Streak: <strong>${streak.best} days</strong></span>
-          <span style="color: var(--text-muted); font-size: 12px;">Current: ${streak.current} days</span>
+          <!-- Smart Insights -->
+          <div class="dp-card">
+            <div class="dp-card-header">
+              <div class="dp-card-title">${Icons.get('brain',18)} Smart Insights</div>
+            </div>
+            ${patterns.length > 0 ? `
+              <div class="dp-insights">
+                ${patterns.map(p => {
+                  const border = p.severity==='high'?'#EF4444':p.severity==='positive'?'#10B981':'#F59E0B';
+                  const bg     = p.severity==='high'?'rgba(239,68,68,0.06)':p.severity==='positive'?'rgba(16,185,129,0.06)':'rgba(245,158,11,0.06)';
+                  return `
+                    <div class="dp-insight-item" style="border-left-color:${border};background:${bg}">
+                      <div class="dp-insight-head">
+                        <span class="dp-insight-icon">${p.icon}</span>
+                        <span class="dp-insight-title">${p.title}</span>
+                      </div>
+                      <p class="dp-insight-desc">${p.desc}</p>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            ` : `
+              <div class="dp-card-empty">
+                ${Icons.get('brain',28)}
+                <p>Take 3+ tests to unlock AI-powered pattern analysis</p>
+              </div>
+            `}
+
+            <!-- Quick action pair -->
+            <div class="dp-quick-pair">
+              <button class="dp-cta-btn dp-cta-btn--primary dp-cta-btn--full" onclick="App.navigate('setup')">${Icons.get('zap',15)} Start Practice</button>
+              <button class="dp-cta-btn dp-cta-btn--outline dp-cta-btn--full" onclick="App.navigate('analytics')">${Icons.get('barChart',15)} Analytics</button>
+            </div>
+          </div>
+
         </div>
-      </div>
-      ` : ''}
+      </section>
+
     `;
 
-    // Draw Chart
-    const canvas = document.getElementById('dashboard-trend-chart');
-    if (canvas && stats && stats.trendData && stats.trendData.length > 0) {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      Analytics.drawLineChart(canvas, stats.trendData, { centerText: '' });
-    }
+    // Draw chart after DOM ready
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('dp-trend-canvas');
+      if (canvas && stats && stats.trendData && stats.trendData.length > 0) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width  = rect.width  * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.getContext('2d').scale(dpr, dpr);
+        Analytics.drawLineChart(canvas, stats.trendData, { centerText: '' });
+      }
+    });
   },
 
-  _getGreeting() {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning! Ready for practice?';
-    if (hour < 17) return 'Good afternoon! Keep the momentum going.';
-    if (hour < 21) return 'Good evening! Perfect time for a test.';
-    return 'Night owl mode — stay focused!';
+  _statCard(icon, value, label, color, bg, small=false) {
+    return `
+      <div class="dp-stat-card" style="--sc-color:${color};--sc-bg:${bg}">
+        <div class="dp-sc-icon">${icon}</div>
+        <div class="dp-sc-val ${small?'dp-sc-val--sm':''}">${value}</div>
+        <div class="dp-sc-lbl">${label}</div>
+      </div>
+    `;
+  },
+
+  _grade(score) {
+    if (score >= 90) return { label:'A+', color:'#10B981', bg:'rgba(16,185,129,0.12)' };
+    if (score >= 80) return { label:'A',  color:'#3B82F6', bg:'rgba(59,130,246,0.12)' };
+    if (score >= 70) return { label:'B+', color:'#8B5CF6', bg:'rgba(139,92,246,0.12)' };
+    if (score >= 60) return { label:'B',  color:'#F59E0B', bg:'rgba(245,158,11,0.12)' };
+    if (score >= 40) return { label:'C',  color:'#F97316', bg:'rgba(249,115,22,0.12)' };
+    return              { label:'D',  color:'#EF4444', bg:'rgba(239,68,68,0.12)' };
   }
 };
+
+window.DashboardPage = DashboardPage;

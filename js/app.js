@@ -69,12 +69,13 @@ const App = {
     test: TestPage,
     result: ResultPage,
     analysis: AnalysisPage,
+    leaderboard: LeaderboardPage,  /* kept for backward-compat hash navigation — redirects to dashboard */
     dashboard: DashboardPage,
-    leaderboard: LeaderboardPage,
     analytics: AnalyticsPage,
     profile: ProfilePage,
     battle: BattlePage,
-    exam: ExamDetailPage
+    exam: ExamDetailPage,
+    polytechnic: PolytechnicPage
   },
 
   async init() {
@@ -116,6 +117,16 @@ const App = {
       // Gamification: load profile from server (v2 — no client-side login bonus)
       if (window.Gamification && Gamification.loadProfileFromServer) {
         Gamification.loadProfileFromServer();
+      }
+
+      // Mount command palette overlay (must be before first render)
+      if (typeof CommandPalette !== 'undefined') {
+        CommandPalette.mount();
+      }
+
+      // Initialize keyboard shortcuts
+      if (typeof Shortcuts !== 'undefined') {
+        Shortcuts.init();
       }
 
       // Check for in-progress test to resume
@@ -171,6 +182,9 @@ const App = {
   },
 
   navigate(page, params = {}, updateHash = true) {
+    // Leaderboard is removed — redirect to dashboard
+    if (page === 'leaderboard') { page = 'dashboard'; }
+
     if (this.currentPage && this.pages[this.currentPage] && this.pages[this.currentPage].destroy) {
       this.pages[this.currentPage].destroy();
     }
@@ -197,7 +211,8 @@ const App = {
       // Board-specific renderer: skip SPA header — renderers have their own system bar
       const isBoardMode = page === 'test' && typeof RendererRouter !== 'undefined' && RendererRouter.shouldUseBoardRenderer();
       const isLegacyCBT = page === 'test' && typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT();
-      appEl.innerHTML = (isBoardMode || isLegacyCBT) ? html : (this._renderHeader(page) + html);
+      const isTestPage = page === 'test';
+      appEl.innerHTML = (isBoardMode || isLegacyCBT || isTestPage) ? html : (this._renderHeader(page) + html);
     } catch (renderErr) {
       console.error(`[ERROR BOUNDARY] Page "${page}" render crashed:`, renderErr);
       appEl.innerHTML = this._renderHeader(page) + this._renderCrash(page, renderErr);
@@ -226,31 +241,98 @@ const App = {
 
     const moonIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
     const sunIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M19.07 4.93l-1.41 1.41"/></svg>';
+    const caretDown = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+    const searchIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
     const userPhoto = window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.photoURL;
     const userEmail = window.FirebaseAuth && FirebaseAuth.isLoggedIn() && FirebaseAuth.getUser()?.email;
     const isLoggedIn = window.FirebaseAuth && FirebaseAuth.isLoggedIn();
+
+    const navLinks = isTest ? '' : `
+      <!-- Exams mega-menu -->
+      <div class="nav-item" id="nav-exams-item">
+        <button class="nav-link" onclick="App._toggleMegaMenu()" aria-haspopup="true" aria-expanded="false">
+          Exams <span class="nav-link-caret">${caretDown}</span>
+        </button>
+        <div class="mega-menu" id="nav-mega-menu" role="menu">
+          <div class="mega-menu-grid">
+            <div>
+              <div class="mega-col-title">Central Govt</div>
+              <div class="mega-col-items">
+                <a href="#exam?id=ssc-cgl"  class="mega-item">SSC CGL</a>
+                <a href="#exam?id=ssc-chsl" class="mega-item">SSC CHSL</a>
+                <a href="#board?id=SSC"     class="mega-item">SSC MTS</a>
+                <a href="#board?id=SSC"     class="mega-item">SSC GD</a>
+              </div>
+              <div class="mega-col-title" style="margin-top:12px">Railways</div>
+              <div class="mega-col-items">
+                <a href="#exam?id=rrb-ntpc" class="mega-item">RRB NTPC</a>
+                <a href="#board?id=Railway" class="mega-item">Group D</a>
+                <a href="#board?id=Railway" class="mega-item">ALP</a>
+              </div>
+            </div>
+            <div>
+              <div class="mega-col-title">Banking</div>
+              <div class="mega-col-items">
+                <a href="#exam?id=ibps-po"  class="mega-item">IBPS PO</a>
+                <a href="#board?id=Banking" class="mega-item">IBPS Clerk</a>
+                <a href="#exam?id=sbi-po"   class="mega-item">SBI PO</a>
+                <a href="#board?id=Banking" class="mega-item">SBI Clerk</a>
+                <a href="#board?id=Banking" class="mega-item">RBI Grade B</a>
+              </div>
+              <div class="mega-col-title" style="margin-top:12px">Defence</div>
+              <div class="mega-col-items">
+                <a href="#board?id=Defence" class="mega-item">NDA</a>
+                <a href="#board?id=Defence" class="mega-item">CDS</a>
+                <a href="#board?id=Defence" class="mega-item">AFCAT</a>
+              </div>
+            </div>
+            <div>
+              <div class="mega-col-title">State Exams</div>
+              <div class="mega-col-items">
+                <a href="#board?id=State" class="mega-item">UP PCS</a>
+                <a href="#board?id=State" class="mega-item">BPSC</a>
+                <a href="#board?id=State" class="mega-item">RPSC</a>
+                <a href="#board?id=State" class="mega-item">MPPSC</a>
+              </div>
+              <div class="mega-col-title" style="margin-top:12px">Other</div>
+              <div class="mega-col-items">
+                <a href="#board?id=Teaching" class="mega-item">CTET</a>
+                <a href="#board?id=Police"   class="mega-item">Police</a>
+                <a href="#exam?id=upsc-gs1"  class="mega-item">UPSC Prelims</a>
+              </div>
+            </div>
+          </div>
+          <div class="mega-footer">
+            <a href="#board" class="mega-footer-link">View All Exams →</a>
+          </div>
+        </div>
+      </div>
+      <a href="#polytechnic" class="nav-link ${activePage === 'polytechnic' ? 'active' : ''}">Polytechnic</a>
+      <a href="#battle"      class="nav-link ${activePage === 'battle'      ? 'active' : ''}">AI Battle</a>
+      <a href="#dashboard" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+    `;
 
     return `
       <header class="header">
         <div class="header-inner">
           <a href="#home" class="header-logo">
-            <div class="logo-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <span class="brand-text">Mock<span class="brand-accent">24hr</span></span>
+            <span class="brand-text" style="font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: var(--brand-primary);">Mock<span style="color: var(--text-primary);">24hr</span></span>
           </a>
 
-          <nav class="header-nav">
-            ${isTest ? '' : `
-              <a href="#setup" class="nav-link ${activePage === 'setup' ? 'active' : ''}">Practice</a>
-              <a href="#leaderboard" class="nav-link ${activePage === 'leaderboard' ? 'active' : ''}">Leaderboard</a>
-            `}
+          <nav class="header-nav" role="navigation" aria-label="Primary">
+            ${navLinks}
           </nav>
 
           <div class="header-actions">
+            <!-- Search button -->
+            ${!isTest ? `
+            <button class="header-search-btn" onclick="CommandPalette?.open?.()" aria-label="Search" title="Search (/)">
+              ${searchIcon}
+              <span class="header-search-text" style="color:var(--text-muted);font-size:var(--text-sm)">Search...</span>
+              <span class="header-search-kbd">/</span>
+            </button>
+            ` : ''}
+
             <button class="theme-toggle-btn" onclick="ThemeManager.toggle()" title="${ThemeManager.isDark() ? 'Light Mode' : 'Dark Mode'}" aria-label="Toggle theme">
               ${ThemeManager.isDark() ? moonIcon : sunIcon}
             </button>
@@ -286,32 +368,66 @@ const App = {
                   </div>
                 </div>
                 <div class="dropdown-divider"></div>
+                <button class="dropdown-item" onclick="App.navigate('dashboard')">Dashboard</button>
                 <button class="dropdown-item" onclick="App.navigate('profile')">Profile</button>
+                <button class="dropdown-item" onclick="App.navigate('analytics')">Analytics</button>
+                <div class="dropdown-divider"></div>
                 <button class="dropdown-item dropdown-signout" onclick="Auth.signOut()">Sign Out</button>
               </div>
             </div>
           </div>
         </div>
       </header>
+      ${isTest ? '' : this._renderBreadcrumb(activePage)}
       ${isTest ? '' : this._renderMobileBottomNav(activePage)}
     `;
   },
 
+  _renderBreadcrumb(activePage) {
+    if (['home','battle','dashboard','profile'].includes(activePage)) return '';
+    if (typeof Breadcrumb === 'undefined') return '';
+    return Breadcrumb.render(activePage, this.params || {});
+  },
+
+  _toggleMegaMenu() {
+    const item = document.getElementById('nav-exams-item');
+    const menu = document.getElementById('nav-mega-menu');
+    const isOpen = item?.classList.contains('open');
+    // Close all other dropdowns first
+    document.querySelectorAll('.nav-item.open').forEach(el => el.classList.remove('open'));
+    document.getElementById('user-dropdown')?.classList.remove('open');
+    if (!isOpen && item && menu) {
+      item.classList.add('open');
+      // Auto-close on outside click
+      setTimeout(() => {
+        const outside = (e) => {
+          if (!item.contains(e.target)) {
+            item.classList.remove('open');
+            document.removeEventListener('click', outside);
+          }
+        };
+        document.addEventListener('click', outside);
+      }, 10);
+    }
+  },
+
   _renderMobileBottomNav(activePage) {
-    const item = (page, label, icon) => `
-      <a href="#${page}" class="mobile-nav-item ${activePage === page ? 'active' : ''}" aria-label="${label}">
+    const item = (page, label, icon, active) => `
+      <a href="#${page}" class="mobile-nav-item ${active ? 'active' : ''}" aria-label="${label}">
         ${Icons.get(icon, 20)}
-        <span>${label}</span>
+        ${active ? `<span>${label}</span>` : ''}
       </a>
     `;
-
+    const pg = activePage || '';
+    const isDailyActive = pg === 'setup' && this.params?.preset === 'daily-challenge';
     return `
       <nav class="mobile-bottom-nav" aria-label="Navigation">
         <div class="mobile-bottom-nav-inner">
-          ${item('home', 'Home', 'home')}
-          ${item('board?id=SSC', 'Exams', 'clipboard')}
-          ${item('setup', 'Practice', 'listChecks')}
-          ${item('profile', 'Profile', 'user')}
+          ${item('home',                                    'Home',        'home',        pg === 'home')}
+          ${item('board',                                   'Exams',       'clipboard',   pg === 'board' || pg === 'exam')}
+          ${item('setup?preset=daily-challenge&daily=1',   'Daily',       'zap',         isDailyActive)}
+          ${item('dashboard',                              'Dashboard',   'barChart',    pg === 'dashboard' || pg === 'leaderboard')}
+          ${item('profile',                                 'Profile',     'user',        pg === 'profile')}
         </div>
       </nav>
     `;

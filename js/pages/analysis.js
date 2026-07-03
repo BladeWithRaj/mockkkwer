@@ -1,181 +1,195 @@
 // ============================================
-// MOCK TEST PLATFORM — Analysis Page
+// SOLUTION REVIEW SCREEN v2.0 — Scholar Design
+// Single question review, read-only options, AI explanation accordions, jump-to dropdown
 // ============================================
 
 const AnalysisPage = {
-  activeTab: 'all',
+  _currentQuestionIdx: 0,
+  _explanationExpanded: true,
 
   render() {
     const result = App.lastResult;
     if (!result) {
       return `
-        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
+        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16); text-align: center;">
           <div class="empty-state">
-            <div class="empty-state-icon">${Icons.get('barChart', 40)}</div>
-            <div class="empty-state-title">No Analysis Available</div>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Complete a test to see detailed analysis</p>
+            <div class="empty-state-icon" style="font-size: 40px;">📊</div>
+            <div class="empty-state-title" style="font-weight: 600; color: var(--text-primary); margin-top: 12px;">No Analysis Available</div>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Complete a test to view solution reviews.</p>
             <button class="btn btn-primary" onclick="App.navigate('setup')">Start a Test</button>
           </div>
         </div>
       `;
     }
 
-    // Filter questions based on active tab
-    let filteredQuestions = result.questionResults;
-    if (this.activeTab === 'correct') {
-      filteredQuestions = result.questionResults.filter(q => q.isCorrect);
-    } else if (this.activeTab === 'wrong') {
-      filteredQuestions = result.questionResults.filter(q => !q.isCorrect && !q.isSkipped);
-    } else if (this.activeTab === 'skipped') {
-      filteredQuestions = result.questionResults.filter(q => q.isSkipped);
+    const questionResults = result.questionResults || [];
+    if (questionResults.length === 0) {
+      return `
+        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16); text-align: center;">
+          <div class="empty-state">
+            <div class="empty-state-icon" style="font-size: 40px;">📭</div>
+            <div class="empty-state-title" style="font-weight: 600; color: var(--text-primary); margin-top: 12px;">No Solutions Found</div>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Questions details are not available for this session.</p>
+            <button class="btn btn-primary" onclick="App.navigate('home')">Go Home</button>
+          </div>
+        </div>
+      `;
     }
 
+    // Wrap around boundaries
+    if (this._currentQuestionIdx < 0) this._currentQuestionIdx = 0;
+    if (this._currentQuestionIdx >= questionResults.length) this._currentQuestionIdx = questionResults.length - 1;
+
+    const qr = questionResults[this._currentQuestionIdx];
+    const q = qr.question;
     const labels = ['A', 'B', 'C', 'D'];
 
+    // Badges based on correctness
+    let statusBadge = '';
+    if (qr.isSkipped) {
+      statusBadge = `<span class="badge" style="background: var(--skipped-light); color: var(--skipped); font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 600;">○ Skipped</span>`;
+    } else if (qr.isCorrect) {
+      statusBadge = `<span class="badge" style="background: var(--success-light); color: var(--success); font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 600;">✓ Correct</span>`;
+    } else {
+      statusBadge = `<span class="badge" style="background: var(--danger-light); color: var(--danger); font-size: 11px; padding: 2px 8px; border-radius: var(--radius-sm); font-weight: 600;">✗ Incorrect</span>`;
+    }
+
     return `
-      <div class="analysis-page page-enter">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
-          <div>
-            <h1 class="animate-fadeInDown" style="font-size: var(--text-2xl);">Detailed Analysis</h1>
-            <p class="animate-fadeInDown stagger-1" style="color: var(--text-secondary); font-size: var(--text-sm);">
-              Score: ${result.totalMarks}/${result.maxMarks} • Accuracy: ${result.accuracy}%
-            </p>
+      <div class="analysis-page page-enter" style="min-height: 100vh; background: var(--bg-primary); display: flex; flex-direction: column;">
+        
+        <!-- Sticky Top Bar -->
+        <div style="position: sticky; top: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); height: 56px; z-index: var(--z-sticky); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4);">
+          <button class="btn btn-ghost" onclick="App.navigate('result')" style="font-size: var(--text-sm); font-weight: 500;">
+            ← Results
+          </button>
+          
+          <!-- Jump to dropdown -->
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: var(--text-xs); color: var(--text-muted); font-weight: 500;">Jump to:</span>
+            <select class="form-select" onchange="AnalysisPage.jumpTo(this.value)" style="height: 32px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--text-xs); font-weight: 600; padding: 0 8px; outline: none; cursor: pointer;">
+              ${questionResults.map((item, idx) => `
+                <option value="${idx}" ${this._currentQuestionIdx === idx ? 'selected' : ''}>
+                  Q${idx + 1} (${item.isCorrect ? '✓' : item.isSkipped ? '○' : '✗'})
+                </option>
+              `).join('')}
+            </select>
           </div>
-          <div class="animate-fadeInDown stagger-2" style="display: flex; gap: var(--space-2);">
-            <button class="btn btn-secondary btn-sm" onclick="App.navigate('result')">← Results</button>
-            <button class="btn btn-primary btn-sm" onclick="App.navigate('setup')">New Test</button>
-          </div>
-        </div>
 
-        <!-- Time Analysis Card -->
-        <div class="card animate-fadeInUp stagger-1" style="margin-bottom: var(--space-6);">
-          <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">${Icons.get('timer', 18)} Time Analysis</h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-4);">
-            <div class="result-stat">
-              <div class="result-stat-value time">${Helpers.formatDuration(result.timeTaken)}</div>
-              <div class="result-stat-label">Total Time</div>
-            </div>
-            <div class="result-stat">
-              <div class="result-stat-value" style="color: var(--primary-light);">${result.avgTimePerQuestion}s</div>
-              <div class="result-stat-label">Avg per Question</div>
-            </div>
-            <div class="result-stat">
-              <div class="result-stat-value" style="color: var(--success);">
-                ${result.questionResults.length > 0 ? Math.min(...result.questionResults.map(q => q.timeSpent)) : 0}s
-              </div>
-              <div class="result-stat-label">Fastest</div>
-            </div>
-            <div class="result-stat">
-              <div class="result-stat-value" style="color: var(--warning);">
-                ${result.questionResults.length > 0 ? Math.max(...result.questionResults.map(q => q.timeSpent)) : 0}s
-              </div>
-              <div class="result-stat-label">Slowest</div>
-            </div>
+          <div style="font-size: var(--text-xs); font-weight: 600; color: var(--text-secondary); text-transform: uppercase;">
+            ${q.subject}
           </div>
         </div>
 
-        <!-- Performance Trend -->
-        ${this._renderTrendChart()}
-
-        <!-- Tabs -->
-        <div class="analysis-tabs animate-fadeInUp stagger-3">
-          <button class="analysis-tab ${this.activeTab === 'all' ? 'active' : ''}"
-                  onclick="AnalysisPage.setTab('all')">
-            All (${result.questionResults.length})
-          </button>
-          <button class="analysis-tab ${this.activeTab === 'correct' ? 'active' : ''}"
-                  onclick="AnalysisPage.setTab('correct')">
-            ${Icons.get('checkCircle', 14)} Correct (${result.correct})
-          </button>
-          <button class="analysis-tab ${this.activeTab === 'wrong' ? 'active' : ''}"
-                  onclick="AnalysisPage.setTab('wrong')">
-            ${Icons.get('xCircle', 14)} Wrong (${result.wrong})
-          </button>
-          <button class="analysis-tab ${this.activeTab === 'skipped' ? 'active' : ''}"
-                  onclick="AnalysisPage.setTab('skipped')">
-            ${Icons.get('skipForward', 14)} Skipped (${result.skipped})
-          </button>
-        </div>
-
-        <!-- Question Review Cards -->
-        <div id="question-review-list">
-          ${filteredQuestions.length === 0 ? `
-            <div class="empty-state" style="padding: var(--space-8);">
-              <div class="empty-state-icon">${Icons.get('fileText', 32)}</div>
-              <div class="empty-state-title">No questions in this category</div>
+        <!-- Main Question Review Section -->
+        <div style="flex: 1; max-width: 640px; width: 100%; margin: 0 auto; padding: 24px var(--sp-4) 80px;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Question ${this._currentQuestionIdx + 1}</div>
+            <div style="display: flex; gap: 8px;">
+              ${statusBadge}
+              <button class="bookmark-btn ${Storage.isQuestionInMistakeBook(q.id) ? 'bookmarked' : ''}"
+                      onclick="AnalysisPage.toggleBookmark('${q.id}', this)"
+                      style="background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${Storage.isQuestionInMistakeBook(q.id) ? '#f87171' : 'var(--text-muted)'}; transition: color 120ms;"
+                      title="Save to Mistake Book">
+                ★
+              </button>
             </div>
-          ` : ''}
-          ${filteredQuestions.map((qr, i) => {
-            const q = qr.question;
-            const statusClass = qr.isCorrect ? 'correct-card' : qr.isSkipped ? 'skipped-card' : 'wrong-card';
-            const statusIcon = qr.isCorrect ? Icons.get('checkCircle', 14) : qr.isSkipped ? Icons.get('skipForward', 14) : Icons.get('xCircle', 14);
-            const qIndex = result.questionResults.indexOf(qr);
+          </div>
 
-            return `
-              <div class="question-review-card ${statusClass} animate-fadeInUp" style="animation-delay: ${i * 50}ms;">
-                <div class="review-question-header">
-                  <span class="review-question-num">Q${qIndex + 1} ${statusIcon}</span>
-                  <div style="display: flex; gap: var(--space-2); align-items: center;">
-                    <span class="chip chip-primary">${q.subject}</span>
-                    <span class="chip">${q.topic}</span>
-                    <span class="chip" style="color: var(--text-muted);">${qr.timeSpent}s</span>
-                    <button class="bookmark-btn ${Storage.isQuestionInMistakeBook(q.id) ? 'bookmarked' : ''}"
-                            onclick="AnalysisPage.toggleBookmark('${q.id}', this)"
-                            style="background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${Storage.isQuestionInMistakeBook(q.id) ? '#f87171' : 'var(--text-muted)'}; transition: color var(--transition-fast);"
-                            title="Save/Remove from Mistake Book">
-                      ${Icons.get('bookmark', 15)}
-                    </button>
+          <!-- Question Content -->
+          <div class="question-text" style="font-size: 16px; line-height: 1.6; color: var(--text-primary); margin-bottom: 20px; font-family: var(--font-body);">
+            ${q.question}
+          </div>
+
+          <!-- Read-only Options List -->
+          <div class="options-list" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px;">
+            ${q.options.map((opt, i) => {
+              const isCorrectOpt = q.correct === i;
+              const isUserOpt = qr.selectedAnswer === i && !qr.isSkipped;
+              
+              let optStyle = 'background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary);';
+              let badge = '';
+
+              if (isCorrectOpt) {
+                optStyle = 'background: var(--success-light); border: 1px solid var(--success); color: var(--text-primary);';
+                badge = '<span style="color: var(--success); font-weight: 700;">✓ Correct</span>';
+              } else if (isUserOpt) {
+                optStyle = 'background: var(--danger-light); border: 1px solid var(--danger); color: var(--text-primary);';
+                badge = '<span style="color: var(--danger); font-weight: 700;">✗ Your Choice</span>';
+              }
+
+              return `
+                <div style="width: 100%; padding: 14px 16px; border-radius: var(--radius); font-size: var(--text-base); display: flex; align-items: center; justify-content: space-between; border-left: 3px solid ${isCorrectOpt ? 'var(--success)' : isUserOpt ? 'var(--danger)' : 'transparent'}; ${optStyle}">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-weight: 700; color: ${isCorrectOpt ? 'var(--success)' : isUserOpt ? 'var(--danger)' : 'var(--text-muted)'}; font-family: var(--font-display);">(${labels[i]})</span>
+                    <span style="font-family: var(--font-body);">${opt}</span>
                   </div>
+                  ${badge}
                 </div>
+              `;
+            }).join('')}
+          </div>
 
-                <p style="font-size: var(--text-sm); color: var(--text-primary); margin-bottom: var(--space-4); line-height: var(--leading-relaxed);">
-                  ${q.question}
-                </p>
+          <!-- Accordion Toggle for Explanation -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <button onclick="AnalysisPage.toggleExplanation()" style="width: 100%; background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: space-between; font-weight: 600; color: var(--brand-primary); font-size: var(--text-sm); cursor: pointer; outline: none; font-family: var(--font-display);">
+              <span>${this._explanationExpanded ? '▼ Hide Explanation' : '▶ Show Explanation'}</span>
+              <span class="badge" style="background: var(--warning-light); color: var(--warning); font-size: 11px; padding: 2px 8px; border-radius: var(--radius-full); font-weight: 600;">AI Explanation</span>
+            </button>
 
-                <div class="options-list" style="pointer-events: none;">
-                  ${q.options.map((opt, oi) => {
-                    let cls = '';
-                    if (oi === q.correct) cls = 'correct';
-                    else if (oi === qr.selectedAnswer && !qr.isCorrect) cls = 'wrong';
-                    return `
-                      <div class="option-btn ${cls}" style="padding: var(--space-2) var(--space-4); cursor: default;">
-                        <span class="option-label" style="width: 26px; height: 26px; font-size: 11px;">${labels[oi]}</span>
-                        <span class="option-text" style="font-size: var(--text-sm);">${opt}</span>
-                      </div>
-                    `;
-                  }).join('')}
-                </div>
+            <!-- Explanation Content -->
+            <div id="explanation-container" style="display: ${this._explanationExpanded ? 'block' : 'none'}; margin-top: 12px; font-size: var(--text-sm); line-height: 1.6; color: var(--text-secondary); padding-left: 8px;">
+              <p style="margin: 0 0 10px;">${q.explanation || 'No detailed explanation is available for this question.'}</p>
+              ${q.topic ? `<p style="margin: 6px 0; font-size: var(--text-xs); color: var(--text-muted);">Topic: <strong>${q.topic}</strong></p>` : ''}
+            </div>
+          </div>
 
-                ${q.explanation ? `
-                  <div class="explanation-box" style="margin-top: var(--space-4);">
-                    <div class="explanation-title">${Icons.get('lightbulb', 14)} Explanation</div>
-                    <div class="explanation-text">${q.explanation}</div>
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          }).join('')}
         </div>
 
-        <div style="text-align: center; padding: var(--space-8) 0;">
-          <button class="btn btn-primary btn-lg" onclick="App.navigate('setup')">
-            ${Icons.get('refresh', 14)} Take Another Test
+        <!-- Sticky Bottom Nav Bar -->
+        <div style="position: sticky; bottom: 0; background: var(--bg-surface); border-top: 1px solid var(--border-color); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4); z-index: var(--z-sticky);">
+          <button class="btn btn-secondary" onclick="AnalysisPage.prev()" ${this._currentQuestionIdx === 0 ? 'disabled' : ''}>
+            ← Prev Question
+          </button>
+          
+          <button class="btn btn-primary" onclick="AnalysisPage.next()" ${this._currentQuestionIdx === questionResults.length - 1 ? 'disabled' : ''}>
+            Next Question →
           </button>
         </div>
+
       </div>
     `;
   },
 
-  _renderTrendChart() {
-    const history = Storage.getHistory();
-    if (history.length < 2) return '';
+  jumpTo(idx) {
+    this._currentQuestionIdx = parseInt(idx, 10);
+    App.renderPage('analysis');
+  },
 
-    return `
-      <div class="card animate-fadeInUp stagger-2" style="margin-bottom: var(--space-6);">
-        <h3 style="font-size: var(--text-base); margin-bottom: var(--space-4);">${Icons.get('trendingUp', 18)} Performance Trend</h3>
-        <canvas id="trend-chart" width="800" height="200" style="width: 100%; height: 200px;"></canvas>
-      </div>
-    `;
+  prev() {
+    if (this._currentQuestionIdx > 0) {
+      this._currentQuestionIdx--;
+      App.renderPage('analysis');
+    }
+  },
+
+  next() {
+    const result = App.lastResult;
+    const total = result?.questionResults?.length || 0;
+    if (this._currentQuestionIdx < total - 1) {
+      this._currentQuestionIdx++;
+      App.renderPage('analysis');
+    }
+  },
+
+  toggleExplanation() {
+    this._explanationExpanded = !this._explanationExpanded;
+    const container = document.getElementById('explanation-container');
+    if (container) {
+      container.style.display = this._explanationExpanded ? 'block' : 'none';
+    }
+    // Re-render
+    App.renderPage('analysis');
   },
 
   toggleBookmark(qId, btn) {
@@ -187,35 +201,20 @@ const AnalysisPage = {
     const inBook = Storage.isQuestionInMistakeBook(qId);
     if (inBook) {
       Storage.removeSingleMistake(qId);
-      Helpers.showToast('Question removed from Mistake Book', 'info');
+      Helpers.showToast('Removed from Mistake Book', 'info');
       btn.style.color = 'var(--text-muted)';
       btn.classList.remove('bookmarked');
     } else {
       Storage.addSingleMistake(qr.question);
-      Helpers.showToast('Question saved to Mistake Book!', 'success');
+      Helpers.showToast('Saved to Mistake Book!', 'success');
       btn.style.color = '#f87171';
       btn.classList.add('bookmarked');
     }
   },
 
-  setTab(tab) {
-    this.activeTab = tab;
-    document.getElementById('app').innerHTML = this.render();
-    this.afterRender();
-  },
-
   afterRender() {
-    // Draw trend chart
-    const canvas = document.getElementById('trend-chart');
-    if (canvas) {
-      const history = Storage.getHistory();
-      const trendData = history.slice(0, 10).reverse().map((t, i) => ({
-        label: `T${i + 1}`,
-        value: t.accuracy || 0
-      }));
-      canvas.width = canvas.offsetWidth * 2;
-      canvas.height = 400;
-      Analytics.drawLineChart(canvas, trendData);
-    }
+    if (window.trackEvent) window.trackEvent("page_view", { page: "analysis_scholar" });
   }
 };
+
+window.AnalysisPage = AnalysisPage;

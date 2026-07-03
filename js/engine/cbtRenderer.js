@@ -25,10 +25,7 @@ const CBTRenderer = {
 
   // ── Check if this exam should use CBT mode ──
   shouldUseCBT() {
-    const preset = this._getPreset();
-    if (!preset) return false;
-    const cbtBoards = ['SSC', 'Railway', 'Banking', 'Defence', 'State'];
-    return cbtBoards.includes(preset.category);
+    return false;
   },
 
   // ── Render instruction screen ──

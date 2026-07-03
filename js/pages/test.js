@@ -5,6 +5,7 @@
 // ============================================
 
 const TestPage = {
+  _visitedQuestions: new Set(),
   timerInterval: null,
   _isProcessing: false,
   _lastWarningShown: false,
@@ -40,164 +41,180 @@ const TestPage = {
     if (!TestEngine.state?.config?.examId) return '';
     const preset = ExamPresets.get(TestEngine.state.config.examId);
     return preset ? preset.name : '';
-  },
-
-  render() {
+  },  render() {
     if (!TestEngine.state) {
       return `
-        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16);">
+        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16); text-align: center;">
           <div class="empty-state">
-            <div class="empty-state-icon">${Icons.get('fileText', 40)}</div>
-            <div class="empty-state-title">${Lang.t('test_no_active')}</div>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">${Lang.t('test_no_active_desc')}</p>
-            <button class="btn btn-primary" onclick="App.navigate('setup')">${Lang.t('test_go_setup')}</button>
+            <div class="empty-state-icon" style="font-size: 40px;">📄</div>
+            <div class="empty-state-title" style="font-weight: 600; color: var(--text-primary); margin-top: 12px;">No Active Test</div>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Go to setup to start a new mock test.</p>
+            <button class="btn btn-primary" onclick="App.navigate('setup')">Go to Setup</button>
           </div>
         </div>
       `;
     }
 
-    // ── Board-specific renderer delegation ──
-    const activeRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
-    if (activeRenderer && typeof activeRenderer.renderTest === 'function') {
-      // RivalBattleRenderer returns null → fall through to default UI
-      if (activeRenderer.isShowingInstructions && activeRenderer.isShowingInstructions()) {
-        const instrHTML = activeRenderer.renderInstructions();
-        if (instrHTML) return instrHTML;
-      } else {
-        const testHTML = activeRenderer.renderTest();
-        if (testHTML) return testHTML;
-      }
-    }
-    // Legacy fallback: old CBTRenderer
-    if (typeof CBTRenderer !== 'undefined' && CBTRenderer.shouldUseCBT()) {
-      if (CBTRenderer.isShowingInstructions()) return CBTRenderer.renderInstructions();
-      return CBTRenderer.renderTest();
-    }
-
     const current = TestEngine.getCurrentQuestion();
     const navStatus = TestEngine.getNavStatus();
-    const noTimer = TestEngine.state.totalTime >= 99999;
-    const progressPercent = ((current.index + 1) / current.total) * 100;
     const answeredCount = Object.keys(TestEngine.state.answers).length;
-    const board = this._getBoard();
     const sections = this._getSections();
-    const examName = this._getExamName();
 
-    // Progress bar color based on completion
-    let progressClass = '';
-    if (progressPercent >= 80) progressClass = 'intense';
-    else if (progressPercent >= 50) progressClass = 'active';
+    // Determine current section name
+    const currentQuestionObj = TestEngine.state.questions[current.index];
+    const currentSubject = currentQuestionObj?.subject || '';
+    const sectionName = currentSubject.toUpperCase();
 
-    // Board-themed progress
-    const boardClass = board ? 'board-themed' : '';
+    // Palette stats
+    const totalCount = current.total;
+    const markedCount = Object.keys(TestEngine.state.markedForReview).filter(k => TestEngine.state.markedForReview[k]).length;
 
     return `
-      <div class="test-page" ${board ? `data-exam-board="${board.key}"` : ''}>
-        <!-- Progress Bar -->
-        <div class="test-progress-wrap">
-          <div class="test-progress-bar ${progressClass} ${boardClass}" style="width: ${progressPercent}%" id="test-progress-bar"></div>
-        </div>
-
-        <!-- Top Bar -->
-        <div class="test-topbar">
-          <div class="test-info">
-            ${examName ? `<span class="exam-badge" style="${board ? 'background:'+board.color : ''}">${examName}</span>` : ''}
-            <span class="test-info-item">
-              Q <strong>${current.index + 1}/${current.total}</strong>
-            </span>
-            <span class="test-info-item answered-badge">
-              ✅ ${answeredCount}
-            </span>
-          </div>
-          <div style="display:flex;align-items:center;gap:var(--space-2);">
-            ${!noTimer ? `
-              <div class="timer-display" id="timer-display">
-                <span class="timer-icon">${Icons.get('timer', 14)}</span>
-                <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
-              </div>
-            ` : ''}
-            <button class="btn btn-ghost btn-sm" onclick="TestPage.toggleFullscreen()" id="fullscreen-btn" title="Fullscreen (F11)">
-              ${Icons.get('monitor', 16)}
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="TestPage.confirmSubmit()" id="submit-test-btn">
-              ${Lang.t('test_submit_btn')}
-            </button>
-          </div>
-        </div>
-
-        <!-- Section Tabs -->
-        ${sections.length > 1 ? `
-        <div class="exam-section-tabs" id="section-tabs">
-          <button class="exam-section-tab ${!this._activeSection ? 'active' : ''}" onclick="TestPage.filterSection(null)">
-            All
-            <span class="exam-section-tab-count">${current.total}</span>
+      <div class="test-page page-enter" style="min-height: 100vh; background: var(--bg-primary); display: flex; flex-direction: column;">
+        <!-- Top Sticky Bar -->
+        <div style="position: sticky; top: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); height: 56px; z-index: var(--z-sticky); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4);">
+          <button class="btn btn-ghost" onclick="TestPage.confirmExit()" style="font-size: var(--text-sm); font-weight: 500; display: flex; align-items: center; gap: 4px;">
+            ← Exit
           </button>
+          <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-primary);">
+            ${sectionName} · Q ${current.index + 1}/${current.total}
+          </div>
+          <div id="timer-display" style="font-family: var(--font-mono); font-size: var(--text-base); font-weight: 700; color: var(--text-primary); transition: color 120ms ease; display: flex; align-items: center; gap: 6px;">
+            ⏱ <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
+          </div>
+        </div>
+
+        <!-- Section Tabs (if multi-section) -->
+        ${sections.length > 1 ? `
+        <div style="display: flex; gap: 8px; padding: 8px var(--sp-4); background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); overflow-x: auto; scrollbar-width: none;">
           ${sections.map(s => `
-            <button class="exam-section-tab ${this._activeSection === s.subject ? 'active' : ''}" onclick="TestPage.filterSection('${s.subject}')">
+            <button class="btn ${currentSubject === s.subject ? 'btn-primary' : 'btn-secondary'}" onclick="TestPage.filterSection('${s.subject}')" style="padding: 4px 12px; font-size: var(--text-xs); border-radius: var(--radius-full); white-space: nowrap;">
               ${s.name}
-              <span class="exam-section-tab-count">${s.questions}</span>
             </button>
           `).join('')}
         </div>
         ` : ''}
 
-        <!-- Test Body -->
-        <div class="test-body">
-          <!-- Question Area -->
-          <div class="question-area" id="question-area">
-            ${this._renderQuestion(current)}
+        <!-- Main Workspace -->
+        <div style="flex: 1; display: grid; grid-template-columns: 1fr 280px; max-width: var(--container-xl); width: 100%; margin: 0 auto;">
+          
+          <!-- Left: Question Area -->
+          <div style="padding: 24px; border-right: 1px solid var(--border-color); overflow-y: auto;">
+            <div id="question-area">
+              ${this._renderQuestion(current)}
+            </div>
           </div>
 
-          <!-- Nav Panel (desktop) -->
-          <div class="question-nav-panel" id="nav-panel-desktop">
-            <div class="nav-panel-card">
-              <div class="nav-panel-title">${Lang.t('test_questions_nav')}</div>
-              <div class="nav-grid" id="nav-grid">
-                ${navStatus.map((ns, i) => `
-                  <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
-                          onclick="TestPage.goTo(${i})" id="nav-btn-${i}">${i + 1}</button>
-                `).join('')}
+          <!-- Right: Side Question Palette (hidden on small screens) -->
+          <div class="desktop-only" style="padding: 24px; background: var(--bg-secondary); overflow-y: auto;">
+            <div style="font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px;">Questions Navigation</div>
+            
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 24px;" id="nav-grid">
+              ${navStatus.map((ns, i) => {
+                const isVisited = this._visitedQuestions.has(i) || ns.current;
+                const isAnswered = ns.answered;
+                const isMarked = ns.review;
+                
+                let btnStyle = 'background: var(--bg-sunken); border: 1px solid var(--border-color); color: var(--text-secondary);';
+                if (isAnswered && isMarked) {
+                  btnStyle = 'background: var(--danger); border: 1px solid var(--danger); color: white;';
+                } else if (isMarked) {
+                  btnStyle = 'background: var(--warning); border: 1px solid var(--warning); color: white;';
+                } else if (isAnswered) {
+                  btnStyle = 'background: var(--success); border: 1px solid var(--success); color: white;';
+                } else if (isVisited) {
+                  btnStyle = 'background: var(--bg-primary); border: 1px solid var(--border-strong); color: var(--text-primary);';
+                }
+                
+                if (ns.current) {
+                  btnStyle += ' outline: 2px solid var(--brand-primary); outline-offset: 2px;';
+                }
+
+                return `
+                  <button onclick="TestPage.goTo(${i})" style="width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; ${btnStyle}">
+                    ${i + 1}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Palette Summary Stats -->
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 16px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span>Total Questions</span>
+                <strong style="color: var(--text-primary);">${totalCount}</strong>
               </div>
-              <div class="nav-legend">
-                <span class="legend-item"><span class="legend-dot current"></span> ${Lang.t('test_legend_current')}</span>
-                <span class="legend-item"><span class="legend-dot answered"></span> ${Lang.t('test_legend_answered')}</span>
-                <span class="legend-item"><span class="legend-dot review"></span> ${Lang.t('test_legend_review')}</span>
-                <span class="legend-item"><span class="legend-dot unanswered"></span> ${Lang.t('test_legend_not_visited')}</span>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Answered</span>
+                <strong style="color: var(--success);">${answeredCount}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span>Marked for Review</span>
+                <strong style="color: var(--warning);">${markedCount}</strong>
               </div>
             </div>
           </div>
+
         </div>
 
-        <!-- Mobile Bottom Bar -->
-        <div class="test-mobile-bar">
-          <button class="mobile-nav-btn" onclick="TestPage.prev()"
-                  ${current.index === 0 ? 'disabled' : ''}>${Lang.t('test_prev')}</button>
-          <button class="mobile-nav-btn nav-toggle" onclick="TestPage.toggleMobileNav()">
-            ${current.index + 1}/${current.total}
+        <!-- Sticky Bottom Bar -->
+        <div style="position: sticky; bottom: 0; background: var(--bg-surface); border-top: 1px solid var(--border-color); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4); z-index: var(--z-sticky);">
+          <button class="btn btn-secondary" onclick="TestPage.prev()" ${current.index === 0 ? 'disabled' : ''} style="font-weight: 500;">
+            ← Prev
           </button>
-          <button class="mobile-nav-btn primary" onclick="TestPage.next()">
-            ${current.index === current.total - 1 ? Lang.t('submit') : Lang.t('test_next')}
+          
+          <button class="btn btn-secondary ${current.isMarkedForReview ? 'active' : ''}" onclick="TestPage.toggleReview()" style="font-weight: 500; color: ${current.isMarkedForReview ? 'var(--warning)' : 'var(--text-secondary)'};">
+            ⭐ Mark for Review
+          </button>
+          
+          <button class="btn btn-primary" onclick="TestPage.next()" style="font-weight: 600; font-family: var(--font-display);">
+            ${current.index === current.total - 1 ? 'Submit' : 'Save & Next →'}
+          </button>
+        </div>
+
+        <!-- Mobile Drawer Navigation Toggle (only visible on mobile) -->
+        <div class="mobile-only" style="position: fixed; bottom: 70px; right: 16px; z-index: 100;">
+          <button onclick="TestPage.toggleMobileNav()" style="width: 48px; height: 48px; border-radius: 50%; background: var(--brand-primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); border: none; font-size: 20px;">
+            📑
           </button>
         </div>
 
         <!-- Mobile Nav Sheet -->
-        <div class="mobile-nav-sheet" id="mobile-nav-sheet">
-          <div class="mobile-nav-sheet-overlay" onclick="TestPage.toggleMobileNav()"></div>
-          <div class="mobile-nav-sheet-content">
-            <div class="nav-panel-title">${Lang.t('test_questions_nav')}</div>
-            <div class="nav-grid" id="nav-grid-mobile">
-              ${navStatus.map((ns, i) => `
-                <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
-                        onclick="TestPage.goTo(${i});TestPage.toggleMobileNav()">${i + 1}</button>
-              `).join('')}
-            </div>
-            <div class="nav-legend" style="justify-content: center;">
-              <span class="legend-item"><span class="legend-dot current"></span> ${Lang.t('test_legend_current')}</span>
-              <span class="legend-item"><span class="legend-dot answered"></span> ${Lang.t('test_legend_answered')}</span>
-              <span class="legend-item"><span class="legend-dot review"></span> ${Lang.t('test_legend_review')}</span>
+        <div class="mobile-nav-sheet" id="mobile-nav-sheet" style="display: none; position: fixed; inset: 0; z-index: var(--z-modal);">
+          <div style="position: absolute; inset: 0; background: var(--bg-overlay);" onclick="TestPage.toggleMobileNav()"></div>
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: var(--bg-surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: 20px; max-height: 70vh; overflow-y: auto;">
+            <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); margin-bottom: 12px; text-align: center;">Jump to Question</div>
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;" id="nav-grid-mobile">
+              ${navStatus.map((ns, i) => {
+                const isVisited = this._visitedQuestions.has(i) || ns.current;
+                const isAnswered = ns.answered;
+                const isMarked = ns.review;
+                
+                let btnStyle = 'background: var(--bg-sunken); border: 1px solid var(--border-color); color: var(--text-secondary);';
+                if (isAnswered && isMarked) {
+                  btnStyle = 'background: var(--danger); border: 1px solid var(--danger); color: white;';
+                } else if (isMarked) {
+                  btnStyle = 'background: var(--warning); border: 1px solid var(--warning); color: white;';
+                } else if (isAnswered) {
+                  btnStyle = 'background: var(--success); border: 1px solid var(--success); color: white;';
+                } else if (isVisited) {
+                  btnStyle = 'background: var(--bg-primary); border: 1px solid var(--border-strong); color: var(--text-primary);';
+                }
+                
+                if (ns.current) {
+                  btnStyle += ' outline: 2px solid var(--brand-primary); outline-offset: 2px;';
+                }
+
+                return `
+                  <button onclick="TestPage.goTo(${i}); TestPage.toggleMobileNav();" style="width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; ${btnStyle}">
+                    ${i + 1}
+                  </button>
+                `;
+              }).join('')}
             </div>
           </div>
         </div>
+
       </div>
     `;
   },
@@ -206,47 +223,39 @@ const TestPage = {
     const q = current.question;
     const labels = ['A', 'B', 'C', 'D'];
 
+    // Track this question as visited
+    this._visitedQuestions.add(current.index);
+
     return `
-      <div class="question-header">
-        <div class="question-number">${current.index + 1}</div>
-        <div class="question-meta">
-          <span class="chip chip-primary">${q.subject}</span>
-        </div>
+      <div class="question-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Question ${current.index + 1}</div>
+        <button class="btn btn-secondary btn-sm" onclick="TestPage.toggleQuestionLanguage()" style="font-size: var(--text-xs); font-weight: 600; padding: 4px 10px;">
+          🌐 Translate (Eng/Hindi)
+        </button>
       </div>
 
-      <div class="question-text question-slide-in">${q.question}</div>
-
-      <div class="options-list" id="options-list">
-        ${q.options.map((opt, i) => `
-          <button class="option-btn ${current.selectedAnswer === i ? 'selected' : ''} option-slide-in"
-                  style="animation-delay: ${i * 60}ms;"
-                  onclick="TestPage.selectOption(${i})" id="option-${i}">
-            <span class="option-label">${labels[i]}</span>
-            <span class="option-text">${opt}</span>
-          </button>
-        `).join('')}
+      <div class="question-text" style="font-size: 16px; line-height: 1.6; color: var(--text-primary); margin-bottom: 24px; font-family: var(--font-body);">
+        ${q.question}
       </div>
 
-      <div class="question-actions">
-        <div class="question-actions-left">
-          <button class="btn btn-ghost btn-sm" onclick="TestPage.clearAnswer()" id="clear-btn">
-            ${Lang.t('test_clear')}
-          </button>
-          <button class="mark-review-btn ${current.isMarkedForReview ? 'active' : ''}"
-                  onclick="TestPage.toggleReview()" id="review-btn">
-            ${current.isMarkedForReview ? Lang.t('test_marked') : Lang.t('test_mark_review')}
-          </button>
-        </div>
-        <div class="question-actions-right desktop-only">
-          <button class="btn btn-secondary btn-sm" onclick="TestPage.prev()"
-                  ${current.index === 0 ? 'disabled style="opacity:0.4;pointer-events:none"' : ''}
-                  id="prev-btn">
-            ${Lang.t('test_prev')}
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="TestPage.next()" id="next-btn">
-            ${current.index === current.total - 1 ? Lang.t('submit') + ' →' : Lang.t('test_next')}
-          </button>
-        </div>
+      <div class="options-list" style="display: flex; flex-direction: column; gap: 10px;">
+        ${q.options.map((opt, i) => {
+          const isSelected = current.selectedAnswer === i;
+          let optStyle = 'background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid var(--border-color); color: var(--text-primary);';
+          if (isSelected) {
+            optStyle = 'background: var(--brand-light); border: 1px solid var(--brand-primary); border-left: 3px solid var(--brand-primary); color: var(--text-primary);';
+          }
+          
+          return `
+            <button onclick="TestPage.selectOption(${i})" style="width: 100%; padding: 14px 16px; text-align: left; border-radius: var(--radius); font-size: var(--text-base); display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: none; transition: all 80ms ease; ${optStyle}">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-weight: 700; color: ${isSelected ? 'var(--brand-primary)' : 'var(--text-muted)'}; font-family: var(--font-display);">(${labels[i]})</span>
+                <span style="font-family: var(--font-body);">${opt}</span>
+              </div>
+              ${isSelected ? `<span style="color: var(--brand-primary); font-weight: bold; font-size: 14px;">✓</span>` : ''}
+            </button>
+          `;
+        }).join('')}
       </div>
     `;
   },
@@ -295,6 +304,7 @@ const TestPage = {
     }
     this._isFullscreen = false;
     this._activeSection = null;
+    this._visitedQuestions.clear();
     // Reset renderer state
     if (typeof RendererBase !== 'undefined') RendererBase.resetState();
     else if (typeof CBTRenderer !== 'undefined') CBTRenderer.resetState();
@@ -651,11 +661,36 @@ const TestPage = {
     setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 3000);
   },
 
-  _lastMotivation: false,
+  toggleQuestionLanguage() {
+    // Toggle languageMode between 'english' and 'hindi'
+    if (TestEngine.state) {
+      const idx = TestEngine.state.currentQuestion;
+      const q = TestEngine.state.questions[idx];
+      if (q) {
+        const nextMode = q.languageMode === 'hindi' ? 'english' : 'hindi';
+        TestEngine.state.questions.forEach(item => item.languageMode = nextMode);
+        this.refreshQuestion();
+        Helpers.showToast(`Swapped to ${nextMode === 'english' ? 'English' : 'Hindi'}!`, 'info');
+      }
+    }
+  },
 
   toggleMobileNav() {
     const sheet = document.getElementById('mobile-nav-sheet');
-    if (sheet) sheet.classList.toggle('open');
+    if (sheet) {
+      const isVisible = sheet.style.display === 'block';
+      sheet.style.display = isVisible ? 'none' : 'block';
+    }
+  },
+
+  _lastMotivation: false,
+
+  confirmExit() {
+    if (confirm('Are you sure you want to exit the test? Your current progress will be lost.')) {
+      this.stopTimer();
+      if (typeof CBTEngine !== 'undefined') CBTEngine.stop();
+      App.navigate('home');
+    }
   },
 
   confirmSubmit() {

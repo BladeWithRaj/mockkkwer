@@ -24,20 +24,24 @@
   <link rel="icon" href="/icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <!-- Google Fonts — Inter + Noto Sans Devanagari (bilingual) -->
+  <!-- Google Fonts — Plus Jakarta Sans + Inter + Noto Sans Devanagari + JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- CSS — Design System -->
-  <link rel="stylesheet" href="css/variables.css?v=20260628">
-  <link rel="stylesheet" href="css/base.css?v=20260628">
-  <link rel="stylesheet" href="css/components.css?v=20260628">
+  <link rel="stylesheet" href="css/variables.css?v=20260629">
+  <link rel="stylesheet" href="css/base.css?v=20260629">
+  <link rel="stylesheet" href="css/nav.css?v=20260629c">
+  <link rel="stylesheet" href="css/components.css?v=20260629">
+  <link rel="stylesheet" href="css/search.css?v=20260629">
 
   <!-- CSS — Pages -->
-  <link rel="stylesheet" href="css/pages.css?v=20260628">
-  <link rel="stylesheet" href="css/homepage-v5.css?v=20260628">
-  <link rel="stylesheet" href="css/result-page.css?v=20260628">
+  <link rel="stylesheet" href="css/pages.css?v=20260629">
+  <link rel="stylesheet" href="css/homepage-v5.css?v=20260629c">
+  <link rel="stylesheet" href="css/result-page.css?v=20260629">
+  <link rel="stylesheet" href="css/dashboard.css?v=20260703">
+  <link rel="stylesheet" href="css/battle.css?v=20260703">
 
   <!-- CSS — Exam & CBT -->
   <link rel="stylesheet" href="css/in-exam.css?v=20260628">
@@ -121,14 +125,16 @@
   <script src="js/utils/tracker.js?v=20260628"></script>
 
   <!-- Engine -->
-  <script src="js/engine/testEngine.js?v=20260628"></script>
-  <script src="js/engine/examPresets.js?v=20260628"></script>
-  <script src="js/engine/daily.js?v=20260628"></script>
-  <script src="js/engine/analytics.js?v=20260628"></script>
-  <script src="js/engine/examProctor.js?v=20260628"></script>
-  <script src="js/engine/cbtEngine.js?v=20260628"></script>
-  <script src="js/engine/progressEngine.js?v=20260628"></script>
-  <script src="js/lang.js?v=20260628"></script>
+  <script src="js/engine/testEngine.js?v=20260629"></script>
+  <script src="js/engine/examPresets.js?v=20260629"></script>
+  <script src="js/engine/daily.js?v=20260629"></script>
+  <script src="js/engine/analytics.js?v=20260629"></script>
+  <script src="js/engine/examProctor.js?v=20260629"></script>
+  <script src="js/engine/cbtEngine.js?v=20260629"></script>
+  <script src="js/engine/progressEngine.js?v=20260629"></script>
+  <script src="js/engine/search.js?v=20260629"></script>
+  <script src="js/engine/shortcuts.js?v=20260629"></script>
+  <script src="js/lang.js?v=20260629"></script>
 
   <!-- Board Renderers -->
   <script src="js/renderers/RendererBase.js?v=20260628"></script>
@@ -139,23 +145,28 @@
   <script src="js/renderers/UPSCRenderer.js?v=20260628"></script>
 
   <!-- Pages -->
-  <script src="js/pages/home.js?v=20260628"></script>
-  <script src="js/pages/boardPage.js?v=20260628"></script>
-  <script src="js/pages/setup.js?v=20260628"></script>
-  <script src="js/pages/test.js?v=20260628"></script>
-  <script src="js/pages/result.js?v=20260628"></script>
-  <script src="js/pages/analysis.js?v=20260628"></script>
-  <script src="js/pages/dashboard.js?v=20260628"></script>
-  <script src="js/pages/leaderboard.js?v=20260628"></script>
-  <script src="js/pages/analytics.js?v=20260628"></script>
-  <script src="js/pages/profile.js?v=20260628"></script>
-  <script src="js/pages/examDetail.js?v=20260628"></script>
+  <script src="js/pages/home.js?v=20260629c"></script>
+  <script src="js/pages/boardPage.js?v=20260629"></script>
+  <script src="js/pages/setup.js?v=20260629"></script>
+  <script src="js/pages/test.js?v=20260629"></script>
+  <script src="js/pages/result.js?v=20260629"></script>
+  <script src="js/pages/analysis.js?v=20260629"></script>
+  <script src="js/pages/dashboard.js?v=20260703"></script>
+  <script src="js/pages/leaderboard.js?v=20260703"></script><!-- stub: redirects to dashboard -->
+  <script src="js/pages/analytics.js?v=20260629"></script>
+  <script src="js/pages/profile.js?v=20260629"></script>
+  <script src="js/pages/examDetail.js?v=20260629"></script>
+  <script src="js/pages/polytechnic.js?v=20260629"></script>
+
+  <!-- Components -->
+  <script src="js/components/breadcrumb.js?v=20260629"></script>
+  <script src="js/components/commandPalette.js?v=20260629"></script>
 
   <!-- Legacy — kept for backward compat, will be removed in future PRs -->
   <script src="js/engine/gamification.js?v=20260628"></script>
   <script src="js/engine/rivals.js?v=20260628"></script>
   <script src="js/engine/rivalEngine.js?v=20260628"></script>
-  <script src="js/pages/battleMode.js?v=20260628"></script>
+  <script src="js/pages/battleMode.js?v=20260703"></script>
   <script src="js/renderers/RivalBattleRenderer.js?v=20260628"></script>
   <script src="js/engine/cbtRenderer.js?v=20260628"></script>
 

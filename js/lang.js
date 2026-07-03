@@ -223,7 +223,6 @@ const Lang = {
     nav_home: 'Home',
     nav_new_test: 'New Test',
     nav_dashboard: 'Dashboard',
-    nav_leaderboard: 'Leaderboard',
 
     // ── Home Page ──
     hero_badge: 'Live Mock Tests',
@@ -359,7 +358,7 @@ const Lang = {
     nav_home: 'होम',
     nav_new_test: 'नया टेस्ट',
     nav_dashboard: 'डैशबोर्ड',
-    nav_leaderboard: 'लीडरबोर्ड',
+    nav_dashboard: 'डैशबोर्ड',
 
     // ── Home Page ──
     hero_badge: 'लाइव मॉक टेस्ट',
