@@ -57,6 +57,9 @@ const HomePage = {
           <!-- Features / Why Mock24hr -->
           ${this._renderFeatures()}
 
+          <!-- Trust Section -->
+          ${this._renderTrust()}
+
           <!-- Testimonials -->
           ${this._renderTestimonials()}
 
@@ -80,12 +83,12 @@ const HomePage = {
 
     const ctas = isLoggedIn
       ? `<div class="hp-hero-ctas">
-           <button class="hp-hero-btn hp-hero-btn--primary" onclick="App.navigate('setup')">Begin Today's Practice →</button>
-           <button class="hp-hero-btn hp-hero-btn--secondary" onclick="App.navigate('setup', {mode:'custom'})">Explore Exams →</button>
+           <button class="hp-hero-btn hp-hero-btn--primary" onclick="App.navigate('setup')">Start Free Mock Test &rarr;</button>
+           <button class="hp-hero-btn hp-hero-btn--secondary" onclick="App.navigate('setup', {mode:'custom'})">Explore Exams &rarr;</button>
          </div>`
       : `<div class="hp-hero-ctas">
-           <button class="hp-hero-btn hp-hero-btn--primary" onclick="App.navigate('setup')">Start Your Preparation →</button>
-           <button class="hp-hero-btn hp-hero-btn--secondary" onclick="App.navigate('setup')">See How It Works →</button>
+           <button class="hp-hero-btn hp-hero-btn--primary" onclick="App.navigate('setup')">Start Free Mock Test &rarr;</button>
+           <button class="hp-hero-btn hp-hero-btn--secondary" onclick="App.navigate('setup')">See How It Works &rarr;</button>
          </div>`;
 
     return `
@@ -418,6 +421,40 @@ const HomePage = {
               </div>
             `).join('')}
           </div>
+        </div>
+      </section>
+    `;
+  },
+
+  // ── TRUST SECTION ──
+  _renderTrust() {
+    const signals = [
+      { symbol: '\u2192', title: 'Official Syllabus Aligned', desc: 'Questions built from NCERT, official notifications, and previous year papers for SSC, Railway, Banking, UPSC.' },
+      { symbol: '\u25ce', title: 'AI-Powered Weakness Detection', desc: 'After every test, our analysis engine identifies your weakest topics and tells you exactly what to revise.' },
+      { symbol: '\u25a4', title: 'No Paywalls on Core Practice', desc: 'Mock tests are free. Always. Premium unlocks intelligence \u2014 not the basic right to practice.' },
+      { symbol: '\u2736', title: 'Updated with Latest PYQs', desc: 'Question bank is regularly updated with previous year papers, new exam patterns, and 2024\u201325 notifications.' },
+    ];
+
+    return `
+      <section class="hp-trust-section">
+        <div class="hp-trust-header">
+          <div class="hp-trust-label">Why Students Trust Us</div>
+          <h2 class="hp-trust-title">Built for serious aspirants,<br>not casual browsers.</h2>
+        </div>
+        <div class="hp-trust-grid">
+          ${signals.map(s => `
+            <div class="hp-trust-card">
+              <div class="hp-trust-symbol">${s.symbol}</div>
+              <div>
+                <div class="hp-trust-card-title">${s.title}</div>
+                <div class="hp-trust-card-desc">${s.desc}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="hp-trust-hook">
+          Students who complete 5+ mocks see an average <strong>18% improvement</strong> in accuracy.
+          <a href="#" onclick="App.navigate('setup'); return false;">Start your first mock &rarr;</a>
         </div>
       </section>
     `;

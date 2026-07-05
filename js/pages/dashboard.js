@@ -94,7 +94,7 @@ const DashboardPage = {
       <!-- ═══ HERO GREETING ═══ -->
       <section class="dp-hero">
         <div class="dp-hero-left">
-          <div class="dp-hero-badge">${alive ? '🔥' : '📊'} ${alive ? `${streak.current} Day Streak Active` : 'Your Dashboard'}</div>
+          <div class="dp-hero-badge">${alive ? `${streak.current}-day streak active` : 'Your Dashboard'}</div>
           <h1 class="dp-hero-title">Hey, ${username}!</h1>
           <p class="dp-hero-sub">${greeting}</p>
 
@@ -156,6 +156,9 @@ const DashboardPage = {
           </div>
         </div>
       </section>
+
+      <!-- ═══ TODAY'S MISSION ═══ -->
+      ${this._renderMission(dailyDone, streak, heatmap, weakArea)}
 
       <!-- ═══ 4 STAT CARDS ═══ -->
       <section class="dp-section">
@@ -310,6 +313,84 @@ const DashboardPage = {
         Analytics.drawLineChart(canvas, stats.trendData, { centerText: '' });
       }
     });
+  },
+
+  _renderMission(dailyDone, streak, heatmap, weakArea) {
+    const streakAlive = window.DailySystem?.isStreakAlive?.() ?? false;
+
+    // Item 1: Daily Challenge
+    const item1Done = dailyDone;
+    const item1 = `
+      <div class="dp-mission-item ${item1Done ? 'dp-mission-item--done' : ''}">
+        <div class="dp-mission-status">
+          <span class="dp-mission-dot ${item1Done ? 'dp-mission-dot--done' : 'dp-mission-dot--pending'}">
+            ${item1Done ? '&#10003;' : '&#9733;'}
+          </span>
+        </div>
+        <div class="dp-mission-body">
+          <div class="dp-mission-title">${item1Done ? 'Daily Challenge — Done' : 'Daily Challenge'}</div>
+          <div class="dp-mission-sub">15 adaptive questions &middot; ${streak.current > 0 ? `${streak.current}-day streak` : 'Start your streak'}</div>
+        </div>
+        <button class="dp-mission-btn ${item1Done ? 'dp-mission-btn--done' : ''}"
+          onclick="DashboardPage._missionStartDaily()">
+          ${item1Done ? 'Completed' : 'Start &rarr;'}
+        </button>
+      </div>`;
+
+    // Item 2: Weak Topic Revision
+    const weakTopic = heatmap && heatmap.length > 0 ? heatmap[0] : null;
+    const item2Done = false; // Revision is never "done" — always valuable
+    const item2 = `
+      <div class="dp-mission-item">
+        <div class="dp-mission-status">
+          <span class="dp-mission-dot dp-mission-dot--pending">&#9670;</span>
+        </div>
+        <div class="dp-mission-body">
+          <div class="dp-mission-title">${weakTopic ? `Revise: ${weakTopic.subject}` : 'Review Weak Topics'}</div>
+          <div class="dp-mission-sub">${weakTopic ? `${weakTopic.accuracy}% accuracy &mdash; needs improvement` : 'Take a test to identify weak areas'}</div>
+        </div>
+        <button class="dp-mission-btn"
+          onclick="App.navigate('setup', ${weakTopic ? `{subject:'${weakTopic.subject}',mode:'section'}` : '{}'})">
+          Revise &rarr;
+        </button>
+      </div>`;
+
+    // Item 3: Recommended Mock
+    const item3 = `
+      <div class="dp-mission-item">
+        <div class="dp-mission-status">
+          <span class="dp-mission-dot dp-mission-dot--pending">&#9632;</span>
+        </div>
+        <div class="dp-mission-body">
+          <div class="dp-mission-title">Recommended Mock</div>
+          <div class="dp-mission-sub">${weakArea && weakArea !== '—' ? `Focus on ${weakArea} &mdash; full pattern test` : 'Full-length mock test based on your level'}</div>
+        </div>
+        <button class="dp-mission-btn" onclick="App.navigate('setup')">
+          Take Mock &rarr;
+        </button>
+      </div>`;
+
+    return `
+      <section class="dp-section dp-mission-section">
+        <div class="dp-mission-header">
+          <span class="dp-mission-label">Today&rsquo;s Mission</span>
+          <span class="dp-mission-date">${new Date().toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short'})}</span>
+        </div>
+        <div class="dp-mission-list">
+          ${item1}
+          ${item2}
+          ${item3}
+        </div>
+      </section>
+    `;
+  },
+
+  _missionStartDaily() {
+    if (window.DailySystem?.isDailyDone?.()) {
+      window.Helpers?.showToast?.('Daily challenge already completed today!', 'info');
+      return;
+    }
+    App.navigate('setup', { preset: 'daily-challenge', daily: '1' });
   },
 
   _statCard(icon, value, label, color, bg, small=false) {

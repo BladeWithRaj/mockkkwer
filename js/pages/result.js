@@ -184,28 +184,135 @@ const ResultPage = {
           </div>
         </div>
 
+        <!-- ═══ WHAT'S NEXT — Retention Loop ═══ -->
+        ${this._renderWhatsNext(result)}
+
         <!-- Action Buttons -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button class="btn btn-primary" onclick="App.navigate('analysis')" style="width: 100%; padding: 12px 0; font-size: var(--text-base); font-weight: 600; font-family: var(--font-display); border-radius: var(--radius-md);">
-            Review Solutions
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+          <button class="btn btn-primary" onclick="App.navigate('analysis')" style="width: 100%; padding: 13px 0; font-size: var(--text-base); font-weight: 600; font-family: var(--font-display); border-radius: var(--radius-md);">
+            Review Solutions &amp; Explanations
           </button>
-          
+
           <div style="display: flex; gap: 10px;">
-            <button class="btn btn-secondary" onclick="ResultPage.shareResult()" style="flex: 1; padding: 10px 0; font-weight: 500; border-radius: var(--radius-md);">
-              Share Result
+            <button class="btn btn-secondary" onclick="ResultPage.startNextMock()" style="flex: 1; padding: 11px 0; font-weight: 600; border-radius: var(--radius-md);">
+              Next Mock &rarr;
             </button>
-            <button class="btn btn-secondary" onclick="ResultPage.attemptAgain()" style="flex: 1; padding: 10px 0; font-weight: 500; border-radius: var(--radius-md);">
+            <button class="btn btn-secondary" onclick="ResultPage.attemptAgain()" style="flex: 1; padding: 11px 0; font-weight: 500; border-radius: var(--radius-md);">
               Attempt Again
             </button>
           </div>
 
-          <button class="btn btn-ghost" onclick="App.navigate('home')" style="width: 100%; margin-top: 10px;">
-            ← Back to Dashboard
+          <button class="btn btn-ghost" onclick="App.navigate('dashboard')" style="width: 100%; margin-top: 4px; color: var(--text-muted); font-size: var(--text-sm);">
+            &larr; Go to Dashboard
           </button>
         </div>
 
       </div>
     `;
+  },
+
+  // ── WHAT'S NEXT section ──
+  _renderWhatsNext(result) {
+    const subjectWise = result.subjectWise || {};
+    const entries = Object.entries(subjectWise);
+
+    // Find weakest subject
+    let weakSubject = null;
+    let weakAcc = 101;
+    entries.forEach(([name, data]) => {
+      const attempted = data.correct + data.wrong;
+      if (attempted > 0) {
+        const acc = Math.round((data.correct / attempted) * 100);
+        if (acc < weakAcc) { weakAcc = acc; weakSubject = name; }
+      }
+    });
+
+    // AI insight based on accuracy band
+    let insight, nextAction, nextLabel, nextIcon;
+    if (result.accuracy >= 80) {
+      insight = `Strong performance! Your accuracy is in the top tier. Push further with harder mocks.`;
+      nextAction = () => `App.navigate('setup', {difficulty:'hard'})`;
+      nextLabel = 'Try a Harder Mock';
+      nextIcon = '&#9651;';
+    } else if (result.accuracy >= 60) {
+      insight = `Good effort. ${weakSubject ? `Focus on <strong>${weakSubject}</strong> — your accuracy there needs work.` : 'Keep practicing to solidify your score.'}`;
+      nextAction = weakSubject
+        ? `App.navigate('setup', {subject:'${weakSubject}', mode:'section'})`
+        : `App.navigate('setup')`;
+      nextLabel = weakSubject ? `Practice ${weakSubject}` : 'Start Next Mock';
+      nextIcon = '&#9670;';
+    } else {
+      insight = `${weakSubject ? `<strong>${weakSubject}</strong> is your biggest opportunity right now.` : 'Your score has room to grow.'} Review your wrong answers first, then take a topic test.`;
+      nextAction = `App.navigate('analysis')`;
+      nextLabel = 'Review Wrong Answers First';
+      nextIcon = '&#9632;';
+    }
+
+    // Streak status
+    const streak = window.DailySystem?.getStreak?.()?.current || 0;
+    const streakAlive = window.DailySystem?.isStreakAlive?.() || false;
+    const streakHtml = streak > 0
+      ? `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:${streakAlive ? '#EA580C' : 'var(--text-muted)'};font-weight:600;margin-top:12px;">
+           <span>${streakAlive ? '&#9733;' : '&#9711;'}</span>
+           ${streakAlive ? `${streak}-day streak &mdash; keep it alive!` : `Streak reset &mdash; start fresh today`}
+         </div>`
+      : `<div style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-muted);margin-top:12px;">
+           &#9711; Complete today's challenge to start a streak
+         </div>`;
+
+    return `
+      <div style="
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-left: 3px solid var(--brand-primary);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 20px;
+      ">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand-primary); margin-bottom: 12px;">
+          What&rsquo;s Next?
+        </div>
+
+        <p style="font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; margin: 0 0 16px;">
+          ${insight}
+        </p>
+
+        <button
+          onclick="${nextAction}()"
+          style="
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--brand-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font-display);
+            transition: opacity 150ms;
+          "
+          onmouseover="this.style.opacity='0.88'"
+          onmouseout="this.style.opacity='1'"
+        >
+          <span>${nextIcon}</span> ${nextLabel}
+        </button>
+
+        ${streakHtml}
+      </div>
+    `;
+  },
+
+  startNextMock() {
+    // Navigate to setup, optionally with a preset based on last exam
+    const config = App.lastTestConfig;
+    if (config && config.examId) {
+      App.navigate('setup', { preset: config.examId });
+    } else {
+      App.navigate('setup');
+    }
   },
 
   shareResult() {
