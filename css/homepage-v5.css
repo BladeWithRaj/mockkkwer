@@ -462,11 +462,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 28px 16px 22px;
+  gap: 14px;
+  padding: 40px 22px 32px;
   background: var(--qa-card-bg, var(--bg-secondary));
-  border: 1.5px solid var(--qa-border, rgba(255,255,255,0.08));
-  border-radius: 20px;
+  border: 2px solid var(--qa-border, rgba(255,255,255,0.08));
+  border-radius: 24px;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
@@ -476,9 +476,9 @@
   text-align: center;
   position: relative;
   overflow: hidden;
-  min-height: 200px;
+  min-height: 260px;
   justify-content: flex-start;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
 }
 
 /* Shine sweep — left to right on hover */
@@ -536,31 +536,31 @@
 
 /* Icon circle */
 .hp-qa-icon {
-  width: 72px;
-  height: 72px;
+  width: 90px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 34px;
+  font-size: 42px;
   background: var(--qa-bg);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   transition: transform 220ms cubic-bezier(0.22,1,0.36,1),
               box-shadow 220ms ease;
   flex-shrink: 0;
-  box-shadow: 0 4px 20px var(--qa-glow);
+  box-shadow: 0 6px 28px var(--qa-glow);
   position: relative;
   z-index: 1;
-  border: 1.5px solid var(--qa-border);
+  border: 2px solid var(--qa-border);
 }
 .hp-qa-card:hover .hp-qa-icon {
-  transform: scale(1.12) translateY(-3px);
-  box-shadow: 0 8px 32px var(--qa-glow);
+  transform: scale(1.14) translateY(-4px);
+  box-shadow: 0 12px 40px var(--qa-glow);
 }
 
 /* Title */
 .hp-qa-label {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.25;
@@ -571,10 +571,10 @@
 
 /* Subtitle */
 .hp-qa-sub {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--text-muted);
   line-height: 1.4;
-  margin-top: 1px;
+  margin-top: 2px;
   position: relative;
   z-index: 1;
 }
@@ -583,12 +583,12 @@
 .hp-qa-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
+  gap: 5px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--qa-color);
   background: var(--qa-bg);
-  padding: 5px 14px;
+  padding: 7px 18px;
   border-radius: 999px;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -596,7 +596,7 @@
   margin-top: auto;
   position: relative;
   z-index: 1;
-  box-shadow: 0 2px 10px var(--qa-glow);
+  box-shadow: 0 3px 14px var(--qa-glow);
 }
 
 /* ── Per-card vibrant color tokens ── */
@@ -1148,23 +1148,23 @@
 
   /* Smaller cards on very small screens */
   .hp-qa-card {
-    min-height: 175px;
-    padding: 22px 10px 18px;
-    gap: 8px;
+    min-height: 210px;
+    padding: 28px 12px 22px;
+    gap: 10px;
   }
 
   .hp-qa-icon {
-    width: 58px;
-    height: 58px;
-    font-size: 26px;
+    width: 70px;
+    height: 70px;
+    font-size: 32px;
   }
 
   .hp-qa-label {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .hp-qa-sub {
-    font-size: 10.5px;
+    font-size: 11px;
   }
 
   .hp-board-card {
