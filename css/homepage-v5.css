@@ -447,7 +447,7 @@
 .hp-quick-actions {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
   margin-bottom: var(--sp-8);
 }
 
@@ -461,94 +461,117 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 32px 20px 24px;
-  background: var(--bg-card, var(--bg-secondary));
-  border: 1.5px solid var(--border-color);
-  border-radius: 22px;
+  gap: 12px;
+  padding: 40px 24px 30px;
+  background: linear-gradient(145deg, var(--qa-card-bg-top, #1e2235) 0%, var(--qa-card-bg-bot, #181c2e) 100%);
+  border: 2px solid var(--qa-border, rgba(255,255,255,0.10));
+  border-radius: 26px;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
-  transition: transform 220ms var(--ease),
-              box-shadow 220ms var(--ease),
-              border-color 220ms var(--ease),
-              background 220ms var(--ease);
+  transition: transform 260ms cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 260ms var(--ease),
+              border-color 260ms var(--ease),
+              background 260ms var(--ease);
   text-align: center;
   position: relative;
   overflow: hidden;
-  min-height: 220px;
+  min-height: 270px;
   justify-content: flex-start;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
-/* Ghost watermark emoji in background */
+/* Shine sweep on load */
 .hp-qa-card::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -80%;
+  width: 60%;
+  height: 220%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.07) 50%, transparent 80%);
+  transform: skewX(-15deg);
+  pointer-events: none;
+  z-index: 3;
+  transition: left 0.6s ease;
+}
+.hp-qa-card:hover::after {
+  left: 130%;
+}
+
+/* Watermark emoji */
+.hp-qa-card .hp-qa-watermark {
   content: var(--qa-watermark, '⭐');
   position: absolute;
-  bottom: -8px;
-  right: -6px;
-  font-size: 80px;
-  opacity: 0.06;
+  bottom: -10px;
+  right: -8px;
+  font-size: 96px;
+  opacity: 0.07;
   pointer-events: none;
   z-index: 0;
   line-height: 1;
-  transition: opacity 220ms var(--ease), transform 220ms var(--ease);
+  transition: opacity 260ms var(--ease), transform 260ms var(--ease);
+  user-select: none;
 }
 
-/* Top accent bar */
+/* Top glowing accent bar */
 .hp-qa-card::before {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 10%;
+  right: 10%;
   height: 3px;
   background: var(--qa-color);
-  opacity: 0;
-  transition: opacity 220ms var(--ease);
-  border-radius: 22px 22px 0 0;
+  border-radius: 0 0 6px 6px;
+  opacity: 1;
   z-index: 2;
+  box-shadow: 0 0 16px 4px var(--qa-glow);
+  transition: left 260ms var(--ease), right 260ms var(--ease), box-shadow 260ms var(--ease);
 }
 
 .hp-qa-card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 24px 52px rgba(0,0,0,0.30);
+  transform: translateY(-10px) scale(1.025);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.40), 0 0 0 1px var(--qa-color), 0 0 40px var(--qa-glow);
   border-color: var(--qa-color);
-  background: linear-gradient(160deg, var(--qa-bg) 0%, var(--bg-card, var(--bg-secondary)) 60%);
   text-decoration: none;
   color: inherit;
 }
 
-.hp-qa-card:hover::before { opacity: 1; }
-.hp-qa-card:hover::after  { opacity: 0.10; transform: scale(1.06) rotate(3deg); }
+.hp-qa-card:hover::before {
+  left: 0;
+  right: 0;
+  box-shadow: 0 0 28px 8px var(--qa-glow);
+}
 
-.hp-qa-card:active { transform: translateY(-2px); }
+.hp-qa-card:active { transform: translateY(-4px) scale(1.01); }
 
 /* Large colored icon circle */
 .hp-qa-icon {
-  width: 84px;
-  height: 84px;
+  width: 96px;
+  height: 96px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  font-size: 38px;
-  background: var(--qa-bg);
-  margin-bottom: 2px;
-  transition: transform 220ms var(--ease), box-shadow 220ms var(--ease);
+  font-size: 44px;
+  background: radial-gradient(circle at 35% 35%, var(--qa-icon-top), var(--qa-bg));
+  margin-bottom: 4px;
+  transition: transform 260ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 260ms var(--ease);
   flex-shrink: 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+  box-shadow: 0 6px 28px var(--qa-glow), inset 0 1px 0 rgba(255,255,255,0.18);
   position: relative;
   z-index: 1;
-  border: 1.5px solid rgba(255,255,255,0.08);
+  border: 2px solid var(--qa-color);
 }
 
 .hp-qa-card:hover .hp-qa-icon {
-  transform: scale(1.14) translateY(-2px);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  transform: scale(1.18) translateY(-4px);
+  box-shadow: 0 14px 40px var(--qa-glow), inset 0 1px 0 rgba(255,255,255,0.18);
 }
 
 .hp-qa-label {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1.3;
@@ -558,7 +581,7 @@
 }
 
 .hp-qa-sub {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-muted);
   line-height: 1.4;
   margin-top: 2px;
@@ -570,45 +593,63 @@
 .hp-qa-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: var(--font-bold);
-  color: var(--qa-color);
-  background: var(--qa-tag-bg);
-  padding: 6px 14px;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--qa-color);
+  padding: 7px 18px;
   border-radius: var(--radius-full);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: none;
   margin-top: auto;
   position: relative;
   z-index: 1;
+  box-shadow: 0 4px 16px var(--qa-glow);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
 
-/* Color + watermark variants */
-.hp-qa-card.qa-daily  {
-  --qa-bg:        rgba(251,146,60,0.16);
-  --qa-color:     #F97316;
-  --qa-tag-bg:    rgba(249,115,22,0.10);
-  --qa-watermark: '🔥';
+/* Color + vibrant variants */
+.hp-qa-card.qa-daily {
+  --qa-bg:          rgba(251,146,60,0.20);
+  --qa-icon-top:    rgba(255,180,90,0.30);
+  --qa-color:       #FB923C;
+  --qa-glow:        rgba(251,146,60,0.45);
+  --qa-border:      rgba(251,146,60,0.35);
+  --qa-card-bg-top: rgba(255,140,50,0.12);
+  --qa-card-bg-bot: #181c2e;
+  --qa-watermark:   '🔥';
 }
 .hp-qa-card.qa-battle {
-  --qa-bg:        rgba(239,68,68,0.14);
-  --qa-color:     #EF4444;
-  --qa-tag-bg:    rgba(239,68,68,0.08);
-  --qa-watermark: '⚔️';
+  --qa-bg:          rgba(239,68,68,0.20);
+  --qa-icon-top:    rgba(255,100,100,0.30);
+  --qa-color:       #F87171;
+  --qa-glow:        rgba(239,68,68,0.45);
+  --qa-border:      rgba(239,68,68,0.35);
+  --qa-card-bg-top: rgba(239,68,68,0.12);
+  --qa-card-bg-bot: #181c2e;
+  --qa-watermark:   '⚔️';
 }
 .hp-qa-card.qa-custom {
-  --qa-bg:        rgba(99,102,241,0.14);
-  --qa-color:     #818CF8;
-  --qa-tag-bg:    rgba(99,102,241,0.08);
-  --qa-watermark: '🎯';
+  --qa-bg:          rgba(99,102,241,0.20);
+  --qa-icon-top:    rgba(140,143,255,0.30);
+  --qa-color:       #818CF8;
+  --qa-glow:        rgba(99,102,241,0.45);
+  --qa-border:      rgba(99,102,241,0.35);
+  --qa-card-bg-top: rgba(99,102,241,0.12);
+  --qa-card-bg-bot: #181c2e;
+  --qa-watermark:   '🎯';
 }
 .hp-qa-card.qa-poly {
-  --qa-bg:        rgba(139,92,246,0.14);
-  --qa-color:     #A78BFA;
-  --qa-tag-bg:    rgba(139,92,246,0.08);
-  --qa-watermark: '📝';
+  --qa-bg:          rgba(139,92,246,0.20);
+  --qa-icon-top:    rgba(180,140,255,0.30);
+  --qa-color:       #A78BFA;
+  --qa-glow:        rgba(139,92,246,0.45);
+  --qa-border:      rgba(139,92,246,0.35);
+  --qa-card-bg-top: rgba(139,92,246,0.12);
+  --qa-card-bg-bot: #181c2e;
+  --qa-watermark:   '📝';
 }
 
 
@@ -1059,7 +1100,9 @@
   border-color: var(--border-color);
 }
 
-[data-theme="dark"] .hp-qa-card,
+[data-theme="dark"] .hp-qa-card {
+  /* keep gradient from variant — do not override */
+}
 [data-theme="dark"] .hp-board-card,
 [data-theme="dark"] .hp-hot-card,
 [data-theme="dark"] .hp-stats {
@@ -1120,14 +1163,14 @@
 
   /* Smaller cards on very small screens */
   .hp-qa-card {
-    min-height: 190px;
-    padding: 24px 14px 20px;
+    min-height: 230px;
+    padding: 28px 14px 22px;
   }
 
   .hp-qa-icon {
-    width: 64px;
-    height: 64px;
-    font-size: 28px;
+    width: 74px;
+    height: 74px;
+    font-size: 32px;
   }
 
   .hp-board-card {
