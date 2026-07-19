@@ -1,18 +1,43 @@
+# Doc 14 §21: Mock24hr Robots Policy
+# Allow public content, block internal/user routes
+
 User-agent: *
 Allow: /
-Sitemap: https://mockkkwer.com/sitemap.xml
 
-# Allow all crawlers to index exam pages
-User-agent: Googlebot
+# ── Public Content (crawl freely) ──
 Allow: /ssc/
 Allow: /railway/
 Allow: /banking/
 Allow: /upsc/
 Allow: /exams/
+Allow: /polytechnic/
+Allow: /polytechnic-important-paper/
+Allow: /about.html
+Allow: /contact.html
 
-# Block internal SPA routes from indexing
-Disallow: /api/
-
-# Block admin panel — NEVER index
+# ── Block: Admin (NEVER index) ──
 Disallow: /admin/
 Disallow: /secure-admin-login/
+
+# ── Block: Internal APIs ──
+Disallow: /api/
+
+# ── Block: User Dashboard & Test Sessions ──
+Disallow: /#dashboard
+Disallow: /#test
+Disallow: /#result
+Disallow: /#setup
+
+# ── Block: Scripts & Internal Assets ──
+Disallow: /js/
+Disallow: /node_modules/
+Disallow: /scripts/
+Disallow: /prompts/
+Disallow: /sql/
+
+# ── Block: Service Worker & Manifests ──
+Disallow: /sw.js
+Disallow: /.env
+
+# ── Sitemaps ──
+Sitemap: https://mock24hr.com/sitemap-index.xml

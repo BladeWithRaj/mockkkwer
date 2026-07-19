@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Doc 14 §20: Core pages sitemap -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url><loc>https://mock24hr.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+
+  <!-- Static Pages -->
+  <url><loc>https://mock24hr.com/about.html</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/contact.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/privacy.html</loc><priority>0.4</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://mock24hr.com/terms.html</loc><priority>0.4</priority><changefreq>yearly</changefreq></url>
+
+  <!-- All Exams Directory -->
+  <url><loc>https://mock24hr.com/exams/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+</urlset>

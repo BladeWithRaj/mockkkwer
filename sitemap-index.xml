@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Doc 14 §20: Sitemap Index — split by content type for efficient indexing -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://mock24hr.com/sitemap-pages.xml</loc>
+    <lastmod>2026-07-07</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://mock24hr.com/sitemap-exams.xml</loc>
+    <lastmod>2026-07-07</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://mock24hr.com/sitemap-bteup.xml</loc>
+    <lastmod>2026-07-07</lastmod>
+  </sitemap>
+</sitemapindex>

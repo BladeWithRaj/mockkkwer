@@ -59,6 +59,26 @@ export default async function handler(req, res) {
   const rid = logRequest(req);
 
   try {
+    // ── Doc 15 §15: Health & Version endpoints ──
+    if (path.includes("/health")) {
+      return res.status(200).json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        uptime: Math.round(process.uptime()),
+        env: process.env.VERCEL ? "vercel" : "local",
+        db: supabase ? "connected" : "disconnected"
+      });
+    }
+    if (path.includes("/version")) {
+      return res.status(200).json({
+        version: "1.15.0",
+        commit: (process.env.VERCEL_GIT_COMMIT_SHA || "dev").slice(0, 7),
+        branch: process.env.VERCEL_GIT_COMMIT_REF || "local",
+        message: (process.env.VERCEL_GIT_COMMIT_MESSAGE || "").slice(0, 80),
+        deployed: process.env.VERCEL_GIT_COMMIT_AUTHOR_NAME || "unknown"
+      });
+    }
+
     // ── Admin routes ──
     if (path.includes("/admin-login"))     return await handleAdminLogin(supabase, req, res);
     if (path.includes("/admin-verify"))    return await handleAdminVerify(supabase, req, res);

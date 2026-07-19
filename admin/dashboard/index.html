@@ -32,8 +32,11 @@
       <div class="tab" data-tab="questions" onclick="switchTab('questions')">📋 Questions</div>
       <div class="tab" data-tab="add" onclick="switchTab('add')">➕ Add Question</div>
       <div class="tab" data-tab="import" onclick="switchTab('import')">📥 Bulk Import</div>
+      <div class="tab" data-tab="review" onclick="switchTab('review')">🔍 Review Queue</div>
+      <div class="tab" data-tab="blueprints" onclick="switchTab('blueprints')">📐 Blueprints</div>
       <div class="tab" data-tab="exams" onclick="switchTab('exams')">🎯 Exams</div>
       <div class="tab" data-tab="poly" onclick="switchTab('poly')">🎓 Polytechnic</div>
+      <div class="tab" data-tab="reports" onclick="switchTab('reports')">🚩 Reports</div>
       <div class="tab" data-tab="users" onclick="switchTab('users')">👥 Users</div>
       <div class="tab" data-tab="activity" onclick="switchTab('activity')">📜 Activity</div>
       <div class="tab" data-tab="security" onclick="switchTab('security')">🛡️ Security</div>
@@ -92,6 +95,9 @@
         case 'questions': await renderQuestions(el); break;
         case 'add': renderAddQuestion(el); break;
         case 'import': renderBulkImport(el); break;
+        case 'review': await renderReviewQueue(el); break;
+        case 'blueprints': await renderBlueprints(el); break;
+        case 'reports': await renderReports(el); break;
         case 'exams': await renderExams(el); break;
         case 'poly': await renderPolyTab(el); break;
         case 'users': await renderUsers(el); break;
@@ -117,22 +123,50 @@
     return d;
   }
 
-  // ═══════════════ DASHBOARD ═══════════════
+  // ═══════════════ CONTENT HEALTH DASHBOARD (Doc 13 §3, §28E) ═══════════════
+  // Upgraded dashboard with action-first content health widgets
   async function renderDashboard(el) {
-    const d = await adminAPI('dashboard');
-    const s = d.stats;
+    let d, healthData;
+    try { d = await adminAPI('dashboard'); } catch(e) { d = { stats: { totalQuestions: 0, totalUsers: 0, totalTests: 0, recentTests: 0, subjectDistribution: {} } }; }
+    const s = d.stats || {};
     const subs = Object.entries(s.subjectDistribution || {});
+
+    // Content health metrics (graceful — uses available data)
+    const draftCount = s.draftQuestions || 0;
+    const pendingReviews = s.pendingReviews || 0;
+    const openReports = s.openReports || 0;
+    const publishedToday = s.publishedToday || 0;
+
     el.innerHTML = `
       <div class="metric-grid">
-        <div class="metric-card"><div class="metric-label">Questions</div><div class="metric-value">${s.totalQuestions}</div></div>
-        <div class="metric-card"><div class="metric-label">Users</div><div class="metric-value">${s.totalUsers}</div></div>
-        <div class="metric-card"><div class="metric-label">Total Tests</div><div class="metric-value">${s.totalTests}</div></div>
-        <div class="metric-card"><div class="metric-label">Tests (7d)</div><div class="metric-value">${s.recentTests}</div></div>
+        <div class="metric-card"><div class="metric-label">Questions</div><div class="metric-value">${s.totalQuestions || 0}</div></div>
+        <div class="metric-card"><div class="metric-label">Users</div><div class="metric-value">${s.totalUsers || 0}</div></div>
+        <div class="metric-card"><div class="metric-label">Total Tests</div><div class="metric-value">${s.totalTests || 0}</div></div>
+        <div class="metric-card"><div class="metric-label">Tests (7d)</div><div class="metric-value">${s.recentTests || 0}</div></div>
       </div>
+
+      <div class="sec-card">
+        <div class="sec-title">🏥 Content Health (Doc 13 §3)</div>
+        <div class="metric-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="metric-card" style="cursor:pointer;border-left:3px solid #f59e0b;" onclick="switchTab('review')">
+            <div class="metric-label">⏳ Pending Reviews</div>
+            <div class="metric-value" style="color:#f59e0b">${pendingReviews}</div>
+          </div>
+          <div class="metric-card" style="cursor:pointer;border-left:3px solid #ef4444;" onclick="switchTab('reports')">
+            <div class="metric-label">🚩 Open Reports</div>
+            <div class="metric-value" style="color:#ef4444">${openReports}</div>
+          </div>
+          <div class="metric-card" style="border-left:3px solid #10b981;">
+            <div class="metric-label">🚀 Published Today</div>
+            <div class="metric-value" style="color:#10b981">${publishedToday}</div>
+          </div>
+        </div>
+      </div>
+
       <div class="sec-card">
         <div class="sec-title">📚 Subject Distribution</div>
         ${subs.length === 0 ? '<div class="empty">No questions yet</div>' :
-          subs.map(([sub,c]) => `<div class="dist-row"><span class="dist-name">${sub}</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:${Math.round(c/s.totalQuestions*100)}%"></div></div><span class="dist-count">${c}</span></div>`).join('')}
+          subs.map(([sub,c]) => `<div class="dist-row"><span class="dist-name">${sub}</span><div class="dist-bar-wrap"><div class="dist-bar" style="width:${Math.round(c/(s.totalQuestions||1)*100)}%"></div></div><span class="dist-count">${c}</span></div>`).join('')}
       </div>
       <div class="sec-card">
         <div class="sec-title">🛡️ Recent Login Activity</div>
@@ -141,6 +175,267 @@
           ${d.loginLog.map(l => `<tr><td>${new Date(l.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</td><td>${l.username}</td><td class="${l.success?'ok':'fail'}">${l.success?'✓ OK':'✗ FAIL'}</td><td>${l.reason||'-'}</td><td class="mono">${l.ip_address||'-'}</td></tr>`).join('')}
           </tbody></table>`}
       </div>`;
+  }
+
+  // ═══════════════ REVIEW QUEUE (Doc 13 §17, §28A) ═══════════════
+  let reviewFilter = 'pending';
+
+  async function renderReviewQueue(el) {
+    // Fetch review queue from Supabase directly (admin has service_role via API)
+    let items = [];
+    try {
+      const d = await adminAPI('review-queue&status=' + reviewFilter);
+      items = d.items || [];
+    } catch(e) {
+      // Fallback: show empty state with explanation
+      items = [];
+    }
+
+    const statusColors = { pending: '#f59e0b', in_review: '#3b82f6', approved: '#10b981', rejected: '#ef4444', needs_revision: '#8b5cf6' };
+    const priorityColors = p => p <= 3 ? '#ef4444' : p <= 6 ? '#f59e0b' : '#6b7280';
+
+    el.innerHTML = `
+      <div class="toolbar">
+        <select class="tool-select" onchange="reviewFilter=this.value;loadTab('review')">
+          ${['pending','in_review','approved','rejected','needs_revision'].map(s => `<option value="${s}" ${reviewFilter===s?'selected':''}>${s.replace('_',' ').toUpperCase()}</option>`).join('')}
+        </select>
+        <button class="tool-btn" onclick="loadTab('review')">Refresh</button>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🔍 Review Queue — ${reviewFilter.replace('_',' ').toUpperCase()} (${items.length})</div>
+        ${items.length === 0 ? `<div class="empty">No items in "${reviewFilter}" status. ${reviewFilter === 'pending' ? '✅ All caught up!' : ''}</div>` :
+          items.map(item => `
+            <div class="q-row" style="border-left:3px solid ${statusColors[item.status]||'#6b7280'};padding:12px;">
+              <div class="q-body" style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-weight:700;font-size:13px;">Q#${item.question_id}</span>
+                  <span style="padding:2px 6px;border-radius:3px;font-size:11px;font-weight:600;color:#fff;background:${priorityColors(item.priority)}">P${item.priority}</span>
+                  <span style="padding:2px 6px;border-radius:3px;font-size:11px;background:var(--surface-alt,#2a2a3e);">${item.reason || 'manual'}</span>
+                  ${item.assigned_to ? `<span style="font-size:11px;color:var(--text-muted);">→ ${item.assigned_to}</span>` : ''}
+                  ${item.due_date ? `<span style="font-size:11px;color:var(--text-muted);">Due: ${item.due_date}</span>` : ''}
+                </div>
+                ${item.reviewer_note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px;font-style:italic;">📝 ${item.reviewer_note}</div>` : ''}
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${new Date(item.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+              </div>
+              <div class="q-actions" style="display:flex;gap:4px;">
+                ${item.status === 'pending' || item.status === 'in_review' ? `
+                  <button class="act-btn" onclick="reviewAction(${item.id},'approved')" title="Approve" style="background:#10b981;color:#fff;">✓</button>
+                  <button class="act-btn" onclick="reviewAction(${item.id},'rejected')" title="Reject" style="background:#ef4444;color:#fff;">✗</button>
+                  <button class="act-btn" onclick="reviewAction(${item.id},'needs_revision')" title="Needs Revision" style="background:#8b5cf6;color:#fff;">↩</button>
+                ` : ''}
+                <button class="act-btn" onclick="editQuestion(${item.question_id})" title="View Question">👁</button>
+              </div>
+            </div>`).join('')}
+      </div>`;
+  }
+
+  async function reviewAction(itemId, newStatus) {
+    const note = prompt('Reviewer note (optional):');
+    try {
+      await adminAPI('review-action', { id: itemId, status: newStatus, reviewer_note: note || null });
+      showToast(`Review item ${newStatus}!`, 'success');
+      loadTab('review');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  window.reviewAction = reviewAction;
+
+
+  // ═══════════════ BLUEPRINT TEMPLATES (Doc 13 §18, §28B) ═══════════════
+  async function renderBlueprints(el) {
+    let blueprints = [];
+    try {
+      const d = await adminAPI('blueprints');
+      blueprints = d.blueprints || [];
+    } catch(e) { blueprints = []; }
+
+    const diffColors = { easy: '#10b981', medium: '#f59e0b', hard: '#ef4444' };
+
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">📐 Blueprint Templates (${blueprints.length})</div>
+        <div style="margin-bottom:12px;">
+          <button class="tool-btn" onclick="renderAddBlueprint()">➕ New Blueprint</button>
+        </div>
+        ${blueprints.length === 0 ? '<div class="empty">No blueprints yet. Create one to standardize paper generation.</div>' :
+          blueprints.map(bp => {
+            const mix = bp.difficulty_mix || {};
+            const sections = bp.sections || [];
+            return `
+            <div class="q-row" style="padding:12px;">
+              <div class="q-body" style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-weight:700;font-size:14px;">${bp.name}</span>
+                  ${bp.exam_slug ? `<span class="chip-s chip-subj">${bp.exam_slug}</span>` : ''}
+                  <span class="chip-s chip-board">${bp.total_questions}Q / ${bp.duration_minutes}min</span>
+                  ${bp.negative_marking > 0 ? `<span class="chip-s chip-diff-hard">-${bp.negative_marking}</span>` : ''}
+                  ${!bp.is_active ? '<span class="chip-s" style="background:#6b7280;color:#fff;">INACTIVE</span>' : ''}
+                </div>
+                <div style="display:flex;gap:12px;margin-top:6px;">
+                  ${Object.entries(mix).map(([diff, pct]) => `<span style="font-size:11px;"><span style="color:${diffColors[diff]||'#6b7280'};font-weight:600;">${diff}:</span> ${pct}%</span>`).join('')}
+                </div>
+                ${sections.length > 0 ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${sections.map(s => `${s.name} (${s.subject}: ${s.questions}Q)`).join(' • ')}</div>` : ''}
+                <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Created by ${bp.created_by || 'admin'} · ${new Date(bp.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+              </div>
+              <div class="q-actions" style="display:flex;gap:4px;">
+                <button class="act-btn" onclick="useBlueprint(${bp.id})" title="Generate Paper" style="background:#10b981;color:#fff;">🚀</button>
+                <button class="act-btn" onclick="editBlueprint(${bp.id})" title="Edit">✏️</button>
+                <button class="act-btn danger" onclick="deleteBlueprint(${bp.id},'${bp.name.replace(/'/g,"\\\\'")}')" title="Delete">🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}
+      </div>`;
+  }
+
+  function renderAddBlueprint(editData = null) {
+    const el = document.getElementById('adminContent');
+    const bp = editData || { name:'', exam_slug:'', difficulty_mix:{easy:30,medium:50,hard:20}, subject_weights:{}, total_questions:100, duration_minutes:60, negative_marking:0, sections:[] };
+    const isEdit = !!editData?.id;
+    const mix = bp.difficulty_mix || {};
+
+    el.innerHTML = `
+      <div class="sec-card">
+        <div class="sec-title">${isEdit ? '✏️ Edit' : '➕ New'} Blueprint Template</div>
+        <form id="blueprintForm" onsubmit="return false;">
+          <div class="form-grid">
+            <div class="form-group"><label>Template Name *</label><input type="text" id="bp_name" value="${bp.name}" required placeholder="SSC CGL Tier 1"></div>
+            <div class="form-group"><label>Exam Slug</label><input type="text" id="bp_slug" value="${bp.exam_slug||''}" placeholder="ssc-cgl"></div>
+            <div class="form-group"><label>Total Questions</label><input type="number" id="bp_total" value="${bp.total_questions}" min="1" max="500"></div>
+            <div class="form-group"><label>Duration (min)</label><input type="number" id="bp_dur" value="${bp.duration_minutes}" min="1"></div>
+            <div class="form-group"><label>Negative Marking</label><input type="number" id="bp_neg" value="${bp.negative_marking}" step="0.01" min="0"></div>
+          </div>
+          <div class="sec-card" style="margin-top:12px;">
+            <div class="sec-title">Difficulty Mix (%)</div>
+            <div style="display:flex;gap:12px;">
+              <div class="form-group"><label style="color:#10b981">Easy</label><input type="number" id="bp_easy" value="${mix.easy||30}" min="0" max="100" style="width:70px;"></div>
+              <div class="form-group"><label style="color:#f59e0b">Medium</label><input type="number" id="bp_med" value="${mix.medium||50}" min="0" max="100" style="width:70px;"></div>
+              <div class="form-group"><label style="color:#ef4444">Hard</label><input type="number" id="bp_hard" value="${mix.hard||20}" min="0" max="100" style="width:70px;"></div>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top:12px;">
+            <button type="button" class="save-btn" onclick="saveBlueprint(${isEdit ? bp.id : 'null'})">${isEdit?'💾 Update':'➕ Create'} Blueprint</button>
+            <button type="button" class="cancel-btn" onclick="switchTab('blueprints')">Cancel</button>
+          </div>
+        </form>
+      </div>`;
+  }
+  window.renderAddBlueprint = renderAddBlueprint;
+
+  async function saveBlueprint(editId) {
+    const payload = {
+      name: document.getElementById('bp_name').value.trim(),
+      exam_slug: document.getElementById('bp_slug').value.trim() || null,
+      total_questions: parseInt(document.getElementById('bp_total').value) || 100,
+      duration_minutes: parseInt(document.getElementById('bp_dur').value) || 60,
+      negative_marking: parseFloat(document.getElementById('bp_neg').value) || 0,
+      difficulty_mix: {
+        easy: parseInt(document.getElementById('bp_easy').value) || 0,
+        medium: parseInt(document.getElementById('bp_med').value) || 0,
+        hard: parseInt(document.getElementById('bp_hard').value) || 0
+      }
+    };
+    if (!payload.name) return showToast('Blueprint name required', 'error');
+
+    try {
+      if (editId) {
+        await adminAPI('update-blueprint', { id: editId, ...payload });
+        showToast('Blueprint updated!', 'success');
+      } else {
+        await adminAPI('create-blueprint', payload);
+        showToast('Blueprint created!', 'success');
+      }
+      switchTab('blueprints');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  window.saveBlueprint = saveBlueprint;
+
+  async function deleteBlueprint(id, name) {
+    if (!confirm(`Delete blueprint "${name}"?`)) return;
+    try { await adminAPI('delete-blueprint', { id }); showToast('Blueprint deleted','success'); switchTab('blueprints'); }
+    catch(e) { showToast(e.message,'error'); }
+  }
+  window.deleteBlueprint = deleteBlueprint;
+
+  async function useBlueprint(id) {
+    showToast('🚀 Paper generation from blueprint — coming soon!', 'info');
+  }
+  window.useBlueprint = useBlueprint;
+
+  async function editBlueprint(id) {
+    try {
+      const d = await adminAPI('blueprints');
+      const bp = (d.blueprints || []).find(b => b.id === id);
+      if (bp) renderAddBlueprint(bp);
+      else showToast('Blueprint not found', 'error');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  window.editBlueprint = editBlueprint;
+
+
+  // ═══════════════ QUESTION REPORTS (Doc 13 §17) ═══════════════
+  let reportFilter = 'open';
+
+  async function renderReports(el) {
+    let reports = [];
+    try {
+      const d = await adminAPI('question-reports&status=' + reportFilter);
+      reports = d.reports || [];
+    } catch(e) { reports = []; }
+
+    const reasonIcons = { wrong_answer: '❌', unclear: '❓', duplicate: '🔁', offensive: '⚠️', other: '📝' };
+    const statusColors = { open: '#ef4444', reviewed: '#f59e0b', resolved: '#10b981', dismissed: '#6b7280' };
+
+    el.innerHTML = `
+      <div class="toolbar">
+        <select class="tool-select" onchange="reportFilter=this.value;loadTab('reports')">
+          ${['open','reviewed','resolved','dismissed'].map(s => `<option value="${s}" ${reportFilter===s?'selected':''}>${s.toUpperCase()}</option>`).join('')}
+        </select>
+        <button class="tool-btn" onclick="loadTab('reports')">Refresh</button>
+      </div>
+      <div class="sec-card">
+        <div class="sec-title">🚩 Question Reports — ${reportFilter.toUpperCase()} (${reports.length})</div>
+        ${reports.length === 0 ? `<div class="empty">No ${reportFilter} reports. ${reportFilter === 'open' ? '✅ All clear!' : ''}</div>` :
+          reports.map(r => `
+            <div class="q-row" style="border-left:3px solid ${statusColors[r.status]||'#6b7280'};padding:12px;">
+              <div class="q-body" style="flex:1;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span style="font-size:16px;">${reasonIcons[r.reason]||'📝'}</span>
+                  <span style="font-weight:700;font-size:13px;">Q#${r.question_id}</span>
+                  <span style="padding:2px 6px;border-radius:3px;font-size:11px;background:var(--surface-alt,#2a2a3e);">${(r.reason||'').replace('_',' ')}</span>
+                </div>
+                ${r.details ? `<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">${r.details}</div>` : ''}
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                  ${r.user_id ? `User: ${r.user_id.slice(0,8)}...` : 'Anonymous'} · ${new Date(r.created_at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}
+                  ${r.resolved_by ? ` · Resolved by ${r.resolved_by}` : ''}
+                </div>
+              </div>
+              <div class="q-actions" style="display:flex;gap:4px;">
+                ${r.status === 'open' ? `
+                  <button class="act-btn" onclick="resolveReport(${r.id},'resolved')" title="Resolve" style="background:#10b981;color:#fff;">✓</button>
+                  <button class="act-btn" onclick="resolveReport(${r.id},'dismissed')" title="Dismiss" style="background:#6b7280;color:#fff;">✗</button>
+                ` : ''}
+                <button class="act-btn" onclick="editQuestion(${r.question_id})" title="View Question">👁</button>
+              </div>
+            </div>`).join('')}
+      </div>`;
+  }
+
+  async function resolveReport(id, newStatus) {
+    try {
+      await adminAPI('resolve-report', { id, status: newStatus, resolved_by: adminUser?.username || 'admin' });
+      showToast(`Report ${newStatus}!`, 'success');
+      loadTab('reports');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  window.resolveReport = resolveReport;
+
+
+  // ═══════════════ POLYTECHNIC TAB ═══════════════
+  async function renderPolyTab(el) {
+    if (!window.AdminPoly) {
+      el.innerHTML = '<div class="empty">❌ Polytechnic module not loaded.</div>';
+      return;
+    }
+    await window.AdminPoly.renderTab(el);
   }
 
   // ═══════════════ QUESTIONS ═══════════════

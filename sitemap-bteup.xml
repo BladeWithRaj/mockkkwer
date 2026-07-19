@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Doc 14 §20: BTEUP/Polytechnic sitemap -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Polytechnic Hub -->
+  <url><loc>https://mock24hr.com/polytechnic/</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
+
+  <!-- Important Papers -->
+  <url><loc>https://mock24hr.com/polytechnic-important-paper/</loc><priority>0.7</priority><changefreq>monthly</changefreq></url>
+</urlset>

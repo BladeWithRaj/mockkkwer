@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Doc 14 §20: Exam landing pages sitemap -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- SSC -->
+  <url><loc>https://mock24hr.com/ssc/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://mock24hr.com/ssc/cgl/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/ssc/chsl/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/ssc/cpo/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/ssc/gd/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://mock24hr.com/ssc/mts/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+
+  <!-- Railway -->
+  <url><loc>https://mock24hr.com/railway/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+
+  <!-- Banking -->
+  <url><loc>https://mock24hr.com/banking/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+
+  <!-- UPSC -->
+  <url><loc>https://mock24hr.com/upsc/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+</urlset>

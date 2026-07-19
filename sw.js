@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v28c';
-const STATIC_CACHE = 'mtp-static-v25c';
-const API_CACHE = 'mtp-api-v25c';
+const CACHE_NAME = 'mtp-v29';
+const STATIC_CACHE = 'mtp-static-v26';
+const API_CACHE = 'mtp-api-v26';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
@@ -21,27 +21,62 @@ const PRECACHE_URLS = [
   '/css/username-modal.css',
   '/css/in-exam.css',
   '/css/cbt.css',
+  '/css/homepage-v5.css',
+  '/css/cbtEngine.css',
+  '/css/renderers/ssc.css',
+  '/css/renderers/railway.css',
+  '/css/renderers/banking.css',
+  '/css/renderers/upsc.css',
+  '/css/qlang.css',
+  '/css/mobile.css',
+  '/css/result-page.css',
+  '/css/firebase-auth.css',
+  // Core JS
   '/js/config.js',
   '/js/supabaseClient.js',
   '/js/firebase-auth.js',
   '/js/auth.js',
+  // Utils
   '/js/utils/helpers.js',
+  '/js/utils/icons.js',
   '/js/utils/storage.js',
+  '/js/utils/tracker.js',
+  // Engines
   '/js/engine/testEngine.js',
   '/js/engine/examPresets.js',
   '/js/engine/daily.js',
+  '/js/engine/analytics.js',
+  '/js/engine/examProctor.js',
+  '/js/engine/cbtEngine.js',
+  '/js/engine/progressEngine.js',
+  '/js/engine/search.js',
+  '/js/engine/shortcuts.js',
+  '/js/engine/learningProfile.js',
+  '/js/engine/aiCoach.js',
+  '/js/engine/flashcards.js',
+  '/js/engine/eventBus.js',
+  '/js/engine/missionEngine.js',
+  '/js/engine/featureFlags.js',
+  '/js/engine/recommendationEngine.js',
+  '/js/engine/learningIntelligence.js',
+  '/js/engine/behaviourEngine.js',
+  '/js/engine/mistakeDNA.js',
+  '/js/engine/correctionEngine.js',
+  '/js/engine/predictiveEngine.js',
+  '/js/engine/digitalTwin.js',
+  '/js/engine/learningOrchestrator.js',
+  '/js/engine/adaptiveAssessmentEngine.js',
   '/js/engine/gamification.js',
   '/js/engine/rivals.js',
   '/js/engine/rivalEngine.js',
-  '/js/utils/tracker.js',
-  '/js/engine/analytics.js',
+  '/js/engine/cbtRenderer.js',
+  '/js/engine/experimentEngine.js',
+  // Services
+  '/js/services/syncService.js',
+  '/js/services/aiGateway.js',
+  // Lang
   '/js/lang.js',
-  '/js/pages/home.js',
-  '/js/pages/boardPage.js',
-  '/css/homepage-v5.css',
-  '/css/cbtEngine.css',
-  '/js/pages/setup.js',
-  '/js/engine/examProctor.js',
+  // Renderers
   '/js/renderers/RendererBase.js',
   '/js/renderers/RendererRouter.js',
   '/js/renderers/SSCRenderer.js',
@@ -49,24 +84,30 @@ const PRECACHE_URLS = [
   '/js/renderers/BankingRenderer.js',
   '/js/renderers/UPSCRenderer.js',
   '/js/renderers/RivalBattleRenderer.js',
-  '/js/engine/cbtRenderer.js',
+  // Pages
+  '/js/pages/home.js',
+  '/js/pages/boardPage.js',
+  '/js/pages/setup.js',
   '/js/pages/test.js',
-  '/css/renderers/ssc.css',
-  '/css/renderers/railway.css',
-  '/css/renderers/banking.css',
-  '/css/renderers/upsc.css',
-  '/css/qlang.css',
-  '/css/mobile.css',
-  '/js/engine/progressEngine.js',
   '/js/pages/result.js',
   '/js/pages/analysis.js',
   '/js/pages/dashboard.js',
+  '/js/pages/leaderboard.js',
   '/js/pages/analytics.js',
   '/js/pages/profile.js',
+  '/js/pages/examDetail.js',
+  '/js/pages/polytechnic.js',
+  '/js/pages/aptitude.js',
+  '/js/pages/aiCoachPage.js',
+  '/js/pages/pricingPage.js',
+  '/js/pages/showcasePage.js',
   '/js/pages/battleMode.js',
+  // Components
+  '/js/components/breadcrumb.js',
+  '/js/components/commandPalette.js',
+  // App (last)
   '/js/app.js',
-  '/css/result-page.css',
-  '/css/firebase-auth.css',
+  // Icons
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
