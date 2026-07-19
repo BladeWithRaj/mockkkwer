@@ -7,31 +7,45 @@
 const Gamification = {
 
   // ═══════════════════════════════════════════
-  //  5-TIER SYSTEM (replaces 20 levels)
+  //  LEVEL SYSTEM (Doc 9 §4)
+  //  Names reflect preparation maturity, not childish gamification.
+  //  Backend stores tier 1–5; UI shows level 1–30 display.
   // ═══════════════════════════════════════════
 
   TIERS: [
-    { level: 1, title: 'Beginner', xpRequired: 0,     iconKey: 'sprout' },
-    { level: 2, title: 'Learner',  xpRequired: 500,   iconKey: 'bookOpen' },
-    { level: 3, title: 'Skilled',  xpRequired: 2000,  iconKey: 'zap' },
-    { level: 4, title: 'Advanced', xpRequired: 5000,  iconKey: 'flame' },
-    { level: 5, title: 'Elite',    xpRequired: 12000, iconKey: 'crown' }
+    { level: 1, title: 'Explorer',           xpRequired: 0,     iconKey: 'sprout' },
+    { level: 2, title: 'Consistent Learner',  xpRequired: 500,   iconKey: 'bookOpen' },
+    { level: 3, title: 'Focused Aspirant',    xpRequired: 2000,  iconKey: 'zap' },
+    { level: 4, title: 'Exam Strategist',     xpRequired: 5000,  iconKey: 'flame' },
+    { level: 5, title: 'Elite Aspirant',      xpRequired: 12000, iconKey: 'crown' }
   ],
 
-  // Badge definitions (kept to 12, no explosion)
+  // ═══════════════════════════════════════════
+  //  ACHIEVEMENT CATEGORIES (Doc 9 §5)
+  //  5 categories, 15 achievements total.
+  //  category field enables grouped display in profile page.
+  // ═══════════════════════════════════════════
+
   BADGE_DEFS: [
-    { id: 'streak_3', title: '3 Day Warrior', iconKey: 'flame', desc: '3 day streak' },
-    { id: 'streak_7', title: 'Week Champion', iconKey: 'award', desc: '7 day streak' },
-    { id: 'streak_15', title: 'Fortnight King', iconKey: 'star', desc: '15 day streak' },
-    { id: 'streak_30', title: 'Monthly Legend', iconKey: 'crown', desc: '30 day streak' },
-    { id: 'tests_5', title: '5 Tests Done', iconKey: 'fileText', desc: 'Complete 5 tests' },
-    { id: 'tests_25', title: '25 Tests Done', iconKey: 'target', desc: 'Complete 25 tests' },
-    { id: 'tests_100', title: 'Century Club', iconKey: 'trophy', desc: 'Complete 100 tests' },
-    { id: 'perfect', title: 'Perfect Score', iconKey: 'checkCircle', desc: '100% in any test' },
-    { id: 'speed_demon', title: 'Speed Demon', iconKey: 'zap', desc: 'Finish test in <50% time' },
-    { id: 'combo_10', title: 'Combo Master', iconKey: 'flame', desc: '10 correct in a row' },
-    { id: 'tier_3', title: 'Skilled Tier', iconKey: 'zap', desc: 'Reach Skilled tier' },
-    { id: 'tier_5', title: 'Elite Tier', iconKey: 'crown', desc: 'Reach Elite tier' }
+    // Practice
+    { id: 'first_mock',   title: 'First Mock',       iconKey: 'fileText',    desc: 'Complete your first mock test',     category: 'practice' },
+    { id: 'tests_10',     title: '10 Mocks',          iconKey: 'target',      desc: 'Complete 10 mock tests',            category: 'practice' },
+    { id: 'tests_100',    title: '100 Mocks',         iconKey: 'trophy',      desc: 'Complete 100 mock tests',           category: 'practice' },
+    // Consistency
+    { id: 'streak_7',     title: '7-Day Streak',      iconKey: 'flame',       desc: '7 consecutive days of study',       category: 'consistency' },
+    { id: 'streak_30',    title: '30-Day Streak',     iconKey: 'award',       desc: '30 consecutive days of study',      category: 'consistency' },
+    { id: 'streak_100',   title: '100-Day Streak',    iconKey: 'crown',       desc: '100 consecutive days of study',     category: 'consistency' },
+    // Revision
+    { id: 'first_review', title: 'First Revision',    iconKey: 'bookOpen',    desc: 'Complete your first revision session', category: 'revision' },
+    { id: 'cards_100',    title: '100 Flashcards',    iconKey: 'star',        desc: 'Review 100 flashcards',             category: 'revision' },
+    // Performance
+    { id: 'score_90',     title: '90% Accuracy',      iconKey: 'checkCircle', desc: 'Score 90%+ in any mock test',       category: 'performance' },
+    { id: 'personal_best',title: 'Personal Best',     iconKey: 'trendingUp',  desc: 'Beat your previous best score',     category: 'performance' },
+    { id: 'combo_10',     title: 'Combo Master',      iconKey: 'zap',         desc: '10 correct answers in a row',       category: 'performance' },
+    { id: 'speed_demon',  title: 'Speed Demon',       iconKey: 'zap',         desc: 'Finish test in <50% allotted time', category: 'performance' },
+    // BTEUP
+    { id: 'first_paper',  title: 'First Paper',       iconKey: 'fileText',    desc: 'Generate your first BTEUP paper',   category: 'bteup' },
+    { id: 'papers_50',    title: '50 Papers',          iconKey: 'trophy',      desc: 'Generate 50 BTEUP papers',          category: 'bteup' }
   ],
 
   KEYS: {
@@ -180,6 +194,7 @@ const Gamification = {
 
     // Update local cache with new wallet data
     const profile = this.getCachedProfile();
+    const oldTier = profile.wallet?.tier || 1;
     if (gam.wallet) {
       profile.wallet = {
         coins: gam.wallet.coins,
@@ -197,10 +212,40 @@ const Gamification = {
     }
     this.updateCachedProfile(profile);
 
+    // ── EventBus: emit mock_completed (Doc 9 §27B) ──
+    if (typeof EventBus !== 'undefined') {
+      EventBus.emit(EventBus.EVENTS.MOCK_COMPLETED, {
+        accuracy: apiResponse.result?.accuracy || 0,
+        examName: apiResponse.result?.examName || 'Mock Test',
+        subject: apiResponse.result?.subject || '',
+        xpEarned: gam.totalXP || 0
+      });
+
+      if (streak?.streak > 0) {
+        EventBus.emit(EventBus.EVENTS.STREAK_EXTENDED, { count: streak.streak });
+      }
+    }
+
     // Show level-up popup if leveled up
     if (gam.leveledUp) {
       const tier = this.getTier();
       this._showLevelUpPopup(tier);
+
+      // EventBus: emit level_up
+      if (typeof EventBus !== 'undefined') {
+        EventBus.emit(EventBus.EVENTS.LEVEL_UP, { tier: tier.level, title: tier.title });
+      }
+    }
+
+    // Emit achievement events
+    if (gam.rewards && gam.rewards.length > 0 && typeof EventBus !== 'undefined') {
+      gam.rewards.forEach(r => {
+        EventBus.emit(EventBus.EVENTS.ACHIEVEMENT_UNLOCKED, {
+          id: r.id || r.title,
+          title: r.title,
+          category: r.category || 'general'
+        });
+      });
     }
 
     // Show grace day notification

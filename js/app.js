@@ -75,8 +75,13 @@ const App = {
     profile: ProfilePage,
     battle: BattlePage,
     exam: ExamDetailPage,
-    polytechnic: PolytechnicPage
+    polytechnic: PolytechnicPage,
+    aptitude: AptitudePage,
+    coach: AICoachPage,    /* Doc 8 — AI Study Command Center */
+    pricing: PricingPage,  /* Doc 9 — Subscription Plans */
+    dev: ShowcasePage      /* Doc 10 — Component Showcase (dev only, hidden) */
   },
+
 
   async init() {
     const appEl = document.getElementById('app');
@@ -90,6 +95,11 @@ const App = {
     `;
 
     try {
+      // Doc 10 §29C: Check/set schema version for future migrations
+      if (typeof Storage !== 'undefined' && Storage.checkSchema) {
+        Storage.checkSchema();
+      }
+
       // Check for existing session
       if (window.Auth) {
         await window.Auth.init();
@@ -129,12 +139,32 @@ const App = {
         Shortcuts.init();
       }
 
+      // Doc 9: Initialize Mission Engine (subscribes to EventBus)
+      if (typeof MissionEngine !== 'undefined' && MissionEngine.init) {
+        MissionEngine.init();
+      }
+
+      // Doc 11: Initialize Sync Service (localStorage ↔ Supabase bridge)
+      if (typeof SyncService !== 'undefined' && SyncService.init) {
+        SyncService.init();
+        // Non-blocking: sync data with cloud after page renders
+        setTimeout(() => SyncService.syncAll().catch(() => {}), 2000);
+      }
+
       // Check for in-progress test to resume
       this._tryResumeTest();
 
       // Start routing
       window.addEventListener('hashchange', () => this.handleRoute());
       this.handleRoute();
+
+      // Doc 5 §3 — Navbar scroll-shrink behavior
+      window.addEventListener('scroll', () => {
+        const header = document.querySelector('.header');
+        if (header) {
+          header.classList.toggle('header--scrolled', window.scrollY > 80);
+        }
+      }, { passive: true });
 
       // Protect against accidental navigation during test
       window.addEventListener('beforeunload', (e) => {
@@ -180,6 +210,26 @@ const App = {
     }
     this.navigate(page, params, false);
   },
+
+  // Re-render current page without changing hash (used for in-page tab switches)
+  renderPage(page) {
+    const target = page || this.currentPage;
+    const pageModule = this.pages[target];
+    if (!pageModule) return;
+    const appEl = document.getElementById('app');
+    try {
+      const isTestPage = target === 'test';
+      const html = pageModule.render(this.params);
+      const footer = isTestPage ? '' : this._renderFooter();
+      appEl.innerHTML = isTestPage ? html : (this._renderHeader(target) + html + footer);
+      if (pageModule.afterRender) {
+        requestAnimationFrame(() => { try { pageModule.afterRender(); } catch(e) {} });
+      }
+    } catch(e) {
+      console.warn('[renderPage] error:', e);
+    }
+  },
+
 
   navigate(page, params = {}, updateHash = true) {
     // Leaderboard is removed — redirect to dashboard
@@ -302,19 +352,33 @@ const App = {
                 <a href="#exam?id=upsc-gs1"  class="mega-item">UPSC Prelims</a>
               </div>
             </div>
+            <div>
+              <div class="mega-col-title">Polytechnic</div>
+              <div class="mega-col-items">
+                <a href="#polytechnic" class="mega-item">BTEUP Generator</a>
+                <a href="#polytechnic" class="mega-item">Browse Papers</a>
+              </div>
+              <div class="mega-col-title" style="margin-top:12px">Quick Access</div>
+              <div class="mega-col-items">
+                <a href="#battle"      class="mega-item">AI Battle Mode</a>
+                <a href="#setup"       class="mega-item">Custom Test</a>
+              </div>
+            </div>
           </div>
           <div class="mega-footer">
-            <a href="#board" class="mega-footer-link">View All Exams →</a>
+            <a href="#board" class="mega-footer-link">View All Exams &rarr;</a>
           </div>
         </div>
       </div>
-      <a href="#polytechnic" class="nav-link ${activePage === 'polytechnic' ? 'active' : ''}">Polytechnic</a>
-      <a href="#battle"      class="nav-link ${activePage === 'battle'      ? 'active' : ''}">AI Battle</a>
-      <a href="#dashboard" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
+      <a href="#aptitude"    class="nav-link ${activePage === 'aptitude' ? 'active' : ''}">Aptitude Qs</a>
+      <a href="#polytechnic" class="nav-link ${activePage === 'polytechnic' ? 'active' : ''}">Paper Generator</a>
+      <a href="#coach"       class="nav-link nav-link--ai ${activePage === 'coach' ? 'active' : ''}" title="AI Study Coach — personalized insights">AI Coach</a>
+      <a href="#dashboard"   class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
     `;
 
     return `
-      <header class="header">
+
+      <header class="header header--glass">
         <div class="header-inner">
           <a href="#home" class="header-logo">
             <span class="brand-text" style="font-family: var(--font-display); font-size: 18px; font-weight: 800; letter-spacing: -0.03em; color: var(--brand-primary);">Mock<span style="color: var(--text-primary);">24hr</span></span>
@@ -420,15 +484,14 @@ const App = {
       </a>
     `;
     const pg = activePage || '';
-    const isDailyActive = pg === 'setup' && this.params?.preset === 'daily-challenge';
     return `
       <nav class="mobile-bottom-nav" aria-label="Navigation">
         <div class="mobile-bottom-nav-inner">
-          ${item('home',                                    'Home',        'home',        pg === 'home')}
-          ${item('board',                                   'Exams',       'clipboard',   pg === 'board' || pg === 'exam')}
-          ${item('setup?preset=daily-challenge&daily=1',   'Daily',       'zap',         isDailyActive)}
-          ${item('dashboard',                              'Dashboard',   'barChart',    pg === 'dashboard' || pg === 'leaderboard')}
-          ${item('profile',                                 'Profile',     'user',        pg === 'profile')}
+          ${item('home',        'Home',       'home',     pg === 'home')}
+          ${item('board',       'Exams',      'clipboard', pg === 'board' || pg === 'exam')}
+          ${item('dashboard',   'AI Study',   'zap',      pg === 'analytics' || pg === 'battle')}
+          ${item('dashboard',   'Dashboard',  'barChart', pg === 'dashboard' || pg === 'leaderboard')}
+          ${item('profile',     'Profile',    'user',     pg === 'profile')}
         </div>
       </nav>
     `;
@@ -461,18 +524,18 @@ const App = {
         <div class="footer-newsletter">
           <div class="footer-newsletter-inner">
             <div class="footer-newsletter-text">
-              <h4>📬 Stay Updated with Daily Mocks</h4>
+              <h4>Stay Updated with Daily Mocks</h4>
               <p>Get free daily challenges, exam tips &amp; cut-off alerts on Telegram</p>
             </div>
             <div class="footer-newsletter-form">
-              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--primary);color:#fff;border-radius:10px;text-decoration:none;font-size:13.5px;font-weight:600;transition:opacity 0.2s;" onmouseover="this.style.opacity=0.88" onmouseout="this.style.opacity=1">
-                <span style="font-size:18px;">✈️</span> Join Telegram Channel
+              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" class="footer-newsletter-btn">
+                Join Telegram Channel
               </a>
             </div>
           </div>
         </div>
 
-        <!-- Main Footer Grid -->
+        <!-- Main Footer Grid (Doc 5 §16 — 5 columns) -->
         <div class="footer-top">
 
           <!-- Brand column -->
@@ -480,10 +543,18 @@ const App = {
             <a href="#home" class="footer-logo">Mock<span>24hr</span></a>
             <p class="footer-tagline">India's most trusted free mock test platform for SSC, Railway, Banking &amp; UPSC. Practice smarter, score higher.</p>
             <div class="footer-social">
-              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Telegram" aria-label="Telegram">✈️</a>
-              <a href="https://youtube.com/@mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="YouTube" aria-label="YouTube">▶️</a>
-              <a href="https://instagram.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Instagram" aria-label="Instagram">📷</a>
-              <a href="https://twitter.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Twitter/X" aria-label="Twitter">🐦</a>
+              <a href="https://t.me/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Telegram" aria-label="Telegram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.37-.49 1.02-.75 3.98-1.73 6.64-2.87 7.97-3.44 3.8-1.58 4.59-1.86 5.1-1.87.11 0 .37.03.54.17.14.12.18.28.2.47-.01.06.01.24 0 .37z"/></svg>
+              </a>
+              <a href="https://youtube.com/@mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="YouTube" aria-label="YouTube">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+              </a>
+              <a href="https://instagram.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Instagram" aria-label="Instagram">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+              </a>
+              <a href="https://twitter.com/mock24hr" target="_blank" rel="noopener" class="footer-social-link" title="Twitter/X" aria-label="Twitter">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </a>
             </div>
           </div>
 
@@ -504,16 +575,30 @@ const App = {
             <div class="footer-col-title">Features</div>
             <ul class="footer-col-links">
               <li><a href="#setup?preset=daily-challenge&daily=1">Daily Challenge</a></li>
+              <li><a href="#coach">AI Coach</a></li>
               <li><a href="#battle">AI Battle Mode</a></li>
               <li><a href="#dashboard">Dashboard</a></li>
               <li><a href="#analytics">Analytics</a></li>
+              <li><a href="#pricing">Plans & Pricing</a></li>
               <li><a href="#profile">My Profile</a></li>
+            </ul>
+          </div>
+
+          <!-- Resources column (Doc 5 §16 — new) -->
+          <div>
+            <div class="footer-col-title">Resources</div>
+            <ul class="footer-col-links">
+              <li><a href="#board">Exam Syllabus</a></li>
+              <li><a href="#board">Previous Year Papers</a></li>
+              <li><a href="#board">Current Affairs</a></li>
+              <li><a href="#board">Exam Calendar</a></li>
+              <li><a href="#polytechnic">BTEUP Papers</a></li>
             </ul>
           </div>
 
           <!-- Company column -->
           <div>
-            <div class="footer-col-title">Company</div>
+            <div class="footer-col-title">Support</div>
             <ul class="footer-col-links">
               <li><a href="about.html">About Us</a></li>
               <li><a href="contact.html">Contact Us</a></li>
@@ -526,10 +611,13 @@ const App = {
 
         <div class="footer-divider"></div>
 
-        <!-- Bottom bar -->
+        <!-- Bottom bar (Doc 5 §16 — version + last updated) -->
         <div class="footer-bottom">
           <div class="footer-copyright">
             &copy; ${year} Mock24hr. All rights reserved. Made with ❤️ in India.
+          </div>
+          <div class="footer-meta" style="font-size:11px; color:var(--text-muted);">
+            v2.0.0 &middot; Last updated July 2026
           </div>
           <ul class="footer-bottom-links">
             <li><a href="privacy.html">Privacy Policy</a></li>
@@ -624,6 +712,8 @@ const App = {
     `;
   }
 };
+
+window.App = App;
 
 // Init
 document.addEventListener('DOMContentLoaded', () => App.init());

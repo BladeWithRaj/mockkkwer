@@ -152,6 +152,77 @@ const SetupPage = {
     `;
   },
 
+  // ── Pre-exam confidence overlay (Doc 7 §4) ──
+  _renderPreExam(config) {
+    const timeMin = config.totalTime ? Math.round(config.totalTime / 60) : Math.round((config.numQuestions * 60) / 60);
+    const negText = config.negativeMarking
+      ? `<div class="te-preexam-warn">⚠ Negative marking: -${config.negativeValue} per wrong answer</div>`
+      : '';
+    return `
+      <div class="te-preexam-overlay" id="preexam-overlay">
+        <div class="te-preexam-card">
+          <div class="te-preexam-exam">${config.examName || 'Mock Test'}</div>
+          <h1 class="te-preexam-title">
+            ${config.examId ? (config.examName || 'Mock Test') : 'Custom Practice Test'}
+          </h1>
+          <div class="te-preexam-meta">
+            <span class="te-preexam-meta-item">◎ ${config.numQuestions} Questions</span>
+            <span class="te-preexam-meta-dot"></span>
+            <span class="te-preexam-meta-item">⏱ ${timeMin} Minutes</span>
+            <span class="te-preexam-meta-dot"></span>
+            <span class="te-preexam-meta-item">${config.marksPerQuestion || 1} Mark Each</span>
+          </div>
+          ${negText}
+          <hr class="te-preexam-divider">
+          <p class="te-preexam-breathe">Take a deep breath.</p>
+          <p class="te-preexam-sub">
+            This mock reflects the latest exam pattern.<br>
+            Read every question carefully before selecting an answer.
+          </p>
+          <div class="te-preexam-actions">
+            <button class="te-preexam-begin" id="preexam-begin-btn" onclick="SetupPage._doBeginTest()">
+              Begin Test →
+            </button>
+            <button class="te-preexam-back" onclick="SetupPage._cancelPreExam()">
+              ← Go back to setup
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  _pendingTestConfig: null,
+
+  _cancelPreExam() {
+    const overlay = document.getElementById('preexam-overlay');
+    if (overlay) overlay.remove();
+    this._pendingTestConfig = null;
+    // Re-enable start button
+    const btn = document.getElementById('start-test-btn');
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Start Test →'; }
+  },
+
+  async _doBeginTest() {
+    const beginBtn = document.getElementById('preexam-begin-btn');
+    if (beginBtn) { beginBtn.disabled = true; beginBtn.textContent = 'Loading...'; }
+    if (!this._pendingTestConfig) {
+      if (beginBtn) { beginBtn.disabled = false; beginBtn.textContent = 'Begin Test →'; }
+      return;
+    }
+    const { fetchedQuestions, engineConfig } = this._pendingTestConfig;
+    const result = TestEngine.createTest({ ...engineConfig, questions: fetchedQuestions });
+    if (result && result.error) {
+      Helpers.showToast(result.error, 'error');
+      if (beginBtn) { beginBtn.disabled = false; beginBtn.textContent = 'Begin Test →'; }
+      return;
+    }
+    const overlay = document.getElementById('preexam-overlay');
+    if (overlay) overlay.remove();
+    this._pendingTestConfig = null;
+    App.navigate('test');
+  },
+
   onExamChanged(examId) {
     if (examId) {
       const preset = ExamPresets.get(examId);
@@ -214,7 +285,7 @@ const SetupPage = {
 
     const originalText = startBtn.innerHTML;
     startBtn.disabled = true;
-    startBtn.innerHTML = `Loading...`;
+    startBtn.innerHTML = 'Loading...';
 
     try {
       const timePerQuestion = this.config.timeMode === 'auto' ? 60 : 0;
@@ -244,26 +315,29 @@ const SetupPage = {
         throw new Error('No questions found. Check database or connection.');
       }
 
-      // Inject language selection override into the test engine questions structure
+      // Inject language selection override
       const langOverride = this.config.language;
       const questionsWithLang = fetchedQuestions.map(q => ({
         ...q,
         languageMode: langOverride
       }));
 
-      const result = TestEngine.createTest({
-        ...this.config,
-        questions: questionsWithLang,
-        timePerQuestion,
-        totalTime
-      });
+      // Store pending config for pre-exam overlay to consume
+      this._pendingTestConfig = {
+        fetchedQuestions: questionsWithLang,
+        engineConfig: {
+          ...this.config,
+          timePerQuestion,
+          totalTime
+        }
+      };
 
-      if (result.error) {
-        throw new Error(result.error);
-      }
+      // Show pre-exam confidence screen (Doc 7 §4)
+      const overlayHtml = this._renderPreExam({ ...this.config, totalTime });
+      document.body.insertAdjacentHTML('beforeend', overlayHtml);
 
-      Helpers.showToast('Test started! Solve now.', 'success');
-      App.navigate('test');
+      startBtn.disabled = false;
+      startBtn.innerHTML = originalText;
 
     } catch (err) {
       Helpers.showToast(err.message, 'error');

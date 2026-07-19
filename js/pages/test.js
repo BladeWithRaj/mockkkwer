@@ -41,7 +41,9 @@ const TestPage = {
     if (!TestEngine.state?.config?.examId) return '';
     const preset = ExamPresets.get(TestEngine.state.config.examId);
     return preset ? preset.name : '';
-  },  render() {
+  },
+
+  render() {
     if (!TestEngine.state) {
       return `
         <div class="setup-page page-enter text-center" style="padding-top: var(--space-16); text-align: center;">
@@ -226,36 +228,41 @@ const TestPage = {
     // Track this question as visited
     this._visitedQuestions.add(current.index);
 
+    // Bookmark state
+    const bookmarks = Storage.getBookmarks?.() || {};
+    const isBookmarked = !!bookmarks[q.id];
+
     return `
-      <div class="question-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div style="font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Question ${current.index + 1}</div>
-        <button class="btn btn-secondary btn-sm" onclick="TestPage.toggleQuestionLanguage()" style="font-size: var(--text-xs); font-weight: 600; padding: 4px 10px;">
-          🌐 Translate (Eng/Hindi)
-        </button>
-      </div>
-
-      <div class="question-text" style="font-size: 16px; line-height: 1.6; color: var(--text-primary); margin-bottom: 24px; font-family: var(--font-body);">
-        ${q.question}
-      </div>
-
-      <div class="options-list" style="display: flex; flex-direction: column; gap: 10px;">
-        ${q.options.map((opt, i) => {
-          const isSelected = current.selectedAnswer === i;
-          let optStyle = 'background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid var(--border-color); color: var(--text-primary);';
-          if (isSelected) {
-            optStyle = 'background: var(--brand-light); border: 1px solid var(--brand-primary); border-left: 3px solid var(--brand-primary); color: var(--text-primary);';
-          }
-          
-          return `
-            <button onclick="TestPage.selectOption(${i})" style="width: 100%; padding: 14px 16px; text-align: left; border-radius: var(--radius); font-size: var(--text-base); display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: none; transition: all 80ms ease; ${optStyle}">
-              <div style="display: flex; align-items: center; gap: 12px;">
-                <span style="font-weight: 700; color: ${isSelected ? 'var(--brand-primary)' : 'var(--text-muted)'}; font-family: var(--font-display);">(${labels[i]})</span>
-                <span style="font-family: var(--font-body);">${opt}</span>
-              </div>
-              ${isSelected ? `<span style="color: var(--brand-primary); font-weight: bold; font-size: 14px;">✓</span>` : ''}
+      <div class="tq-wrapper">
+        <div class="tq-header">
+          <div class="tq-num">Q ${current.index + 1} &nbsp;/&nbsp; ${current.total}</div>
+          <div class="tq-actions">
+            <button class="tq-action-btn tq-lang-btn" onclick="TestPage.toggleQuestionLanguage()">
+              &#127760; EN/HI
             </button>
-          `;
-        }).join('')}
+            <button class="tq-action-btn ${isBookmarked ? 'tq-bookmark-btn--active' : ''}" onclick="TestPage.toggleBookmark('${q.id}')" id="bookmark-btn-${q.id}" title="Bookmark">
+              ${isBookmarked ? '&#9733;' : '&#9734;'} ${isBookmarked ? 'Saved' : 'Save'}
+            </button>
+            <button class="tq-action-btn" onclick="TestPage._showReportModal(${current.index})" title="Report">
+              &#9873; Report
+            </button>
+          </div>
+        </div>
+
+        <div class="tq-question">${q.question}</div>
+
+        <div class="opt-list">
+          ${q.options.map((opt, i) => {
+            const isSelected = current.selectedAnswer === i;
+            return `
+              <button class="opt-btn ${isSelected ? 'opt-btn--selected' : ''}" onclick="TestPage.selectOption(${i})">
+                <span class="opt-label">${labels[i]}</span>
+                <span class="opt-text">${opt}</span>
+                <span class="opt-check">${isSelected ? '&#10003;' : ''}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
       </div>
     `;
   },
@@ -269,7 +276,7 @@ const TestPage = {
       document.documentElement.style.setProperty('--exam-color', board.color);
     }
 
-    // Keyboard shortcuts (1-4, A-D, arrows, R, F11)
+    // Keyboard shortcuts (1-4, A-D, arrows, R, B=bookmark, F11)
     this._keyHandler = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       switch(e.key) {
@@ -405,11 +412,89 @@ const TestPage = {
     // Gamification: track combo for correct answers (approximate)
     this._trackAnswerForGamification(index);
 
+    // ── Confidence Tracker (Doc 8 §9) — practice mode only ──
+    const config = TestEngine.state?.config;
+    const isPracticeMode = config && (config.timeMode === 'none' || config.isAdaptive === true);
+    if (isPracticeMode && typeof LearningProfile !== 'undefined') {
+      this._showConfidenceStrip(index);
+    }
+
     // Release lock after animation frame
     requestAnimationFrame(() => {
       this._isProcessing = false;
     });
   },
+
+  // Confidence strip — non-blocking bottom strip (Doc 8 §9)
+  _showConfidenceStrip(selectedIndex) {
+    // Remove any existing strip
+    const existing = document.getElementById('confidence-strip');
+    if (existing) existing.remove();
+
+    const current = TestEngine.getCurrentQuestion?.();
+    if (!current) return;
+    const q = current.question;
+
+    const strip = document.createElement('div');
+    strip.id = 'confidence-strip';
+    strip.style.cssText = [
+      'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
+      'background:var(--bg-card)', 'border:1.5px solid var(--border-color)',
+      'border-radius:40px', 'padding:8px 6px',
+      'display:flex', 'align-items:center', 'gap:6px',
+      'z-index:9000', 'box-shadow:0 4px 24px rgba(0,0,0,0.15)',
+      'animation:te-fadeUp 0.2s ease both',
+      'font-family:var(--font-display)'
+    ].join(';');
+
+    const label = document.createElement('span');
+    label.style.cssText = 'font-size:11px;color:var(--text-muted);font-weight:600;padding:0 6px;white-space:nowrap';
+    label.textContent = 'How confident?';
+    strip.appendChild(label);
+
+    const opts = [
+      { key: 'guess',     label: 'Guess',     color: '#EF4444' },
+      { key: 'unsure',    label: 'Unsure',     color: '#F59E0B' },
+      { key: 'confident', label: 'Confident',  color: '#10B981' }
+    ];
+
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.style.cssText = [
+        `border:1.5px solid ${opt.color}20`, 'border-radius:20px',
+        'padding:5px 12px', 'font-size:12px', 'font-weight:700',
+        `color:${opt.color}`, 'background:transparent',
+        'cursor:pointer', `font-family:var(--font-display)`,
+        'transition:background 120ms,border-color 120ms'
+      ].join(';');
+      btn.textContent = opt.label;
+      btn.onmouseover = () => btn.style.background = `${opt.color}15`;
+      btn.onmouseout  = () => btn.style.background = 'transparent';
+      btn.onclick = () => {
+        // Record confidence
+        try {
+          const current = TestEngine.getCurrentQuestion?.();
+          if (current && typeof LearningProfile !== 'undefined') {
+            LearningProfile.recordConfidence(
+              current.question?.id,
+              opt.key,
+              null,    // wasCorrect not known yet (will be determined at submit)
+              current.question?.subject
+            );
+          }
+        } catch(e) {}
+        strip.remove();
+      };
+      strip.appendChild(btn);
+    });
+
+    // Auto-dismiss after 6 seconds
+    setTimeout(() => { if (strip.parentNode) strip.remove(); }, 6000);
+
+    document.body.appendChild(strip);
+  },
+
+
 
   clearAnswer() {
     TestEngine.clearAnswer();
@@ -595,6 +680,7 @@ const TestPage = {
 
     // Only show combos/motivation in rival battle
     if (!isRivalBattle) return;
+    if (!window.Gamification) return;
 
     const q = TestEngine.state.questions[TestEngine.state.currentQuestion];
     if (!q) return;
@@ -693,13 +779,90 @@ const TestPage = {
     }
   },
 
+  // ── Bookmark (Doc 7 §13) ──
+  toggleBookmark(qId) {
+    const bookmarks = Storage.getBookmarks?.() || {};
+    if (bookmarks[qId]) {
+      delete bookmarks[qId];
+      Helpers.showToast?.('Bookmark removed', 'info');
+    } else {
+      bookmarks[qId] = Date.now();
+      Helpers.showToast?.('Bookmarked ✓', 'success');
+    }
+    Storage.setBookmarks?.(bookmarks);
+    // Update button state without full re-render
+    const btn = document.getElementById(`bookmark-btn-${qId}`);
+    if (btn) {
+      const isNowBookmarked = !!bookmarks[qId];
+      btn.className = `tq-action-btn ${isNowBookmarked ? 'tq-bookmark-btn--active' : ''}`;
+      btn.innerHTML = `${isNowBookmarked ? '&#9733;' : '&#9734;'} ${isNowBookmarked ? 'Saved' : 'Save'}`;
+    }
+  },
+
+  // ── Report Issue (Doc 7 §14) ──
+  _reportSelected: null,
+  _showReportModal(qIndex) {
+    this._reportSelected = null;
+    const reasons = [
+      'Wrong Answer Key',
+      'Typo or Spelling Error',
+      'Duplicate Question',
+      'Formatting Issue',
+      'Other'
+    ];
+    const html = `
+      <div class="te-report-backdrop" id="report-modal" onclick="if(event.target.id==='report-modal')TestPage._closeReportModal()">
+        <div class="te-report-sheet">
+          <div class="te-report-title">Report an issue with Q.${qIndex + 1}</div>
+          <div class="te-report-reasons" id="report-reasons">
+            ${reasons.map((r, i) => `
+              <button class="te-report-reason" onclick="TestPage._selectReportReason(this, '${r}')">
+                ${r}
+              </button>
+            `).join('')}
+          </div>
+          <div class="te-report-actions">
+            <button class="te-report-cancel" onclick="TestPage._closeReportModal()">Cancel</button>
+            <button class="te-report-submit" onclick="TestPage._submitReport(${qIndex})">
+              Send Report
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+  },
+  _selectReportReason(el, reason) {
+    this._reportSelected = reason;
+    document.querySelectorAll('.te-report-reason').forEach(btn => btn.classList.remove('selected'));
+    el.classList.add('selected');
+  },
+  _closeReportModal() {
+    const m = document.getElementById('report-modal');
+    if (m) m.remove();
+    this._reportSelected = null;
+  },
+  _submitReport(qIndex) {
+    if (!this._reportSelected) {
+      Helpers.showToast?.('Please select a reason', 'warning');
+      return;
+    }
+    // Store locally (future: send to backend)
+    const reports = JSON.parse(localStorage.getItem('question_reports') || '[]');
+    const q = TestEngine.state?.questions?.[qIndex];
+    reports.push({ qId: q?.id || qIndex, reason: this._reportSelected, ts: Date.now() });
+    localStorage.setItem('question_reports', JSON.stringify(reports));
+    this._closeReportModal();
+    Helpers.showToast?.('Report submitted. Thank you!', 'success');
+  },
+
   confirmSubmit() {
     const summary = TestEngine.getSummary();
     if (!summary) return;
 
     const unansweredWarning = summary.unanswered > 0
       ? `<p style="font-size: var(--text-sm); color: var(--warning); margin-top: var(--space-3);">
-           ${Icons.get('alertTriangle', 14)} You have <strong>${summary.unanswered}</strong> unanswered question${summary.unanswered > 1 ? 's' : ''}. Submit anyway?
+           ${Icons.get('alertTriangle', 14)} You have <strong>${summary.unanswered}</strong> unanswered question${summary.unanswered > 1 ? 's' : ''}.
          </p>`
       : '';
 
@@ -711,22 +874,22 @@ const TestPage = {
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0;">
               <div style="padding: var(--space-3); background: var(--success-bg); border-radius: var(--radius-md); text-align: center;">
                 <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--success);">${summary.answered}</div>
-                <div style="font-size: var(--text-xs); color: var(--text-muted);">${Lang.t('test_answered')}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Answered</div>
               </div>
               <div style="padding: var(--space-3); background: var(--danger-bg); border-radius: var(--radius-md); text-align: center;">
                 <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--danger);">${summary.unanswered}</div>
-                <div style="font-size: var(--text-xs); color: var(--text-muted);">${Lang.t('test_unanswered')}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Unanswered</div>
               </div>
               <div style="padding: var(--space-3); background: var(--warning-bg); border-radius: var(--radius-md); text-align: center;">
                 <div style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--warning);">${summary.reviewed}</div>
-                <div style="font-size: var(--text-xs); color: var(--text-muted);">${Lang.t('test_review')}</div>
+                <div style="font-size: var(--text-xs); color: var(--text-muted);">Marked for Review</div>
               </div>
             </div>
             ${unansweredWarning}
           </div>
           <div class="modal-actions">
             <button class="btn btn-secondary" onclick="document.getElementById('submit-modal').remove()">${Lang.t('cancel')}</button>
-            <button class="btn btn-primary" onclick="TestPage.submitTest()">${Lang.t('test_confirm_submit')}</button>
+            <button class="btn btn-primary" onclick="TestPage.submitTest()">Submit &amp; View Results &rarr;</button>
           </div>
         </div>
       </div>
@@ -759,9 +922,68 @@ const TestPage = {
     const result = TestEngine.submit();
     if (result) {
       App.lastResult = result;
+
+      // ── Doc 8 AI Study System hooks ──
+      try {
+        // Learning Profile (§28A) — must be before Flashcards
+        if (typeof LearningProfile !== 'undefined') {
+          LearningProfile.updateAfterTest(result);
+        }
+        // Auto-flashcards from wrong answers (§12)
+        if (typeof Flashcards !== 'undefined') {
+          const newCards = Flashcards.generateFromResult(result);
+          if (newCards > 0) {
+            Helpers.showToast?.(`${newCards} flashcard${newCards > 1 ? 's' : ''} created from wrong answers`, 'info');
+          }
+        }
+        // Daily progress + streak (already called in some paths, safe to call again)
+        if (typeof DailySystem !== 'undefined' && DailySystem.recordProgress) {
+          DailySystem.recordProgress(result);
+        }
+        // Progress engine
+        if (typeof ProgressEngine !== 'undefined') {
+          ProgressEngine.recordResult(result);
+        }
+        // Doc 18: Learning Intelligence — auto-classify mistakes + save snapshot
+        if (typeof LearningIntelligence !== 'undefined') {
+          LearningIntelligence.processResult(result);
+        }
+        // Doc 19: Cognitive Behaviour — save behaviour snapshot (must run after Doc 18)
+        if (typeof BehaviourEngine !== 'undefined') {
+          BehaviourEngine.processResult(result);
+        }
+        // Backfill correctness onto this test's confidence entries (recorded
+        // mid-test with wasCorrect:null). Must run before MistakeDNA/any
+        // confidence-matrix read so high-confidence-wrong is detectable.
+        if (typeof Storage !== 'undefined' && Storage.backfillConfidenceCorrectness) {
+          const correctnessById = {};
+          (result.questionResults || []).forEach(qr => {
+            if (qr && qr.question && qr.question.id != null && !qr.isSkipped) {
+              correctnessById[qr.question.id] = !!qr.isCorrect;
+            }
+          });
+          Storage.backfillConfidenceCorrectness(correctnessById);
+        }
+        // Doc 20: Mistake DNA — root-cause snapshot (must run after Doc 18/19 + backfill)
+        if (typeof MistakeDNA !== 'undefined') {
+          MistakeDNA.processResult(result);
+        }
+        // ── Doc 9 EventBus: emit mock_completed for MissionEngine ──
+        if (typeof EventBus !== 'undefined') {
+          EventBus.emit(EventBus.EVENTS.MOCK_COMPLETED, {
+            accuracy: result.accuracy || 0,
+            examName: result.examName || result.config?.name || 'Mock Test',
+            subject: result.subject || result.config?.subject || ''
+          });
+        }
+      } catch(e) {
+        console.warn('AI Study System hook error (non-fatal):', e);
+      }
+
       App.navigate('result');
     }
   },
+
 
   // ── Time-up popup ──
   _showTimeoutPopup() {

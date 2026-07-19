@@ -83,18 +83,41 @@ const AnalysisPage = {
         <!-- Main Question Review Section -->
         <div style="flex: 1; max-width: 640px; width: 100%; margin: 0 auto; padding: 24px var(--sp-4) 80px;">
           
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div style="font-size: var(--text-lg); font-weight: 700; color: var(--text-primary); font-family: var(--font-display);">Question ${this._currentQuestionIdx + 1}</div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
               ${statusBadge}
-              <button class="bookmark-btn ${Storage.isQuestionInMistakeBook(q.id) ? 'bookmarked' : ''}"
+              ${Storage.isQuestionInMistakeBook?.(q.id)
+                ? `<span class="ap-bookmark-indicator">&#9733; Saved</span>`
+                : ''}
+              <button class="bookmark-btn ${Storage.isQuestionInMistakeBook?.(q.id) ? 'bookmarked' : ''}"
                       onclick="AnalysisPage.toggleBookmark('${q.id}', this)"
-                      style="background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${Storage.isQuestionInMistakeBook(q.id) ? '#f87171' : 'var(--text-muted)'}; transition: color 120ms;"
+                      style="background: transparent; border: none; padding: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: ${Storage.isQuestionInMistakeBook?.(q.id) ? '#f87171' : 'var(--text-muted)'}; transition: color 120ms;"
                       title="Save to Mistake Book">
-                ★
+                &#9733;
               </button>
             </div>
           </div>
+
+          <!-- Meta strip: time taken + difficulty + topic (Doc 7 §22) -->
+          ${(() => {
+            const qResult = questionResults[this._currentQuestionIdx];
+            const totalQ  = questionResults.length || 1;
+            const result  = App.lastResult;
+            const avgTime = result?.timeSpent ? Math.round(result.timeSpent / totalQ) : 0;
+            const timeTaken = qResult?.timeTaken || avgTime;
+            const diff = q.difficulty || '';
+            const diffClass = diff === 'easy' ? 'ap-diff--easy' : diff === 'hard' ? 'ap-diff--hard' : diff ? 'ap-diff--medium' : '';
+            const diffLabel = diff ? diff.charAt(0).toUpperCase() + diff.slice(1) : '';
+            return `
+              <div class="ap-meta-strip">
+                ${timeTaken ? `<span class="ap-meta-item">&#8987; ~${timeTaken}s spent</span>` : ''}
+                ${diffLabel ? `<span class="ap-meta-item"><span class="ap-diff-badge ${diffClass}">${diffLabel}</span></span>` : ''}
+                ${q.subject ? `<span class="ap-meta-item">&#9654; ${q.subject}</span>` : ''}
+                ${q.topic   ? `<span class="ap-meta-item">&#9670; ${q.topic}</span>` : ''}
+              </div>
+            `;
+          })()}
 
           <!-- Question Content -->
           <div class="question-text" style="font-size: 16px; line-height: 1.6; color: var(--text-primary); margin-bottom: 20px; font-family: var(--font-body);">
@@ -142,6 +165,13 @@ const AnalysisPage = {
               <p style="margin: 0 0 10px;">${q.explanation || 'No detailed explanation is available for this question.'}</p>
               ${q.topic ? `<p style="margin: 6px 0; font-size: var(--text-xs); color: var(--text-muted);">Topic: <strong>${q.topic}</strong></p>` : ''}
             </div>
+
+            <!-- Practice Similar button (Doc 7 §22) -->
+            ${q.subject ? `
+              <button class="ap-practice-btn" onclick="App.navigate('setup',{subject:'${q.subject}',mode:'section'})">
+                &#9670; Practice Similar ${q.subject} Questions
+              </button>
+            ` : ''}
           </div>
 
         </div>

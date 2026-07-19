@@ -14,8 +14,8 @@
 /* ── Top section ── */
 .footer-top {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 48px;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 40px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 56px 24px 40px;
@@ -220,6 +220,12 @@
 .footer-newsletter-btn:hover { opacity: 0.88; transform: translateY(-1px); }
 
 /* ── Mobile responsive ── */
+@media (max-width: 1100px) {
+  .footer-top {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 32px;
+  }
+}
 @media (max-width: 900px) {
   .footer-top {
     grid-template-columns: 1fr 1fr;

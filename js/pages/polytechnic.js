@@ -1,268 +1,353 @@
 // ============================================
-// POLYTECHNIC PAGE — BTEUP Paper Generator v8
-// Dark Premium. Search-first. High-density.
+// POLYTECHNIC PAGE — BTEUP Paper Generator
+// Blue/Purple Premium Design — SPA version
+// Converted from standalone polytechnic/index.html
 // ============================================
 
 const PolytechnicPage = {
-  _selectedBranch: 'Mechanical Engineering',
-  _selectedSemester: '3',
   _selectedSubject: '',
-  _selectedType: 'pyq', // 'pyq', 'sample', 'practice'
-  _selectedYear: '2022',
-  _selectedMode: 'online', // 'online', 'pdf'
   _generatedPaper: null,
-
-  _branches: [
-    'Mechanical Engineering',
-    'Civil Engineering',
-    'Electrical Engineering',
-    'Electronics Engineering',
-    'Computer Science & Engineering',
-    'Information Technology',
-    'Chemical Engineering'
-  ],
-
-  _subjects: {
-    '1': [
-      { id: 9, name: 'Mathematics-I', code: '4101' },
-      { id: 10, name: 'Applied Physics-I', code: '4102' },
-      { id: 11, name: 'Applied Chemistry', code: '4103' },
-      { id: 12, name: 'Communication Skills in English', code: '4104' },
-      { id: 13, name: 'Engineering Mechanics', code: '4105' }
-    ],
-    '2': [
-      { id: 14, name: 'Applied Mathematics-II', code: '4201' },
-      { id: 15, name: 'Applied Physics-II', code: '4202' }
-    ],
-    '3': [
-      { id: 1, name: 'Applied Mathematics-II', code: '3001' },
-      { id: 2, name: 'Applied Mechanics', code: '3002' },
-      { id: 3, name: 'Engineering Drawing', code: '3003' },
-      { id: 4, name: 'Manufacturing Technology', code: '3004' }
-    ],
-    '4': [
-      { id: 5, name: 'Strength of Materials', code: '4001' },
-      { id: 6, name: 'Thermal Engineering', code: '4002' }
-    ],
-    '5': [
-      { id: 7, name: 'Theory of Machines', code: '5001' },
-      { id: 8, name: 'Machine Design', code: '5002' }
-    ],
-    '6': [
-      { id: 16, name: 'Industrial Engineering', code: '6001' }
-    ]
-  },
-
-  _availablePapers: [
-    { branch: 'Mechanical', sem: '3rd Sem', subject: 'Applied Math II', year: '2022', questions: '30 Qs' },
-    { branch: 'Mechanical', sem: '3rd Sem', subject: 'Applied Math II', year: '2021', questions: '30 Qs' },
-    { branch: 'Civil', sem: '2nd Sem', subject: 'Engineering Drawing', year: '2023', questions: '25 Qs' },
-    { branch: 'CS', sem: '4th Sem', subject: 'Data Structures', year: '2022', questions: '30 Qs' },
-    { branch: 'Electrical', sem: '5th Sem', subject: 'Power Systems', year: '2023', questions: '30 Qs' },
-    { branch: 'Mechanical', sem: '1st Sem', subject: 'Applied Physics', year: '2023', questions: '30 Qs' },
-    { branch: 'CS', sem: '6th Sem', subject: 'Software Engg', year: '2022', questions: '25 Qs' },
-    { branch: 'Civil', sem: '4th Sem', subject: 'Structural Analysis', year: '2021', questions: '30 Qs' }
-  ],
+  _isGenerating: false,
 
   render(params) {
-    if (params?.branch) this._selectedBranch = params.branch === 'cs' ? 'Computer Science & Engineering' : params.branch.charAt(0).toUpperCase() + params.branch.slice(1) + ' Engineering';
-    if (params?.semester) this._selectedSemester = params.semester;
-    
-    const subjects = this._subjects[this._selectedSemester] || [];
-    if (subjects.length > 0 && !this._selectedSubject) {
-      this._selectedSubject = subjects[0].name;
-    }
-
     return `
-      <div class="page-enter" style="max-width: 1200px; margin: 0 auto; padding: 24px;">
-        <!-- Header -->
-        <div style="margin-bottom: 24px;">
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
-            <a href="#home" style="color: var(--primary); text-decoration: none;">Home</a>
-            <span>›</span>
-            <span>Polytechnic</span>
+      <div class="page-enter" style="min-height:100vh;">
+
+        <!-- Injected Scoped Styles -->
+        <style>
+          .poly-page {
+            --poly-bg: #0a0a1a;
+            --poly-surface: #12122a;
+            --poly-surface2: #1a1a3e;
+            --poly-accent: #6c5ce7;
+            --poly-accent-glow: rgba(108, 92, 231, 0.3);
+            --poly-text: #e4e4f0;
+            --poly-text-dim: #8888aa;
+            --poly-border: #2a2a4a;
+            --poly-success: #00d68f;
+            --poly-warn: #ffa726;
+            --poly-danger: #ff5252;
+            --poly-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            color: var(--poly-text);
+          }
+          .poly-header {
+            background: linear-gradient(135deg, #0f0f2e 0%, #1a1a4e 50%, #0a0a2a 100%);
+            border-bottom: 1px solid var(--poly-border);
+            padding: 24px 32px;
+            border-radius: 18px;
+            margin-bottom: 28px;
+          }
+          .poly-header h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #6c5ce7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 4px;
+          }
+          .poly-header p { color: var(--poly-text-dim); font-size: 0.9rem; margin: 0; }
+
+          .poly-card {
+            background: var(--poly-surface);
+            border: 1px solid var(--poly-border);
+            border-radius: var(--poly-radius);
+            padding: 24px;
+            margin-bottom: 24px;
+          }
+          .poly-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--poly-text);
+          }
+
+          .poly-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+          }
+          @media (max-width: 600px) { .poly-stats-row { grid-template-columns: repeat(2, 1fr); } }
+          .poly-stat-card {
+            background: var(--poly-surface);
+            border: 1px solid var(--poly-border);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+          }
+          .poly-stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6c5ce7, #00d68f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          .poly-stat-label { font-size: 0.75rem; color: var(--poly-text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+          .poly-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+          }
+          @media (max-width: 600px) { .poly-form-grid { grid-template-columns: 1fr; } }
+          .poly-form-group { display: flex; flex-direction: column; }
+          .poly-form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--poly-text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+          }
+          .poly-form-group select,
+          .poly-form-group input {
+            background: var(--poly-surface2);
+            border: 1px solid var(--poly-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--poly-text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border 0.2s;
+            outline: none;
+          }
+          .poly-form-group select:focus,
+          .poly-form-group input:focus {
+            border-color: var(--poly-accent);
+            box-shadow: 0 0 0 3px var(--poly-accent-glow);
+          }
+
+          .poly-btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+          }
+          .poly-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--poly-accent-glow); }
+          .poly-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+          .poly-btn-secondary {
+            background: var(--poly-surface2);
+            color: var(--poly-text);
+            border: 1px solid var(--poly-border);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          .poly-btn-secondary:hover { border-color: var(--poly-accent); background: rgba(108, 92, 231, 0.1); }
+
+          .poly-section-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--poly-surface2);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+          }
+          .poly-section-row .section-name { font-weight: 600; color: var(--poly-text); }
+          .poly-section-row .section-meta { color: var(--poly-text-dim); font-size: 0.8rem; }
+
+          .poly-syllabus-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+          }
+          .poly-syllabus-chip {
+            background: var(--poly-surface2);
+            border: 1px solid var(--poly-border);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--poly-text);
+          }
+          .poly-chip-weight {
+            background: var(--poly-accent);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+          }
+
+          .poly-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+          }
+          .poly-result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+          .poly-loading {
+            text-align: center;
+            padding: 40px;
+          }
+          .poly-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--poly-border);
+            border-top: 4px solid var(--poly-accent);
+            border-radius: 50%;
+            animation: polySpin 0.8s linear infinite;
+            margin: 0 auto 16px;
+          }
+          @keyframes polySpin { to { transform: rotate(360deg); } }
+        </style>
+
+        <div class="poly-page" style="max-width:900px;margin:0 auto;padding:24px 16px 80px;">
+
+          <!-- Header -->
+          <div class="poly-header">
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--poly-text-dim);margin-bottom:8px;">
+              <a href="#home" style="color:var(--poly-accent);text-decoration:none;">Home</a>
+              <span>›</span><span>Polytechnic</span>
+            </div>
+            <h1>📄 Polytechnic Paper Generator</h1>
+            <p>Generate weighted, balanced BTEUP exam papers with bilingual support</p>
           </div>
-          <h1 style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px;">📄 BTEUP Paper Generator</h1>
-          <p style="color: var(--text-secondary); font-size: 13px; margin: 0;">Generate authentic BTEUP Polytechnic question papers instantly · No login required</p>
-        </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start;" class="poly-grid">
-          <!-- Left Column (60%) -->
-          <div style="display: flex; flex-direction: column; gap: 24px;">
-            <!-- Generator Config Card -->
-            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
-              <h2 style="font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0 0 20px; display: flex; align-items: center; gap: 8px;">
-                <span>⚙️</span> Generate New Paper
-              </h2>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-                <!-- Branch -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Branch / Course</label>
-                  <select id="poly-branch-select" onchange="PolytechnicPage.onBranchChange(this.value)" 
-                          style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-size: 13px; width: 100%;">
-                    ${this._branches.map(b => `<option value="${b}" ${b === this._selectedBranch ? 'selected' : ''}>${b}</option>`).join('')}
-                  </select>
-                </div>
-
-                <!-- Semester -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Semester</label>
-                  <select id="poly-semester-select" onchange="PolytechnicPage.onSemesterChange(this.value)"
-                          style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-size: 13px; width: 100%;">
-                    ${Object.keys(this._subjects).map(s => `<option value="${s}" ${s === this._selectedSemester ? 'selected' : ''}>Semester ${s}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 20px;">
-                <!-- Subject -->
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Subject</label>
-                  <select id="poly-subject-select" onchange="PolytechnicPage.onSubjectChange(this.value)"
-                          style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: var(--text-primary); font-size: 13px; width: 100%;">
-                    ${subjects.map(s => `<option value="${s.name}" ${s.name === this._selectedSubject ? 'selected' : ''}>${s.name} (${s.code})</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-
-              <!-- Paper Type Chips -->
-              <div style="margin-bottom: 20px;">
-                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">Paper Type</label>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  ${['pyq', 'sample', 'practice'].map(t => {
-                    const label = t === 'pyq' ? 'Previous Year Paper' : t === 'sample' ? 'Sample Paper' : 'Practice Set';
-                    const active = this._selectedType === t;
-                    return `
-                      <button onclick="PolytechnicPage.onTypeChange('${t}')"
-                              style="background: ${active ? 'var(--primary-light)' : 'var(--bg-elevated)'}; border: 1px solid ${active ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 6px; padding: 8px 16px; color: ${active ? 'var(--text-primary)' : 'var(--text-secondary)'}; font-size: 13px; font-weight: 500;">
-                        ${label}
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-
-              <!-- Conditional Year Select (only for PYQs) -->
-              ${this._selectedType === 'pyq' ? `
-                <div style="margin-bottom: 20px;">
-                  <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">Year (for PYQ)</label>
-                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    ${['2019', '2020', '2021', '2022', '2023'].map(y => {
-                      const active = this._selectedYear === y;
-                      return `
-                        <button onclick="PolytechnicPage.onYearChange('${y}')"
-                                style="background: ${active ? 'var(--primary-light)' : 'var(--bg-elevated)'}; border: 1px solid ${active ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 6px; padding: 6px 12px; color: ${active ? 'var(--text-primary)' : 'var(--text-secondary)'}; font-size: 12px;">
-                          ${y}
-                        </button>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
-              ` : ''}
-
-              <!-- Mode Selection -->
-              <div style="margin-bottom: 24px;">
-                <label style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 8px;">Paper Mode</label>
-                <div style="display: flex; gap: 8px;">
-                  <button onclick="PolytechnicPage.onModeChange('online')"
-                          style="flex: 1; background: ${this._selectedMode === 'online' ? 'var(--primary-light)' : 'var(--bg-elevated)'}; border: 1px solid ${this._selectedMode === 'online' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 6px; padding: 10px; color: var(--text-primary); font-size: 13px; font-weight: 500;">
-                    💻 Solve Online
-                  </button>
-                  <button onclick="PolytechnicPage.onModeChange('pdf')"
-                          style="flex: 1; background: ${this._selectedMode === 'pdf' ? 'var(--primary-light)' : 'var(--bg-elevated)'}; border: 1px solid ${this._selectedMode === 'pdf' ? 'var(--primary)' : 'var(--border-color)'}; border-radius: 6px; padding: 10px; color: var(--text-primary); font-size: 13px; font-weight: 500;">
-                    📥 Download PDF
-                  </button>
-                </div>
-              </div>
-
-              <!-- Generate Button -->
-              <button onclick="PolytechnicPage.generate()"
-                      style="background: var(--primary); border: none; border-radius: 6px; padding: 14px; color: white; font-weight: 600; font-size: 14px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                Generate Predicted Paper →
-              </button>
+          <!-- Stats -->
+          <div class="poly-stats-row">
+            <div class="poly-stat-card">
+              <div class="poly-stat-value">16</div>
+              <div class="poly-stat-label">Subjects</div>
             </div>
-
-            <!-- Preview Container -->
-            <div id="poly-preview-container">
-              ${this._renderPreview()}
+            <div class="poly-stat-card">
+              <div class="poly-stat-value">500+</div>
+              <div class="poly-stat-label">Questions</div>
+            </div>
+            <div class="poly-stat-card">
+              <div class="poly-stat-value">7</div>
+              <div class="poly-stat-label">Branches</div>
+            </div>
+            <div class="poly-stat-card">
+              <div class="poly-stat-value">6</div>
+              <div class="poly-stat-label">Semesters</div>
             </div>
           </div>
 
-          <!-- Right Column (40%) -->
-          <div style="display: flex; flex-direction: column; gap: 24px;" class="poly-sidebar">
-            <!-- Available Papers -->
-            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px;">
-              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
-                <h3 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing:-0.01em;">📄 Available Papers</h3>
-                <span style="font-size:11px; background:rgba(99,102,241,0.12); color:#818CF8; padding:3px 10px; border-radius:100px; font-weight:600;">${this._availablePapers.length} papers</span>
+          <!-- Generator Form -->
+          <div class="poly-card">
+            <div class="poly-card-title">🎯 Paper Configuration</div>
+            <div class="poly-form-grid">
+              <div class="poly-form-group">
+                <label>Branch</label>
+                <select id="poly-branch" onchange="PolytechnicPage.onBranchChange(this.value)">
+                  <option value="Mechanical Engineering">Mechanical Engineering</option>
+                  <option value="Civil Engineering">Civil Engineering</option>
+                  <option value="Electrical Engineering">Electrical Engineering</option>
+                  <option value="Electronics Engineering">Electronics Engineering</option>
+                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Chemical Engineering">Chemical Engineering</option>
+                </select>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                ${this._availablePapers.map(p => {
-                  const branchIcons = { Mechanical:'⚙️', Civil:'🏗️', CS:'💻', Electrical:'⚡', Electronics:'📡' };
-                  const branchColors = { Mechanical:'rgba(245,158,11,0.15)','#D97706', Civil:'rgba(16,185,129,0.15)','#10B981', CS:'rgba(99,102,241,0.15)','#818CF8', Electrical:'rgba(234,179,8,0.15)','#EAB308', Electronics:'rgba(236,72,153,0.15)','#EC4899' };
-                  const icon = branchIcons[p.branch] || '📋';
-                  const bgMap = { Mechanical:'rgba(245,158,11,0.14)', Civil:'rgba(16,185,129,0.14)', CS:'rgba(99,102,241,0.14)', Electrical:'rgba(234,179,8,0.14)', Electronics:'rgba(236,72,153,0.14)' };
-                  const clrMap = { Mechanical:'#D97706', Civil:'#10B981', CS:'#818CF8', Electrical:'#EAB308', Electronics:'#EC4899' };
-                  const bg = bgMap[p.branch] || 'rgba(99,102,241,0.12)';
-                  const clr = clrMap[p.branch] || '#818CF8';
-                  return `
-                  <div onclick="PolytechnicPage.loadPredefined('${p.subject}', '${p.year}')" style="
-                    display:flex; align-items:center; gap:14px;
-                    padding:14px 16px;
-                    background:var(--bg-elevated);
-                    border:1.5px solid var(--border-color);
-                    border-radius:14px;
-                    cursor:pointer;
-                    transition:all 200ms;
-                    position:relative;
-                    overflow:hidden;
-                  " onmouseenter="this.style.borderColor='${clr}'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.2)';" onmouseleave="this.style.borderColor=''; this.style.transform=''; this.style.boxShadow='';">
-                    <!-- Branch icon circle -->
-                    <div style="
-                      width:44px; height:44px;
-                      border-radius:50%;
-                      background:${bg};
-                      display:flex; align-items:center; justify-content:center;
-                      font-size:20px; flex-shrink:0;
-                      border:1.5px solid rgba(255,255,255,0.06);
-                    ">${icon}</div>
-                    <!-- Text -->
-                    <div style="flex:1; min-width:0;">
-                      <div style="font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.branch} · ${p.sem}</div>
-                      <div style="font-size:11px; color:var(--text-muted);">${p.subject} · ${p.questions}</div>
-                    </div>
-                    <!-- Year badge + Solve btn -->
-                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-                      <span style="font-size:10px; font-weight:700; color:${clr}; background:${bg}; padding:2px 8px; border-radius:100px; letter-spacing:0.02em;">${p.year}</span>
-                      <span style="font-size:11px; font-weight:600; color:${clr};">Solve →</span>
-                    </div>
-                  </div>`;
-                }).join('')}
+              <div class="poly-form-group">
+                <label>Semester</label>
+                <select id="poly-semester" onchange="PolytechnicPage.onSemChange(this.value)">
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3" selected>Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                </select>
+              </div>
+              <div class="poly-form-group">
+                <label>Subject</label>
+                <select id="poly-subject">
+                  <option value="">Select Subject...</option>
+                </select>
+              </div>
+              <div class="poly-form-group">
+                <label>Language</label>
+                <select id="poly-language">
+                  <option value="bilingual">Bilingual (EN + HI)</option>
+                  <option value="en">English Only</option>
+                  <option value="hi">Hindi Only</option>
+                </select>
+              </div>
+              <div class="poly-form-group">
+                <label>Paper Title (Optional)</label>
+                <input type="text" id="poly-title" placeholder="Auto-generated if empty">
+              </div>
+              <div class="poly-form-group">
+                <label>Watermark</label>
+                <input type="text" id="poly-watermark" placeholder="e.g., PRACTICE ONLY">
               </div>
             </div>
 
-            <!-- Stats Card -->
-            <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
-              <h3 style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 16px;">Generator Statistics</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <!-- Syllabus preview -->
+            <div id="poly-syllabus-preview" style="margin-top:16px;display:none;">
+              <div class="poly-card-title" style="font-size:0.9rem">📚 Syllabus Weightage</div>
+              <div class="poly-syllabus-chips" id="poly-syllabus-chips"></div>
+            </div>
+
+            <!-- Pattern preview -->
+            <div id="poly-pattern-preview" style="margin-top:16px;display:none;">
+              <div class="poly-card-title" style="font-size:0.9rem">📋 Paper Structure</div>
+              <div id="poly-sections-preview"></div>
+            </div>
+
+            <button class="poly-btn-primary" id="poly-gen-btn" onclick="PolytechnicPage.generate()">
+              ⚡ Generate Paper
+            </button>
+          </div>
+
+          <!-- Loading -->
+          <div id="poly-loading" style="display:none;">
+            <div class="poly-loading">
+              <div class="poly-spinner"></div>
+              <div style="font-weight:600;color:var(--poly-text);">Generating balanced paper...</div>
+              <div style="color:var(--poly-text-dim);margin-top:4px;font-size:0.85rem;">Applying unit weightage, difficulty balancing, and anti-repetition</div>
+            </div>
+          </div>
+
+          <!-- Result -->
+          <div id="poly-result" style="display:none;">
+            <div class="poly-card">
+              <div class="poly-result-header">
                 <div>
-                  <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono);">1,247</div>
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Generated Today</div>
+                  <div class="poly-card-title">✅ Paper Generated</div>
+                  <div style="color:var(--poly-text-dim);font-size:0.85rem;" id="poly-result-meta"></div>
                 </div>
-                <div>
-                  <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono);">8,432</div>
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Total Papers</div>
-                </div>
-                <div>
-                  <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono);">23</div>
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Branches Covered</div>
-                </div>
-                <div>
-                  <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono);">2019-2023</div>
-                  <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Year Coverage</div>
+                <div class="poly-result-actions">
+                  <button class="poly-btn-secondary" onclick="PolytechnicPage.printPaper()">🖨️ Print / Preview</button>
+                  <button class="poly-btn-secondary" onclick="PolytechnicPage.generate()">🔄 Generate Another</button>
                 </div>
               </div>
+              <div id="poly-sections-summary"></div>
+            </div>
+          </div>
+
+          <!-- Info Card -->
+          <div class="poly-card" style="border-color:rgba(108,92,231,0.3);">
+            <div class="poly-card-title">💡 About This Generator</div>
+            <div style="font-size:0.9rem;color:var(--poly-text-dim);line-height:1.7;">
+              <p style="margin-bottom:8px;">BTEUP pattern ke hisaab se balanced question papers generate karta hai — unit weightage, difficulty mixing, aur bilingual (English + Hindi) support ke saath.</p>
+              <p style="margin:0;">Question bank abhi build ho raha hai. Jaise-jaise questions add honge, papers aur accurate honge.</p>
             </div>
           </div>
         </div>
@@ -270,135 +355,57 @@ const PolytechnicPage = {
     `;
   },
 
-  _renderPreview() {
-    if (!this._generatedPaper) return '';
-
-    return `
-      <div class="animate-fadeInUp" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px;">
-        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
-          <h3 style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px;">
-            ${this._generatedPaper.title}
-          </h3>
-          <div style="font-size: 12px; color: var(--text-secondary); display: flex; gap: 16px; flex-wrap: wrap;">
-            <span>Branch: ${this._generatedPaper.branch}</span>
-            <span>Semester: ${this._generatedPaper.semester}</span>
-            <span>Marks: ${this._generatedPaper.marks}</span>
-            <span>Time: 3 Hours</span>
-          </div>
-        </div>
-
-        <div style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: var(--text-muted); line-height: 1.6;">
-          <strong>Instructions:</strong> All questions are compulsory. In case of any discrepancy or translation variation, English version is official.
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px;">
-          <div>
-            <div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Section A (Very Short Answer — 10 x 2 Marks)</div>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              <div style="padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">
-                <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Q1. Solve the integration: ∫ x * e^x dx.</div>
-                <div style="font-size: 11px; color: var(--text-muted);">समाकलन हल करें: ∫ x * e^x dx</div>
-              </div>
-              <div style="padding-bottom: 10px; border-bottom: 1px solid var(--border-light);">
-                <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Q2. Differentiate log(sin x) with respect to x.</div>
-                <div style="font-size: 11px; color: var(--text-muted);">x के सापेक्ष log(sin x) का अवकलन कीजिये।</div>
-              </div>
-              <div>
-                <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 4px;">Q3. Find the value of limit x -> 0 (sin x / x).</div>
-                <div style="font-size: 11px; color: var(--text-muted);">सीमा का मान ज्ञात कीजिये: limit x -> 0 (sin x / x).</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display: flex; gap: 12px;">
-          <button onclick="PolytechnicPage.startSolving()"
-                  style="flex: 1; background: var(--primary); border: none; border-radius: 6px; padding: 12px; color: white; font-weight: 600; font-size: 13px; display: flex; align-items: center; justify-content: center;">
-            Start Solving Online
-          </button>
-          <button onclick="PolytechnicPage.downloadPDF()"
-                  style="background: transparent; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 20px; color: var(--text-primary); font-weight: 500; font-size: 13px;">
-            Download PDF
-          </button>
-        </div>
-      </div>
-    `;
+  onBranchChange(val) {
+    // Placeholder — will be wired to actual data later
+    window.Helpers?.showToast?.('Branch changed: ' + val, 'info');
   },
 
-  onBranchChange(value) {
-    this._selectedBranch = value;
-    this.refresh();
-  },
-
-  onSemesterChange(value) {
-    this._selectedSemester = value;
-    const subjects = this._subjects[value] || [];
-    this._selectedSubject = subjects.length > 0 ? subjects[0].name : '';
-    this.refresh();
-  },
-
-  onSubjectChange(value) {
-    this._selectedSubject = value;
-  },
-
-  onTypeChange(value) {
-    this._selectedType = value;
-    this.refresh();
-  },
-
-  onYearChange(value) {
-    this._selectedYear = value;
-    this.refresh();
-  },
-
-  onModeChange(value) {
-    this._selectedMode = value;
-    this.refresh();
+  onSemChange(val) {
+    window.Helpers?.showToast?.('Semester changed: ' + val, 'info');
   },
 
   generate() {
-    window.Helpers?.showToast?.('Generating predicted paper...', 'info');
+    if (this._isGenerating) return;
+    this._isGenerating = true;
+
+    const btn = document.getElementById('poly-gen-btn');
+    const loading = document.getElementById('poly-loading');
+    const result = document.getElementById('poly-result');
+
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Generating...'; }
+    if (loading) loading.style.display = 'block';
+    if (result) result.style.display = 'none';
+
     setTimeout(() => {
-      this._generatedPaper = {
-        title: `BTEUP Predicted Paper — ${this._selectedSubject}`,
-        branch: this._selectedBranch,
-        semester: `${this._selectedSemester} Semester`,
-        marks: '50 Marks',
-        subject: this._selectedSubject
-      };
-      window.Helpers?.showToast?.('Paper generated successfully!', 'success');
-      this.refresh();
-    }, 1200);
+      this._isGenerating = false;
+      if (btn) { btn.disabled = false; btn.textContent = '⚡ Generate Paper'; }
+      if (loading) loading.style.display = 'none';
+
+      // Show placeholder result
+      if (result) {
+        result.style.display = 'block';
+        const meta = document.getElementById('poly-result-meta');
+        if (meta) meta.textContent = 'Question bank under construction — full generation coming soon.';
+      }
+
+      window.Helpers?.showToast?.('Paper generation system under construction!', 'info');
+    }, 1500);
   },
 
-  loadPredefined(subject, year) {
-    window.Helpers?.showToast?.(`Loading ${subject} (${year})...`, 'info');
-    this._selectedSubject = subject;
-    this._selectedYear = year;
-    this._selectedType = 'pyq';
-    this.generate();
-  },
-
-  startSolving() {
-    window.Helpers?.showToast?.('Launching Online Exam Mode...', 'success');
-    App.navigate('setup', { preset: 'polytechnic-test' });
-  },
-
-  downloadPDF() {
-    window.Helpers?.showToast?.('Downloading paper PDF...', 'info');
-    window.open('/polytechnic/', '_blank');
+  printPaper() {
+    window.Helpers?.showToast?.('Print feature coming soon!', 'info');
   },
 
   refresh() {
-    const container = document.getElementById('app');
-    if (container && App.currentPage === 'polytechnic') {
-      container.innerHTML = App._renderHeader('polytechnic') + this.render();
+    const app = document.getElementById('app');
+    if (app && typeof App !== 'undefined' && App.currentPage === 'polytechnic') {
+      const footer = App._renderFooter ? App._renderFooter() : '';
+      app.innerHTML = App._renderHeader('polytechnic') + this.render() + footer;
     }
   },
 
-  afterRender() {
-    // Responsive grid tweak if needed
-  }
+  afterRender() {},
+  destroy() {}
 };
 
 window.PolytechnicPage = PolytechnicPage;

@@ -37,36 +37,50 @@ async function fetchRandomQuestions(config = {}) {
 
     // Lightweight dedupe — prefer unseen questions
     const used = JSON.parse(localStorage.getItem("used_ids") || "[]");
-    const fresh = data.filter(q => !used.includes(q.id));
-    const base = fresh.length >= limit ? fresh : data;
 
-    // Shuffle (Fisher-Yates)
-    const shuffled = [...base];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // Map raw DB rows to UI format
+    const mapped = mapDBToUI(data);
+
+    if (mapped.length < data.length) {
+      console.warn("Dropped bad questions during mapping");
     }
 
-    // Exact count
-    const selected = shuffled.slice(0, limit);
-
-    // Save used IDs (cap at 200)
-    const newUsed = [...used, ...selected.map(q => q.id)].slice(-200);
-    localStorage.setItem("used_ids", JSON.stringify(newUsed));
-
-    console.log("TOTAL DB:", data.length, "FRESH:", fresh.length, "SELECTED:", selected.length);
+    console.log("TOTAL DB:", data.length, "MAPPED:", mapped.length);
 
     if (data.length < limit) {
       console.warn("DB has fewer questions than requested:", data.length, "<", limit);
     }
 
-    const mapped = mapDBToUI(selected);
-
-    if (mapped.length < selected.length) {
-      console.warn("Dropped", selected.length - mapped.length, "bad questions during mapping");
+    // Doc 25: Feed full mapped pool into Adaptive Assessment Engine for intelligent selection
+    if (typeof AdaptiveAssessmentEngine !== 'undefined') {
+      try {
+        const res = AdaptiveAssessmentEngine.generateAdaptivePaper(mapped, { totalQuestions: limit, subjects });
+        if (res.success && res.questions.length > 0) {
+          window.lastPaperQuality = res.quality;
+          window.lastPaperSession = res.session;
+          console.log("AAE: Adaptive selection completed. Expected Gain:", res.quality.learningGain);
+          const aaeUsed = [...used, ...res.questions.map(q => q.id)].slice(-200);
+          localStorage.setItem("used_ids", JSON.stringify(aaeUsed));
+          return res.questions;
+        }
+      } catch (aaeErr) {
+        console.warn("AAE: Adaptive selection failed, falling back to random:", aaeErr.message);
+      }
     }
 
-    return mapped;
+    // Fallback: standard random selection with dedup
+    const fresh = mapped.filter(q => !used.includes(q.id));
+    const pool = fresh.length >= limit ? fresh : mapped;
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const selected = shuffled.slice(0, limit);
+    const newUsed = [...used, ...selected.map(q => q.id)].slice(-200);
+    localStorage.setItem("used_ids", JSON.stringify(newUsed));
+    console.log("FRESH:", fresh.length, "SELECTED:", selected.length);
+    return selected;
   } catch (err) {
     console.error("fetchRandomQuestions CRASH:", err);
     return [];

@@ -17,6 +17,52 @@
 
   <title>Mock24hr — Free Mock Tests for SSC, Railway, Banking & UPSC</title>
 
+  <!-- Doc 14 §13: Canonical URL -->
+  <link rel="canonical" href="https://mock24hr.com/">
+
+  <!-- Doc 14 §13: Open Graph -->
+  <meta property="og:title" content="Mock24hr — Free Mock Tests for SSC, Railway, Banking & UPSC">
+  <meta property="og:description" content="Practice with real exam pattern, timer, negative marking, and detailed AI analysis. 30+ competitive exam patterns — 100% free.">
+  <meta property="og:url" content="https://mock24hr.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Mock24hr">
+  <meta property="og:image" content="https://mock24hr.com/icons/icon-512.png">
+
+  <!-- Doc 14 §13: Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mock24hr — Free Mock Tests for SSC, Railway, Banking & UPSC">
+  <meta name="twitter:description" content="30+ exam patterns. Real timer, negative marking, AI analysis. Start practicing now!">
+  <meta name="twitter:image" content="https://mock24hr.com/icons/icon-512.png">
+
+  <!-- Doc 14 §12: Organization Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Mock24hr",
+    "url": "https://mock24hr.com",
+    "logo": "https://mock24hr.com/icons/icon-512.png",
+    "description": "Free Mock Test Platform for SSC, Railway, Banking & UPSC competitive exams",
+    "sameAs": []
+  }
+  </script>
+
+  <!-- Doc 14 §12: WebSite Schema with SearchAction -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Mock24hr",
+    "url": "https://mock24hr.com",
+    "description": "Free Mock Test Platform for competitive exam preparation",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://mock24hr.com/exams/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json">
 
@@ -48,6 +94,7 @@
   <link rel="stylesheet" href="css/in-exam.css?v=20260628">
   <link rel="stylesheet" href="css/cbt.css?v=20260628">
   <link rel="stylesheet" href="css/cbtEngine.css?v=20260628">
+  <link rel="stylesheet" href="css/test.css?v=20260707">
   <link rel="stylesheet" href="css/board-pages.css?v=20260628">
   <link rel="stylesheet" href="css/qlang.css?v=20260628">
 
@@ -122,7 +169,7 @@
   <!-- Utilities -->
   <script src="js/utils/helpers.js?v=20260628"></script>
   <script src="js/utils/icons.js?v=20260628"></script>
-  <script src="js/utils/storage.js?v=20260628"></script>
+  <script src="js/utils/storage.js?v=20260707b"></script>
   <script src="js/utils/tracker.js?v=20260628"></script>
 
   <!-- Engine -->
@@ -135,6 +182,38 @@
   <script src="js/engine/progressEngine.js?v=20260629"></script>
   <script src="js/engine/search.js?v=20260629"></script>
   <script src="js/engine/shortcuts.js?v=20260629"></script>
+  <!-- Doc 8: AI Study System engines -->
+  <script src="js/engine/learningProfile.js?v=20260707"></script>
+  <script src="js/engine/aiCoach.js?v=20260707"></script>
+  <script src="js/engine/flashcards.js?v=20260707"></script>
+  <!-- Doc 9: Gamification, Retention & Subscription -->
+  <script src="js/engine/eventBus.js?v=20260707"></script>
+  <script src="js/engine/missionEngine.js?v=20260707"></script>
+  <script src="js/engine/featureFlags.js?v=20260707"></script>
+  <!-- Doc 10: Recommendation Engine -->
+  <script src="js/engine/recommendationEngine.js?v=20260707"></script>
+  <!-- Doc 18: Learning Intelligence Engine (the brain) -->
+  <script src="js/engine/learningIntelligence.js?v=20260707b"></script>
+  <!-- Doc 19: Cognitive Behaviour Engine (how students think) -->
+  <script src="js/engine/behaviourEngine.js?v=20260707"></script>
+  <!-- Doc 20: Mistake DNA Engine (root cause of every mistake) -->
+  <script src="js/engine/mistakeDNA.js?v=20260708"></script>
+  <!-- Doc 21: Correction Intelligence Engine (diagnosis → treatment) -->
+  <script src="js/engine/correctionEngine.js?v=20260708"></script>
+  <!-- Doc 22: Predictive Intelligence Engine (future forecasting) -->
+  <script src="js/engine/predictiveEngine.js?v=20260708"></script>
+  <!-- Doc 23: Student Digital Twin Engine (future simulation platform) -->
+  <script src="js/engine/digitalTwin.js?v=20260711"></script>
+  <!-- Doc 24: Learning Orchestrator & Decision Engine (AI decision orchestrator) -->
+  <script src="js/engine/learningOrchestrator.js?v=20260711"></script>
+  <!-- Doc 25: Adaptive Assessment Engine (personalized test generation) -->
+  <script src="js/engine/adaptiveAssessmentEngine.js?v=20260711"></script>
+  <!-- Doc 11: Sync Service (localStorage ↔ Supabase) -->
+  <script src="js/services/syncService.js?v=20260707"></script>
+  <!-- Doc 12: AI Gateway (provider routing, cache, prompts) -->
+  <script src="js/services/aiGateway.js?v=20260707"></script>
+  <!-- Doc 16: Experiment Engine (A/B testing) -->
+  <script src="js/engine/experimentEngine.js?v=20260707"></script>
   <script src="js/lang.js?v=20260629"></script>
 
   <!-- Board Renderers -->
@@ -150,14 +229,21 @@
   <script src="js/pages/boardPage.js?v=20260629"></script>
   <script src="js/pages/setup.js?v=20260629"></script>
   <script src="js/pages/test.js?v=20260629"></script>
-  <script src="js/pages/result.js?v=20260629"></script>
+  <script src="js/pages/result.js?v=20260707b"></script>
   <script src="js/pages/analysis.js?v=20260629"></script>
-  <script src="js/pages/dashboard.js?v=20260703"></script>
+  <script src="js/pages/dashboard.js?v=20260707b"></script>
   <script src="js/pages/leaderboard.js?v=20260703"></script><!-- stub: redirects to dashboard -->
   <script src="js/pages/analytics.js?v=20260629"></script>
   <script src="js/pages/profile.js?v=20260629"></script>
   <script src="js/pages/examDetail.js?v=20260629"></script>
   <script src="js/pages/polytechnic.js?v=20260629"></script>
+  <script src="js/pages/aptitude.js?v=20260711"></script>
+  <!-- Doc 8: AI Coach Command Center -->
+  <script src="js/pages/aiCoachPage.js?v=20260707b"></script>
+  <!-- Doc 9: Pricing Page -->
+  <script src="js/pages/pricingPage.js?v=20260707"></script>
+  <!-- Doc 10: Component Showcase (dev only) -->
+  <script src="js/pages/showcasePage.js?v=20260707"></script>
 
   <!-- Components -->
   <script src="js/components/breadcrumb.js?v=20260629"></script>

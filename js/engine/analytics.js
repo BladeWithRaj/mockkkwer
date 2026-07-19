@@ -115,7 +115,9 @@ const Analytics = {
       improvementRate,
       topics: sortedByAcc, // weak to strong
       weakTopic,
-      slowTopic
+      slowTopic,
+      // Doc 20: Mistake trends from MistakeDNA
+      mistakeTrends: typeof MistakeDNA !== 'undefined' ? MistakeDNA.getMistakeTimeline() : null
     };
 
     // Update Cache

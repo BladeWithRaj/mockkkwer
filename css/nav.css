@@ -17,6 +17,15 @@
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
+  transition: height 250ms var(--ease, ease),
+              border-width 250ms var(--ease, ease);
+}
+
+/* Doc 5 §3 — Scrolled: smaller height, thinner border, no shadow */
+.header--scrolled {
+  height: 48px;
+  border-bottom-width: 0.5px;
+  box-shadow: none;
 }
 
 .header-inner {

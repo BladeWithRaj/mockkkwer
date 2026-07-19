@@ -9,7 +9,7 @@ const ProfilePage = {
 
   render() {
     const user = Auth.getUser();
-    const data = Gamification.getProfileData();
+    const data = typeof Gamification !== 'undefined' ? Gamification.getProfileData() : { level: { title: 'Student' }, xp: 0, badges: [], subjects: [], trends: [] };
     const userName = user?.username || user?.name || Storage.getUsername() || 'User';
     const tier = data.level;
 
@@ -110,7 +110,7 @@ const ProfilePage = {
 
   switchTab(tab) {
     this._activeTab = tab;
-    const data = Gamification.getProfileData();
+    const data = typeof Gamification !== 'undefined' ? Gamification.getProfileData() : { level: { title: 'Student' }, xp: 0, badges: [], subjects: [], trends: [] };
 
     // Update tab buttons
     document.querySelectorAll('.profile-tab').forEach(btn => {
@@ -243,7 +243,7 @@ const ProfilePage = {
   // ── ANALYTICS TAB ──
   _renderAnalyticsTab(data) {
     const subjects = data.subjects || [];
-    const recommendations = Gamification.getRecommendations();
+    const recommendations = typeof Gamification !== 'undefined' ? Gamification.getRecommendations() : [];
     const trends = data.trends || [];
 
     return `

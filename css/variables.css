@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════
-   MOCK24HR — Design Tokens v2.0 "Scholar"
+   MOCK24HR — Design Tokens v3.0 "Premium Scholar"
    Font: Plus Jakarta Sans (headings + UI), Inter (body)
    Palette: Slate + Royal Blue
+   Design System: Document 4 — Premium Design Language
    ═══════════════════════════════════════════════════════════ */
 
 :root {
@@ -11,13 +12,15 @@
   --font-hindi:   'Noto Sans Devanagari', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 
-  --text-xs:   0.75rem;    /* 12px */
-  --text-sm:   0.875rem;   /* 14px */
-  --text-base: 1rem;       /* 16px */
-  --text-lg:   1.125rem;   /* 18px */
-  --text-xl:   1.25rem;    /* 20px */
-  --text-2xl:  1.5rem;     /* 24px */
-  --text-3xl:  1.875rem;   /* 30px */
+  --text-xs:      0.75rem;    /* 12px */
+  --text-sm:      0.875rem;   /* 14px */
+  --text-base:    1rem;       /* 16px */
+  --text-lg:      1.125rem;   /* 18px */
+  --text-xl:      1.25rem;    /* 20px */
+  --text-2xl:     1.5rem;     /* 24px */
+  --text-3xl:     1.875rem;   /* 30px */
+  --text-4xl:     2.25rem;    /* 36px */
+  --text-display: 2.75rem;    /* 44px — Hero display headings */
 
   --font-normal:   400;
   --font-medium:   500;
@@ -54,14 +57,23 @@
   --skipped:         #9061F9;   /* purple-600 */
   --skipped-light:   #F3E8FF;
 
-  /* ── Backgrounds — Light Mode ── */
+  /* ── Backgrounds — Light Mode (5-Layer Surface System) ──
+     Layer 1: bg-base      — Page background
+     Layer 2: bg-section   — Section surfaces
+     Layer 3: bg-card      — Cards
+     Layer 4: bg-nested    — Nested cards / insets
+     Layer 5: bg-float     — Floating elements (tooltips, dropdowns)
+     ─────────────────────────────────────────────── */
   --bg-primary:      #FFFFFF;
   --bg-secondary:    #F9FAFB;   /* neutral-50 */
+  --bg-section:      #F9FAFB;   /* alternating section surface */
   --bg-surface:      #FFFFFF;
   --bg-elevated:     #FFFFFF;
   --bg-sunken:       #F3F4F6;   /* neutral-100 */
   --bg-card:         #FFFFFF;
-  --bg-card-hover:   #F3F4F6;
+  --bg-card-hover:   #F9FAFB;
+  --bg-nested:       #F3F4F6;   /* nested card / inset */
+  --bg-float:        #FFFFFF;   /* floating elements */
   --bg-input:        #FFFFFF;
   --bg-input-focus:  #FFFFFF;
   --bg-overlay:      rgba(13, 17, 23, 0.4);
@@ -103,19 +115,28 @@
   --sp-16: 4rem;    /* 64px */
   --sp-20: 5rem;    /* 80px */
 
-  /* ── Radius ── */
-  --radius-sm:   4px;
-  --radius:      8px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   20px;
-  --radius-full: 999px;
+  /* ── Radius — 4 values only (Doc 4 §9) ── */
+  --radius-sm:   6px;    /* small: chips, tags, inputs */
+  --radius:      8px;    /* legacy compat — maps to sm */
+  --radius-md:   10px;   /* medium: cards, buttons */
+  --radius-lg:   16px;   /* large: sections, modals */
+  --radius-xl:   24px;   /* extra large: hero cards, feature blocks */
+  --radius-full: 999px;  /* pills, avatars */
 
   /* ── Transitions ── */
   --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur-fast:    120ms;
   --dur-normal:  200ms;
   --dur-slow:    300ms;
+
+  /* ── Motion — Purposeful animation (Doc 4 §17) ── */
+  --motion-enter:  var(--dur-normal) var(--ease);
+  --motion-hover:  var(--dur-fast) var(--ease);
+  --motion-page:   var(--dur-slow) var(--ease);
+
+  /* ── Grain / Texture (Doc 4 §6) ── */
+  --grain-opacity: 0.03;
 
   /* ── Z-index ── */
   --z-base:     0;
@@ -151,6 +172,17 @@
   --accent-light:   rgba(217, 119, 6, 0.12);
   --primary-dark:   #1E429F;
   --bg-base:        #FFFFFF;
+
+  /* ── Component Tokens (Doc 4 §25) ── */
+  --card-radius:    var(--radius-lg);
+  --card-padding:   var(--sp-5);
+  --card-border:    1px solid var(--border-color);
+  --card-shadow:    var(--shadow-xs);
+  --btn-radius:     var(--radius-md);
+  --input-radius:   var(--radius-md);
+  --modal-radius:   var(--radius-lg);
+  --section-gap:    var(--sp-16);   /* 64px between major sections */
+  --section-gap-sm: var(--sp-12);   /* 48px between minor sections */
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -158,18 +190,27 @@
    Palette: Slate 900-950 backgrounds, Lighter blue accents
    ═══════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
-  /* ── Backgrounds ── */
-  --bg-primary:      #0D1117;   /* neutral-950 */
-  --bg-secondary:    #161B22;   /* neutral-900 surface */
+  /* ── Backgrounds — Dark 5-Layer Surface System ──
+     Each layer is intentionally slightly lighter
+     to create depth without relying on shadows (Doc 4 §5, §24)
+     ─────────────────────────────────────────────── */
+  --bg-primary:      #0D1117;   /* Layer 1: page base */
+  --bg-secondary:    #161B22;   /* Layer 2: section surface */
+  --bg-section:      #131920;   /* alternating sections */
   --bg-surface:      #161B22;
-  --bg-elevated:     #243347;   /* neutral-800 */
-  --bg-sunken:       #0D1117;
-  --bg-card:         #1C2333;
-  --bg-card-hover:   #243347;
+  --bg-elevated:     #1C2333;   /* Layer 3 */
+  --bg-sunken:       #0A0E14;
+  --bg-card:         #161B22;   /* Layer 3: cards */
+  --bg-card-hover:   #1C2333;
+  --bg-nested:       #1C2333;   /* Layer 4: nested cards */
+  --bg-float:        #243347;   /* Layer 5: floating elements */
   --bg-input:        #0D1117;
   --bg-input-focus:  #161B22;
   --bg-overlay:      rgba(0, 0, 0, 0.75);
   --bg-base:         #0D1117;
+
+  /* ── Grain — reduced in dark mode ── */
+  --grain-opacity: 0.02;
 
   /* ── Primary adjustments ── */
   --brand-primary:   #4C9EEB;   /* slightly lighter blue for dark */

@@ -1,6 +1,6 @@
 /* ============================================
-   MOCK24HR — Base Styles v7 "Clean Scholar"
-   Reset · Typography · Accessibility · Utilities
+   MOCK24HR — Base Styles v8 "Premium Scholar"
+   Reset · Typography · Grain · Surfaces · Accessibility · Utilities
    ============================================ */
 
 /* ── Reset ── */
@@ -31,6 +31,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle grain texture — creates warmth (Doc 4 §6) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: var(--grain-opacity, 0.03);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { display: none; }
+}
+
 #app {
   position: relative;
   z-index: 1;
@@ -52,6 +69,15 @@ h3 { font-size: var(--text-lg); }
 h4 { font-size: var(--text-base); font-weight: var(--font-medium); }
 h5 { font-size: var(--text-sm); font-weight: var(--font-medium); }
 h6 { font-size: var(--text-xs); font-weight: var(--font-medium); }
+
+/* Display heading — hero/feature titles (Doc 4 §11) */
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
 
 p {
   color: var(--text-secondary);
@@ -200,6 +226,24 @@ select:focus-visible {
   white-space: nowrap;
   border-width: 0;
 }
+
+/* ── Surface Layer Utilities (Doc 4 §5) ── */
+.surface-base    { background: var(--bg-primary); }
+.surface-section {
+  background: var(--bg-section);
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+}
+.surface-card    { background: var(--bg-card); }
+.surface-nested  { background: var(--bg-nested); }
+.surface-float   {
+  background: var(--bg-float);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Section rhythm variation (Doc 4 §27) */
+.section-gap     { padding: var(--section-gap) 0; }
+.section-gap-sm  { padding: var(--section-gap-sm) 0; }
 
 /* Visually hidden but still focusable */
 .sr-only-focusable:focus,
