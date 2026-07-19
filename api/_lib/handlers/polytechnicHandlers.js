@@ -21,6 +21,7 @@ export async function handlePolytechnic(supabase, req, res) {
     if (path.includes("/polytechnic/questions")) return await handleQuestions(supabase, req, res);
     if (path.includes("/polytechnic/generate"))  return await handleGenerate(supabase, req, res);
     if (path.includes("/polytechnic/papers"))    return await handlePapers(supabase, req, res);
+    if (path.includes("/polytechnic/notes"))     return await handleNotes(supabase, req, res);
 
     return res.status(404).json({ error: "Polytechnic route not found", path });
   } catch (err) {
@@ -266,6 +267,137 @@ async function handlePapers(supabase, req, res) {
 
     if (!paper) return res.status(404).json({ error: "Paper not found" });
     return res.json({ paper });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+// ── Notes CRUD ──
+async function handleNotes(supabase, req, res) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const subjectId = url.searchParams.get("subject_id");
+  const unitNo = url.searchParams.get("unit");
+  const noteType = url.searchParams.get("type");
+  const search = url.searchParams.get("search");
+  const noteId = url.searchParams.get("id");
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
+
+  // GET — List notes or fetch single note
+  if (req.method === "GET") {
+    // Single note by id
+    if (noteId) {
+      const { data, error } = await supabase
+        .from("polytechnic_notes")
+        .select("*, polytechnic_note_attachments(*)")
+        .eq("id", parseInt(noteId))
+        .eq("is_active", true)
+        .single();
+
+      if (error || !data) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+
+      // Increment view count (fire-and-forget)
+      supabase
+        .from("polytechnic_notes")
+        .update({ view_count: (data.view_count || 0) + 1 })
+        .eq("id", data.id)
+        .then(() => {});
+
+      return res.json({ note: data });
+    }
+
+    // List notes with filters
+    let query = supabase
+      .from("polytechnic_notes")
+      .select("id, subject_id, unit_no, title, title_hi, note_type, sort_order, view_count, created_at, updated_at", { count: "exact" })
+      .eq("is_active", true)
+      .order("unit_no", { ascending: true })
+      .order("sort_order", { ascending: true })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (subjectId) query = query.eq("subject_id", parseInt(subjectId));
+    if (unitNo) query = query.eq("unit_no", parseInt(unitNo));
+    if (noteType) query = query.eq("note_type", noteType);
+    if (search) query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
+
+    const { data, error, count } = await query;
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ notes: data, total: count, page, limit });
+  }
+
+  // POST — Create note (admin)
+  if (req.method === "POST") {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const { subject_id, unit_no, title, title_hi, content, content_hi, note_type, sort_order, attachments } = body;
+
+    if (!subject_id || !unit_no || !title || !content) {
+      return res.status(400).json({ error: "subject_id, unit_no, title, and content are required" });
+    }
+
+    const { data: note, error } = await supabase
+      .from("polytechnic_notes")
+      .insert({
+        subject_id: parseInt(subject_id),
+        unit_no: parseInt(unit_no),
+        title,
+        title_hi: title_hi || null,
+        content,
+        content_hi: content_hi || null,
+        note_type: note_type || "theory",
+        sort_order: sort_order || 0,
+        created_by: body.created_by || "admin"
+      })
+      .select()
+      .single();
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    // Insert attachments if provided
+    if (attachments?.length && note) {
+      const attachRows = attachments.map(a => ({
+        note_id: note.id,
+        file_url: a.file_url,
+        file_name: a.file_name,
+        file_type: a.file_type || "pdf",
+        file_size_bytes: a.file_size_bytes || null
+      }));
+      await supabase.from("polytechnic_note_attachments").insert(attachRows);
+    }
+
+    return res.json({ success: true, note });
+  }
+
+  // PATCH — Update note
+  if (req.method === "PATCH") {
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return res.status(400).json({ error: "id is required for update" });
+    }
+
+    // Only allow safe fields
+    const allowed = ["title", "title_hi", "content", "content_hi", "note_type", "sort_order", "is_active"];
+    const safeUpdates = {};
+    for (const key of allowed) {
+      if (updates[key] !== undefined) safeUpdates[key] = updates[key];
+    }
+
+    if (Object.keys(safeUpdates).length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+
+    const { data, error } = await supabase
+      .from("polytechnic_notes")
+      .update(safeUpdates)
+      .eq("id", parseInt(id))
+      .select()
+      .single();
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.json({ success: true, note: data });
   }
 
   return res.status(405).json({ error: "Method not allowed" });
