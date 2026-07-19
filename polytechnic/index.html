@@ -1116,7 +1116,8 @@
         allSubjects.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
-          opt.textContent = `${s.branch} Sem-${s.semester} | ${s.subject_name} (${s.subject_code})`;
+          const branchLabel = s.is_common ? 'Common' : (s.branch || 'General');
+          opt.textContent = `Sem-${s.semester} | ${s.subject_name} (${s.subject_code})`;
           opt.dataset.name = s.subject_name;
           sel.appendChild(opt);
         });
