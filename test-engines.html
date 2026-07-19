@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mock24hr Engine Test Suite</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      padding: 24px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      color: #3b82f6;
+      border-bottom: 2px solid #1e293b;
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      border-left: 5px solid #3b82f6;
+    }
+    .summary-card.all-passed {
+      border-left-color: #10b981;
+    }
+    .summary-card.has-failed {
+      border-left-color: #ef4444;
+    }
+    .summary-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .summary-stats {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .test-section {
+      margin-bottom: 20px;
+      background: #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .section-title {
+      background: #334155;
+      padding: 12px 16px;
+      font-weight: bold;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .test-list {
+      padding: 12px 16px;
+    }
+    .test-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13.5px;
+      border-bottom: 1px solid #334155;
+    }
+    .test-item:last-child {
+      border-bottom: none;
+    }
+    .test-name {
+      color: #cbd5e1;
+    }
+    .test-status.pass {
+      color: #10b981;
+      font-weight: bold;
+    }
+    .test-status.fail {
+      color: #ef4444;
+      font-weight: bold;
+    }
+    .error-log {
+      color: #fca5a5;
+      font-size: 12px;
+      margin-top: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <!-- Mocks & Core Utilities -->
+  <script>
+    // Stub local storage with actual storage object
+    const mockStorage = {};
+    window.localStorage = {
+      getItem: (key) => mockStorage[key] || null,
+      setItem: (key, val) => { mockStorage[key] = String(val); },
+      removeItem: (key) => { delete mockStorage[key]; },
+      clear: () => { Object.keys(mockStorage).forEach(k => delete mockStorage[k]); }
+    };
+
+    // Stubs for DailySystem and Lang
+    window.DailySystem = {
+      getStreak: () => ({ current: 5, max: 12 }),
+      isStreakAlive: () => true,
+      getDailyGoal: () => ({ target: 15, current: 8 }),
+      getMistakePatterns: () => [{ type: 'declining' }],
+      getRecentProgress: () => [
+        { date: '2026-07-06T10:00:00Z', accuracy: 78, correct: 15, total: 20 },
+        { date: '2026-07-07T10:00:00Z', accuracy: 68, correct: 13, total: 20 }
+      ],
+      getProgress: () => [
+        { accuracy: 60, timestamp: Date.now() - 3 * 24 * 3600 * 1000 },
+        { accuracy: 65, timestamp: Date.now() - 2 * 24 * 3600 * 1000 },
+        { accuracy: 70, timestamp: Date.now() - 1 * 24 * 3600 * 1000 }
+      ],
+      hasDoneToday: () => false
+    };
+
+    window.Lang = {
+      t: (key) => key
+    };
+  </script>
+
+  <script src="js/utils/helpers.js?v=20260628"></script>
+  <script src="js/utils/storage.js?v=20260628"></script>
+
+  <!-- Load production engines -->
+  <script src="js/engine/learningProfile.js?v=20260707"></script>
+  <script src="js/engine/recommendationEngine.js?v=20260707"></script>
+  <script src="js/engine/learningIntelligence.js?v=20260707"></script>
+  <script src="js/engine/behaviourEngine.js?v=20260707"></script>
+  <script src="js/engine/mistakeDNA.js?v=20260708"></script>
+  <script src="js/engine/correctionEngine.js?v=20260708"></script>
+  <script src="js/engine/predictiveEngine.js?v=20260708"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Mock24hr Engine Test Suite</h1>
+    
+    <div id="summary-card" class="summary-card">
+      <div id="summary-title" class="summary-title">Running Tests...</div>
+      <div id="summary-stats" class="summary-stats">Please wait while the engines are evaluated.</div>
+    </div>
+
+    <div id="test-sections"></div>
+  </div>
+
+  <!-- Test Framework & Assertions -->
+  <script>
+    const results = {
+      passed: 0,
+      failed: 0,
+      sections: {}
+    };
+
+    function describe(sectionName, fn) {
+      results.sections[sectionName] = [];
+      window.currentSection = sectionName;
+      fn();
+    }
+
+    function it(testName, fn) {
+      try {
+        fn();
+        results.passed++;
+        results.sections[window.currentSection].push({ name: testName, status: 'pass' });
+      } catch (err) {
+        results.failed++;
+        results.sections[window.currentSection].push({ name: testName, status: 'fail', error: err.stack || err.message });
+      }
+    }
+
+    function assert(cond, msg = 'Assertion failed') {
+      if (!cond) throw new Error(msg);
+    }
+
+    function assertEquals(actual, expected, msg = '') {
+      if (actual !== expected) {
+        throw new Error(`${msg ? msg + ': ' : ''}Expected [${expected}] but got [${actual}]`);
+      }
+    }
+
+    // Deep equality helper for arrays or objects
+    function assertDeepEquals(actual, expected, msg = '') {
+      const a = JSON.stringify(actual);
+      const e = JSON.stringify(expected);
+      if (a !== e) {
+        throw new Error(`${msg ? msg + ': ' : ''}Expected [${e}] but got [${a}]`);
+      }
+    }
+
+    function assertBetween(val, min, max, msg = '') {
+      if (val < min || val > max) {
+        throw new Error(`${msg ? msg + ': ' : ''}Expected ${val} to be between ${min} and ${max}`);
+      }
+    }
+  </script>
+
+  <!-- Assertions Logic -->
+  <script>
+    // Setup clean environment in LocalStorage
+    const mockProfile = {
+      version: 1,
+      createdAt: '2026-07-01T00:00:00Z',
+      updatedAt: '2026-07-07T00:00:00Z',
+      overallTrend: 'up',
+      totalQuestionsAnswered: 450,
+      totalTestsTaken: 12,
+      revisionQueue: ['GK', 'Quantitative'],
+      subjectProfiles: {
+        'Quantitative': {
+          subject: 'Quantitative',
+          attempts: 5,
+          correct: 60,
+          wrong: 40,
+          accuracy: 72,
+          avgSpeed: 42,
+          trend: 'up',
+          lastAttempted: '2026-07-06T10:00:00Z',
+          accuracyHistory: [60, 65, 68, 70, 72],
+          mistakeTypes: { concept: 5, calculation: 12, reading: 4, guess: 2, timePressure: 3, careless: 8 },
+          revisionSchedule: { lastRevised: '2026-07-04T10:00:00Z', intervalDays: 4 }
+        },
+        'Reasoning': {
+          subject: 'Reasoning',
+          attempts: 6,
+          correct: 80,
+          wrong: 20,
+          accuracy: 81,
+          avgSpeed: 38,
+          trend: 'up',
+          lastAttempted: '2026-07-07T10:00:00Z',
+          accuracyHistory: [70, 72, 75, 78, 81],
+          mistakeTypes: { concept: 2, calculation: 4, reading: 8, guess: 1, timePressure: 1, careless: 3 },
+          revisionSchedule: { lastRevised: '2026-07-05T10:00:00Z', intervalDays: 6 }
+        },
+        'GK': {
+          subject: 'GK',
+          attempts: 4,
+          correct: 30,
+          wrong: 70,
+          accuracy: 45,
+          avgSpeed: 18,
+          trend: 'down',
+          lastAttempted: '2026-07-05T10:00:00Z',
+          accuracyHistory: [55, 52, 48, 45],
+          mistakeTypes: { concept: 14, calculation: 0, reading: 2, guess: 12, timePressure: 1, careless: 2 },
+          revisionSchedule: { lastRevised: null, intervalDays: 1 }
+        }
+      }
+    };
+    
+    // Clear storage before writing mock data
+    localStorage.clear();
+
+    // Write storage key before executing engines
+    localStorage.setItem('mocktest_learning_profile', JSON.stringify(mockProfile));
+
+    // Sample inputs for test evaluation
+    const sampleResult = {
+      accuracy: 75,
+      totalQuestions: 10,
+      skipped: 2,
+      wrong: 3,
+      correct: 5,
+      negativeDeduction: 0.75,
+      maxMarks: 10,
+      totalMarks: 4.25,
+      questionResults: [
+        { index: 0, timeSpent: 25, isCorrect: true, isSkipped: false, question: { id: 'q0', subject: 'Quantitative' } },
+        { index: 1, timeSpent: 30, isCorrect: true, isSkipped: false, question: { id: 'q1', subject: 'Quantitative' } },
+        { index: 2, timeSpent: 4, isCorrect: true, isSkipped: false, question: { id: 'q2', subject: 'Quantitative' } }, // lucky guess
+        { index: 3, timeSpent: 12, isCorrect: true, isSkipped: false, question: { id: 'q3', subject: 'Quantitative' } },
+        { index: 4, timeSpent: 28, isCorrect: true, isSkipped: false, question: { id: 'q4', subject: 'Quantitative' } },
+        { index: 5, timeSpent: 8, isCorrect: false, isSkipped: false, question: { id: 'q5', subject: 'Quantitative' } }, // careless
+        { index: 6, timeSpent: 75, isCorrect: false, isSkipped: false, question: { id: 'q6', subject: 'Quantitative' } }, // concept gap
+        { index: 7, timeSpent: 140, isCorrect: false, isSkipped: false, question: { id: 'q7', subject: 'Quantitative' } }, // overthinking
+        { index: 8, timeSpent: 1, isCorrect: false, isSkipped: true, question: { id: 'q8', subject: 'Quantitative' } }, // skip
+        { index: 9, timeSpent: 45, isCorrect: false, isSkipped: true, question: { id: 'q9', subject: 'Quantitative' } }  // skip
+      ]
+    };
+
+    // Populate historical snapshots
+    localStorage.setItem('mtp_intelligence', JSON.stringify({
+      snapshots: [
+        { date: '2026-07-01T10:00:00Z', accuracy: 50, focusScore: 50, fatigueIndex: 40 },
+        { date: '2026-07-02T10:00:00Z', accuracy: 55, focusScore: 60, fatigueIndex: 30 },
+        { date: '2026-07-03T10:00:00Z', accuracy: 62, focusScore: 65, fatigueIndex: 25 },
+        { date: '2026-07-04T10:00:00Z', accuracy: 70, focusScore: 75, fatigueIndex: 20 },
+        { date: '2026-07-05T10:00:00Z', accuracy: 75, focusScore: 80, fatigueIndex: 15 }
+      ]
+    }));
+
+    // Setup behavior snapshots history with subjectAccuracy key to satisfy getRecoveryScore
+    localStorage.setItem('mtp_behaviour', JSON.stringify({
+      snapshots: [
+        { date: '2026-07-01T10:00:00Z', accuracy: 50, behaviourScore: 52, focusScore: 50, riskIndex: 40, recoveryRate: 30, panicDetected: false, subjectAccuracy: { GK: 55, Quantitative: 60, Reasoning: 70 } },
+        { date: '2026-07-02T10:00:00Z', accuracy: 55, behaviourScore: 58, focusScore: 60, riskIndex: 35, recoveryRate: 40, panicDetected: false, subjectAccuracy: { GK: 52, Quantitative: 65, Reasoning: 72 } },
+        { date: '2026-07-03T10:00:00Z', accuracy: 62, behaviourScore: 64, focusScore: 65, riskIndex: 30, recoveryRate: 45, panicDetected: false, subjectAccuracy: { GK: 48, Quantitative: 68, Reasoning: 75 } },
+        { date: '2026-07-04T10:00:00Z', accuracy: 70, behaviourScore: 72, focusScore: 75, riskIndex: 28, recoveryRate: 60, panicDetected: false, subjectAccuracy: { GK: 45, Quantitative: 70, Reasoning: 78 } },
+        { date: '2026-07-05T10:00:00Z', accuracy: 75, behaviourScore: 78, focusScore: 80, riskIndex: 25, recoveryRate: 70, panicDetected: false, subjectAccuracy: { GK: 45, Quantitative: 72, Reasoning: 81 } }
+      ]
+    }));
+
+    // Populate Confidence Matrix data under the correct key 'mocktest_confidence_log'
+    localStorage.setItem('mocktest_confidence_log', JSON.stringify([
+      { confidence: 'confident', wasCorrect: true },
+      { confidence: 'confident', wasCorrect: true },
+      { confidence: 'confident', wasCorrect: false },
+      { confidence: 'confident', wasCorrect: false },
+      { confidence: 'unsure', wasCorrect: true },
+      { confidence: 'unsure', wasCorrect: true },
+      { confidence: 'guess', wasCorrect: true },
+      { confidence: 'confident', wasCorrect: true },
+      { confidence: 'confident', wasCorrect: true },
+      { confidence: 'unsure', wasCorrect: false }
+    ]));
+
+    // ── 1. LearningIntelligence Engine Tests ──
+    describe('LearningIntelligence (Doc 18)', () => {
+      it('should detect student cognitive state correctly', () => {
+        const stateResult = LearningIntelligence.detectState(sampleResult);
+        assert(stateResult.state !== 'unknown', 'State should be calculated');
+        assert(stateResult.confidence > 0, 'Confidence should be positive');
+      });
+
+      it('should classify mistake based on timing metrics', () => {
+        const medianTime = 29;
+        const guessMistake = LearningIntelligence.classifyMistake({ timeSpent: 2, isCorrect: false }, medianTime);
+        assertEquals(guessMistake, 'guess', 'Very fast wrong answer should be classified as blind guess');
+
+        const conceptMistake = LearningIntelligence.classifyMistake({ timeSpent: 80, isCorrect: false }, medianTime);
+        assertEquals(conceptMistake, 'concept', 'Slow wrong answer should be classified as concept gap');
+      });
+
+      it('should retrieve overall mistake DNA distribution', () => {
+        const dna = LearningIntelligence.getMistakeDNA();
+        assert(dna.calculation > 0, 'Should accumulate subject profiles calculation mistakes');
+        assert(dna.concept > 0, 'Should accumulate subject profiles concept mistakes');
+      });
+
+      it('should evaluate confidence matrix calibration', () => {
+        const matrix = LearningIntelligence.getConfidenceMatrix();
+        assert(matrix.total > 0, 'Should read mock confidence entries');
+        assert(matrix.overPct > 0, 'Should find overconfident percentage');
+      });
+
+      it('should calculate focus score', () => {
+        const focus = LearningIntelligence.calculateFocusScore(sampleResult);
+        assertBetween(focus.score, 0, 100, 'Focus score must range 0-100');
+        assert(focus.rapidGuesses >= 0, 'Should track rapid clicks');
+      });
+
+      it('should compute learning velocity', () => {
+        const vel = LearningIntelligence.getLearningVelocity();
+        assert(vel.length > 0, 'Velocity should compute for subjects with history');
+        assertEquals(vel[0].subject, 'Quantitative', 'Quantitative should be represented');
+      });
+
+      it('should calculate forgetting curves and decay times', () => {
+        const curves = LearningIntelligence.getForgettingCurve();
+        assert(curves.length > 0, 'Should return forgetting curve metrics');
+        assert(curves[0].daysToForget > 0, 'Should calculate decay days');
+      });
+
+      it('should generate daily intelligence summary text', () => {
+        const report = LearningIntelligence.generateDailyReport();
+        assert(report.sections.length > 0, 'Should compile sections');
+        assert(report.sections.some(s => s.title === 'Biggest Improvement'), 'Should evaluate growth');
+      });
+    });
+
+    // ── 2. BehaviourEngine Tests ──
+    describe('BehaviourEngine (Doc 19)', () => {
+      it('should classify answers into 9 detailed decision types', () => {
+        const decisions = BehaviourEngine.classifyDecisions(sampleResult);
+        assertEquals(decisions.length, 10, 'All questions classified');
+        
+        const lucky = decisions.find(d => d.index === 2);
+        assertEquals(lucky.decision, 'lucky_guess', 'Fast correct answer is a lucky guess');
+
+        const careless = decisions.find(d => d.index === 5);
+        assertEquals(careless.decision, 'careless_error', 'Fast wrong answer is a careless mistake');
+
+        const knowledge = decisions.find(d => d.index === 7);
+        assertEquals(knowledge.decision, 'knowledge_error', 'Slow wrong answer is a concept error');
+      });
+
+      it('should analyze risk style profiles', () => {
+        const risk = BehaviourEngine.analyzeRisk(sampleResult);
+        assertBetween(risk.riskIndex, 0, 100, 'Risk index in boundaries');
+        assert(risk.riskType !== 'unknown', 'Risk type evaluated');
+      });
+
+      it('should detect attention drift and focus collapses', () => {
+        const drift = BehaviourEngine.analyzeAttentionDrift(sampleResult);
+        assert(drift.windows.length > 0, 'Should compile windows');
+      });
+
+      it('should calculate recovery parameters', () => {
+        const recovery = BehaviourEngine.analyzeRecovery(sampleResult);
+        assert(recovery.recoveryRate >= 0, 'Recovery rate output');
+      });
+
+      it('should check for panic indicators', () => {
+        const panic = BehaviourEngine.detectPanic(sampleResult);
+        assert(typeof panic.panicDetected === 'boolean', 'Panic outcome computed');
+      });
+
+      it('should calculate composite behaviour score', () => {
+        const bhScore = BehaviourEngine.calculateBehaviourScore(sampleResult);
+        assertBetween(bhScore.score, 0, 100, 'Behaviour score bounds');
+        assert(bhScore.components.decision.score >= 0, 'Includes components');
+      });
+
+      it('should tag student behaviour DNA', () => {
+        const dna = BehaviourEngine.getBehaviourDNA(sampleResult);
+        assert(dna.length > 0, 'Should produce style tags');
+      });
+    });
+
+    // ── 3. MistakeDNA Engine Tests ──
+    describe('MistakeDNA (Doc 20)', () => {
+      it('should root-cause wrong answers to a specific category', () => {
+        const cause1 = MistakeDNA.rootCause(sampleResult.questionResults[5], 29, null);
+        assertEquals(cause1, 'careless', 'Fast wrong is careless');
+
+        const cause2 = MistakeDNA.rootCause(sampleResult.questionResults[6], 29, null);
+        assertEquals(cause2, 'concept', 'Slow wrong is concept');
+      });
+
+      it('should compute score leakage map', () => {
+        const leaks = MistakeDNA.getScoreLeakageMap(sampleResult);
+        assert(leaks.recoverableMarks > 0, 'Recoverable marks should be calculated');
+        const conceptLeak = leaks.leaks.find(l => l.cause === 'concept');
+        assert(conceptLeak && conceptLeak.marks > 0, 'Should capture concept leakage');
+      });
+
+      it('should track recovery rates', () => {
+        const rec = MistakeDNA.getRecoveryScore();
+        assert(rec.recoveryRate >= 0, 'Recovery score calculated');
+      });
+    });
+
+    // ── 4. CorrectionEngine Tests ──
+    describe('CorrectionEngine (Doc 21)', () => {
+      it('should match cause to a targeted prescription drill', () => {
+        const mini = CorrectionEngine.getMicroLearning('concept', 'Quantitative', 2);
+        assertEquals(mini.prescription.type, 'concept_lesson', 'Concept cause maps to concept lesson');
+        assert(mini.prescription.steps.length > 0, 'Should return list of steps');
+      });
+
+      it('should generate active correction missions', () => {
+        const missions = CorrectionEngine.generateCorrectionMissions();
+        // Returns null if no active repeat mistakes are generated
+        assert(missions === null || (typeof missions === 'object' && (missions.prescription || missions.diagnosis)), 'Missions output contracts verified');
+      });
+    });
+
+    // ── 5. PredictiveEngine Tests ──
+    describe('PredictiveEngine (Doc 22)', () => {
+      it('should calculate exponential topic decay', () => {
+        const decay = PredictiveEngine.predictTopicDecay();
+        assert(decay.ready, 'Should evaluate when mock profiles are active');
+        assert(decay.decays.length > 0, 'Calculates decays per topic');
+      });
+
+      it('should perform linear regression score prediction', () => {
+        const forecast = PredictiveEngine.predictNextScore();
+        assert(forecast.ready, 'Score forecast evaluated');
+        assert(forecast.prediction.score > 0, 'Returns predicted score');
+      });
+
+      it('should calculate learning weather forecast', () => {
+        const weather = PredictiveEngine.getLearningWeather();
+        assert(weather.icon !== '', 'Weather icon returned');
+        assert(weather.label !== '', 'Weather condition evaluated');
+      });
+    });
+
+    // ── 6. RecommendationEngine Tests (Doc 25) ──
+    describe('RecommendationEngine (Doc 25)', () => {
+      it('should get next recommended mock test', () => {
+        const nextMock = RecommendationEngine.getNextMock();
+        assert(nextMock && nextMock.subject, 'Should suggest next mock subject');
+      });
+
+      it('should calculate daily focus areas', () => {
+        const dailyFocus = RecommendationEngine.getDailyFocus();
+        assert(dailyFocus && dailyFocus.subject, 'Should recommend a daily focus subject');
+      });
+
+      it('should identify weak topics', () => {
+        const weak = RecommendationEngine.getWeakTopics();
+        assert(Array.isArray(weak), 'Weak topics should be an array');
+      });
+
+      it('should calculate revision priority list', () => {
+        const rev = RecommendationEngine.getRevisionPriority();
+        assert(Array.isArray(rev), 'Revision priority should be an array');
+      });
+
+      it('should generate premium upgrade teaser recommendations', () => {
+        const teaser = RecommendationEngine.getUpgradeTeaser();
+        assert(teaser && teaser.feature, 'Should recommend a teaser feature');
+      });
+    });
+  </script>
+
+  <!-- Execution & DOM Rendering -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const parent = document.getElementById('test-sections');
+      
+      Object.entries(results.sections).forEach(([sectionName, tests]) => {
+        const sectionEl = document.createElement('div');
+        sectionEl.className = 'test-section';
+        
+        let sectionFailed = false;
+        const testItemsHTML = tests.map(t => {
+          if (t.status === 'fail') sectionFailed = true;
+          return `
+            <div class="test-item">
+              <div>
+                <div class="test-name">${t.name}</div>
+                ${t.error ? `<div class="error-log">${t.error}</div>` : ''}
+              </div>
+              <div class="test-status ${t.status}">${t.status.toUpperCase()}</div>
+            </div>
+          `;
+        }).join('');
+
+        sectionEl.innerHTML = `
+          <div class="section-title">
+            <span>${sectionName}</span>
+            <span style="color: ${sectionFailed ? '#ef4444' : '#10b981'}">
+              ${tests.filter(t => t.status === 'pass').length}/${tests.length} Passed
+            </span>
+          </div>
+          <div class="test-list">${testItemsHTML}</div>
+        `;
+        
+        parent.appendChild(sectionEl);
+      });
+
+      // Update summary card
+      const summaryCard = document.getElementById('summary-card');
+      const summaryTitle = document.getElementById('summary-title');
+      const summaryStats = document.getElementById('summary-stats');
+
+      const totalTests = results.passed + results.failed;
+      summaryStats.innerHTML = `Tests Run: ${totalTests} | Passed: ${results.passed} | Failed: ${results.failed}`;
+
+      if (results.failed === 0) {
+        summaryCard.className = 'summary-card all-passed';
+        summaryTitle.innerHTML = `=== TEST RESULTS: ${results.passed}/${totalTests} passed, 0 failed ===`;
+      } else {
+        summaryCard.className = 'summary-card has-failed';
+        summaryTitle.innerHTML = `=== TEST RESULTS: ${results.passed}/${totalTests} passed, ${results.failed} failed ===`;
+      }
+    });
+  </script>
+</body>
+</html>

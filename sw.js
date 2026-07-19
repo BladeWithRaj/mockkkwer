@@ -3,9 +3,9 @@
 // Cache-first for static, network-first for API
 // ============================================
 
-const CACHE_NAME = 'mtp-v29';
-const STATIC_CACHE = 'mtp-static-v26';
-const API_CACHE = 'mtp-api-v26';
+const CACHE_NAME = 'mtp-v30';
+const STATIC_CACHE = 'mtp-static-v27';
+const API_CACHE = 'mtp-api-v27';
 
 // Static assets to precache on install
 const PRECACHE_URLS = [
