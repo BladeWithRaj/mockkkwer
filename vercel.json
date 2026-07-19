@@ -38,7 +38,7 @@
       ]
     },
     {
-      "source": "/sitemap-*.xml",
+      "source": "/sitemap-:name.xml",
       "headers": [
         { "key": "Content-Type", "value": "application/xml" }
       ]
