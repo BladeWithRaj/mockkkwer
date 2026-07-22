@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- SEO: Title & Description -->
-  <title>BTEUP Polytechnic Hub — Free Notes & Paper Generator | Mock24hr</title>
-  <meta name="description" content="Free BTEUP Polytechnic study notes (PDF) and exam paper generator. Unit-wise notes for Applied Physics, Mathematics, FEEE & more. Bilingual support (English + Hindi).">
-  <meta name="keywords" content="BTEUP notes, polytechnic notes PDF, polytechnic paper generator, Applied Physics notes, Mathematics-II notes, FEEE notes, BTEUP exam paper, polytechnic study material, UP polytechnic">
+  <title>BTEUP Polytechnic Notes — Free PDF Download | Mock24hr</title>
+  <meta name="description" content="Free BTEUP Polytechnic study notes PDF download. Subject-wise notes for Applied Physics, Mathematics, FEEE & more. All units in one PDF. Bilingual support (English + Hindi).">
+  <meta name="keywords" content="BTEUP notes, polytechnic notes PDF, Applied Physics notes, Mathematics-I notes, Mathematics-II notes, FEEE notes, BTEUP study material, UP polytechnic notes download">
   <meta name="author" content="Mock24hr">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 
@@ -15,8 +15,8 @@
   <link rel="canonical" href="https://mock24hr.com/polytechnic/">
 
   <!-- SEO: Open Graph -->
-  <meta property="og:title" content="BTEUP Polytechnic Hub — Free Notes & Paper Generator">
-  <meta property="og:description" content="Download unit-wise polytechnic notes (PDF) and generate balanced exam papers with bilingual support. 100% free.">
+  <meta property="og:title" content="BTEUP Polytechnic Notes — Free PDF Download">
+  <meta property="og:description" content="Download free subject-wise polytechnic notes PDF. All units in one file. 100% free.">
   <meta property="og:url" content="https://mock24hr.com/polytechnic/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Mock24hr">
@@ -25,8 +25,8 @@
 
   <!-- SEO: Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="BTEUP Polytechnic Hub — Free Notes & Paper Generator">
-  <meta name="twitter:description" content="Unit-wise polytechnic notes PDF + exam paper generator. Free for all BTEUP students.">
+  <meta name="twitter:title" content="BTEUP Polytechnic Notes — Free PDF Download">
+  <meta name="twitter:description" content="Subject-wise polytechnic notes PDF download. Free for all BTEUP students.">
   <meta name="twitter:image" content="https://mock24hr.com/icons/icon-512.png">
 
   <!-- AEO: Structured Data — WebPage -->
@@ -34,8 +34,8 @@
   {
     "@context": "https://schema.org",
     "@type": "WebPage",
-    "name": "BTEUP Polytechnic Hub",
-    "description": "Free BTEUP Polytechnic study notes and exam paper generator with bilingual support.",
+    "name": "BTEUP Polytechnic Notes",
+    "description": "Free BTEUP Polytechnic study notes PDF download with bilingual support.",
     "url": "https://mock24hr.com/polytechnic/",
     "isPartOf": {
       "@type": "WebSite",
@@ -46,13 +46,13 @@
       "@type": "BreadcrumbList",
       "itemListElement": [
         {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://mock24hr.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Polytechnic Hub", "item": "https://mock24hr.com/polytechnic/"}
+        {"@type": "ListItem", "position": 2, "name": "Polytechnic Notes", "item": "https://mock24hr.com/polytechnic/"}
       ]
     }
   }
   </script>
 
-  <!-- AEO: Structured Data — FAQPage (GEO optimized) -->
+  <!-- AEO: Structured Data — FAQPage -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -63,15 +63,7 @@
         "name": "Where can I download free BTEUP polytechnic notes PDF?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "You can download free unit-wise BTEUP polytechnic notes in PDF format from Mock24hr's Polytechnic Hub. Notes are available for subjects like Applied Physics-I, Mathematics-II, FEEE, and more."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How to generate BTEUP polytechnic exam papers?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Mock24hr's Paper Generator lets you create balanced, weighted exam papers for any BTEUP polytechnic subject. Select your subject, pattern, and language (English/Hindi/Bilingual) and get a printable paper with answer key."
+          "text": "You can download free BTEUP polytechnic notes in PDF format from Mock24hr's Polytechnic Notes page. Notes are available for subjects like Applied Physics-I, Mathematics-I, Mathematics-II, FEEE, and more."
         }
       },
       {
@@ -79,20 +71,20 @@
         "name": "Are BTEUP polytechnic notes available in Hindi?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Yes, Mock24hr provides bilingual support. Notes and papers are available in English, Hindi, and Bilingual (both languages) format."
+          "text": "Yes, Mock24hr provides bilingual notes. PDF notes are available in English, Hindi, and Bilingual format."
         }
       }
     ]
   }
   </script>
 
-  <!-- AEO: Structured Data — EducationalOrganization -->
+  <!-- AEO: Structured Data — Course -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Course",
-    "name": "BTEUP Polytechnic Study Material",
-    "description": "Unit-wise study notes and practice papers for UP polytechnic diploma students",
+    "name": "BTEUP Polytechnic Study Notes",
+    "description": "Complete subject-wise study notes for UP polytechnic diploma students",
     "provider": {
       "@type": "Organization",
       "name": "Mock24hr",
@@ -119,7 +111,8 @@
       --primary: #6c5ce7;
       --primary-light: #a78bfa;
       --primary-glow: rgba(108, 92, 231, 0.3);
-      --success: #00d68f;
+      --accent: #00d68f;
+      --accent-glow: rgba(0, 214, 143, 0.25);
       --warn: #ffa726;
       --danger: #ff5252;
       --text: #ffffff;
@@ -140,6 +133,33 @@
       display: flex;
       flex-direction: column;
       -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    /* ── Background Image ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: url('/assets/polytechnic-bg.png') center/cover no-repeat;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(180deg, rgba(10,10,26,0.7) 0%, rgba(10,10,26,0.4) 40%, rgba(10,10,26,0.85) 100%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body > * {
+      position: relative;
+      z-index: 1;
     }
 
     ::selection {
@@ -156,19 +176,18 @@
     /* ── Header ── */
     .page-header {
       width: 100%;
-      padding: 32px 24px 48px;
+      padding: 40px 24px 56px;
       position: relative;
       overflow: hidden;
     }
     .page-header::before {
       content: '';
       position: absolute;
-      top: 0; left: 50%;
+      top: -40px; left: 50%;
       transform: translateX(-50%);
-      width: 800px; height: 300px;
-      background: rgba(108, 92, 231, 0.15);
-      filter: blur(120px);
-      border-radius: 50%;
+      width: 900px; height: 350px;
+      background: radial-gradient(ellipse, rgba(108, 92, 231, 0.2), transparent 70%);
+      filter: blur(80px);
       pointer-events: none;
       z-index: 0;
     }
@@ -179,7 +198,7 @@
       z-index: 1;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 16px;
     }
     .back-link {
       display: inline-flex;
@@ -196,65 +215,128 @@
     .back-link .material-symbols-outlined { font-size: 18px; transition: transform 0.2s; }
     .back-link:hover .material-symbols-outlined { transform: translateX(-4px); }
 
-    .header-row {
+    .hero-content {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 24px;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .badge-row {
+      display: flex;
+      gap: 10px;
       flex-wrap: wrap;
     }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      border: 1px solid;
+    }
+    .hero-badge.free {
+      background: rgba(0, 214, 143, 0.1);
+      color: var(--accent);
+      border-color: rgba(0, 214, 143, 0.3);
+    }
+    .hero-badge.pdf {
+      background: rgba(108, 92, 231, 0.1);
+      color: var(--primary-light);
+      border-color: rgba(108, 92, 231, 0.3);
+    }
+
     .page-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: clamp(2rem, 5vw, 3rem);
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
       font-weight: 800;
-      background: linear-gradient(135deg, #6c5ce7, #a78bfa);
+      background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #6c5ce7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: -0.5px;
+      line-height: 1.15;
     }
     .page-subtitle {
       color: var(--text-dim);
-      font-size: 1.1rem;
-      margin-top: 4px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 600px;
     }
 
-    /* ── Tab Controls ── */
-    .tab-controls {
+    /* ── Stats Row ── */
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-item .material-symbols-outlined {
+      font-size: 20px;
+      color: var(--primary-light);
+    }
+    .stat-item .stat-num {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .stat-item .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Search Bar ── */
+    .search-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      margin-bottom: 32px;
+    }
+    .search-bar {
+      position: relative;
+      max-width: 480px;
+    }
+    .search-bar .material-symbols-outlined {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 20px;
+      transition: color 0.2s;
+    }
+    .search-bar input {
+      width: 100%;
       background: rgba(18, 18, 42, 0.6);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 6px;
-      display: flex;
-      gap: 4px;
+      padding: 14px 20px 14px 48px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: all 0.25s;
     }
-    .tab-btn {
-      flex: 1;
-      padding: 10px 20px;
-      border-radius: 8px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-dim);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 600;
-      font-size: 0.875rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.3s;
-      white-space: nowrap;
+    .search-bar input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+      background: rgba(18, 18, 42, 0.85);
     }
-    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
-    .tab-btn.active {
-      background: linear-gradient(135deg, rgba(108,92,231,0.2), rgba(167,139,250,0.2));
+    .search-bar input:focus + .material-symbols-outlined,
+    .search-bar:focus-within .material-symbols-outlined {
       color: var(--primary-light);
-      border-color: rgba(108, 92, 231, 0.3);
-      box-shadow: 0 0 15px rgba(108, 92, 231, 0.2);
-      font-weight: 700;
     }
-    .tab-btn .material-symbols-outlined { font-size: 20px; }
+    .search-bar input::placeholder {
+      color: var(--text-dim);
+    }
 
     /* ── Main ── */
     .main-content {
@@ -265,505 +347,191 @@
       padding: 0 24px 96px;
     }
 
-    /* ── Tab Content ── */
-    .tab-panel { display: none; opacity: 0; transition: opacity 0.3s ease; }
-    .tab-panel.active { display: block; opacity: 1; }
-
-    /* ── Glass Card ── */
-    .glass-card {
-      background: rgba(18, 18, 42, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-    }
-
-    /* ── Hover Lift ── */
-    .hover-lift {
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s, border-color 0.3s;
-    }
-    .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px -10px var(--primary-glow);
-      border-color: rgba(167, 139, 250, 0.3);
-    }
-
-    /* ── Stats Grid ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-    .stat-card {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .stat-icon {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary-light);
-      margin-bottom: 8px;
-    }
-    .stat-label { color: var(--text-dim); font-size: 0.8rem; }
-    .stat-value {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
-
-    /* ── Form Grid ── */
-    .form-layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 32px;
-      align-items: start;
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full-width { grid-column: 1 / -1; }
-    .form-group label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--text-dim);
-    }
-    .form-group select,
-    .form-group input[type="text"],
-    .form-group input[type="number"] {
-      background: rgba(18, 18, 42, 0.5);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-      color: var(--text);
-      font-size: 0.9rem;
-      font-family: inherit;
-      transition: all 0.2s;
-      appearance: none;
-      width: 100%;
-    }
-    .form-group select:focus,
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-glow);
-    }
-    .select-wrapper { position: relative; }
-    .select-wrapper .material-symbols-outlined {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      pointer-events: none;
-    }
-
-    /* ── Language Radio ── */
-    .lang-options { display: flex; gap: 12px; flex-wrap: wrap; }
-    .lang-option input { display: none; }
-    .lang-option label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background: rgba(18, 18, 42, 0.3);
-      color: var(--text-dim);
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: all 0.2s;
-    }
-    .lang-option input:checked + label {
-      border-color: var(--primary);
-      background: rgba(108, 92, 231, 0.1);
-      color: var(--primary-light);
-    }
-
-    /* ── Generate Button ── */
-    .btn-generate {
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      color: #fff;
-      border: none;
-      padding: 16px 32px;
-      border-radius: var(--radius);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.3s;
-      box-shadow: 0 8px 25px -5px rgba(108, 92, 231, 0.5);
-    }
-    .btn-generate:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 35px -5px rgba(108, 92, 231, 0.6);
-    }
-    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    /* ── Recent Papers List ── */
-    .recent-list { max-height: 500px; overflow-y: auto; padding-right: 8px; }
-    .recent-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 14px;
-      border-radius: var(--radius);
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .recent-item:hover {
-      border-color: var(--border);
-      background: rgba(255,255,255,0.03);
-    }
-    .recent-icon {
-      width: 40px; height: 40px;
-      border-radius: 8px;
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: rgba(108, 92, 231, 0.7);
-      flex-shrink: 0;
-    }
-    .recent-title {
-      font-size: 0.875rem;
-      font-weight: 700;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .recent-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
-
-    /* ── Notes Controls ── */
-    .notes-controls {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 20px;
-      background: rgba(18, 18, 42, 0.3);
-      padding: 16px;
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-    }
-    .notes-search {
-      flex: 1;
-      max-width: 400px;
-      position: relative;
-    }
-    .notes-search .material-symbols-outlined {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      font-size: 18px;
-    }
-    .notes-search input {
-      width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid transparent;
-      border-radius: var(--radius);
-      padding: 12px 16px 12px 44px;
-      color: var(--text);
-      font-size: 0.875rem;
-      transition: all 0.2s;
-    }
-    .notes-search input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: var(--surface);
-    }
-    .notes-subject-select {
-      position: relative;
-      min-width: 250px;
-    }
-    .notes-subject-select .select-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary-light);
-      font-size: 18px;
-      pointer-events: none;
-    }
-    .notes-subject-select select {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 40px 12px 44px;
-      color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-weight: 600;
-      font-size: 0.875rem;
-      appearance: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .notes-subject-select select:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--primary-glow);
-    }
-    .notes-subject-select .arrow-icon {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-dim);
-      pointer-events: none;
-    }
-
-    /* ── Notes Grid ── */
-    .notes-grid {
+    /* ── Subject Cards Grid ── */
+    .subjects-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 24px;
     }
 
-    .note-card {
+    /* ── Subject Card ── */
+    .subject-card {
+      background: rgba(18, 18, 42, 0.55);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
       border-radius: var(--radius-xl);
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       position: relative;
       overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .note-card .bg-number {
+    .subject-card::before {
+      content: '';
       position: absolute;
-      right: -10px; bottom: -10px;
-      font-size: 8rem;
+      top: 0; left: 0;
+      width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .subject-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(167, 139, 250, 0.35);
+      box-shadow:
+        0 16px 48px -12px rgba(108, 92, 231, 0.3),
+        0 0 0 1px rgba(167, 139, 250, 0.15);
+    }
+    .subject-card:hover::before { opacity: 1; }
+
+    .subject-card .card-bg-icon {
+      position: absolute;
+      right: -20px; bottom: -15px;
+      font-size: 10rem;
       font-weight: 900;
-      color: rgba(255,255,255,0.03);
+      color: rgba(108, 92, 231, 0.04);
       pointer-events: none;
       user-select: none;
       transition: color 0.3s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    .note-card:hover .bg-number { color: rgba(108, 92, 231, 0.08); }
+    .subject-card:hover .card-bg-icon {
+      color: rgba(108, 92, 231, 0.08);
+    }
 
-    .note-header {
+    .card-header {
       display: flex;
-      justify-content: space-between;
       align-items: flex-start;
+      gap: 16px;
       margin-bottom: 20px;
       position: relative;
       z-index: 1;
     }
-    .unit-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 12px;
-      border-radius: 20px;
-      background: rgba(108, 92, 231, 0.2);
-      color: var(--primary-light);
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border: 1px solid rgba(108, 92, 231, 0.3);
-    }
-    .view-count {
+    .card-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: var(--text-dim);
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 24px;
     }
-    .view-count .material-symbols-outlined { font-size: 16px; }
+    .card-icon.physics { background: rgba(0, 214, 143, 0.12); color: var(--accent); }
+    .card-icon.math { background: rgba(108, 92, 231, 0.15); color: var(--primary-light); }
+    .card-icon.electrical { background: rgba(255, 167, 38, 0.12); color: var(--warn); }
+    .card-icon.default { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
 
-    .note-title {
+    .card-meta {
+      flex: 1;
+    }
+    .card-meta .subject-name {
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 1.2rem;
       font-weight: 700;
-      margin-bottom: 8px;
-      position: relative;
-      z-index: 1;
+      line-height: 1.3;
       transition: color 0.2s;
     }
-    .note-card:hover .note-title { color: var(--primary-light); }
+    .subject-card:hover .subject-name { color: var(--primary-light); }
 
-    .note-topics {
+    .card-meta .unit-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+    .card-meta .unit-count .material-symbols-outlined { font-size: 15px; }
+
+    .card-topics {
       font-size: 0.85rem;
       color: var(--text-dim);
-      line-height: 1.5;
+      line-height: 1.6;
       margin-bottom: 24px;
       flex: 1;
       position: relative;
       z-index: 1;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .btn-download {
+    .btn-pdf-download {
       position: relative;
       z-index: 1;
       width: 100%;
-      padding: 12px 16px;
+      padding: 14px 20px;
       border-radius: var(--radius);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: rgba(255,255,255,0.9);
-      font-size: 0.875rem;
-      font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      color: #fff;
+      font-size: 0.9rem;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      transition: all 0.3s;
+      gap: 10px;
       text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 6px 20px -4px rgba(108, 92, 231, 0.45);
     }
-    .btn-download:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: transparent;
+    .btn-pdf-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px -4px rgba(108, 92, 231, 0.6);
     }
-    .btn-download .material-symbols-outlined { font-size: 18px; }
+    .btn-pdf-download:active {
+      transform: translateY(0);
+    }
+    .btn-pdf-download .material-symbols-outlined { font-size: 20px; }
 
-    /* ── Featured Card (wide) ── */
-    .note-card.featured {
-      grid-column: span 2;
-      background: linear-gradient(135deg, var(--surface), rgba(108, 92, 231, 0.05));
+    /* ── Coming Soon Card ── */
+    .subject-card.coming-soon {
+      opacity: 0.5;
+      pointer-events: none;
     }
-    .note-card.featured::after {
-      content: '';
-      position: absolute;
-      top: 0; right: 0;
-      width: 256px; height: 256px;
-      background: rgba(167, 139, 250, 0.05);
-      border-radius: 50%;
-      filter: blur(60px);
+    .subject-card.coming-soon .btn-pdf-download {
+      background: var(--surface2);
+      color: var(--text-dim);
+      box-shadow: none;
+      cursor: not-allowed;
     }
-    .note-card.featured .note-title { font-size: 1.4rem; }
-    .note-card.featured .note-topics {
-      -webkit-line-clamp: 3;
-      max-width: 600px;
-    }
-    .note-card.featured .btn-actions {
-      display: flex; gap: 12px;
-      flex-wrap: wrap;
-      position: relative;
-      z-index: 1;
-    }
-    .note-card.featured .btn-download {
-      width: auto;
-      flex: 0 0 auto;
-    }
-    .note-card.featured .btn-download.primary-dl {
-      background: var(--primary);
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+    .coming-soon-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(255, 167, 38, 0.1);
+      color: var(--warn);
+      font-size: 0.7rem;
       font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(255, 167, 38, 0.2);
     }
 
     /* ── Empty State ── */
     .empty-state {
       text-align: center;
-      padding: 64px 20px;
+      padding: 80px 20px;
       color: var(--text-dim);
+      grid-column: 1 / -1;
     }
     .empty-state .material-symbols-outlined {
-      font-size: 64px;
-      color: rgba(108, 92, 231, 0.3);
+      font-size: 72px;
+      color: rgba(108, 92, 231, 0.25);
       margin-bottom: 16px;
     }
     .empty-state h3 {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       color: var(--text);
       margin-bottom: 8px;
-    }
-
-    /* ── Loading ── */
-    .loading-state {
-      display: none;
-      text-align: center;
-      padding: 48px;
-    }
-    .loading-state.visible { display: block; }
-    .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid var(--border);
-      border-top: 4px solid var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Toast ── */
-    .toast {
-      position: fixed;
-      bottom: 20px; right: 20px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 20px;
-      font-size: 0.875rem;
-      z-index: 1000;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s;
-    }
-    .toast.visible { opacity: 1; transform: translateY(0); }
-    .toast.error { border-color: var(--danger); color: var(--danger); }
-    .toast.success { border-color: var(--success); color: var(--success); }
-
-    /* ── Result Section ── */
-    .result-section { display: none; }
-    .result-section.visible { display: block; }
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-secondary:hover { border-color: var(--primary); background: rgba(108, 92, 231, 0.1); }
-
-    .section-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border-radius: 8px;
-      margin-bottom: 6px;
-      font-size: 0.9rem;
     }
 
     /* ── Footer ── */
@@ -797,22 +565,49 @@
       color: var(--primary-light);
     }
 
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 20px; right: 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 20px;
+      font-size: 0.875rem;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+    }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+    .toast.success { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Animations ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .subject-card {
+      animation: fadeInUp 0.5s ease backwards;
+    }
+    .subject-card:nth-child(1) { animation-delay: 0.05s; }
+    .subject-card:nth-child(2) { animation-delay: 0.1s; }
+    .subject-card:nth-child(3) { animation-delay: 0.15s; }
+    .subject-card:nth-child(4) { animation-delay: 0.2s; }
+    .subject-card:nth-child(5) { animation-delay: 0.25s; }
+    .subject-card:nth-child(6) { animation-delay: 0.3s; }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
-      .form-layout { grid-template-columns: 1fr; }
-      .notes-grid { grid-template-columns: repeat(2, 1fr); }
-      .note-card.featured { grid-column: span 2; }
+      .subjects-grid { grid-template-columns: repeat(2, 1fr); }
     }
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .form-grid { grid-template-columns: 1fr; }
-      .notes-grid { grid-template-columns: 1fr; }
-      .note-card.featured { grid-column: span 1; }
-      .header-row { flex-direction: column; align-items: flex-start; }
-      .tab-controls { width: 100%; }
-      .notes-controls { flex-direction: column; }
-      .notes-subject-select { width: 100%; min-width: unset; }
-      .notes-search { max-width: 100%; }
+    @media (max-width: 640px) {
+      .subjects-grid { grid-template-columns: 1fr; }
+      .page-header { padding: 24px 16px 40px; }
+      .main-content { padding: 0 16px 64px; }
+      .search-container { padding: 0 16px; }
+      .stats-row { gap: 20px; }
     }
 
     /* ── Reduced Motion ── */
@@ -833,188 +628,44 @@
         <span class="material-symbols-outlined">arrow_back</span>
         Back to Home
       </a>
-      <div class="header-row">
-        <div>
-          <h1 class="page-title">BTEUP Polytechnic Hub</h1>
-          <p class="page-subtitle">Generate exam papers & study unit-wise notes</p>
+      <div class="hero-content">
+        <div class="badge-row">
+          <span class="hero-badge free">
+            <span class="material-symbols-outlined" style="font-size:14px">verified</span>
+            100% Free
+          </span>
+          <span class="hero-badge pdf">
+            <span class="material-symbols-outlined" style="font-size:14px">picture_as_pdf</span>
+            PDF Download
+          </span>
         </div>
-        <div class="tab-controls" role="tablist" aria-label="Polytechnic sections">
-          <button class="tab-btn active" id="tabBtnPaper" role="tab" aria-selected="true" aria-controls="panelPaper" onclick="switchTab('paper')">
-            <span class="material-symbols-outlined">description</span>
-            Paper Generator
-          </button>
-          <button class="tab-btn" id="tabBtnNotes" role="tab" aria-selected="false" aria-controls="panelNotes" onclick="switchTab('notes')">
-            <span class="material-symbols-outlined">menu_book</span>
-            Study Notes
-          </button>
+        <h1 class="page-title">BTEUP Polytechnic<br>Study Notes</h1>
+        <p class="page-subtitle">Subject-wise complete notes — sabhi units ek hi PDF mein. Download karo aur offline padho. Bilingual support available.</p>
+        <div class="stats-row" id="statsRow">
+          <!-- Populated by JS -->
         </div>
       </div>
     </div>
   </header>
 
+  <!-- ── Search ── -->
+  <div class="search-container">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search subjects... (e.g. Physics, Math, FEEE)" oninput="filterSubjects()" aria-label="Search subjects">
+      <span class="material-symbols-outlined">search</span>
+    </div>
+  </div>
+
   <!-- ── Main Content ── -->
   <main class="main-content">
-
-    <!-- ═══ TAB 1: Paper Generator ═══ -->
-    <section class="tab-panel active" id="panelPaper" role="tabpanel" aria-labelledby="tabBtnPaper">
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="glass-card stat-card hover-lift">
-          <div class="stat-icon"><span class="material-symbols-outlined">library_books</span></div>
-          <span class="stat-label">Total Subjects</span>
-          <span class="stat-value" id="statSubjects">-</span>
-        </div>
-        <div class="glass-card stat-card hover-lift">
-          <div class="stat-icon"><span class="material-symbols-outlined">format_list_numbered</span></div>
-          <span class="stat-label">Questions</span>
-          <span class="stat-value" id="statQuestions">-</span>
-        </div>
-        <div class="glass-card stat-card hover-lift" style="position:relative;overflow:hidden">
-          <div style="position:absolute;right:-16px;top:-16px;width:96px;height:96px;background:rgba(0,214,143,0.1);border-radius:50%;filter:blur(20px)"></div>
-          <div class="stat-icon" style="background:rgba(0,214,143,0.1);color:var(--success)"><span class="material-symbols-outlined">verified</span></div>
-          <span class="stat-label">Approved</span>
-          <span class="stat-value" style="color:var(--success)" id="statApproved">-</span>
-        </div>
-        <div class="glass-card stat-card hover-lift">
-          <div class="stat-icon"><span class="material-symbols-outlined">print</span></div>
-          <span class="stat-label">Generated</span>
-          <span class="stat-value" id="statPapers">-</span>
-        </div>
-      </div>
-
-      <!-- Form + Recent Papers -->
-      <div class="form-layout">
-        <!-- Form -->
-        <div class="glass-card" style="border-radius:var(--radius-xl);padding:32px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;right:0;width:256px;height:256px;background:rgba(108,92,231,0.08);border-radius:50%;filter:blur(60px);transform:translate(50%,-50%)"></div>
-          <h2 style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:1.3rem;margin-bottom:28px;display:flex;align-items:center;gap:10px;position:relative;z-index:1">
-            <span class="material-symbols-outlined" style="color:var(--primary-light)">tune</span>
-            Configure Paper
-          </h2>
-          <form id="generateForm" onsubmit="return handleGenerate(event)">
-            <div class="form-grid">
-              <div class="form-group">
-                <label for="subjectSelect">Select Subject</label>
-                <div class="select-wrapper">
-                  <select id="subjectSelect" required onchange="loadSubjectDetails()">
-                    <option value="">Choose a subject...</option>
-                  </select>
-                  <span class="material-symbols-outlined">expand_more</span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="patternSelect">Exam Pattern</label>
-                <div class="select-wrapper">
-                  <select id="patternSelect">
-                    <option value="">Default Pattern</option>
-                  </select>
-                  <span class="material-symbols-outlined">expand_more</span>
-                </div>
-              </div>
-              <div class="form-group full-width">
-                <label for="paperTitle">Paper Title (Optional)</label>
-                <input type="text" id="paperTitle" placeholder="e.g. Mid-Term Practice Test A">
-              </div>
-              <div class="form-group full-width">
-                <label>Paper Language</label>
-                <div class="lang-options">
-                  <div class="lang-option">
-                    <input type="radio" name="language" value="bilingual" id="langBi" checked>
-                    <label for="langBi">
-                      <span class="material-symbols-outlined" style="font-size:18px">translate</span>
-                      Bilingual (EN + HI)
-                    </label>
-                  </div>
-                  <div class="lang-option">
-                    <input type="radio" name="language" value="en" id="langEn">
-                    <label for="langEn">English</label>
-                  </div>
-                  <div class="lang-option">
-                    <input type="radio" name="language" value="hi" id="langHi">
-                    <label for="langHi">Hindi</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <button type="submit" class="btn-generate" id="generateBtn">
-              <span class="material-symbols-outlined">auto_awesome</span>
-              Generate Paper
-            </button>
-          </form>
-        </div>
-
-        <!-- Recent Papers -->
-        <div class="glass-card" style="border-radius:var(--radius-xl)">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-            <h3 style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:1.05rem">Recent Papers</h3>
-          </div>
-          <div class="recent-list" id="recentPapers">
-            <div style="padding:12px;color:var(--text-dim);font-size:0.875rem">Loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading -->
-      <div class="loading-state" id="loadingSection">
-        <div class="spinner"></div>
-        <div style="font-weight:600">Generating balanced paper...</div>
-        <div style="color:var(--text-dim);margin-top:4px;font-size:0.85rem">Applying unit weightage, difficulty balancing, and anti-repetition</div>
-      </div>
-
-      <!-- Result -->
-      <div class="result-section" id="resultSection" style="margin-top:24px">
-        <div class="glass-card" style="border-radius:var(--radius-xl)">
-          <div class="result-header">
-            <div>
-              <h3 style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:1.1rem;display:flex;align-items:center;gap:8px">
-                <span class="material-symbols-outlined" style="color:var(--success)">check_circle</span>
-                Paper Generated
-              </h3>
-              <div style="color:var(--text-dim);font-size:0.85rem;margin-top:4px" id="resultMeta"></div>
-            </div>
-            <div class="result-actions">
-              <button class="btn-secondary" onclick="openPaper()">🖨️ Print</button>
-              <button class="btn-secondary" onclick="showAnswerKey()">🔑 Answer Key</button>
-              <button class="btn-secondary" onclick="generateAnother()">🔄 New Paper</button>
-            </div>
-          </div>
-          <div id="sectionsSummary"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ TAB 2: Study Notes ═══ -->
-    <section class="tab-panel" id="panelNotes" role="tabpanel" aria-labelledby="tabBtnNotes">
-      <!-- Controls -->
-      <div class="notes-controls">
-        <div class="notes-subject-select">
-          <span class="material-symbols-outlined select-icon">book</span>
-          <select id="notesSubjectSelect" onchange="loadNotes()" aria-label="Select subject for notes">
-            <option value="">Loading subjects...</option>
-          </select>
-          <span class="material-symbols-outlined arrow-icon">arrow_drop_down</span>
-        </div>
-        <div class="notes-search">
-          <span class="material-symbols-outlined">search</span>
-          <input type="text" id="notesSearchInput" placeholder="Filter units or topics..." oninput="filterNotes()" aria-label="Search notes">
-        </div>
-      </div>
-
-      <!-- Notes Grid -->
-      <div class="notes-grid" id="notesGrid">
-        <div class="empty-state" style="grid-column:1/-1">
-          <span class="material-symbols-outlined">menu_book</span>
-          <h3>Select a subject to view notes</h3>
-          <p>Choose a subject from the dropdown above to see unit-wise study notes.</p>
-        </div>
-      </div>
-    </section>
-
+    <div class="subjects-grid" id="subjectsGrid">
+      <!-- Populated by JS -->
+    </div>
   </main>
 
   <!-- ── Footer ── -->
   <footer class="page-footer">
-    <div class="footer-brand">BTEUP Polytechnic Hub</div>
+    <div class="footer-brand">BTEUP Polytechnic Notes</div>
     <div class="footer-links">
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Service</a>
@@ -1031,330 +682,169 @@
     // ═══════════════════════════════════════
     const SUPABASE_STORAGE_BASE = 'https://ygzqmcmiroomjajoxezt.supabase.co/storage/v1/object/public/Polytechnic%20Notes/NOTES';
 
-    // ── Direct PDF URL per subject ──
+    // ── Subject PDF Map ──
     // Each subject has ONE combined PDF (all units in single file)
-    // Add new subjects here as you upload PDFs to Supabase Storage
     const SUBJECT_PDF_MAP = {
-      'Applied Physics-I': `${SUPABASE_STORAGE_BASE}/Applied%20Physics-I/ChatGPT%20Image%20Jul%2013%2C%202026%2C%2003_30_47%20PM.pdf`,
-      'Mathematics-I': `${SUPABASE_STORAGE_BASE}/Mathamatics-1/ChatGPT%20Image%20Jul%2013%2C%202026%2C%2002_56_07%20PM.pdf`,
+      'Applied Physics-I': `${SUPABASE_STORAGE_BASE}/Applied%20Physics-I/Applied%20Physics-I%20UNIT-1.pdf`,
+      'Mathematics-I': `${SUPABASE_STORAGE_BASE}/Mathamatics-1/Mathamatics-1%20(1).pdf`,
     };
 
-    // Unit data per subject (title + topics for UI display)
-    // Each card shows unit info but ALL download buttons point to the same combined PDF
-    const UNIT_DATA = {
-      'Applied Physics-I': [
-        { unit: 1, title: 'Measurement & Units', topics: 'Physical quantities, SI units, dimensions, error analysis, significant figures, vernier caliper, screw gauge.' },
-        { unit: 2, title: 'Force and Motion', topics: "Newton's laws of motion, momentum, impulse, friction, circular motion, centripetal force." },
-        { unit: 3, title: 'Work, Power & Energy', topics: 'Work done, kinetic & potential energy, conservation of energy, power, simple machines.' },
-        { unit: 4, title: 'Rotational Motion', topics: 'Torque, moment of inertia, angular momentum, parallel & perpendicular axis theorems.' },
-        { unit: 5, title: 'Properties of Matter', topics: "Elasticity, Hooke's law, stress-strain, surface tension, viscosity, Bernoulli's theorem." }
-      ],
-      'Mathematics-I': [
-        { unit: 1, title: 'Algebra', topics: 'AP, GP, HP series, logarithms, binomial theorem, partial fractions, permutations & combinations.' },
-        { unit: 2, title: 'Trigonometry', topics: 'Compound angles, multiple & sub-multiple angles, transformation formulae, inverse trigonometric functions.' },
-        { unit: 3, title: 'Differential Calculus-I', topics: 'Functions, limits, continuity, differentiation from first principles, product rule, quotient rule, chain rule.' },
-        { unit: 4, title: 'Coordinate Geometry', topics: 'Straight lines, distance formula, section formula, slope, angle between lines, pair of straight lines.' },
-        { unit: 5, title: 'Statistics & Probability', topics: 'Mean, median, mode, standard deviation, probability theorems, Bayes theorem, probability distribution.' }
-      ],
-      'Mathematics-II': [
-        { unit: 1, title: 'Determinants & Matrices', topics: "Properties of determinants, minors, cofactors, Cramer's rule, types of matrices, inverse, rank." },
-        { unit: 2, title: 'Differential Calculus-II', topics: "Successive differentiation, Leibnitz theorem, partial differentiation, Euler's theorem, maxima & minima." },
-        { unit: 3, title: 'Integral Calculus', topics: "Integration by parts, definite integrals, reduction formulae, beta & gamma functions, numerical integration." },
-        { unit: 4, title: 'Differential Equations', topics: 'Order & degree, variable separable, homogeneous, linear, Bernoulli, exact, 2nd order with constant coefficients.' },
-        { unit: 5, title: 'Coordinate Geometry & Vectors', topics: 'Circle, parabola, ellipse, hyperbola, dot product, cross product, scalar triple product.' }
-      ],
-      'FEEE': [
-        { unit: 1, title: 'DC Circuits & Magnetic Circuits', topics: "Ohm's law, Kirchhoff's laws, series-parallel, star-delta, Faraday's laws, self & mutual inductance." },
-        { unit: 2, title: 'AC Circuits', topics: 'RMS & average values, phasor diagrams, R-L-C circuits, power factor, resonance, three-phase systems.' },
-        { unit: 3, title: 'Electrical Machines', topics: 'Transformer, EMF equation, losses, DC motor types, induction motor, synchronous motor.' },
-        { unit: 4, title: 'Electronic Devices', topics: 'PN junction, zener diode, rectifiers, BJT basics, FET/MOSFET, transistor as switch/amplifier.' },
-        { unit: 5, title: 'Digital Electronics & Instruments', topics: 'Logic gates, Boolean algebra, adder, flip-flops, CRO, multimeter, wattmeter.' }
-      ]
+    // Clean download filenames (what the user sees when saving the file)
+    const DOWNLOAD_NAMES = {
+      'Applied Physics-I': 'Applied-Physics-I-Complete-Notes.pdf',
+      'Mathematics-I': 'Mathematics-I-Complete-Notes.pdf',
     };
 
-    let generatedHTML = '';
-    let generatedAnswerKey = null;
-    let allSubjects = [];
+    // ── Subject Data ──
+    // Full list of subjects with metadata. Subjects with PDF get download button.
+    // Subjects without PDF show "Coming Soon".
+    const SUBJECTS = [
+      {
+        name: 'Applied Physics-I',
+        code: '4101',
+        semester: 1,
+        icon: 'science',
+        iconClass: 'physics',
+        units: 5,
+        topics: 'Measurement & Units, Force & Motion, Work Power Energy, Rotational Motion, Properties of Matter — Elasticity, Surface Tension, Viscosity',
+      },
+      {
+        name: 'Mathematics-I',
+        code: '4101',
+        semester: 1,
+        icon: 'calculate',
+        iconClass: 'math',
+        units: 5,
+        topics: 'Algebra (AP, GP, HP), Trigonometry, Differential Calculus, Coordinate Geometry, Statistics & Probability',
+      },
+      {
+        name: 'Mathematics-II',
+        code: '4201',
+        semester: 2,
+        icon: 'functions',
+        iconClass: 'math',
+        units: 5,
+        topics: "Determinants & Matrices, Leibnitz Theorem, Euler's Theorem, Integral Calculus, Differential Equations, Vectors",
+      },
+      {
+        name: 'FEEE',
+        code: '4105',
+        semester: 1,
+        icon: 'bolt',
+        iconClass: 'electrical',
+        units: 5,
+        topics: "DC Circuits, Kirchhoff's Laws, AC Circuits, Transformers, Semiconductor Devices, Digital Electronics",
+      },
+    ];
 
     // ═══════════════════════════════════════
-    // TAB SWITCHING
+    // RENDER SUBJECTS
     // ═══════════════════════════════════════
-    function switchTab(tab) {
-      // Panels
-      document.getElementById('panelPaper').classList.toggle('active', tab === 'paper');
-      document.getElementById('panelNotes').classList.toggle('active', tab === 'notes');
+    function renderSubjects(filter = '') {
+      const grid = document.getElementById('subjectsGrid');
+      const query = filter.toLowerCase().trim();
 
-      // Buttons
-      document.getElementById('tabBtnPaper').classList.toggle('active', tab === 'paper');
-      document.getElementById('tabBtnNotes').classList.toggle('active', tab === 'notes');
-
-      // ARIA
-      document.getElementById('tabBtnPaper').setAttribute('aria-selected', tab === 'paper');
-      document.getElementById('tabBtnNotes').setAttribute('aria-selected', tab === 'notes');
-
-      // Load notes data on first switch
-      if (tab === 'notes' && document.getElementById('notesSubjectSelect').options.length <= 1) {
-        populateNotesSubjects();
-      }
-    }
-
-    // ═══════════════════════════════════════
-    // PAPER GENERATOR (existing logic)
-    // ═══════════════════════════════════════
-    (async () => {
-      await loadSubjects();
-      await loadRecentPapers();
-      loadStats();
-    })();
-
-    async function loadSubjects() {
-      try {
-        const r = await fetch('/api/polytechnic/subjects');
-        const d = await r.json();
-        allSubjects = d.subjects || [];
-        const sel = document.getElementById('subjectSelect');
-        allSubjects.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          const branchLabel = s.is_common ? 'Common' : (s.branch || 'General');
-          opt.textContent = `Sem-${s.semester} | ${s.subject_name} (${s.subject_code})`;
-          opt.dataset.name = s.subject_name;
-          sel.appendChild(opt);
-        });
-        document.getElementById('statSubjects').textContent = allSubjects.length;
-      } catch(e) { console.warn('Failed to load subjects:', e.message); }
-    }
-
-    async function loadSubjectDetails() {
-      const subjectId = document.getElementById('subjectSelect').value;
-      if (!subjectId) return;
-      try {
-        const r = await fetch(`/api/polytechnic/patterns?subject_id=${subjectId}`);
-        const d = await r.json();
-        const sel = document.getElementById('patternSelect');
-        sel.innerHTML = '<option value="">Default Pattern</option>';
-        (d.patterns || []).forEach(p => {
-          const opt = document.createElement('option');
-          opt.value = p.id;
-          opt.textContent = `${p.pattern_name} (${p.total_marks}M, ${p.time_minutes}min)`;
-          sel.appendChild(opt);
-        });
-      } catch(e) {}
-    }
-
-    async function handleGenerate(e) {
-      e.preventDefault();
-      const subjectId = document.getElementById('subjectSelect').value;
-      if (!subjectId) return toast('Select a subject first', 'error');
-
-      document.getElementById('generateBtn').disabled = true;
-      document.getElementById('loadingSection').classList.add('visible');
-      document.getElementById('resultSection').classList.remove('visible');
-
-      try {
-        const lang = document.querySelector('input[name="language"]:checked')?.value || 'bilingual';
-        const r = await fetch('/api/polytechnic/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subject_id: parseInt(subjectId),
-            pattern_id: document.getElementById('patternSelect').value || null,
-            title: document.getElementById('paperTitle').value || null,
-            language: lang,
-            watermark: '',
-            exclude_recent_days: 30,
-            show_answer_key: true
-          })
-        });
-        const d = await r.json();
-        if (!r.ok || !d.success) throw new Error(d.error || 'Generation failed');
-
-        generatedHTML = d.html;
-        generatedAnswerKey = d.answer_key;
-        document.getElementById('resultMeta').textContent =
-          `${d.total_questions} Questions | ${d.total_marks} Marks | ${d.time_minutes} Min | Paper #${d.paper_id}`;
-
-        const summary = document.getElementById('sectionsSummary');
-        summary.innerHTML = '';
-        (d.sections_summary || []).forEach(s => {
-          summary.innerHTML += `<div class="section-row">
-            <span style="font-weight:600">${s.name}</span>
-            <span style="color:var(--text-dim);font-size:0.8rem">${s.questions}Q = ${s.marks}M</span>
-          </div>`;
-        });
-
-        document.getElementById('resultSection').classList.add('visible');
-        toast('Paper generated successfully!', 'success');
-        loadRecentPapers();
-      } catch(err) {
-        toast(err.message, 'error');
-      } finally {
-        document.getElementById('generateBtn').disabled = false;
-        document.getElementById('loadingSection').classList.remove('visible');
-      }
-    }
-
-    function openPaper() {
-      if (!generatedHTML) return toast('No paper generated yet', 'error');
-      const w = window.open('', '_blank');
-      w.document.write(generatedHTML);
-      w.document.close();
-    }
-    function showAnswerKey() {
-      if (!generatedHTML) return toast('No paper generated yet', 'error');
-      const w = window.open('', '_blank');
-      const html = generatedHTML.replace('style="display:none;"', 'style="display:block;"');
-      w.document.write(html);
-      w.document.close();
-    }
-    function generateAnother() {
-      document.getElementById('resultSection').classList.remove('visible');
-      document.getElementById('subjectSelect').focus();
-    }
-
-    async function loadRecentPapers() {
-      try {
-        const r = await fetch('/api/polytechnic/papers');
-        const d = await r.json();
-        const cont = document.getElementById('recentPapers');
-        if (!d.papers?.length) {
-          cont.innerHTML = '<div style="padding:12px;color:var(--text-dim);font-size:0.875rem">No papers generated yet.</div>';
-          document.getElementById('statPapers').textContent = '0';
-          return;
-        }
-        document.getElementById('statPapers').textContent = d.papers.length;
-        cont.innerHTML = d.papers.slice(0, 8).map(p => `
-          <div class="recent-item">
-            <div class="recent-icon"><span class="material-symbols-outlined">picture_as_pdf</span></div>
-            <div style="flex:1;min-width:0">
-              <div class="recent-title">${p.title}</div>
-              <div class="recent-meta">${p.paper_type || 'Practice'} • ${new Date(p.created_at).toLocaleDateString('en-IN')}</div>
-            </div>
-          </div>
-        `).join('');
-      } catch(e) { console.warn('Failed to load papers:', e.message); }
-    }
-
-    async function loadStats() {
-      try {
-        const r1 = await fetch('/api/polytechnic/questions?status=approved&limit=1');
-        const d1 = await r1.json();
-        document.getElementById('statApproved').textContent = d1.total || 0;
-        const r2 = await fetch('/api/polytechnic/questions?status=pending&limit=1');
-        const d2 = await r2.json();
-        document.getElementById('statQuestions').textContent = (d1.total || 0) + (d2.total || 0);
-      } catch(e) {}
-    }
-
-    // ═══════════════════════════════════════
-    // STUDY NOTES
-    // ═══════════════════════════════════════
-    function populateNotesSubjects() {
-      const sel = document.getElementById('notesSubjectSelect');
-      sel.innerHTML = '<option value="">Select Subject...</option>';
-
-      // Only show subjects that have PDF uploaded in SUBJECT_PDF_MAP
-      const notesSubjects = Object.keys(SUBJECT_PDF_MAP);
-      notesSubjects.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        sel.appendChild(opt);
+      const filtered = SUBJECTS.filter(s => {
+        if (!query) return true;
+        return s.name.toLowerCase().includes(query) ||
+               s.topics.toLowerCase().includes(query) ||
+               s.code.includes(query);
       });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <span class="material-symbols-outlined">search_off</span>
+            <h3>No subjects found</h3>
+            <p>Try a different search term.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((s, i) => {
+        const hasPdf = !!SUBJECT_PDF_MAP[s.name];
+        const pdfUrl = SUBJECT_PDF_MAP[s.name] || '#';
+        const downloadName = DOWNLOAD_NAMES[s.name] || '';
+        const comingSoonClass = hasPdf ? '' : ' coming-soon';
+
+        return `
+          <div class="subject-card${comingSoonClass}" data-subject="${s.name}">
+            <div class="card-bg-icon">${s.code.slice(-2)}</div>
+            <div class="card-header">
+              <div class="card-icon ${s.iconClass}">
+                <span class="material-symbols-outlined">${s.icon}</span>
+              </div>
+              <div class="card-meta">
+                <div class="subject-name">${s.name}</div>
+                <div class="unit-count">
+                  <span class="material-symbols-outlined">folder</span>
+                  ${s.units} Units • Sem ${s.semester}
+                  ${!hasPdf ? '<span class="coming-soon-badge" style="margin-left:8px">Coming Soon</span>' : ''}
+                </div>
+              </div>
+            </div>
+            <p class="card-topics">${s.topics}</p>
+            <a href="${pdfUrl}" target="_blank" rel="noopener" class="btn-pdf-download"
+               ${hasPdf && downloadName ? `download="${downloadName}"` : ''}
+               ${hasPdf ? `onclick="trackDownload('${s.name}')"` : 'onclick="return false;"'}
+               aria-label="${hasPdf ? 'Download ' + s.name + ' PDF' : s.name + ' coming soon'}">
+              <span class="material-symbols-outlined">${hasPdf ? 'download' : 'hourglass_empty'}</span>
+              ${hasPdf ? 'Download PDF' : 'Coming Soon'}
+            </a>
+          </div>`;
+      }).join('');
     }
 
-    function loadNotes() {
-      const subjectName = document.getElementById('notesSubjectSelect').value;
-      const grid = document.getElementById('notesGrid');
+    // ═══════════════════════════════════════
+    // RENDER STATS
+    // ═══════════════════════════════════════
+    function renderStats() {
+      const totalSubjects = SUBJECTS.length;
+      const availablePdfs = Object.keys(SUBJECT_PDF_MAP).length;
+      const totalUnits = SUBJECTS.reduce((sum, s) => sum + s.units, 0);
 
-      if (!subjectName) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column:1/-1">
-            <span class="material-symbols-outlined">menu_book</span>
-            <h3>Select a subject to view notes</h3>
-            <p>Choose a subject from the dropdown above to see unit-wise study notes.</p>
-          </div>`;
-        return;
-      }
-
-      const units = UNIT_DATA[subjectName];
-      const pdfUrl = SUBJECT_PDF_MAP[subjectName];
-
-      if (!units) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column:1/-1">
-            <span class="material-symbols-outlined">hourglass_empty</span>
-            <h3>Notes coming soon for ${subjectName}</h3>
-            <p>We're preparing unit-wise notes for this subject. Check back soon!</p>
-          </div>`;
-        return;
-      }
-
-      if (!pdfUrl) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column:1/-1">
-            <span class="material-symbols-outlined">upload_file</span>
-            <h3>PDF not uploaded yet for ${subjectName}</h3>
-            <p>Notes content is ready but the PDF file hasn't been uploaded to storage yet.</p>
-          </div>`;
-        return;
-      }
-
-      // Top download banner — one combined PDF for all units
-      let html = `
-        <div class="glass-card hover-lift" style="grid-column:1/-1;border-radius:var(--radius-xl);padding:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;background:linear-gradient(135deg,var(--surface),rgba(108,92,231,0.08))">
-          <div style="display:flex;align-items:center;gap:16px">
-            <div style="width:56px;height:56px;border-radius:14px;background:rgba(108,92,231,0.15);display:flex;align-items:center;justify-content:center">
-              <span class="material-symbols-outlined" style="font-size:28px;color:var(--primary-light)">picture_as_pdf</span>
-            </div>
-            <div>
-              <h3 style="font-family:'Plus Jakarta Sans';font-weight:700;font-size:1.1rem">${subjectName} — Complete Notes</h3>
-              <p style="color:var(--text-dim);font-size:0.85rem;margin-top:2px">All ${units.length} units in one PDF • Download & study offline</p>
-            </div>
-          </div>
-          <a href="${pdfUrl}" target="_blank" rel="noopener" class="btn-download primary-dl" style="width:auto;padding:14px 28px;border-radius:var(--radius);background:var(--primary);color:#fff;border:none;box-shadow:0 4px 15px rgba(108,92,231,0.4);font-weight:700" aria-label="Download ${subjectName} complete PDF">
-            <span class="material-symbols-outlined">download</span>
-            Download Complete PDF
-          </a>
+      document.getElementById('statsRow').innerHTML = `
+        <div class="stat-item">
+          <span class="material-symbols-outlined">library_books</span>
+          <span class="stat-num">${totalSubjects}</span>
+          <span class="stat-label">Subjects</span>
+        </div>
+        <div class="stat-item">
+          <span class="material-symbols-outlined">folder</span>
+          <span class="stat-num">${totalUnits}</span>
+          <span class="stat-label">Units</span>
+        </div>
+        <div class="stat-item">
+          <span class="material-symbols-outlined">picture_as_pdf</span>
+          <span class="stat-num">${availablePdfs}</span>
+          <span class="stat-label">PDFs Ready</span>
         </div>
       `;
-
-      // Unit cards — show topics covered, each card also links to same PDF
-      html += units.map((u, i) => {
-        return `
-          <div class="glass-card note-card hover-lift" data-unit="${u.unit}" data-title="${u.title}" data-topics="${u.topics}">
-            <div class="bg-number">${u.unit}</div>
-            <div class="note-header">
-              <span class="unit-badge">Unit ${u.unit}</span>
-            </div>
-            <h3 class="note-title">${u.title}</h3>
-            <p class="note-topics">${u.topics}</p>
-            <a href="${pdfUrl}" target="_blank" rel="noopener" class="btn-download" aria-label="View Unit ${u.unit} in PDF">
-              <span class="material-symbols-outlined">open_in_new</span>
-              View in PDF
-            </a>
-          </div>
-        `;
-      }).join('');
-
-      grid.innerHTML = html;
     }
 
-    function filterNotes() {
-      const query = document.getElementById('notesSearchInput').value.toLowerCase().trim();
-      const cards = document.querySelectorAll('.note-card');
+    // ═══════════════════════════════════════
+    // SEARCH / FILTER
+    // ═══════════════════════════════════════
+    function filterSubjects() {
+      const query = document.getElementById('searchInput').value;
+      renderSubjects(query);
+    }
 
-      cards.forEach(card => {
-        if (!query) {
-          card.style.display = '';
-          return;
+    // ═══════════════════════════════════════
+    // TRACK DOWNLOAD (analytics event)
+    // ═══════════════════════════════════════
+    function trackDownload(subjectName) {
+      // EventBus integration — emit download event
+      try {
+        if (window.EventBus) {
+          window.EventBus.emit('notes_downloaded', {
+            subject: subjectName,
+            source: 'polytechnic',
+            timestamp: Date.now()
+          });
         }
-        const title = (card.dataset.title || '').toLowerCase();
-        const topics = (card.dataset.topics || '').toLowerCase();
-        const unit = (card.dataset.unit || '');
-        const match = title.includes(query) || topics.includes(query) || unit === query;
-        card.style.display = match ? '' : 'none';
-      });
+      } catch(e) { /* silent */ }
+      toast(`Downloading ${subjectName} notes...`, 'success');
     }
 
     // ═══════════════════════════════════════
@@ -1368,15 +858,10 @@
     }
 
     // ═══════════════════════════════════════
-    // URL HASH ROUTING (deep links)
+    // INIT
     // ═══════════════════════════════════════
-    function checkHash() {
-      if (window.location.hash === '#notes') {
-        switchTab('notes');
-      }
-    }
-    window.addEventListener('hashchange', checkHash);
-    checkHash();
+    renderStats();
+    renderSubjects();
   </script>
 </body>
 </html>
