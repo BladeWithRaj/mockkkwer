@@ -1144,12 +1144,14 @@
     const SUBJECT_PDF_MAP = {
       'Applied Physics-I': `${SUPABASE_STORAGE_BASE}/Applied%20Physics-I/Applied%20Physics-I%20UNIT-1.pdf`,
       'Mathematics-I': `${SUPABASE_STORAGE_BASE}/Mathamatics-1/Mathamatics-1%20(1).pdf`,
+      'Applied Chemistry': `${SUPABASE_STORAGE_BASE}/Applied%20Chemistry/Applied%20Chemistry%20%20(1).pdf`,
     };
 
     // Clean download filenames (what the user sees when saving the file)
     const DOWNLOAD_NAMES = {
       'Applied Physics-I': 'Applied-Physics-I-Complete-Notes.pdf',
       'Mathematics-I': 'Mathematics-I-Complete-Notes.pdf',
+      'Applied Chemistry': 'Applied-Chemistry-Complete-Notes.pdf',
     };
 
     // ── Subject Data ──
@@ -1191,6 +1193,15 @@
         iconClass: 'electrical',
         units: 5,
         topics: "DC Circuits, Kirchhoff's Laws, AC Circuits, Transformers, Semiconductor Devices, Digital Electronics",
+      },
+      {
+        name: 'Applied Chemistry',
+        code: '4103',
+        semester: 1,
+        icon: 'science',
+        iconClass: 'physics',
+        units: 5,
+        topics: 'Atomic Structure, Fuels & Combustion, Water Treatment, Polymers & Plastics, Corrosion & its Prevention',
       },
     ];
 
