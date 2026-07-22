@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- SEO: Title & Description -->
-  <title>BTEUP Polytechnic Notes — Free PDF Download | Mock24hr</title>
+  <title>BTEUP Polytechnic Hub — Notes & Paper Generator | Mock24hr</title>
   <meta name="description" content="Free BTEUP Polytechnic study notes PDF download. Subject-wise notes for Applied Physics, Mathematics, FEEE & more. All units in one PDF. Bilingual support (English + Hindi).">
   <meta name="keywords" content="BTEUP notes, polytechnic notes PDF, Applied Physics notes, Mathematics-I notes, Mathematics-II notes, FEEE notes, BTEUP study material, UP polytechnic notes download">
   <meta name="author" content="Mock24hr">
@@ -598,16 +598,361 @@
     .subject-card:nth-child(5) { animation-delay: 0.25s; }
     .subject-card:nth-child(6) { animation-delay: 0.3s; }
 
+    /* ── Tab Controls ── */
+    .tab-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 24px;
+      margin-bottom: 32px;
+    }
+    .tab-controls {
+      background: rgba(18, 18, 42, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+      display: inline-flex;
+      gap: 4px;
+    }
+    .tab-btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(108,92,231,0.2), rgba(167,139,250,0.2));
+      color: var(--primary-light);
+      border-color: rgba(108, 92, 231, 0.3);
+      box-shadow: 0 0 20px rgba(108, 92, 231, 0.2);
+      font-weight: 700;
+    }
+    .tab-btn .material-symbols-outlined { font-size: 20px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; animation: fadeInUp 0.4s ease; }
+
+    /* ── Paper Generator ── */
+    .gen-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    .gen-form-card {
+      background: rgba(18, 18, 42, 0.55);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .gen-form-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--accent), #00b4d8);
+    }
+    .gen-form-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .gen-form-card h3 .material-symbols-outlined { color: var(--accent); }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group select,
+    .form-group input[type="text"] {
+      width: 100%;
+      background: rgba(10, 10, 26, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: all 0.25s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-group select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23a1a1aa'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
+    .form-group select:focus,
+    .form-group input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .form-group select option {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .lang-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .lang-option input { display: none; }
+    .lang-option label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: rgba(10, 10, 26, 0.5);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lang-option input:checked + label {
+      background: rgba(108, 92, 231, 0.15);
+      border-color: var(--primary);
+      color: var(--primary-light);
+      box-shadow: 0 0 12px rgba(108, 92, 231, 0.15);
+    }
+
+    .btn-generate {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--accent), #00b4d8);
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 6px 24px -4px rgba(0, 214, 143, 0.4);
+      margin-top: 8px;
+    }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px -4px rgba(0, 214, 143, 0.55);
+    }
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-generate .material-symbols-outlined { font-size: 22px; }
+
+    /* ── Paper Result ── */
+    .result-card {
+      background: rgba(18, 18, 42, 0.55);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    }
+    .result-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .result-card h3 .material-symbols-outlined { color: var(--primary-light); }
+
+    .result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .result-meta .meta-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(108, 92, 231, 0.1);
+      border: 1px solid rgba(108, 92, 231, 0.2);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--primary-light);
+    }
+    .result-meta .meta-chip .material-symbols-outlined { font-size: 16px; }
+
+    .sections-summary {
+      margin-bottom: 24px;
+    }
+    .section-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      background: rgba(10, 10, 26, 0.4);
+      font-size: 0.875rem;
+    }
+    .section-row span:first-child { font-weight: 600; }
+    .section-row span:last-child { color: var(--text-dim); font-size: 0.8rem; }
+
+    .result-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(18, 18, 42, 0.6);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s;
+      text-decoration: none;
+    }
+    .btn-action:hover {
+      border-color: var(--primary);
+      background: rgba(108, 92, 231, 0.1);
+      color: var(--primary-light);
+    }
+    .btn-action.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-color: transparent;
+      color: #fff;
+    }
+    .btn-action .material-symbols-outlined { font-size: 18px; }
+
+    /* ── Recent Papers ── */
+    .recent-papers {
+      margin-top: 32px;
+    }
+    .recent-papers h4 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-dim);
+    }
+    .paper-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      background: rgba(18, 18, 42, 0.4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    .paper-item:hover {
+      border-color: rgba(167, 139, 250, 0.3);
+      background: rgba(18, 18, 42, 0.6);
+    }
+    .paper-item .paper-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .paper-item .paper-date {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Loading Spinner ── */
+    .loading-section {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+    }
+    .loading-section.visible { display: block; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-section p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .result-section { display: none; }
+    .result-section.visible { display: block; animation: fadeInUp 0.4s ease; }
+
     /* ── Responsive ── */
     @media (max-width: 1024px) {
       .subjects-grid { grid-template-columns: repeat(2, 1fr); }
+      .gen-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 640px) {
       .subjects-grid { grid-template-columns: 1fr; }
+      .gen-grid { grid-template-columns: 1fr; }
       .page-header { padding: 24px 16px 40px; }
       .main-content { padding: 0 16px 64px; }
       .search-container { padding: 0 16px; }
+      .tab-container { padding: 0 16px; }
       .stats-row { gap: 20px; }
+      .tab-controls { width: 100%; }
+      .tab-btn { flex: 1; justify-content: center; font-size: 0.8rem; padding: 10px 14px; }
+      .result-actions { flex-direction: column; }
     }
 
     /* ── Reduced Motion ── */
@@ -639,8 +984,8 @@
             PDF Download
           </span>
         </div>
-        <h1 class="page-title">BTEUP Polytechnic<br>Study Notes</h1>
-        <p class="page-subtitle">Subject-wise complete notes — sabhi units ek hi PDF mein. Download karo aur offline padho. Bilingual support available.</p>
+        <h1 class="page-title">BTEUP Polytechnic<br>Hub</h1>
+        <p class="page-subtitle">Study notes download karo, practice papers generate karo — sab ek jagah. Bilingual support available.</p>
         <div class="stats-row" id="statsRow">
           <!-- Populated by JS -->
         </div>
@@ -648,24 +993,136 @@
     </div>
   </header>
 
-  <!-- ── Search ── -->
-  <div class="search-container">
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search subjects... (e.g. Physics, Math, FEEE)" oninput="filterSubjects()" aria-label="Search subjects">
-      <span class="material-symbols-outlined">search</span>
+  <!-- ── Tab Controls ── -->
+  <div class="tab-container">
+    <div class="tab-controls">
+      <button class="tab-btn active" onclick="switchTab('notes')" id="tabNotes" aria-label="Study Notes tab">
+        <span class="material-symbols-outlined">menu_book</span>
+        Study Notes
+      </button>
+      <button class="tab-btn" onclick="switchTab('generator')" id="tabGenerator" aria-label="Paper Generator tab">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        Paper Generator
+      </button>
     </div>
   </div>
 
   <!-- ── Main Content ── -->
   <main class="main-content">
-    <div class="subjects-grid" id="subjectsGrid">
-      <!-- Populated by JS -->
+
+    <!-- ══ TAB: Study Notes ══ -->
+    <div class="tab-panel active" id="panelNotes">
+      <div class="search-container" style="padding:0; margin-bottom:28px;">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search subjects... (e.g. Physics, Math, FEEE)" oninput="filterSubjects()" aria-label="Search subjects">
+          <span class="material-symbols-outlined">search</span>
+        </div>
+      </div>
+      <div class="subjects-grid" id="subjectsGrid">
+        <!-- Populated by JS -->
+      </div>
     </div>
+
+    <!-- ══ TAB: Paper Generator ══ -->
+    <div class="tab-panel" id="panelGenerator">
+      <div class="gen-grid">
+        <!-- Left: Form -->
+        <div class="gen-form-card">
+          <h3>
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Generate Exam Paper
+          </h3>
+          <form id="paperForm" onsubmit="handleGenerate(event)">
+            <div class="form-group">
+              <label for="genSubject">Subject</label>
+              <select id="genSubject" onchange="loadPatterns()" required>
+                <option value="">Loading subjects...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="genPattern">Paper Pattern</label>
+              <select id="genPattern">
+                <option value="">Default Pattern</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Language</label>
+              <div class="lang-options">
+                <div class="lang-option">
+                  <input type="radio" name="genLang" id="langBi" value="bilingual" checked>
+                  <label for="langBi">
+                    <span class="material-symbols-outlined" style="font-size:16px">translate</span>
+                    Bilingual
+                  </label>
+                </div>
+                <div class="lang-option">
+                  <input type="radio" name="genLang" id="langEn" value="english">
+                  <label for="langEn">English</label>
+                </div>
+                <div class="lang-option">
+                  <input type="radio" name="genLang" id="langHi" value="hindi">
+                  <label for="langHi">Hindi</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="genTitle">Paper Title (Optional)</label>
+              <input type="text" id="genTitle" placeholder="e.g. Mid-Term Paper 2025">
+            </div>
+            <button type="submit" class="btn-generate" id="generateBtn">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              Generate Paper
+            </button>
+          </form>
+        </div>
+
+        <!-- Right: Result -->
+        <div>
+          <div class="loading-section" id="loadingSection">
+            <div class="spinner"></div>
+            <p>Generating your paper...</p>
+          </div>
+
+          <div class="result-section" id="resultSection">
+            <div class="result-card">
+              <h3>
+                <span class="material-symbols-outlined">description</span>
+                Paper Ready!
+              </h3>
+              <div class="result-meta" id="resultMeta"></div>
+              <div class="sections-summary" id="sectionsSummary"></div>
+              <div class="result-actions">
+                <button class="btn-action primary" onclick="openPaper()">
+                  <span class="material-symbols-outlined">open_in_new</span>
+                  View Paper
+                </button>
+                <button class="btn-action" onclick="showAnswerKey()">
+                  <span class="material-symbols-outlined">key</span>
+                  Answer Key
+                </button>
+                <button class="btn-action" onclick="generateAnother()">
+                  <span class="material-symbols-outlined">refresh</span>
+                  New Paper
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-papers" id="recentPapersSection">
+            <h4>📋 Recent Papers</h4>
+            <div id="recentPapers">
+              <div style="padding:14px; color:var(--text-dim); font-size:0.85rem">Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ── Footer ── -->
   <footer class="page-footer">
-    <div class="footer-brand">BTEUP Polytechnic Notes</div>
+    <div class="footer-brand">BTEUP Polytechnic Hub</div>
     <div class="footer-links">
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Service</a>
@@ -855,6 +1312,198 @@
       t.textContent = msg;
       t.className = 'toast visible ' + type;
       setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    // ═══════════════════════════════════════
+    // TAB SWITCHING
+    // ═══════════════════════════════════════
+    let generatorLoaded = false;
+
+    function switchTab(tab) {
+      // Toggle tab buttons
+      document.getElementById('tabNotes').classList.toggle('active', tab === 'notes');
+      document.getElementById('tabGenerator').classList.toggle('active', tab === 'generator');
+
+      // Toggle panels
+      document.getElementById('panelNotes').classList.toggle('active', tab === 'notes');
+      document.getElementById('panelGenerator').classList.toggle('active', tab === 'generator');
+
+      // Lazy-load generator data on first switch
+      if (tab === 'generator' && !generatorLoaded) {
+        generatorLoaded = true;
+        loadGenSubjects();
+        loadRecentPapers();
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // PAPER GENERATOR — Load Subjects from API
+    // ═══════════════════════════════════════
+    let allApiSubjects = [];
+
+    async function loadGenSubjects() {
+      try {
+        const r = await fetch('/api/polytechnic/subjects');
+        const d = await r.json();
+        allApiSubjects = d.subjects || [];
+        const sel = document.getElementById('genSubject');
+        sel.innerHTML = '<option value="">Choose a subject...</option>';
+        allApiSubjects.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `Sem-${s.semester} | ${s.subject_name} (${s.subject_code})`;
+          sel.appendChild(opt);
+        });
+      } catch(e) {
+        console.warn('Failed to load subjects:', e.message);
+        document.getElementById('genSubject').innerHTML = '<option value="">Failed to load subjects</option>';
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // PAPER GENERATOR — Load Patterns for Subject
+    // ═══════════════════════════════════════
+    async function loadPatterns() {
+      const subjectId = document.getElementById('genSubject').value;
+      const sel = document.getElementById('genPattern');
+      sel.innerHTML = '<option value="">Default Pattern</option>';
+      if (!subjectId) return;
+
+      try {
+        const r = await fetch(`/api/polytechnic/patterns?subject_id=${subjectId}`);
+        const d = await r.json();
+        (d.patterns || []).forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.id;
+          opt.textContent = `${p.pattern_name} (${p.total_marks}M, ${p.time_minutes}min)`;
+          sel.appendChild(opt);
+        });
+      } catch(e) { /* silent */ }
+    }
+
+    // ═══════════════════════════════════════
+    // PAPER GENERATOR — Generate Paper
+    // ═══════════════════════════════════════
+    let generatedHTML = '';
+    let generatedAnswerKey = null;
+
+    async function handleGenerate(e) {
+      e.preventDefault();
+      const subjectId = document.getElementById('genSubject').value;
+      if (!subjectId) return toast('Select a subject first', 'error');
+
+      document.getElementById('generateBtn').disabled = true;
+      document.getElementById('loadingSection').classList.add('visible');
+      document.getElementById('resultSection').classList.remove('visible');
+
+      try {
+        const lang = document.querySelector('input[name="genLang"]:checked')?.value || 'bilingual';
+        const r = await fetch('/api/polytechnic/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject_id: parseInt(subjectId),
+            pattern_id: document.getElementById('genPattern').value || null,
+            title: document.getElementById('genTitle').value || null,
+            language: lang,
+            watermark: '',
+            exclude_recent_days: 30,
+            show_answer_key: true
+          })
+        });
+        const d = await r.json();
+        if (!r.ok || !d.success) throw new Error(d.error || 'Generation failed');
+
+        generatedHTML = d.html;
+        generatedAnswerKey = d.answer_key;
+
+        // Show result meta chips
+        const meta = document.getElementById('resultMeta');
+        meta.innerHTML = `
+          <div class="meta-chip">
+            <span class="material-symbols-outlined">quiz</span>
+            ${d.total_questions} Questions
+          </div>
+          <div class="meta-chip">
+            <span class="material-symbols-outlined">grade</span>
+            ${d.total_marks} Marks
+          </div>
+          <div class="meta-chip">
+            <span class="material-symbols-outlined">timer</span>
+            ${d.time_minutes} Min
+          </div>
+          <div class="meta-chip">
+            <span class="material-symbols-outlined">tag</span>
+            Paper #${d.paper_id}
+          </div>
+        `;
+
+        // Show sections summary
+        const summary = document.getElementById('sectionsSummary');
+        summary.innerHTML = '';
+        (d.sections_summary || []).forEach(s => {
+          summary.innerHTML += `<div class="section-row">
+            <span>${s.name}</span>
+            <span>${s.questions}Q = ${s.marks}M</span>
+          </div>`;
+        });
+
+        document.getElementById('resultSection').classList.add('visible');
+        toast('Paper generated successfully!', 'success');
+        loadRecentPapers();
+      } catch(err) {
+        toast(err.message, 'error');
+      } finally {
+        document.getElementById('generateBtn').disabled = false;
+        document.getElementById('loadingSection').classList.remove('visible');
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // PAPER ACTIONS
+    // ═══════════════════════════════════════
+    function openPaper() {
+      if (!generatedHTML) return toast('No paper generated yet', 'error');
+      const w = window.open('', '_blank');
+      w.document.write(generatedHTML);
+      w.document.close();
+    }
+
+    function showAnswerKey() {
+      if (!generatedHTML) return toast('No paper generated yet', 'error');
+      const w = window.open('', '_blank');
+      const html = generatedHTML.replace('style="display:none;"', 'style="display:block;"');
+      w.document.write(html);
+      w.document.close();
+    }
+
+    function generateAnother() {
+      document.getElementById('resultSection').classList.remove('visible');
+      document.getElementById('genSubject').focus();
+    }
+
+    // ═══════════════════════════════════════
+    // RECENT PAPERS
+    // ═══════════════════════════════════════
+    async function loadRecentPapers() {
+      try {
+        const r = await fetch('/api/polytechnic/papers');
+        const d = await r.json();
+        const cont = document.getElementById('recentPapers');
+        if (!d.papers?.length) {
+          cont.innerHTML = '<div style="padding:14px;color:var(--text-dim);font-size:0.85rem">No papers generated yet. Create your first one!</div>';
+          return;
+        }
+        cont.innerHTML = d.papers.slice(0, 8).map(p => {
+          const date = new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+          return `<div class="paper-item">
+            <span class="paper-title">${p.title || 'Untitled Paper'}</span>
+            <span class="paper-date">${date}</span>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        document.getElementById('recentPapers').innerHTML = '<div style="padding:14px;color:var(--text-dim);font-size:0.85rem">Unable to load recent papers.</div>';
+      }
     }
 
     // ═══════════════════════════════════════
