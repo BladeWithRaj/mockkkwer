@@ -173,33 +173,46 @@
     ::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 4px; border: 1px solid var(--border); }
     ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-    /* ── Header ── */
+    /* ── Header / Hero ── */
     .page-header {
       width: 100%;
-      padding: 40px 24px 56px;
       position: relative;
       overflow: hidden;
+      min-height: 520px;
     }
     .page-header::before {
       content: '';
       position: absolute;
-      top: -40px; left: 50%;
-      transform: translateX(-50%);
-      width: 900px; height: 350px;
-      background: radial-gradient(ellipse, rgba(108, 92, 231, 0.2), transparent 70%);
+      top: -60px; left: -100px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(108, 92, 231, 0.18), transparent 65%);
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .page-header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: 20%;
+      width: 500px; height: 400px;
+      background: radial-gradient(circle, rgba(0, 214, 143, 0.1), transparent 65%);
       filter: blur(80px);
       pointer-events: none;
       z-index: 0;
     }
+
     .header-inner {
       max-width: 1200px;
       margin: 0 auto;
       position: relative;
       z-index: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      padding: 40px 24px 56px;
     }
+
     .back-link {
       display: inline-flex;
       align-items: center;
@@ -210,15 +223,18 @@
       font-weight: 500;
       transition: color 0.2s;
       width: fit-content;
+      grid-column: 1 / -1;
     }
     .back-link:hover { color: #fff; }
     .back-link .material-symbols-outlined { font-size: 18px; transition: transform 0.2s; }
     .back-link:hover .material-symbols-outlined { transform: translateX(-4px); }
 
+    /* ── Hero Left (Text) ── */
     .hero-content {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 20px;
+      animation: fadeInUp 0.6s ease both;
     }
     .badge-row {
       display: flex;
@@ -235,6 +251,7 @@
       font-weight: 600;
       letter-spacing: 0.3px;
       border: 1px solid;
+      backdrop-filter: blur(8px);
     }
     .hero-badge.free {
       background: rgba(0, 214, 143, 0.1);
@@ -249,46 +266,201 @@
 
     .page-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-size: clamp(2rem, 4.5vw, 3rem);
       font-weight: 800;
-      background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #6c5ce7 100%);
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .page-title-accent {
+      display: block;
+      background: linear-gradient(135deg, #a78bfa 0%, #6c5ce7 40%, #00d68f 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
-      line-height: 1.15;
+      background-clip: text;
     }
     .page-subtitle {
       color: var(--text-dim);
-      font-size: 1.05rem;
-      line-height: 1.6;
-      max-width: 600px;
+      font-size: 1rem;
+      line-height: 1.75;
+      max-width: 440px;
+    }
+    .page-subtitle strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── Hero CTA Row ── */
+    .hero-cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 26px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      white-space: nowrap;
+    }
+    .hero-btn .material-symbols-outlined { font-size: 20px; }
+    .hero-btn--primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      box-shadow: 0 6px 24px -4px rgba(108, 92, 231, 0.5);
+    }
+    .hero-btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px -4px rgba(108, 92, 231, 0.65);
+    }
+    .hero-btn--secondary {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border: 1.5px solid var(--border);
+    }
+    .hero-btn--secondary:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(167, 139, 250, 0.4);
+    }
+    .hero-btn:active { transform: translateY(0) scale(0.98); }
+
+    /* ── Hero Right (Image) ── */
+    .hero-image-wrap {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      aspect-ratio: 4 / 3;
+      animation: fadeInUp 0.7s ease 0.15s both;
+    }
+    .hero-image-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary-light));
+      z-index: 0;
+      opacity: 0.6;
+    }
+    .hero-image-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(180deg, transparent 50%, rgba(10, 10, 26, 0.7) 100%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .hero-image-wrap img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: inherit;
+    }
+    .hero-image-overlay {
+      position: absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      z-index: 3;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .hero-image-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(10, 10, 26, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .hero-image-chip .material-symbols-outlined {
+      font-size: 16px;
+      color: var(--accent);
+    }
+
+    /* ── Floating Particles ── */
+    .hero-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .hero-particle {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: var(--primary-light);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particleFloat 6s ease-in-out infinite;
+    }
+    .hero-particle:nth-child(1) { left: 10%; top: 20%; animation-delay: 0s; }
+    .hero-particle:nth-child(2) { left: 70%; top: 15%; animation-delay: 1.2s; width: 4px; height: 4px; background: var(--accent); }
+    .hero-particle:nth-child(3) { left: 85%; top: 65%; animation-delay: 2.5s; width: 5px; height: 5px; }
+    .hero-particle:nth-child(4) { left: 25%; top: 75%; animation-delay: 3.8s; width: 3px; height: 3px; background: var(--accent); }
+    .hero-particle:nth-child(5) { left: 55%; top: 40%; animation-delay: 4.5s; width: 4px; height: 4px; }
+    .hero-particle:nth-child(6) { left: 40%; top: 85%; animation-delay: 1.8s; width: 5px; height: 5px; background: var(--accent); }
+
+    @keyframes particleFloat {
+      0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+      20% { opacity: 0.7; transform: translateY(-15px) scale(1); }
+      80% { opacity: 0.4; transform: translateY(-30px) scale(0.8); }
     }
 
     /* ── Stats Row ── */
     .stats-row {
       display: flex;
-      gap: 32px;
-      margin-top: 8px;
+      gap: 0;
+      margin-top: 16px;
       flex-wrap: wrap;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
     }
     .stat-item {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      flex-direction: column;
+      gap: 2px;
+      padding-right: 28px;
+      margin-right: 28px;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child {
+      border-right: none;
+      margin-right: 0;
+      padding-right: 0;
     }
     .stat-item .material-symbols-outlined {
-      font-size: 20px;
-      color: var(--primary-light);
+      display: none;
     }
     .stat-item .stat-num {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 800;
       color: #fff;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
     }
     .stat-item .stat-label {
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.01em;
     }
 
     /* ── Search Bar ── */
@@ -941,18 +1113,33 @@
     @media (max-width: 1024px) {
       .subjects-grid { grid-template-columns: repeat(2, 1fr); }
       .gen-grid { grid-template-columns: 1fr; }
+      .header-inner { grid-template-columns: 1fr 1fr; gap: 28px; }
+    }
+    @media (max-width: 768px) {
+      .header-inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding: 28px 16px 40px;
+      }
+      .page-header { min-height: auto; }
+      .hero-image-wrap { aspect-ratio: 16 / 9; max-height: 280px; }
+      .hero-content { order: 1; }
+      .hero-image-wrap { order: 2; }
+      .page-title { font-size: clamp(1.7rem, 5.5vw, 2.2rem); }
+      .hero-cta-row { flex-direction: column; }
+      .hero-btn { justify-content: center; width: 100%; }
     }
     @media (max-width: 640px) {
       .subjects-grid { grid-template-columns: 1fr; }
       .gen-grid { grid-template-columns: 1fr; }
-      .page-header { padding: 24px 16px 40px; }
       .main-content { padding: 0 16px 64px; }
       .search-container { padding: 0 16px; }
       .tab-container { padding: 0 16px; }
-      .stats-row { gap: 20px; }
+      .stat-item { padding-right: 16px; margin-right: 16px; }
       .tab-controls { width: 100%; }
       .tab-btn { flex: 1; justify-content: center; font-size: 0.8rem; padding: 10px 14px; }
       .result-actions { flex-direction: column; }
+      .hero-image-overlay { display: none; }
     }
 
     /* ── Reduced Motion ── */
@@ -966,13 +1153,25 @@
 </head>
 <body>
 
-  <!-- ── Header ── -->
+  <!-- ── Header / Hero ── -->
   <header class="page-header">
+    <!-- Floating Particles -->
+    <div class="hero-particles" aria-hidden="true">
+      <div class="hero-particle"></div>
+      <div class="hero-particle"></div>
+      <div class="hero-particle"></div>
+      <div class="hero-particle"></div>
+      <div class="hero-particle"></div>
+      <div class="hero-particle"></div>
+    </div>
+
     <div class="header-inner">
       <a href="/" class="back-link" aria-label="Back to Home">
         <span class="material-symbols-outlined">arrow_back</span>
         Back to Home
       </a>
+
+      <!-- Left: Text Content -->
       <div class="hero-content">
         <div class="badge-row">
           <span class="hero-badge free">
@@ -984,10 +1183,35 @@
             PDF Download
           </span>
         </div>
-        <h1 class="page-title">BTEUP Polytechnic<br>Hub</h1>
-        <p class="page-subtitle">Study notes download karo, practice papers generate karo — sab ek jagah. Bilingual support available.</p>
+        <h1 class="page-title">BTEUP Polytechnic<br><span class="page-title-accent">Notes & Paper Generator</span></h1>
+        <p class="page-subtitle">Subject-wise <strong>study notes</strong> download karo, exam-ready <strong>practice papers</strong> generate karo — sab bilkul free, <strong>Hindi + English</strong> mein.</p>
+        <div class="hero-cta-row">
+          <a href="#panelNotes" class="hero-btn hero-btn--primary" onclick="switchTab('notes')">
+            <span class="material-symbols-outlined">download</span>
+            Download Notes
+          </a>
+          <a href="#panelGenerator" class="hero-btn hero-btn--secondary" onclick="switchTab('generator')">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Generate Paper
+          </a>
+        </div>
         <div class="stats-row" id="statsRow">
           <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Right: Editorial Image -->
+      <div class="hero-image-wrap">
+        <img src="/assets/polytechnic-editorial.png" alt="Polytechnic engineering workshop — technical drawing, gears, precision instruments" loading="eager" />
+        <div class="hero-image-overlay">
+          <div class="hero-image-chip">
+            <span class="material-symbols-outlined">school</span>
+            BTEUP Syllabus
+          </div>
+          <div class="hero-image-chip">
+            <span class="material-symbols-outlined">translate</span>
+            Hindi + English
+          </div>
         </div>
       </div>
     </div>

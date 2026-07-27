@@ -4,6 +4,7 @@
    Arial/system fonts. Radio circles.
    2025 update: zoom controls, answered counter,
    action buttons near question info bar.
+   DARK MODE SUPPORT via .ssc-dark class.
    Boring, official, clinical. NO animations.
    ============================================ */
 
@@ -24,6 +25,11 @@
   --ssc-purple: #6A1B9A;
   --ssc-orange: #E65100;
   --ssc-grey: #9E9E9E;
+  --ssc-option-bg: transparent;
+  --ssc-option-hover: #FAFAFA;
+  --ssc-q-content-bg: var(--ssc-surface);
+  --ssc-inst-table-header: #F5F5F5;
+  --ssc-modal-bg: #FFFFFF;
   background: var(--ssc-bg) !important;
   color: var(--ssc-text) !important;
   font-family: Arial, 'Segoe UI', system-ui, sans-serif !important;
@@ -31,9 +37,9 @@
   min-height: 100vh;
   -webkit-user-select: none;
   user-select: none;
-  /* Subtle diagonal watermark — government exam feel */
   background-image: repeating-linear-gradient(45deg, transparent, transparent 200px,
       rgba(21, 101, 192, 0.012) 200px, rgba(21, 101, 192, 0.012) 400px);
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 .ssc-mode * {
@@ -41,6 +47,136 @@
   --text-secondary: #424242;
   --bg-card: #FFFFFF;
   --border-color: #BDBDBD;
+}
+
+/* ═══════════════════════════════════════════
+   DARK MODE — .ssc-dark override
+   Deep, polished dark theme. Pure blacks,
+   muted accents, high contrast text.
+   ═══════════════════════════════════════════ */
+.ssc-mode.ssc-dark {
+  --ssc-blue: #5B9BD5;
+  --ssc-blue-dark: #4A8BC4;
+  --ssc-blue-light: #12202E;
+  --ssc-header-bg: linear-gradient(180deg, #0D1117 0%, #0A0E14 100%);
+  --ssc-surface: #141A22;
+  --ssc-bg: #0A0E14;
+  --ssc-border: #1E2A36;
+  --ssc-border-light: #182430;
+  --ssc-text: #D4DEE8;
+  --ssc-text-muted: #6B7D90;
+  --ssc-green: #4CAF50;
+  --ssc-red: #E53935;
+  --ssc-purple: #9C27B0;
+  --ssc-orange: #EF6C00;
+  --ssc-grey: #3A4A5A;
+  --ssc-option-bg: #0D1219;
+  --ssc-option-hover: #141C26;
+  --ssc-q-content-bg: #0F151D;
+  --ssc-inst-table-header: #111920;
+  --ssc-modal-bg: #141A22;
+  background-image: none;
+}
+
+.ssc-mode.ssc-dark * {
+  --text-primary: #D4DEE8;
+  --text-secondary: #9EAAB8;
+  --bg-card: #141A22;
+  --border-color: #1E2A36;
+}
+
+/* Dark mode header */
+.ssc-mode.ssc-dark .ssc-header {
+  background: linear-gradient(180deg, #0D1117 0%, #0A0E14 100%);
+  border-bottom: 2px solid #5B9BD5;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+
+/* Dark mode section bar */
+.ssc-mode.ssc-dark .ssc-section-bar {
+  background: #0D1117;
+  border-bottom-color: #1E2A36;
+}
+.ssc-mode.ssc-dark .ssc-section-tab.active {
+  background: rgba(91, 155, 213, 0.12);
+}
+
+/* Dark mode question content */
+.ssc-mode.ssc-dark .ssc-question-content {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Dark mode answered counter */
+.ssc-mode.ssc-dark .ssc-answered-counter {
+  background: rgba(76, 175, 80, 0.10);
+  border-color: rgba(76, 175, 80, 0.25);
+}
+
+/* Dark mode palette */
+.ssc-mode.ssc-dark .ssc-palette {
+  border-left-color: #1E2A36;
+}
+.ssc-mode.ssc-dark .ssc-palette-header {
+  background: #0D1117;
+}
+
+/* Dark mode q-btn current highlight */
+.ssc-mode.ssc-dark .ssc-q-btn.current {
+  box-shadow: 0 0 0 1px rgba(91, 155, 213, 0.4);
+}
+
+/* Dark mode instructions */
+.ssc-mode.ssc-dark .ssc-instructions {
+  background: #0F151D;
+}
+.ssc-mode.ssc-dark .ssc-instructions-header {
+  background: #0D1117;
+}
+.ssc-mode.ssc-dark .ssc-instructions-body {
+  background: #0F151D;
+}
+.ssc-mode.ssc-dark .ssc-instructions-footer {
+  background: #0D1117;
+  border-top-color: #1E2A36;
+}
+
+/* Dark mode submit modal */
+.ssc-mode.ssc-dark .ssc-submit-overlay {
+  background: rgba(0,0,0,0.7);
+}
+
+/* Dark mode mobile bar */
+.ssc-mode.ssc-dark .ssc-mobile-bar {
+  background: #0D1117;
+  border-top-color: #1E2A36;
+}
+
+/* Dark mode inst-table hardcoded overrides */
+.ssc-mode.ssc-dark .ssc-inst-table th {
+  background: #111920 !important;
+}
+.ssc-mode.ssc-dark .ssc-inst-table td {
+  border-color: #1E2A36;
+}
+
+/* ── Dark Mode Toggle Button ── */
+.ssc-dark-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.ssc-dark-toggle:hover {
+  background: rgba(255,255,255,0.18);
 }
 
 /* ── SSC Header — TCS iON Blue Bar ── */
@@ -161,6 +297,10 @@
   animation: sscBlink 1s infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .ssc-timer.danger { animation: none; }
+}
+
 @keyframes sscBlink {
   50% {
     opacity: 0.4;
@@ -213,11 +353,12 @@
   border-bottom: 3px solid transparent;
   white-space: nowrap;
   font-family: inherit;
+  transition: background 0.15s;
 }
 
 .ssc-section-tab:hover {
   color: var(--ssc-text);
-  background: #FAFAFA;
+  background: var(--ssc-option-hover);
 }
 
 .ssc-section-tab.active {
@@ -301,17 +442,16 @@
 .ssc-question-content {
   flex: 1;
   padding: 20px 24px;
-  background: var(--ssc-surface);
+  background: var(--ssc-q-content-bg);
   margin: 8px 12px;
   border: 1px solid var(--ssc-border-light);
   overflow-y: auto;
-  /* Authentic TCS iON: slightly larger padding for readability */
 }
 
 .ssc-q-number-line {
   margin-bottom: 10px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #F5F5F5;
+  border-bottom: 1px solid var(--ssc-border-light);
 }
 
 .ssc-q-number {
@@ -341,7 +481,6 @@
   color: var(--ssc-text);
   margin-bottom: 18px;
   font-family: 'Noto Sans Devanagari', Arial, 'Segoe UI', sans-serif;
-  /* TCS iON uses slightly larger text for readability */
 }
 
 .ssc-question-text,
@@ -383,15 +522,16 @@
   align-items: flex-start;
   gap: 8px;
   padding: 8px 12px;
-  background: transparent;
+  background: var(--ssc-option-bg);
   border: 1px solid var(--ssc-border-light);
   cursor: pointer;
   font-size: 14px;
+  transition: border-color 0.12s, background 0.12s;
 }
 
 .ssc-option:hover {
   border-color: var(--ssc-blue);
-  background: #FAFAFA;
+  background: var(--ssc-option-hover);
 }
 
 .ssc-option.selected {
@@ -410,6 +550,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: border-color 0.12s, background 0.12s;
 }
 
 .ssc-radio.checked {
@@ -468,10 +609,12 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
+  color: var(--ssc-text);
+  transition: background 0.12s;
 }
 
 .ssc-btn:hover {
-  background: #F5F5F5;
+  background: var(--ssc-option-hover);
 }
 
 .ssc-btn:disabled {
@@ -487,9 +630,15 @@
 .ssc-btn-mark:hover {
   background: #F3E5F5;
 }
+.ssc-mode.ssc-dark .ssc-btn-mark:hover {
+  background: rgba(171, 71, 188, 0.15);
+}
 
 .ssc-btn-mark.active {
   background: #E1BEE7;
+}
+.ssc-mode.ssc-dark .ssc-btn-mark.active {
+  background: rgba(171, 71, 188, 0.25);
 }
 
 .ssc-btn-clear {
@@ -499,6 +648,9 @@
 
 .ssc-btn-clear:hover {
   background: #FFEBEE;
+}
+.ssc-mode.ssc-dark .ssc-btn-clear:hover {
+  background: rgba(239, 83, 80, 0.12);
 }
 
 .ssc-btn-prev {
@@ -591,41 +743,44 @@
   font-weight: 700;
   color: white;
   flex-shrink: 0;
+  border: 1px solid transparent;
 }
 
 .ssc-legend-text {
   color: var(--ssc-text-muted);
 }
 
+/* Legend dot colors */
 .ssc-dot-answered,
-.ssc-legend-dot.answered {
+.ssc-legend-dot.ssc-dot-answered {
   background: var(--ssc-green);
 }
 
 .ssc-dot-not-answered,
-.ssc-legend-dot.not-answered {
+.ssc-legend-dot.ssc-dot-not-answered {
   background: var(--ssc-red);
 }
 
 .ssc-dot-not-visited,
-.ssc-legend-dot.not-visited {
-  background: var(--ssc-grey);
-  color: #424242;
+.ssc-legend-dot.ssc-dot-not-visited {
+  background: var(--ssc-surface);
+  border-color: var(--ssc-border);
+  color: var(--ssc-text-muted);
 }
 
 .ssc-dot-marked,
-.ssc-legend-dot.marked {
+.ssc-legend-dot.ssc-dot-marked {
   background: var(--ssc-purple);
 }
 
 .ssc-dot-marked-answered,
-.ssc-legend-dot.marked-answered {
+.ssc-legend-dot.ssc-dot-marked-answered {
   background: var(--ssc-purple);
   position: relative;
 }
 
 .ssc-dot-marked-answered::after,
-.ssc-legend-dot.marked-answered::after {
+.ssc-legend-dot.ssc-dot-marked-answered::after {
   content: '✓';
   position: absolute;
   bottom: -2px;
@@ -656,16 +811,17 @@
   aspect-ratio: 1;
   border: 1px solid var(--ssc-border-light);
   border-radius: 2px;
-  background: #FAFAFA;
+  background: var(--ssc-surface);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  color: #757575;
+  color: var(--ssc-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   font-family: inherit;
+  transition: border-color 0.12s;
 }
 
 .ssc-q-btn:hover {
@@ -795,55 +951,6 @@
   color: white;
   font-weight: 600;
 }
-.ssc-dot-not-visited {
-  background: #FAFAFA;
-  border-color: var(--ssc-border);
-  color: #757575;
-}
-.ssc-dot-not-answered {
-  background: var(--ssc-red);
-  border-color: var(--ssc-red);
-}
-.ssc-dot-answered {
-  background: var(--ssc-green);
-  border-color: var(--ssc-green);
-}
-.ssc-dot-marked {
-  background: var(--ssc-purple);
-  border-color: var(--ssc-purple);
-}
-.ssc-dot-marked-answered {
-  background: var(--ssc-purple);
-  border-color: var(--ssc-purple);
-  position: relative;
-}
-.ssc-dot-marked-answered::after {
-  content: '✓';
-  position: absolute;
-  bottom: -3px; right: -3px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: var(--ssc-green);
-  font-size: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: white;
-}
-
-/* Legend dots in test palette */
-.ssc-legend-dot {
-  width: 22px; height: 22px;
-  border-radius: 2px;
-  display: inline-flex;
-  align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 600;
-  color: white;
-  border: 1px solid transparent;
-}
-.ssc-legend-dot.ssc-dot-not-visited { background: #FAFAFA; border-color: var(--ssc-border); color: #757575; }
-.ssc-legend-dot.ssc-dot-not-answered { background: var(--ssc-red); }
-.ssc-legend-dot.ssc-dot-answered { background: var(--ssc-green); }
-.ssc-legend-dot.ssc-dot-marked { background: var(--ssc-purple); }
-.ssc-legend-dot.ssc-dot-marked-answered { background: var(--ssc-purple); }
 
 /* Instruction table */
 .ssc-inst-table {
@@ -858,15 +965,16 @@
   padding: 6px 12px;
   border: 1px solid var(--ssc-border-light);
   text-align: left;
+  color: var(--ssc-text);
 }
 
 .ssc-inst-table th {
-  background: #F5F5F5;
+  background: var(--ssc-inst-table-header);
   font-weight: 600;
 }
 
 .ssc-inst-total-row {
-  background: #F5F5F5;
+  background: var(--ssc-inst-table-header);
 }
 
 .ssc-instructions-footer {
@@ -916,10 +1024,7 @@
   background: var(--ssc-blue-dark);
 }
 
-/* ── Submit Modal (shared across all renderers) ── */
-/* Self-contained: no CSS variable dependencies since
-   the modal is injected into document.body outside
-   any renderer scope (.ssc-mode, .upsc-mode, etc.) */
+/* ── Submit Modal ── */
 .ssc-submit-overlay {
   position: fixed;
   inset: 0;
@@ -932,14 +1037,14 @@
 }
 
 .ssc-submit-modal {
-  background: #FFFFFF;
+  background: var(--ssc-modal-bg, #FFFFFF);
   width: 620px;
   max-width: 95vw;
   max-height: 90vh;
   overflow-y: auto;
   border-radius: 6px;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
-  border: 1px solid #BDBDBD;
+  border: 1px solid var(--ssc-border, #BDBDBD);
 }
 
 .ssc-submit-modal-header {
@@ -953,7 +1058,7 @@
 
 .ssc-submit-modal-body {
   padding: 20px;
-  color: #212121;
+  color: var(--ssc-text, #212121);
   font-size: 14px;
 }
 
@@ -967,37 +1072,37 @@
 .ssc-submit-table th,
 .ssc-submit-table td {
   padding: 8px 12px;
-  border: 1px solid #E0E0E0;
+  border: 1px solid var(--ssc-border-light, #E0E0E0);
   text-align: center;
-  color: #212121;
+  color: var(--ssc-text, #212121);
 }
 
 .ssc-submit-table th {
-  background: #F5F5F5;
+  background: var(--ssc-inst-table-header, #F5F5F5);
   font-weight: 700;
   font-size: 12px;
-  color: #424242;
+  color: var(--ssc-text-muted, #424242);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .ssc-submit-total-row {
-  background: #F5F5F5;
+  background: var(--ssc-inst-table-header, #F5F5F5);
   font-weight: 700;
 }
 
 .ssc-cell-green {
-  color: #2E7D32;
+  color: var(--ssc-green);
   font-weight: 700;
 }
 
 .ssc-cell-red {
-  color: #C62828;
+  color: var(--ssc-red);
   font-weight: 700;
 }
 
 .ssc-cell-purple {
-  color: #6A1B9A;
+  color: var(--ssc-purple);
   font-weight: 700;
 }
 
@@ -1006,21 +1111,29 @@
   background: #FFEBEE;
   border: 1px solid #EF9A9A;
   border-radius: 4px;
-  color: #C62828;
+  color: var(--ssc-red);
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 12px;
+}
+.ssc-mode.ssc-dark .ssc-submit-warning {
+  background: rgba(239,83,80,0.1);
+  border-color: rgba(239,83,80,0.3);
 }
 
 .ssc-submit-warning-orange {
   background: #FFF3E0;
   border-color: #FFCC80;
-  color: #E65100;
+  color: var(--ssc-orange);
+}
+.ssc-mode.ssc-dark .ssc-submit-warning-orange {
+  background: rgba(255,112,67,0.1);
+  border-color: rgba(255,112,67,0.3);
 }
 
 .ssc-submit-modal-footer {
   padding: 12px 20px;
-  border-top: 1px solid #E0E0E0;
+  border-top: 1px solid var(--ssc-border-light, #E0E0E0);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -1030,17 +1143,17 @@
 .ssc-submit-modal-footer .ssc-btn {
   padding: 8px 18px;
   border-radius: 4px;
-  border: 1px solid #BDBDBD;
-  background: #FFFFFF;
+  border: 1px solid var(--ssc-border, #BDBDBD);
+  background: var(--ssc-surface, #FFFFFF);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   font-family: 'Segoe UI', Arial, sans-serif;
-  color: #424242;
+  color: var(--ssc-text, #424242);
 }
 
 .ssc-submit-modal-footer .ssc-btn:hover {
-  background: #F5F5F5;
+  background: var(--ssc-option-hover, #F5F5F5);
 }
 
 .ssc-btn-submit-confirm {
@@ -1107,7 +1220,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--ssc-surface);
     border-top: 1px solid var(--ssc-border);
     padding: 6px 12px;
     z-index: 50;

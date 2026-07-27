@@ -32,6 +32,22 @@ const BankingRenderer = {
   toggleMobilePalette() { RendererBase.toggleMobilePalette(); },
   updateViolationBadge() { RendererBase.updateViolationBadge(); },
 
+  // ── Dark Mode Toggle ──
+  _isDark: localStorage.getItem('ibps_dark_mode') === '1',
+
+  toggleDarkMode() {
+    this._isDark = !this._isDark;
+    localStorage.setItem('ibps_dark_mode', this._isDark ? '1' : '0');
+    const el = document.getElementById('ibps-container');
+    if (el) el.classList.toggle('ibps-dark', this._isDark);
+    const btn = document.getElementById('ibps-dark-toggle-btn');
+    if (btn) btn.textContent = this._isDark ? '☀️' : '🌙';
+  },
+
+  _getDarkClass() {
+    return this._isDark ? ' ibps-dark' : '';
+  },
+
   // ── Banking-specific state ──
   _calcOpen: false,
   _calcDisplay: '0',
@@ -49,7 +65,7 @@ const BankingRenderer = {
     const hasSectionTimers = preset.sectionTimers || false;
 
     return `
-    <div class="ibps-mode" id="ibps-container">
+    <div class="ibps-mode${this._getDarkClass()}" id="ibps-container">
       <div class="ibps-header">
         <div class="ibps-header-left">
           <span class="ibps-logo">🏦 IBPS Online Examination</span>
@@ -57,6 +73,7 @@ const BankingRenderer = {
         </div>
         <div class="ibps-header-right">
           <span class="ibps-candidate">Candidate: <strong>${this._getCandidateName()}</strong></span>
+          <button class="ibps-dark-toggle" id="ibps-dark-toggle-btn" onclick="BankingRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <span class="ibps-profile">👤</span>
         </div>
       </div>
@@ -144,13 +161,13 @@ const BankingRenderer = {
     }
 
     // Current section info
-    const currentSection = sections.find(s => s.subject === q.subject);
+    const currentSection = sections.find(s => s.subject === (q._presetSection || q.subject));
     const sectionTimeStr = preset?.sectionTimers && currentSection?.sectionTime
       ? `<div class="ibps-section-timer" id="ibps-section-timer">⏱ ${Helpers.formatTime(this._sectionTimers[q.subject] || currentSection.sectionTime)}</div>`
       : '';
 
     return `
-    <div class="ibps-mode" id="ibps-container">
+    <div class="ibps-mode${this._getDarkClass()}" id="ibps-container">
       <!-- Header -->
       <div class="ibps-header">
         <div class="ibps-header-left">
@@ -161,6 +178,7 @@ const BankingRenderer = {
           ${TestEngine.state.totalTime < 99999 ? `<div class="ibps-timer" id="cbt-timer">${Helpers.formatTime(TestEngine.state.timeRemaining)}</div>` : ''}
           ${sectionTimeStr}
           ${preset?.calculator ? `<button class="ibps-calc-btn" onclick="BankingRenderer.toggleCalculator()" title="Calculator (Alt+C)">🧮</button>` : ''}
+          <button class="ibps-dark-toggle" id="ibps-dark-toggle-btn" onclick="BankingRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <button class="ibps-submit-btn" onclick="BankingRenderer.showSubmitModal()" id="cbt-submit-btn">Submit</button>
         </div>
       </div>
@@ -169,7 +187,7 @@ const BankingRenderer = {
       ${sections.length > 1 ? `
       <div class="ibps-section-bar" id="cbt-section-bar">
         ${sections.map((s, si) => {
-          const isActive = q.subject === s.subject;
+          const isActive = (q._presetSection || q.subject) === s.subject;
           const isLocked = this._lockedSections.has(s.subject);
           const lockIcon = isLocked ? '🔒 ' : '';
           const sTime = preset?.sectionTimers && s.sectionTime
@@ -469,7 +487,7 @@ const BankingRenderer = {
     const q = current.question;
     const labels = ['A', 'B', 'C', 'D', 'E'];
     const preset = this._getPreset();
-    const currentSection = preset?.sections?.find(s => s.subject === q.subject);
+    const currentSection = preset?.sections?.find(s => s.subject === (q._presetSection || q.subject));
 
     const content = document.getElementById('cbt-question-content');
     if (content) {
@@ -501,7 +519,7 @@ const BankingRenderer = {
     // Update active section tab
     document.querySelectorAll('.ibps-section-tab').forEach(t => t.classList.remove('active'));
     const secs = preset?.sections || [];
-    const mi = secs.findIndex(s => s.subject === q.subject);
+    const mi = secs.findIndex(s => s.subject === (q._presetSection || q.subject));
     const tabs = document.querySelectorAll('.ibps-section-tab');
     if (mi >= 0 && tabs[mi]) tabs[mi].classList.add('active');
 

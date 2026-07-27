@@ -13,7 +13,7 @@ const SearchEngine = {
   _actions: [
     { type: 'action', icon: '⚔️', name: 'AI Battle — Quick Match',   meta: 'Challenge an AI rival',         action: () => App.navigate('battle'),      kbd: '⌘B' },
     { type: 'action', icon: '🔥', name: 'Daily Challenge',           meta: 'Today\'s 15-question challenge', action: () => HomePage._startDaily(),      kbd: '' },
-    { type: 'action', icon: '📄', name: 'BTEUP Paper Generator',     meta: 'Generate polytechnic paper',     action: () => App.navigate('polytechnic'), kbd: '' },
+    { type: 'action', icon: '📚', name: 'BTEUP Study Notes',         meta: 'Download polytechnic notes PDF', action: () => window.location.href = '/polytechnic/', kbd: '' },
     { type: 'action', icon: '📊', name: 'My Dashboard',              meta: 'View your stats & history',      action: () => App.navigate('dashboard'),   kbd: '⌘D' },
     { type: 'action', icon: '📋', name: 'Practice Test Setup',       meta: 'Start a custom test',            action: () => App.navigate('setup'),       kbd: '' },
   ],

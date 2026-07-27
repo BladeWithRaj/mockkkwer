@@ -29,6 +29,22 @@ const SSCRenderer = {
   toggleMobilePalette() { RendererBase.toggleMobilePalette(); },
   updateViolationBadge() { RendererBase.updateViolationBadge(); },
 
+  // ── Dark Mode Toggle ──
+  _isDark: localStorage.getItem('ssc_dark_mode') === '1',
+
+  toggleDarkMode() {
+    this._isDark = !this._isDark;
+    localStorage.setItem('ssc_dark_mode', this._isDark ? '1' : '0');
+    const el = document.getElementById('ssc-container');
+    if (el) el.classList.toggle('ssc-dark', this._isDark);
+    const btn = document.getElementById('ssc-dark-toggle-btn');
+    if (btn) btn.textContent = this._isDark ? '☀️' : '🌙';
+  },
+
+  _getDarkClass() {
+    return this._isDark ? ' ssc-dark' : '';
+  },
+
   // ── SSC-specific check ──
   shouldUseCBT() {
     const preset = this._getPreset();
@@ -106,7 +122,7 @@ const SSCRenderer = {
 
     const org = this._getOrgInfo();
     return `
-    <div class="ssc-mode" id="ssc-container">
+    <div class="ssc-mode${this._getDarkClass()}" id="ssc-container">
       <!-- TCS iON Header -->
       <div class="ssc-header">
         <div class="ssc-header-left">
@@ -127,6 +143,7 @@ const SSCRenderer = {
             <span class="ssc-candidate-label">Roll No:</span>
             <span class="ssc-candidate-name">${this._getCandidateRoll()}</span>
           </div>
+          <button class="ssc-dark-toggle" id="ssc-dark-toggle-btn" onclick="SSCRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <div class="ssc-profile-photo">
             <span>👤</span>
           </div>
@@ -254,7 +271,7 @@ const SSCRenderer = {
     const navStatus = TestEngine.getNavStatus();
 
     return `
-    <div class="ssc-mode" id="ssc-container">
+    <div class="ssc-mode${this._getDarkClass()}" id="ssc-container">
       <!-- SSC System Header — TCS iON style -->
       <div class="ssc-header">
         <div class="ssc-header-left">
@@ -286,6 +303,7 @@ const SSCRenderer = {
             </div>
           </div>
           ` : ''}
+          <button class="ssc-dark-toggle" id="ssc-dark-toggle-btn" onclick="SSCRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <div class="ssc-profile-photo"><span>👤</span></div>
         </div>
       </div>
@@ -294,7 +312,7 @@ const SSCRenderer = {
       ${sections.length > 1 ? `
       <div class="ssc-section-bar" id="cbt-section-bar">
         ${sections.map((s, i) => {
-      const isActive = q.subject === s.subject;
+      const isActive = (q._presetSection || q.subject) === s.subject;
       const isLocked = this._lockedSections.has(s.subject);
       return `<button class="ssc-section-tab ${isActive ? 'active' : ''} ${isLocked ? 'locked' : ''}"
                     onclick="SSCRenderer.jumpToSection('${s.subject}')">${s.name}</button>`;
@@ -310,7 +328,7 @@ const SSCRenderer = {
           <div class="ssc-question-info">
             <div class="ssc-q-left">
               <span class="ssc-q-type">Single Choice</span>
-              <span class="ssc-q-section-label">${q.subject}</span>
+              <span class="ssc-q-section-label">${q.subject}</span><span class="ssc-q-subsection-label" style="font-size:10px;opacity:0.6;margin-left:4px;"></span>
               <span class="ssc-answered-counter" id="ssc-ans-counter">Answered: ${stats.answered}/${stats.total}</span>
             </div>
             <div class="ssc-q-right">
@@ -400,7 +418,7 @@ const SSCRenderer = {
           <!-- Section filter in palette (if multiple sections) -->
           ${sections.length > 1 ? `
           <div class="ssc-palette-section-label">
-            ${q.subject}
+            ${q._presetSection || q.subject}
           </div>
           ` : ''}
 
@@ -455,6 +473,8 @@ const SSCRenderer = {
     // Update section label
     const secLabel = document.querySelector('.ssc-q-section-label');
     if (secLabel) secLabel.textContent = q.subject;
+    const subSecLabel = document.querySelector('.ssc-q-subsection-label');
+    if (subSecLabel && q._presetSection && q._presetSection !== q.subject) subSecLabel.textContent = '(' + q._presetSection + ')';  else if (subSecLabel) subSecLabel.textContent = '';
 
     // Update marks info
     const marksInfo = document.querySelector('.ssc-q-marks-info');
@@ -481,7 +501,7 @@ const SSCRenderer = {
     });
     const preset2 = this._getPreset();
     const sections = preset2?.sections || [];
-    const matchIdx = sections.findIndex(s => s.subject === q.subject);
+    const matchIdx = sections.findIndex(s => s.subject === (q._presetSection || q.subject));
     const allTabs = document.querySelectorAll('.ssc-section-tab');
     if (matchIdx >= 0 && allTabs[matchIdx]) {
       allTabs[matchIdx].classList.add('active');

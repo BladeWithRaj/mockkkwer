@@ -25,6 +25,22 @@ const UPSCRenderer = {
   toggleMobilePalette() { RendererBase.toggleMobilePalette(); },
   updateViolationBadge() { RendererBase.updateViolationBadge(); },
 
+  // ── Dark Mode Toggle ──
+  _isDark: localStorage.getItem('upsc_dark_mode') === '1',
+
+  toggleDarkMode() {
+    this._isDark = !this._isDark;
+    localStorage.setItem('upsc_dark_mode', this._isDark ? '1' : '0');
+    const el = document.getElementById('upsc-container');
+    if (el) el.classList.toggle('upsc-dark', this._isDark);
+    const btn = document.getElementById('upsc-dark-toggle-btn');
+    if (btn) btn.textContent = this._isDark ? '☀️' : '🌙';
+  },
+
+  _getDarkClass() {
+    return this._isDark ? ' upsc-dark' : '';
+  },
+
   // ── Bilingual helpers ──
   _renderQuestionText(q) {
     const mode = typeof Lang !== 'undefined' ? Lang.questionLang : 'en';
@@ -52,7 +68,7 @@ const UPSCRenderer = {
     const sections = preset.sections || [];
 
     return `
-    <div class="upsc-mode" id="upsc-container">
+    <div class="upsc-mode${this._getDarkClass()}" id="upsc-container">
       <div class="upsc-header">
         <div class="upsc-header-left">
           <span class="upsc-emblem">⚖️</span>
@@ -60,6 +76,7 @@ const UPSCRenderer = {
         </div>
         <div class="upsc-header-right">
           <span class="upsc-exam-name">${preset.fullName || preset.name}</span>
+          <button class="upsc-dark-toggle" id="upsc-dark-toggle-btn" onclick="UPSCRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
         </div>
       </div>
       <div class="upsc-instructions">
@@ -124,10 +141,10 @@ const UPSCRenderer = {
 
     // Find section name
     const sections = preset?.sections || [];
-    const currentSection = sections.find(s => s.subject === q.subject);
+    const currentSection = sections.find(s => s.subject === (q._presetSection || q.subject));
 
     return `
-    <div class="upsc-mode" id="upsc-container">
+    <div class="upsc-mode${this._getDarkClass()}" id="upsc-container">
       <!-- Header — minimal, institutional -->
       <div class="upsc-header">
         <div class="upsc-header-left">
@@ -137,6 +154,7 @@ const UPSCRenderer = {
         </div>
         <div class="upsc-header-right">
           ${TestEngine.state.totalTime < 99999 ? `<div class="upsc-timer" id="cbt-timer">${Helpers.formatTime(TestEngine.state.timeRemaining)}</div>` : ''}
+          <button class="upsc-dark-toggle" id="upsc-dark-toggle-btn" onclick="UPSCRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <button class="upsc-submit-btn" onclick="UPSCRenderer.showSubmitModal()" id="cbt-submit-btn">Submit Paper</button>
         </div>
       </div>
@@ -225,7 +243,7 @@ const UPSCRenderer = {
     const q = current.question;
     const labels = ['(a)', '(b)', '(c)', '(d)', '(e)'];
     const preset = this._getPreset();
-    const currentSection = preset?.sections?.find(s => s.subject === q.subject);
+    const currentSection = preset?.sections?.find(s => s.subject === (q._presetSection || q.subject));
 
     const content = document.getElementById('cbt-question-content');
     if (content) {

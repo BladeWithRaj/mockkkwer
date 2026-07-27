@@ -355,8 +355,8 @@ const App = {
             <div>
               <div class="mega-col-title">Polytechnic</div>
               <div class="mega-col-items">
-                <a href="#polytechnic" class="mega-item">BTEUP Generator</a>
-                <a href="#polytechnic" class="mega-item">Browse Papers</a>
+                <a href="/polytechnic/" class="mega-item">BTEUP Notes</a>
+                <a href="/polytechnic/" class="mega-item">Download PDFs</a>
               </div>
               <div class="mega-col-title" style="margin-top:12px">Quick Access</div>
               <div class="mega-col-items">
@@ -371,7 +371,7 @@ const App = {
         </div>
       </div>
       <a href="#aptitude"    class="nav-link ${activePage === 'aptitude' ? 'active' : ''}">Aptitude Qs</a>
-      <a href="#polytechnic" class="nav-link ${activePage === 'polytechnic' ? 'active' : ''}">Paper Generator</a>
+      <a href="/polytechnic/" class="nav-link">BTEUP</a>
       <a href="#coach"       class="nav-link nav-link--ai ${activePage === 'coach' ? 'active' : ''}" title="AI Study Coach — personalized insights">AI Coach</a>
       <a href="#dashboard"   class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">Dashboard</a>
     `;

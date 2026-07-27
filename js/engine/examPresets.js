@@ -112,7 +112,10 @@ const ExamPresets = {
         description: '15 questions, 10 min', renderer: 'ssc'
       },
 
-      // ─── SSC CGL ───
+      // ═══════════════════════════════
+      //   SSC EXAMS
+      // ═══════════════════════════════
+
       'ssc-cgl': {
         id: 'ssc-cgl', name: 'SSC CGL', fullName: 'SSC CGL Tier 1 — 2026',
         category: 'SSC', icon: '🎯', totalQuestions: 100, totalTime: 3600,
@@ -123,11 +126,9 @@ const ExamPresets = {
           { name: 'English Language', subject: 'english', questions: 25 },
           { name: 'General Awareness', subject: 'gk', questions: 25 }
         ],
-        description: '100 questions, 60 min', renderer: 'ssc',
-        sortOrder: 1
+        description: '100 questions, 60 min, −0.50 marking', renderer: 'ssc', sortOrder: 1
       },
 
-      // ─── SSC CHSL ───
       'ssc-chsl': {
         id: 'ssc-chsl', name: 'SSC CHSL', fullName: 'SSC CHSL Tier 1 — 2026',
         category: 'SSC', icon: '📝', totalQuestions: 100, totalTime: 3600,
@@ -138,11 +139,9 @@ const ExamPresets = {
           { name: 'English Language', subject: 'english', questions: 25 },
           { name: 'General Awareness', subject: 'gk', questions: 25 }
         ],
-        description: '100 questions, 60 min', renderer: 'ssc',
-        sortOrder: 2
+        description: '100 questions, 60 min, −0.50 marking', renderer: 'ssc', sortOrder: 2
       },
 
-      // ─── SSC MTS ───
       'ssc-mts': {
         id: 'ssc-mts', name: 'SSC MTS', fullName: 'SSC MTS CBT — 2026',
         category: 'SSC', icon: '📋', totalQuestions: 90, totalTime: 5400,
@@ -153,11 +152,9 @@ const ExamPresets = {
           { name: 'English Language', subject: 'english', questions: 25 },
           { name: 'General Awareness', subject: 'gk', questions: 25 }
         ],
-        description: '90 questions, 90 min', renderer: 'ssc',
-        sortOrder: 3
+        description: '90 questions, 90 min, −1.00 marking', renderer: 'ssc', sortOrder: 3
       },
 
-      // ─── SSC GD ───
       'ssc-gd': {
         id: 'ssc-gd', name: 'SSC GD Constable', fullName: 'SSC GD Constable CBT — 2026',
         category: 'SSC', icon: '🛡️', totalQuestions: 80, totalTime: 3600,
@@ -168,11 +165,38 @@ const ExamPresets = {
           { name: 'Elementary Mathematics', subject: 'math', questions: 20 },
           { name: 'English / Hindi', subject: 'english', questions: 20 }
         ],
-        description: '80 questions, 60 min, no negative', renderer: 'ssc',
-        sortOrder: 4
+        description: '80 questions, 60 min, no negative', renderer: 'ssc', sortOrder: 4
       },
 
-      // ─── RRB NTPC ───
+      'ssc-cpo': {
+        id: 'ssc-cpo', name: 'SSC CPO', fullName: 'SSC CPO (SI) Tier 1 — 2026',
+        category: 'SSC', icon: '👮', totalQuestions: 200, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 50 },
+          { name: 'General Knowledge & GA', subject: 'gk', questions: 50 },
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 50 },
+          { name: 'English Comprehension', subject: 'english', questions: 50 }
+        ],
+        description: '200 questions, 120 min, −0.25 marking', renderer: 'ssc', sortOrder: 5
+      },
+
+      'ssc-stenographer': {
+        id: 'ssc-stenographer', name: 'SSC Steno', fullName: 'SSC Stenographer Grade C & D — 2026',
+        category: 'SSC', icon: '⌨️', totalQuestions: 200, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 50 },
+          { name: 'General Awareness', subject: 'gk', questions: 50 },
+          { name: 'English Language', subject: 'english', questions: 100 }
+        ],
+        description: '200 questions, 120 min, −0.25 marking', renderer: 'ssc', sortOrder: 6
+      },
+
+      // ═══════════════════════════════
+      //   RAILWAY EXAMS
+      // ═══════════════════════════════
+
       'rrb-ntpc': {
         id: 'rrb-ntpc', name: 'RRB NTPC', fullName: 'RRB NTPC CBT 1 — 2026',
         category: 'Railway', icon: '🚆', totalQuestions: 100, totalTime: 5400,
@@ -182,11 +206,64 @@ const ExamPresets = {
           { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 30 },
           { name: 'General Awareness', subject: 'gk', questions: 40 }
         ],
-        description: '100 questions, 90 min', renderer: 'railway',
-        sortOrder: 1
+        description: '100 questions, 90 min, −1/3 marking', renderer: 'railway', sortOrder: 1
       },
 
-      // ─── IBPS PO ───
+      'rrb-group-d': {
+        id: 'rrb-group-d', name: 'RRB Group D', fullName: 'RRB Group D CBT — 2026',
+        category: 'Railway', icon: '🔧', totalQuestions: 100, totalTime: 5400,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 1,
+        sections: [
+          { name: 'Mathematics', subject: 'math', questions: 25 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 30 },
+          { name: 'General Science', subject: 'gk', questions: 25 },
+          { name: 'General Awareness & Current Affairs', subject: 'gk', questions: 20 }
+        ],
+        description: '100 questions, 90 min, −1/3 marking', renderer: 'railway', sortOrder: 2
+      },
+
+      'rrb-alp': {
+        id: 'rrb-alp', name: 'RRB ALP', fullName: 'RRB ALP (Assistant Loco Pilot) CBT 1 — 2026',
+        category: 'Railway', icon: '🚂', totalQuestions: 75, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 1,
+        sections: [
+          { name: 'Mathematics', subject: 'math', questions: 20 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 25 },
+          { name: 'General Science', subject: 'gk', questions: 20 },
+          { name: 'General Awareness', subject: 'gk', questions: 10 }
+        ],
+        description: '75 questions, 60 min, −1/3 marking', renderer: 'railway', sortOrder: 3
+      },
+
+      'rrb-je': {
+        id: 'rrb-je', name: 'RRB JE', fullName: 'RRB JE (Junior Engineer) CBT 1 — 2026',
+        category: 'Railway', icon: '⚙️', totalQuestions: 100, totalTime: 5400,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 1,
+        sections: [
+          { name: 'Mathematics', subject: 'math', questions: 30 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 25 },
+          { name: 'General Awareness', subject: 'gk', questions: 15 },
+          { name: 'General Science', subject: 'gk', questions: 30 }
+        ],
+        description: '100 questions, 90 min, −1/3 marking', renderer: 'railway', sortOrder: 4
+      },
+
+      'rpf-constable': {
+        id: 'rpf-constable', name: 'RPF Constable', fullName: 'RPF Constable CBT — 2026',
+        category: 'Railway', icon: '🛤️', totalQuestions: 120, totalTime: 5400,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 1,
+        sections: [
+          { name: 'General Awareness', subject: 'gk', questions: 50 },
+          { name: 'Arithmetic', subject: 'math', questions: 35 },
+          { name: 'General Intelligence & Reasoning', subject: 'reasoning', questions: 35 }
+        ],
+        description: '120 questions, 90 min, −1/3 marking', renderer: 'railway', sortOrder: 5
+      },
+
+      // ═══════════════════════════════
+      //   BANKING EXAMS
+      // ═══════════════════════════════
+
       'ibps-po': {
         id: 'ibps-po', name: 'IBPS PO', fullName: 'IBPS PO Prelims — 2026',
         category: 'Banking', icon: '🏦', totalQuestions: 100, totalTime: 3600,
@@ -196,8 +273,149 @@ const ExamPresets = {
           { name: 'Quantitative Aptitude', subject: 'math', questions: 35 },
           { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
         ],
-        description: '100 questions, 60 min', renderer: 'banking',
-        sortOrder: 1
+        description: '100 questions, 60 min, −0.25 marking', renderer: 'banking', sortOrder: 1
+      },
+
+      'sbi-po': {
+        id: 'sbi-po', name: 'SBI PO', fullName: 'SBI PO Prelims — 2026',
+        category: 'Banking', icon: '🏛️', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'English Language', subject: 'english', questions: 30 },
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 35 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
+        ],
+        description: '100 questions, 60 min, −0.25 marking', renderer: 'banking', sortOrder: 2
+      },
+
+      'ibps-clerk': {
+        id: 'ibps-clerk', name: 'IBPS Clerk', fullName: 'IBPS Clerk Prelims — 2026',
+        category: 'Banking', icon: '📊', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'English Language', subject: 'english', questions: 30 },
+          { name: 'Numerical Ability', subject: 'math', questions: 35 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
+        ],
+        description: '100 questions, 60 min, −0.25 marking', renderer: 'banking', sortOrder: 3
+      },
+
+      'sbi-clerk': {
+        id: 'sbi-clerk', name: 'SBI Clerk', fullName: 'SBI Clerk Prelims — 2026',
+        category: 'Banking', icon: '💳', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'English Language', subject: 'english', questions: 30 },
+          { name: 'Numerical Ability', subject: 'math', questions: 35 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
+        ],
+        description: '100 questions, 60 min, −0.25 marking', renderer: 'banking', sortOrder: 4
+      },
+
+      'rbi-assistant': {
+        id: 'rbi-assistant', name: 'RBI Assistant', fullName: 'RBI Assistant Prelims — 2026',
+        category: 'Banking', icon: '🏧', totalQuestions: 100, totalTime: 3600,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'English Language', subject: 'english', questions: 30 },
+          { name: 'Numerical Ability', subject: 'math', questions: 35 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 35 }
+        ],
+        description: '100 questions, 60 min, −0.25 marking', renderer: 'banking', sortOrder: 5
+      },
+
+      'ibps-rrb-po': {
+        id: 'ibps-rrb-po', name: 'IBPS RRB PO', fullName: 'IBPS RRB Officer Scale 1 Prelims — 2026',
+        category: 'Banking', icon: '🌾', totalQuestions: 80, totalTime: 2700,
+        negativeMarking: true, negativeValue: 0.25, marksPerQuestion: 1,
+        sections: [
+          { name: 'Quantitative Aptitude', subject: 'math', questions: 40 },
+          { name: 'Reasoning Ability', subject: 'reasoning', questions: 40 }
+        ],
+        description: '80 questions, 45 min, −0.25 marking', renderer: 'banking', sortOrder: 6
+      },
+
+      // ═══════════════════════════════
+      //   UPSC EXAMS
+      // ═══════════════════════════════
+
+      'upsc-prelims-gs1': {
+        id: 'upsc-prelims-gs1', name: 'UPSC Prelims GS-I', fullName: 'UPSC CSE Prelims — General Studies Paper I — 2026',
+        category: 'UPSC', icon: '🏛️', totalQuestions: 100, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 2,
+        sections: [
+          { name: 'History & Culture', subject: 'gk', questions: 15 },
+          { name: 'Geography', subject: 'gk', questions: 15 },
+          { name: 'Indian Polity', subject: 'gk', questions: 15 },
+          { name: 'Economy', subject: 'gk', questions: 15 },
+          { name: 'Environment & Ecology', subject: 'gk', questions: 15 },
+          { name: 'Science & Technology', subject: 'gk', questions: 10 },
+          { name: 'Current Affairs', subject: 'gk', questions: 15 }
+        ],
+        description: '100 questions, 120 min, −1/3 marking', renderer: 'upsc', sortOrder: 1
+      },
+
+      'upsc-prelims-csat': {
+        id: 'upsc-prelims-csat', name: 'UPSC CSAT', fullName: 'UPSC CSE Prelims — CSAT Paper II — 2026',
+        category: 'UPSC', icon: '🧠', totalQuestions: 80, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 2.5,
+        sections: [
+          { name: 'Comprehension', subject: 'english', questions: 20 },
+          { name: 'Logical Reasoning & Analytical Ability', subject: 'reasoning', questions: 25 },
+          { name: 'Basic Numeracy & Data Interpretation', subject: 'math', questions: 20 },
+          { name: 'Decision Making', subject: 'reasoning', questions: 15 }
+        ],
+        description: '80 questions, 120 min, qualifying paper', renderer: 'upsc', sortOrder: 2
+      },
+
+      'upsc-capf': {
+        id: 'upsc-capf', name: 'UPSC CAPF', fullName: 'UPSC CAPF (AC) Paper I — 2026',
+        category: 'UPSC', icon: '🎖️', totalQuestions: 125, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 2,
+        sections: [
+          { name: 'General Ability & Intelligence', subject: 'gk', questions: 75 },
+          { name: 'General Studies', subject: 'gk', questions: 50 }
+        ],
+        description: '125 questions, 120 min, −1/3 marking', renderer: 'upsc', sortOrder: 3
+      },
+
+      'upsc-epfo': {
+        id: 'upsc-epfo', name: 'UPSC EPFO', fullName: 'UPSC EPFO Enforcement Officer — 2026',
+        category: 'UPSC', icon: '📑', totalQuestions: 120, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 2,
+        sections: [
+          { name: 'General English', subject: 'english', questions: 20 },
+          { name: 'Indian Freedom Struggle', subject: 'gk', questions: 15 },
+          { name: 'Current Events', subject: 'gk', questions: 15 },
+          { name: 'Indian Polity', subject: 'gk', questions: 15 },
+          { name: 'Economy & Social Security', subject: 'gk', questions: 20 },
+          { name: 'General Accounting Principles', subject: 'math', questions: 15 },
+          { name: 'General Science & IT', subject: 'gk', questions: 10 },
+          { name: 'General Mental Ability & Quantitative Aptitude', subject: 'reasoning', questions: 10 }
+        ],
+        description: '120 questions, 120 min, −1/3 marking', renderer: 'upsc', sortOrder: 4
+      },
+
+      'uppsc-prelims': {
+        id: 'uppsc-prelims', name: 'UPPSC Prelims', fullName: 'UPPSC PCS Prelims GS Paper I — 2026',
+        category: 'UPSC', icon: '🗺️', totalQuestions: 150, totalTime: 7200,
+        negativeMarking: true, negativeValue: 0.33, marksPerQuestion: 2,
+        sections: [
+          { name: 'General Studies', subject: 'gk', questions: 100 },
+          { name: 'Current Affairs & UP Special', subject: 'gk', questions: 50 }
+        ],
+        description: '150 questions, 120 min, −1/3 marking', renderer: 'upsc', sortOrder: 5
+      },
+
+      'bpsc-prelims': {
+        id: 'bpsc-prelims', name: 'BPSC Prelims', fullName: 'BPSC PCS Prelims GS — 2026',
+        category: 'UPSC', icon: '📋', totalQuestions: 150, totalTime: 7200,
+        negativeMarking: false, negativeValue: 0, marksPerQuestion: 1,
+        sections: [
+          { name: 'General Studies', subject: 'gk', questions: 100 },
+          { name: 'Current Affairs & Bihar Special', subject: 'gk', questions: 50 }
+        ],
+        description: '150 questions, 120 min, no negative', renderer: 'upsc', sortOrder: 6
       }
     };
     this._loaded = true;

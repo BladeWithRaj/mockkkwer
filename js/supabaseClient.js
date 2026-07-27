@@ -8,6 +8,22 @@ const SUPABASE_KEY = "sb_publishable_f9j2KF0lNdMVts6i4bFPzw_jXAvJaqV";
 // IMPORTANT: renamed to 'client' to avoid conflict with window.supabase
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ── SUBJECT MAPPING: preset subject → actual DB subjects ──
+// DB has granular subjects (polity, science, history, geography)
+// Presets use broad categories (gk covers all of those)
+const SUBJECT_MAP = {
+  gk:        ['gk', 'polity', 'science', 'history', 'geography', 'ga'],
+  math:      ['math', 'qa'],
+  reasoning: ['reasoning'],
+  english:   ['english'],
+  hindi:     ['hindi']
+};
+
+function _expandSubject(subject) {
+  const key = (subject || '').toLowerCase();
+  return SUBJECT_MAP[key] || [key];
+}
+
 // ── FETCH (Direct Supabase — ONLY source) ──────
 
 async function fetchRandomQuestions(config = {}) {
@@ -20,7 +36,9 @@ async function fetchRandomQuestions(config = {}) {
     if (subjects.includes("all") || subjects.length === 0) {
       // no filter — fetch from all subjects
     } else {
-      query = query.in("subject", subjects.map(s => s.toLowerCase()));
+      // Expand preset subjects to DB subjects (e.g. 'gk' → ['gk','polity','science',...])
+      const expanded = [...new Set(subjects.flatMap(s => _expandSubject(s)))];
+      query = query.in("subject", expanded);
     }
 
     const { data, error } = await query;
@@ -139,7 +157,9 @@ async function fetchSectionWiseQuestions(config = {}) {
       }
 
       let query = client.from("questions").select("*, options(*)");
-      query = query.eq("subject", subjectFilter.toLowerCase());
+      // Expand subject to match DB categories (gk → polity, science, history, etc.)
+      const dbSubjects = _expandSubject(subjectFilter);
+      query = query.in("subject", dbSubjects);
 
       const { data, error } = await query;
 
@@ -158,6 +178,10 @@ async function fetchSectionWiseQuestions(config = {}) {
       const base = fresh.length >= needed ? fresh : data;
       const shuffled = _shuffle(base);
       const selected = shuffled.slice(0, needed);
+
+      // Tag questions with their preset section for CBT grouping
+      // BUT keep original subject intact (polity stays polity, not overridden to gk)
+      selected.forEach(q => { q._presetSection = subjectFilter; });
 
       allSelected.push(...selected);
       console.log(`Section ${subjectFilter}: ${selected.length}/${needed} questions`);
@@ -496,6 +520,7 @@ function mapDBToUI(data) {
     return {
       id: q.id,
       subject: (q.subject || "general").toLowerCase(),
+      _presetSection: q._presetSection || null,  // preset section tag for CBT grouping
       correct: newCorrect,          // ← post-shuffle correct index
 
       // Bilingual storage (for language toggle)

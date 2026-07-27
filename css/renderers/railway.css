@@ -278,8 +278,81 @@
   .rrb-palette.open { max-height: 50vh; overflow-y: auto; }
   .rrb-q-grid { grid-template-columns: repeat(8, 1fr); }
   .rrb-mobile-toggle { display: flex !important; position: fixed; bottom: 56px; right: 12px; width: 44px; height: 44px; border-radius: 50%; background: var(--rrb-green); color: white; border: none; font-size: 18px; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 50; }
-  .rrb-mobile-bar { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--rrb-border); padding: 6px 12px; z-index: 50; gap: 6px; }
+  .rrb-mobile-bar { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: var(--rrb-surface); border-top: 1px solid var(--rrb-border); padding: 6px 12px; z-index: 50; gap: 6px; }
   .rrb-mobile-bar .rrb-btn { flex: 1; text-align: center; }
 }
 @media (min-width: 769px) { .rrb-mobile-toggle { display: none !important; } .rrb-mobile-bar { display: none !important; } }
 
+/* ═══════════════════════════════════════════
+   DARK MODE — .rrb-dark override
+   Deep, polished dark. Pure blacks, muted green.
+   ═══════════════════════════════════════════ */
+.rrb-mode.rrb-dark {
+  --rrb-green: #43A047;
+  --rrb-green-dark: #2E7D32;
+  --rrb-green-light: #0A1A10;
+  --rrb-green-mid: #388E3C;
+  --rrb-header-bg: linear-gradient(180deg, #080F08 0%, #060C06 100%);
+  --rrb-surface: #101A12;
+  --rrb-bg: #060C06;
+  --rrb-border: #152518;
+  --rrb-text: #D0E0D0;
+  --rrb-text-muted: #5A7A60;
+  --rrb-answered: #43A047;
+  --rrb-not-answered: #E53935;
+  --rrb-marked: #9C27B0;
+  --rrb-not-visited: #1A2A1C;
+  background-image: none;
+}
+.rrb-mode.rrb-dark .rrb-header {
+  background: linear-gradient(180deg, #080F08 0%, #060C06 100%);
+  border-bottom: 2px solid #43A047;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.rrb-mode.rrb-dark .rrb-section-bar {
+  background: #080F08;
+  border-bottom-color: #152518;
+}
+.rrb-mode.rrb-dark .rrb-section-tab.active {
+  background: rgba(67, 160, 71, 0.12);
+}
+.rrb-mode.rrb-dark .rrb-question-panel {
+  background: #060C06;
+}
+.rrb-mode.rrb-dark .rrb-question-content {
+  background: #0A1208;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.rrb-mode.rrb-dark .rrb-option {
+  background: #080F08;
+  border-color: #152518;
+}
+.rrb-mode.rrb-dark .rrb-option:hover {
+  background: #101A12;
+}
+.rrb-mode.rrb-dark .rrb-palette {
+  border-left-color: #152518;
+}
+.rrb-mode.rrb-dark .rrb-palette-header {
+  background: #080F08;
+}
+.rrb-mode.rrb-dark .rrb-action-bar {
+  background: #080F08;
+  border-top-color: #152518;
+}
+.rrb-mode.rrb-dark .rrb-instructions {
+  background: #0A1208;
+}
+.rrb-mode.rrb-dark .rrb-instructions-header {
+  background: #080F08;
+}
+.rrb-mode.rrb-dark .rrb-mobile-bar {
+  background: #080F08;
+  border-top-color: #152518;
+}
+.rrb-mode.rrb-dark .rrb-inst-table th {
+  background: #0A1208 !important;
+}
+.rrb-mode.rrb-dark .rrb-inst-table td {
+  border-color: #152518;
+}

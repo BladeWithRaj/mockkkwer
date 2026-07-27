@@ -39,5 +39,4 @@ Disallow: /sql/
 Disallow: /sw.js
 Disallow: /.env
 
-# ── Sitemaps ──
-Sitemap: https://mock24hr.com/sitemap-index.xml
+

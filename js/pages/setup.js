@@ -66,15 +66,99 @@ const SetupPage = {
     const calculatedTimeSec = this.config.totalTime || (this.config.numQuestions * this.config.timePerQuestion);
     const calculatedTimeMin = Math.round(calculatedTimeSec / 60);
 
+    // ── PRESET MODE: Clean exam card, no customization ──
+    if (currentPreset) {
+      return `
+      <div class="setup-page page-enter" style="padding: 24px var(--sp-4) 80px;">
+        <div class="sp-card" style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 0; box-shadow: var(--shadow-md); overflow: hidden;">
+
+          <!-- Exam Header -->
+          <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark, #1a3f8a) 100%); padding: 24px 24px 20px; text-align: center;">
+            <div style="font-size: 32px; margin-bottom: 8px;">${currentPreset.icon || '📝'}</div>
+            <h1 style="font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 4px; font-family: var(--font-display);">
+              ${currentPreset.fullName || currentPreset.name}
+            </h1>
+            <p style="color: rgba(255,255,255,0.7); font-size: 13px; margin: 0;">
+              ${currentPreset.description || currentPreset.category + ' Exam'}
+            </p>
+          </div>
+
+          <div style="padding: 20px 24px 24px;">
+            <!-- Quick Stats -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
+              <div style="text-align: center; padding: 10px 6px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono);">${currentPreset.totalQuestions}</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 2px;">Questions</div>
+              </div>
+              <div style="text-align: center; padding: 10px 6px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono);">${calculatedTimeMin}</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 2px;">Minutes</div>
+              </div>
+              <div style="text-align: center; padding: 10px 6px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-color);">
+                <div style="font-size: 18px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono);">${currentPreset.totalQuestions * (currentPreset.marksPerQuestion || 1)}</div>
+                <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-top: 2px;">Marks</div>
+              </div>
+            </div>
+
+            <!-- Section Breakdown -->
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 8px;">Sections</div>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                ${currentPreset.sections.map((s, i) => `
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-secondary); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: var(--primary); color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700;">${i + 1}</span>
+                      <span style="font-size: 13px; color: var(--text-primary); font-weight: 500;">${s.name}</span>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 700; color: var(--primary); font-family: var(--font-mono);">${s.questions}Q</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Negative Marking Warning -->
+            <div style="background: ${this.config.negativeMarking ? 'var(--warning-light)' : 'var(--bg-secondary)'}; border: 1px solid ${this.config.negativeMarking ? 'var(--warning)' : 'var(--border-color)'}; border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: ${this.config.negativeMarking ? 'var(--warning)' : 'var(--text-muted)'}; font-weight: 500; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+              <span>${this.config.negativeMarking ? '⚠️' : 'ℹ️'}</span>
+              <span>${negWarning} · ${currentPreset.marksPerQuestion || 1} mark per correct answer</span>
+            </div>
+
+            <!-- Language Toggle -->
+            <div style="margin-bottom: 16px;">
+              <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px;">Language</div>
+              <div style="display: flex; gap: 8px;">
+                ${['english', 'hindi', 'both'].map(lang => `
+                  <button type="button" class="btn ${this.config.language === lang ? 'btn-primary' : 'btn-secondary'}" onclick="SetupPage.setLanguage('${lang}')" style="flex: 1; padding: 8px 0; font-size: 12px; font-weight: 600; text-transform: capitalize; border-radius: var(--radius-sm);">
+                    ${lang === 'both' ? 'Bilingual' : lang === 'hindi' ? 'हिंदी' : 'English'}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Start Test CTA -->
+            <button class="btn btn-primary" onclick="SetupPage.startTest()" id="start-test-btn" style="width: 100%; padding: 14px 0; font-size: 16px; font-weight: 700; font-family: var(--font-display); border-radius: var(--radius-md); letter-spacing: 0.02em;">
+              🚀 Start Mock Test
+            </button>
+
+            <button class="btn btn-secondary" onclick="window.history.back()" style="width: 100%; padding: 10px 0; font-size: var(--text-sm); font-weight: 500; border-radius: var(--radius-md); margin-top: 8px;">
+              ← Back
+            </button>
+          </div>
+
+        </div>
+      </div>
+    `;
+    }
+
+    // ── CUSTOM MODE: Full configuration for custom tests ──
     return `
       <div class="setup-page page-enter" style="padding: 24px var(--sp-4) 80px;">
         <div class="sp-card" style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md);">
           
           <div style="margin-bottom: 20px; text-align: center;">
             <h1 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--text-primary); margin: 0 0 4px; font-family: var(--font-display);">
-              ${isDaily ? 'Daily Challenge' : 'Test Configuration'}
+              ${isDaily ? 'Daily Challenge' : 'Custom Practice Test'}
             </h1>
-            <p style="color: var(--text-secondary); font-size: var(--text-sm); margin: 0;">Confirm details before you begin</p>
+            <p style="color: var(--text-secondary); font-size: var(--text-sm); margin: 0;">Configure your test settings</p>
           </div>
 
           <!-- Form Fields -->

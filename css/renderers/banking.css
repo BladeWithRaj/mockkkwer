@@ -282,8 +282,102 @@
   .ibps-palette { width: 100%; border-left: none; max-height: 0; overflow: hidden; transition: max-height 0.3s; }
   .ibps-palette.open { max-height: 50vh; overflow-y: auto; }
   .ibps-mobile-toggle { display: flex !important; position: fixed; bottom: 56px; right: 12px; width: 44px; height: 44px; border-radius: 50%; background: var(--ibps-blue); color: white; border: none; font-size: 18px; align-items: center; justify-content: center; z-index: 50; }
-  .ibps-mobile-bar { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid var(--ibps-border); padding: 6px 12px; z-index: 50; gap: 6px; }
+  .ibps-mobile-bar { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: var(--ibps-surface); border-top: 1px solid var(--ibps-border); padding: 6px 12px; z-index: 50; gap: 6px; }
   .ibps-mobile-bar .ibps-btn { flex: 1; text-align: center; }
   .ibps-kbd-hint { display: none; }
 }
 @media (min-width: 769px) { .ibps-mobile-toggle { display: none !important; } .ibps-mobile-bar { display: none !important; } }
+
+/* ═══════════════════════════════════════════
+   DARK MODE — .ibps-dark override
+   Deep, polished dark. Pure blacks, muted navy.
+   ═══════════════════════════════════════════ */
+.ibps-mode.ibps-dark {
+  --ibps-blue: #7986CB;
+  --ibps-blue-dark: #5C6BC0;
+  --ibps-blue-light: #0E1225;
+  --ibps-surface: #111828;
+  --ibps-bg: #080C18;
+  --ibps-border: #1A2540;
+  --ibps-text: #D0D8E4;
+  --ibps-text-muted: #6878A0;
+  --ibps-green: #4CAF50;
+  --ibps-red: #E53935;
+  --ibps-purple: #9C27B0;
+  --ibps-grey: #3A4660;
+  background-image: none;
+}
+.ibps-mode.ibps-dark .ibps-header {
+  background: linear-gradient(180deg, #0A0E1A 0%, #080C18 100%);
+  border-bottom: 2px solid #5C6BC0;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+}
+.ibps-mode.ibps-dark .ibps-section-bar {
+  background: #0A0E1A;
+  border-bottom-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-section-tab.active {
+  background: rgba(121, 134, 203, 0.12);
+}
+.ibps-mode.ibps-dark .ibps-question-panel {
+  background: #080C18;
+}
+.ibps-mode.ibps-dark .ibps-question-content {
+  background: #0C1020;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.ibps-mode.ibps-dark .ibps-option {
+  background: #0A0E1A;
+  border-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-option:hover {
+  background: #111828;
+}
+.ibps-mode.ibps-dark .ibps-palette {
+  border-left-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-palette-header {
+  background: #0A0E1A;
+}
+.ibps-mode.ibps-dark .ibps-action-bar {
+  background: #0A0E1A;
+  border-top-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-instructions {
+  background: #0C1020;
+}
+.ibps-mode.ibps-dark .ibps-instructions-header {
+  background: #0A0E1A;
+}
+.ibps-mode.ibps-dark .ibps-mobile-bar {
+  background: #0A0E1A;
+  border-top-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-calc-modal {
+  background: #111828;
+  border-color: #1A2540;
+}
+.ibps-mode.ibps-dark .ibps-inst-table th {
+  background: #0E1225 !important;
+}
+.ibps-mode.ibps-dark .ibps-inst-table td {
+  border-color: #1A2540;
+}
+
+/* Dark toggle button (shared style) */
+.ibps-dark-toggle,
+.rrb-dark-toggle,
+.upsc-dark-toggle {
+  width: 32px; height: 32px; border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: white; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.ibps-dark-toggle:hover,
+.rrb-dark-toggle:hover,
+.upsc-dark-toggle:hover {
+  background: rgba(255,255,255,0.18);
+}
+

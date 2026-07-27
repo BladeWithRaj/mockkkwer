@@ -9,10 +9,10 @@
 const HomePage = {
 
   _boardConfig: {
-    SSC:      { icon: '◆', color: '#1A56DB', label: 'SSC',         bg: '#EBF5FF', sub: 'CGL · CHSL · MTS · GD · CPO',      img: 'assets/ssc-editorial.png' },
-    Railway:  { icon: '▲', color: '#E02424', label: 'Railway',     bg: '#FDE8E8', sub: 'NTPC · Group D · ALP',              img: 'assets/railway-editorial.png' },
-    Banking:  { icon: '◎', color: '#0E9F6E', label: 'Banking',     bg: '#EBF8F2', sub: 'IBPS PO · SBI PO · Clerk',          img: 'assets/banking-editorial.png' },
-    UPSC:     { icon: '▤', color: '#D97706', label: 'UPSC',        bg: '#FEF3C7', sub: 'Civil Services · EPFO',             img: 'assets/upsc-editorial.png' }
+    SSC:      { icon: '◆', color: '#1A56DB', label: 'SSC',         bg: '#EBF5FF', sub: 'CGL · CHSL · MTS · GD · CPO',      img: 'assets/ssc-editorial.png',     page: '/ssc/' },
+    Railway:  { icon: '▲', color: '#E02424', label: 'Railway',     bg: '#FDE8E8', sub: 'NTPC · Group D · ALP',              img: 'assets/railway-editorial.png', page: '/railway/' },
+    Banking:  { icon: '◎', color: '#0E9F6E', label: 'Banking',     bg: '#EBF8F2', sub: 'IBPS PO · SBI PO · Clerk',          img: 'assets/banking-editorial.png', page: '/banking/' },
+    UPSC:     { icon: '▤', color: '#D97706', label: 'UPSC',        bg: '#FEF3C7', sub: 'Civil Services · EPFO',             img: 'assets/upsc-editorial.png',    page: '/upsc/' }
   },
 
   _hotMocks: [
@@ -86,17 +86,24 @@ const HomePage = {
     const continueBlock = (isLoggedIn && hasResume) ? this._renderHeroContinue() : '';
 
     const badge = isLoggedIn
-      ? `<div class="hp-hero-badge">Welcome back, ${userName}</div>`
-      : `<div class="hp-hero-badge">Free Mock Test Platform · SSC · Railway · Banking · UPSC</div>`;
+      ? `<div class="hp-hero-badge">⚡ Welcome back, ${userName}</div>`
+      : `<div class="hp-hero-badge">🎯 India's Free Mock Test Platform</div>`;
+
+    // Stats from actual data
+    const history = window.Storage?.getHistory?.() || [];
+    const totalTests = Math.max(history.length, 0);
+    const boards = Object.keys(this._boardConfig).length;
+    const allPresets = window.ExamPresets?.getAll ? ExamPresets.getAll() : [];
+    const examCount = allPresets.length || 30;
 
     return `
       <section class="hp-hero">
         <div class="hp-hero-left">
           ${badge}
 
-          <h1 class="text-display">Crack Your Next Exam<br>With <span class="hp-hero-accent">Smarter Practice,</span><br>Not More Guesswork.</h1>
+          <h1 class="text-display">Practice Smart.<br><span class="hp-hero-accent">Score Higher.</span></h1>
 
-          <p class="hp-hero-subtitle">AI-powered mock tests, personalized revision, and BTEUP paper generation — in one platform.</p>
+          <p class="hp-hero-subtitle">Real exam pattern mock tests for <strong>SSC, Railway, Banking & UPSC</strong> — with AI analysis, negative marking, and detailed performance reports. 100% free.</p>
 
           ${continueBlock}
 
@@ -109,19 +116,21 @@ const HomePage = {
             </button>
           </div>
 
-          <!-- Trust Row — exam board names, not icons (Doc 5 §4) -->
-          <div class="hp-hero-trust">
-            <span class="hp-hero-trust-label">Trusted by aspirants of</span>
-            <div class="hp-hero-trust-boards">
-              <span>SSC</span>
-              <span class="hp-trust-dot"></span>
-              <span>Railway</span>
-              <span class="hp-trust-dot"></span>
-              <span>Banking</span>
-              <span class="hp-trust-dot"></span>
-              <span>UPSC</span>
-              <span class="hp-trust-dot"></span>
-              <span>BTEUP</span>
+          <!-- Stats Row -->
+          <div class="hp-hero-stats">
+            <div class="hp-hero-stat">
+              <div class="hp-hero-stat-value">${examCount}+</div>
+              <div class="hp-hero-stat-label">Exam Patterns</div>
+            </div>
+            <div class="hp-hero-stat-divider"></div>
+            <div class="hp-hero-stat">
+              <div class="hp-hero-stat-value">${boards}</div>
+              <div class="hp-hero-stat-label">Exam Boards</div>
+            </div>
+            <div class="hp-hero-stat-divider"></div>
+            <div class="hp-hero-stat">
+              <div class="hp-hero-stat-value">Free</div>
+              <div class="hp-hero-stat-label">No Hidden Fees</div>
             </div>
           </div>
         </div>
@@ -162,11 +171,11 @@ const HomePage = {
   // ══════════════════════════════════════════════════════════
   _renderSearch() {
     const chips = [
-      { label: 'SSC CGL',      action: "App.navigate('board', {id:'SSC'})" },
-      { label: 'Railway NTPC', action: "App.navigate('board', {id:'Railway'})" },
-      { label: 'Banking PO',   action: "App.navigate('board', {id:'Banking'})" },
-      { label: 'UPSC Pre',     action: "App.navigate('board', {id:'UPSC'})" },
-      { label: 'BTEUP',        action: "App.navigate('polytechnic')" },
+      { label: 'SSC CGL',      action: "window.location.href='/ssc/'" },
+      { label: 'Railway NTPC', action: "window.location.href='/railway/'" },
+      { label: 'Banking PO',   action: "window.location.href='/banking/'" },
+      { label: 'UPSC Pre',     action: "window.location.href='/upsc/'" },
+      { label: 'BTEUP',        action: "window.location.href='/polytechnic/'" },
     ];
     return `
       <div class="hp-search-section">
@@ -212,7 +221,7 @@ const HomePage = {
   _renderBoardGrid(boards) {
     const boardClass = { SSC: 'board-ssc', Railway: 'board-railway', Banking: 'board-banking', UPSC: 'board-upsc' };
     const cards = boards.map(b => `
-      <a href="#board?id=${b.id}" class="hp-board-card ${boardClass[b.id] || ''}" style="background-image: url('${b.img}'); background-size: cover; background-position: center;">
+      <a href="${b.page}" class="hp-board-card ${boardClass[b.id] || ''}" style="background-image: url('${b.img}'); background-size: cover; background-position: center;">
         <div class="hp-board-icon">${b.icon}</div>
         <div class="hp-board-info">
           <div class="hp-board-name">${b.label}</div>
@@ -246,27 +255,95 @@ const HomePage = {
 
 
   // ══════════════════════════════════════════════════════════
-  // TODAY'S TRENDING TESTS (Doc 5 §8) — social proof
+  // TODAY'S TRENDING TESTS (Doc 5 §8) — premium cards
+  // Board SVG emblems + animated shimmer + glow hover
   // ══════════════════════════════════════════════════════════
+
+  // SVG emblems for each exam board — stylized official logos
+  _boardLogos: {
+    SSC: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 4L72 20V52L40 76L8 52V20L40 4Z" fill="var(--hot-color)" opacity="0.12" stroke="var(--hot-color)" stroke-width="2"/>
+      <path d="M40 14L62 26V50L40 66L18 50V26L40 14Z" fill="var(--hot-color)" opacity="0.08"/>
+      <text x="40" y="38" text-anchor="middle" font-size="14" font-weight="900" fill="var(--hot-color)" font-family="'Plus Jakarta Sans',sans-serif">SSC</text>
+      <text x="40" y="52" text-anchor="middle" font-size="7" font-weight="600" fill="var(--hot-color)" opacity="0.7" font-family="'Inter',sans-serif">GOVT OF INDIA</text>
+    </svg>`,
+    Railway: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="40" r="32" stroke="var(--hot-color)" stroke-width="2" opacity="0.2"/>
+      <circle cx="40" cy="40" r="24" stroke="var(--hot-color)" stroke-width="1.5" opacity="0.15"/>
+      <circle cx="40" cy="40" r="8" fill="var(--hot-color)" opacity="0.15"/>
+      <line x1="40" y1="8" x2="40" y2="72" stroke="var(--hot-color)" stroke-width="1.5" opacity="0.2"/>
+      <line x1="8" y1="40" x2="72" y2="40" stroke="var(--hot-color)" stroke-width="1.5" opacity="0.2"/>
+      <line x1="16" y1="16" x2="64" y2="64" stroke="var(--hot-color)" stroke-width="1" opacity="0.12"/>
+      <line x1="64" y1="16" x2="16" y2="64" stroke="var(--hot-color)" stroke-width="1" opacity="0.12"/>
+      <text x="40" y="38" text-anchor="middle" font-size="11" font-weight="900" fill="var(--hot-color)" font-family="'Plus Jakarta Sans',sans-serif">RRB</text>
+      <text x="40" y="50" text-anchor="middle" font-size="6.5" font-weight="600" fill="var(--hot-color)" opacity="0.7" font-family="'Inter',sans-serif">RAILWAYS</text>
+    </svg>`,
+    Banking: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 8L70 24H10L40 8Z" fill="var(--hot-color)" opacity="0.15" stroke="var(--hot-color)" stroke-width="1.5"/>
+      <rect x="16" y="28" width="6" height="28" rx="2" fill="var(--hot-color)" opacity="0.12"/>
+      <rect x="28" y="28" width="6" height="28" rx="2" fill="var(--hot-color)" opacity="0.12"/>
+      <rect x="46" y="28" width="6" height="28" rx="2" fill="var(--hot-color)" opacity="0.12"/>
+      <rect x="58" y="28" width="6" height="28" rx="2" fill="var(--hot-color)" opacity="0.12"/>
+      <rect x="10" y="58" width="60" height="6" rx="2" fill="var(--hot-color)" opacity="0.15"/>
+      <text x="40" y="46" text-anchor="middle" font-size="10" font-weight="900" fill="var(--hot-color)" font-family="'Plus Jakarta Sans',sans-serif">IBPS</text>
+      <text x="40" y="72" text-anchor="middle" font-size="6.5" font-weight="600" fill="var(--hot-color)" opacity="0.7" font-family="'Inter',sans-serif">BANKING</text>
+    </svg>`,
+    UPSC: `<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="40" cy="36" r="26" stroke="var(--hot-color)" stroke-width="2" opacity="0.15"/>
+      <circle cx="40" cy="36" r="18" stroke="var(--hot-color)" stroke-width="1.5" opacity="0.12"/>
+      <path d="M32 26L40 14L48 26" stroke="var(--hot-color)" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+      <circle cx="40" cy="36" r="6" fill="var(--hot-color)" opacity="0.12"/>
+      <text x="40" y="40" text-anchor="middle" font-size="11" font-weight="900" fill="var(--hot-color)" font-family="'Plus Jakarta Sans',sans-serif">UPSC</text>
+      <text x="40" y="70" text-anchor="middle" font-size="6" font-weight="600" fill="var(--hot-color)" opacity="0.7" font-family="'Inter',sans-serif">CIVIL SERVICES</text>
+    </svg>`
+  },
+
   _renderHotMocks() {
-    const cards = this._hotMocks.map(m => {
+    const cards = this._hotMocks.map((m, i) => {
       const cls = `hot-${m.category.toLowerCase()}`;
+      const logo = this._boardLogos[m.category] || '';
+      const badgeIcon = m.badge === 'Hot' ? '🔥' : '📈';
       return `
-        <div class="hp-hot-card ${cls}" onclick="HomePage._startExam('${m.id}')">
-          <div class="hp-hot-icon">${this._boardConfig[m.category]?.icon || '&#9632;'}</div>
-          <div class="hp-hot-body">
-            <div class="hp-hot-header">
-              <span class="hp-hot-badge">${m.badge}</span>
-              <span class="hp-live-indicator">
-                <span class="hp-live-dot"></span>
-                ${m.active}
-              </span>
-            </div>
-            <div class="hp-hot-name">${m.name}</div>
-            <div class="hp-hot-stats">${m.q} Questions &middot; ${m.min} Mins &middot; Negative Marks</div>
-            <div class="hp-hot-attempts">${m.attempts}</div>
-            <button class="hp-hot-btn" onclick="event.stopPropagation(); HomePage._startExam('${m.id}')">Start Now →</button>
+        <div class="hp-hot-card ${cls}" onclick="HomePage._startExam('${m.id}')" style="animation-delay:${i * 100}ms">
+          <!-- Animated shimmer stripe -->
+          <div class="hp-hot-shimmer"></div>
+
+          <!-- Board Logo -->
+          <div class="hp-hot-logo">
+            ${logo}
           </div>
+
+          <!-- Board Label -->
+          <div class="hp-hot-board-label">${m.category}</div>
+
+          <!-- Badge + Live Row -->
+          <div class="hp-hot-header">
+            <span class="hp-hot-badge">${badgeIcon} ${m.badge}</span>
+            <span class="hp-live-indicator">
+              <span class="hp-live-dot"></span>
+              ${m.active}
+            </span>
+          </div>
+
+          <!-- Test Info -->
+          <div class="hp-hot-name">${m.name}</div>
+          <div class="hp-hot-chips">
+            <span class="hp-hot-chip">${m.q}Q</span>
+            <span class="hp-hot-chip">${m.min} Min</span>
+            <span class="hp-hot-chip">−ve Marks</span>
+          </div>
+
+          <!-- Attempts -->
+          <div class="hp-hot-attempts">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            ${m.attempts}
+          </div>
+
+          <!-- CTA -->
+          <button class="hp-hot-btn" onclick="event.stopPropagation(); HomePage._startExam('${m.id}')">
+            Start Now
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
       `;
     }).join('');
@@ -274,7 +351,7 @@ const HomePage = {
     return `
       <div class="hp-section" style="padding-top:48px; padding-bottom:64px;">
         <div class="hp-section-header">
-          <div class="hp-section-title">Today's Trending Tests</div>
+          <div class="hp-section-title">🔥 Today's Trending Tests</div>
           <a href="#board" class="hp-section-action">View all mocks →</a>
         </div>
         <div class="hp-hot-grid">
@@ -314,7 +391,7 @@ const HomePage = {
         color: '#9061F9',
         bg: 'rgba(144,97,249,0.08)',
         title: 'Generation',
-        desc: 'Offline paper generator, custom question sets, BTEUP papers, and downloadable PDF exports.'
+        desc: 'Free BTEUP study notes, subject-wise PDFs, custom question sets, and downloadable study material.'
       },
       {
         symbol: '◈',
@@ -387,16 +464,16 @@ const HomePage = {
       <section class="hp-bteup-showcase">
         <div class="hp-bteup-inner">
           <div class="hp-bteup-left">
-            <div class="hp-features-label" style="color:#8B5CF6;">Engineering Tools</div>
-            <h2 class="hp-bteup-title">BTEUP Previous Year<br>Paper Generator</h2>
-            <p class="hp-bteup-desc">Instantly generate semester-wise question papers from our database of 10,000+ verified BTEUP questions. Download as PDF, practice offline.</p>
+            <div class="hp-features-label" style="color:#8B5CF6;">Polytechnic Resources</div>
+            <h2 class="hp-bteup-title">BTEUP Polytechnic<br>Study Notes</h2>
+            <p class="hp-bteup-desc">Download free subject-wise study notes for all BTEUP polytechnic subjects. All units combined in one PDF — download and study offline.</p>
             <ul class="hp-bteup-features">
-              <li>All semesters (1st to 6th) covered</li>
-              <li>Subject-wise filtering</li>
-              <li>PDF export with answer key</li>
-              <li>Updated with 2024-25 papers</li>
+              <li>Subject-wise complete notes</li>
+              <li>All units in one PDF download</li>
+              <li>Bilingual support (English + Hindi)</li>
+              <li>100% Free — no signup required</li>
             </ul>
-            <button class="hp-hero-btn hp-hero-btn--primary" onclick="App.navigate('polytechnic')">Generate Sample Paper &rarr;</button>
+            <a href="/polytechnic/" class="hp-hero-btn hp-hero-btn--primary" style="display:inline-block;text-decoration:none;">Download Notes &rarr;</a>
           </div>
           <div class="hp-bteup-right">
             <div class="hp-bteup-preview">
@@ -404,16 +481,16 @@ const HomePage = {
                 <span class="hp-bteup-preview-dot" style="background:#EF4444;"></span>
                 <span class="hp-bteup-preview-dot" style="background:#F59E0B;"></span>
                 <span class="hp-bteup-preview-dot" style="background:#10B981;"></span>
-                <span style="font-size:11px; color:var(--text-muted); margin-left:8px;">paper-generator.pdf</span>
+                <span style="font-size:11px; color:var(--text-muted); margin-left:8px;">polytechnic-notes.pdf</span>
               </div>
               <div class="hp-bteup-preview-body">
-                <div class="hp-bteup-preview-line hp-bteup-preview-line--title">BTEUP Examination 2024-25</div>
-                <div class="hp-bteup-preview-line hp-bteup-preview-line--sub">Semester: 3rd &middot; Subject: Applied Mathematics</div>
+                <div class="hp-bteup-preview-line hp-bteup-preview-line--title">BTEUP Study Notes 2024-25</div>
+                <div class="hp-bteup-preview-line hp-bteup-preview-line--sub">Applied Physics-I &middot; All 5 Units</div>
                 <div class="hp-bteup-preview-line hp-bteup-preview-line--divider"></div>
-                <div class="hp-bteup-preview-line">Q.1 Solve the differential equation...</div>
-                <div class="hp-bteup-preview-line">Q.2 Find the Laplace transform of...</div>
-                <div class="hp-bteup-preview-line">Q.3 Evaluate the integral...</div>
-                <div class="hp-bteup-preview-line hp-bteup-preview-line--fade">Q.4 Using matrix method, solve...</div>
+                <div class="hp-bteup-preview-line">Unit 1: Measurement & Units...</div>
+                <div class="hp-bteup-preview-line">Unit 2: Force and Motion...</div>
+                <div class="hp-bteup-preview-line">Unit 3: Work, Power & Energy...</div>
+                <div class="hp-bteup-preview-line hp-bteup-preview-line--fade">Unit 4: Rotational Motion...</div>
               </div>
             </div>
           </div>
@@ -711,7 +788,27 @@ const HomePage = {
 
   async _startExam(presetId) {
     if (!window.ExamPresets) return;
-    App.navigate('setup', { preset: presetId });
+    
+    // Check if exam has a detail page with stages
+    const hasDetail = typeof ExamDetailPage !== 'undefined' && ExamDetailPage._exams && ExamDetailPage._exams[presetId];
+    
+    if (hasDetail) {
+      const exam = ExamDetailPage._exams[presetId];
+      const visibleStages = ExamDetailPage._getVisibleStages(exam);
+      const liveStages = visibleStages.filter(s => s.status === 'live');
+      
+      // Single live stage + few total stages → skip to setup directly
+      if (liveStages.length === 1 && visibleStages.length <= 2 && liveStages[0].presetId) {
+        App.navigate('setup', { preset: liveStages[0].presetId });
+        return;
+      }
+      
+      // Multiple stages → show exam detail for selection
+      App.navigate('exam', { id: presetId });
+    } else {
+      // Fallback: direct to setup (old behavior)
+      App.navigate('setup', { preset: presetId });
+    }
   },
 
   async _startDaily() {

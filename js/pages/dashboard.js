@@ -753,7 +753,7 @@ const DashboardPage = {
       { id: 'streak30', icon: '★', label: '30-Day Streak',     earned: streak.best >= 30,           sub: streak.best >= 30 ? 'Unlocked' : `Best: ${streak.best} days` },
       { id: 'acc90',    icon: '▲', label: '90% Accuracy',      earned: bestScore >= 90,             sub: bestScore >= 90 ? 'Unlocked' : `Best: ${bestScore}%` },
       { id: 'tests10',  icon: '◎', label: '10 Tests',          earned: history.length >= 10,        sub: history.length >= 10 ? 'Unlocked' : `${history.length}/10` },
-      { id: 'bteup',    icon: '▦', label: 'Paper Generator',   earned: bteupPapers >= 1,            sub: bteupPapers >= 1 ? 'Unlocked' : 'Generate 1 paper' },
+      { id: 'bteup',    icon: '▦', label: 'BTEUP Notes',        earned: bteupPapers >= 1,            sub: bteupPapers >= 1 ? 'Unlocked' : 'Download 1 PDF' },
     ];
 
     const earnedCount = badges.filter(b => b.earned).length;

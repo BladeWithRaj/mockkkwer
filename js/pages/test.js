@@ -46,21 +46,36 @@ const TestPage = {
   render() {
     if (!TestEngine.state) {
       return `
-        <div class="setup-page page-enter text-center" style="padding-top: var(--space-16); text-align: center;">
-          <div class="empty-state">
-            <div class="empty-state-icon" style="font-size: 40px;">📄</div>
-            <div class="empty-state-title" style="font-weight: 600; color: var(--text-primary); margin-top: 12px;">No Active Test</div>
-            <p style="color: var(--text-muted); margin-bottom: var(--space-6);">Go to setup to start a new mock test.</p>
-            <button class="btn btn-primary" onclick="App.navigate('setup')">Go to Setup</button>
+        <div class="cbt-page" style="align-items:center; justify-content:center;">
+          <div style="text-align:center; padding:40px;">
+            <div style="font-size:40px; margin-bottom:12px;">📄</div>
+            <div style="font-size:18px; font-weight:600; color:#E2E8F0; margin-bottom:8px;">No Active Test</div>
+            <p style="color:#64748B; margin-bottom:24px;">Go to setup to start a new mock test.</p>
+            <button class="cbt-btn cbt-btn-primary" onclick="App.navigate('setup')">Go to Setup</button>
           </div>
         </div>
       `;
+    }
+
+    // ── Board Renderer Delegation ──
+    // If a board-specific renderer (SSC/Banking/Railway/UPSC) is active,
+    // delegate the entire render to that renderer's methods.
+    const _boardRenderer = typeof RendererRouter !== 'undefined' ? RendererRouter.getActiveRenderer() : null;
+    if (_boardRenderer) {
+      if (_boardRenderer.isShowingInstructions && _boardRenderer.isShowingInstructions()) {
+        return _boardRenderer.renderInstructions();
+      }
+      if (_boardRenderer.renderTest) {
+        return _boardRenderer.renderTest();
+      }
     }
 
     const current = TestEngine.getCurrentQuestion();
     const navStatus = TestEngine.getNavStatus();
     const answeredCount = Object.keys(TestEngine.state.answers).length;
     const sections = this._getSections();
+    const board = this._getBoard();
+    const examName = this._getExamName();
 
     // Determine current section name
     const currentQuestionObj = TestEngine.state.questions[current.index];
@@ -70,149 +85,145 @@ const TestPage = {
     // Palette stats
     const totalCount = current.total;
     const markedCount = Object.keys(TestEngine.state.markedForReview).filter(k => TestEngine.state.markedForReview[k]).length;
+    const notAnsweredCount = this._visitedQuestions.size - answeredCount;
+    const notVisitedCount = totalCount - this._visitedQuestions.size;
+    const progressPercent = Math.round((answeredCount / totalCount) * 100);
 
     return `
-      <div class="test-page page-enter" style="min-height: 100vh; background: var(--bg-primary); display: flex; flex-direction: column;">
-        <!-- Top Sticky Bar -->
-        <div style="position: sticky; top: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); height: 56px; z-index: var(--z-sticky); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4);">
-          <button class="btn btn-ghost" onclick="TestPage.confirmExit()" style="font-size: var(--text-sm); font-weight: 500; display: flex; align-items: center; gap: 4px;">
-            ← Exit
-          </button>
-          <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-primary);">
-            ${sectionName} · Q ${current.index + 1}/${current.total}
+      <div class="cbt-page page-enter" ${board ? `data-exam-board="${board.key}"` : ''}>
+
+        <!-- HEADER BAR -->
+        <div class="cbt-header">
+          <div class="cbt-header-left">
+            <button class="cbt-exit-btn" onclick="TestPage.confirmExit()">✕ Exit</button>
+            ${board ? `<span class="cbt-exam-badge">${board.label}</span>` : ''}
+            <span class="cbt-exam-name">${examName}</span>
           </div>
-          <div id="timer-display" style="font-family: var(--font-mono); font-size: var(--text-base); font-weight: 700; color: var(--text-primary); transition: color 120ms ease; display: flex; align-items: center; gap: 6px;">
-            ⏱ <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
+          <div class="cbt-header-center">
+            <span class="cbt-question-counter">${sectionName ? sectionName + ' · ' : ''}Q ${current.index + 1} / ${current.total}</span>
+          </div>
+          <div class="cbt-header-right">
+            <button class="cbt-fullscreen-btn" onclick="TestPage.toggleFullscreen()" title="Fullscreen (F11)">⛶</button>
+            <div class="cbt-timer" id="timer-display">
+              <span class="cbt-timer-icon">⏱</span>
+              <span id="timer-text">${Helpers.formatTime(TestEngine.state.timeRemaining)}</span>
+            </div>
           </div>
         </div>
 
-        <!-- Section Tabs (if multi-section) -->
+        <!-- PROGRESS BAR -->
+        <div class="cbt-progress">
+          <div class="cbt-progress-fill" style="width:${progressPercent}%"></div>
+        </div>
+
+        <!-- SECTION TABS -->
         ${sections.length > 1 ? `
-        <div style="display: flex; gap: 8px; padding: 8px var(--sp-4); background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); overflow-x: auto; scrollbar-width: none;">
+        <div class="cbt-section-tabs">
           ${sections.map(s => `
-            <button class="btn ${currentSubject === s.subject ? 'btn-primary' : 'btn-secondary'}" onclick="TestPage.filterSection('${s.subject}')" style="padding: 4px 12px; font-size: var(--text-xs); border-radius: var(--radius-full); white-space: nowrap;">
+            <button class="cbt-section-tab ${currentSubject === s.subject ? 'active' : ''}" onclick="TestPage.filterSection('${s.subject}')">
               ${s.name}
             </button>
           `).join('')}
         </div>
         ` : ''}
 
-        <!-- Main Workspace -->
-        <div style="flex: 1; display: grid; grid-template-columns: 1fr 280px; max-width: var(--container-xl); width: 100%; margin: 0 auto;">
-          
+        <!-- MAIN WORKSPACE -->
+        <div class="cbt-workspace">
+
           <!-- Left: Question Area -->
-          <div style="padding: 24px; border-right: 1px solid var(--border-color); overflow-y: auto;">
-            <div id="question-area">
-              ${this._renderQuestion(current)}
-            </div>
+          <div class="cbt-question-panel" id="question-area">
+            ${this._renderQuestion(current)}
           </div>
 
-          <!-- Right: Side Question Palette (hidden on small screens) -->
-          <div class="desktop-only" style="padding: 24px; background: var(--bg-secondary); overflow-y: auto;">
-            <div style="font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 12px;">Questions Navigation</div>
-            
-            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 24px;" id="nav-grid">
-              ${navStatus.map((ns, i) => {
-                const isVisited = this._visitedQuestions.has(i) || ns.current;
-                const isAnswered = ns.answered;
-                const isMarked = ns.review;
-                
-                let btnStyle = 'background: var(--bg-sunken); border: 1px solid var(--border-color); color: var(--text-secondary);';
-                if (isAnswered && isMarked) {
-                  btnStyle = 'background: var(--danger); border: 1px solid var(--danger); color: white;';
-                } else if (isMarked) {
-                  btnStyle = 'background: var(--warning); border: 1px solid var(--warning); color: white;';
-                } else if (isAnswered) {
-                  btnStyle = 'background: var(--success); border: 1px solid var(--success); color: white;';
-                } else if (isVisited) {
-                  btnStyle = 'background: var(--bg-primary); border: 1px solid var(--border-strong); color: var(--text-primary);';
-                }
-                
-                if (ns.current) {
-                  btnStyle += ' outline: 2px solid var(--brand-primary); outline-offset: 2px;';
-                }
+          <!-- Right: Question Palette -->
+          <div class="cbt-palette-panel">
 
-                return `
-                  <button onclick="TestPage.goTo(${i})" style="width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; ${btnStyle}">
-                    ${i + 1}
-                  </button>
-                `;
-              }).join('')}
+            <!-- Color Legend -->
+            <div>
+              <div class="cbt-palette-title">Legend</div>
+              <div class="cbt-legend">
+                <div class="cbt-legend-item"><span class="cbt-legend-dot answered">✓</span> Answered</div>
+                <div class="cbt-legend-item"><span class="cbt-legend-dot not-answered">✕</span> Not Answered</div>
+                <div class="cbt-legend-item"><span class="cbt-legend-dot not-visited"></span> Not Visited</div>
+                <div class="cbt-legend-item"><span class="cbt-legend-dot marked">★</span> Marked</div>
+                <div class="cbt-legend-item"><span class="cbt-legend-dot marked-ans">✓</span> Ans + Marked</div>
+              </div>
             </div>
 
-            <!-- Palette Summary Stats -->
-            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 16px;">
-              <div style="display: flex; justify-content: space-between;">
-                <span>Total Questions</span>
-                <strong style="color: var(--text-primary);">${totalCount}</strong>
+            <!-- Question Grid -->
+            <div>
+              <div class="cbt-palette-title">Questions</div>
+              <div class="cbt-nav-grid" id="nav-grid">
+                ${this._renderNavButtons(navStatus)}
               </div>
-              <div style="display: flex; justify-content: space-between;">
+            </div>
+
+            <!-- Stats -->
+            <div class="cbt-palette-stats">
+              <div class="cbt-palette-stat">
+                <span>Total</span>
+                <strong>${totalCount}</strong>
+              </div>
+              <div class="cbt-palette-stat">
                 <span>Answered</span>
-                <strong style="color: var(--success);">${answeredCount}</strong>
+                <strong class="green">${answeredCount}</strong>
               </div>
-              <div style="display: flex; justify-content: space-between;">
+              <div class="cbt-palette-stat">
+                <span>Not Answered</span>
+                <strong class="red">${notAnsweredCount < 0 ? 0 : notAnsweredCount}</strong>
+              </div>
+              <div class="cbt-palette-stat">
                 <span>Marked for Review</span>
-                <strong style="color: var(--warning);">${markedCount}</strong>
+                <strong class="purple">${markedCount}</strong>
+              </div>
+              <div class="cbt-palette-stat">
+                <span>Not Visited</span>
+                <strong>${notVisitedCount < 0 ? 0 : notVisitedCount}</strong>
               </div>
             </div>
+
           </div>
 
         </div>
 
-        <!-- Sticky Bottom Bar -->
-        <div style="position: sticky; bottom: 0; background: var(--bg-surface); border-top: 1px solid var(--border-color); height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--sp-4); z-index: var(--z-sticky);">
-          <button class="btn btn-secondary" onclick="TestPage.prev()" ${current.index === 0 ? 'disabled' : ''} style="font-weight: 500;">
-            ← Prev
-          </button>
-          
-          <button class="btn btn-secondary ${current.isMarkedForReview ? 'active' : ''}" onclick="TestPage.toggleReview()" style="font-weight: 500; color: ${current.isMarkedForReview ? 'var(--warning)' : 'var(--text-secondary)'};">
-            ⭐ Mark for Review
-          </button>
-          
-          <button class="btn btn-primary" onclick="TestPage.next()" style="font-weight: 600; font-family: var(--font-display);">
-            ${current.index === current.total - 1 ? 'Submit' : 'Save & Next →'}
-          </button>
+        <!-- BOTTOM ACTION BAR -->
+        <div class="cbt-bottom-bar">
+          <div class="cbt-bottom-left">
+            <button class="cbt-btn cbt-btn-ghost" onclick="TestPage.prev()" ${current.index === 0 ? 'disabled' : ''}>
+              ← Prev
+            </button>
+            <button class="cbt-btn cbt-btn-clear" onclick="TestPage.clearResponse()">
+              ✕ Clear
+            </button>
+          </div>
+          <div class="cbt-bottom-right">
+            <button class="cbt-btn cbt-btn-review ${current.isMarkedForReview ? 'active' : ''}" onclick="TestPage.toggleReview()">
+              ★ <span class="cbt-btn-text">Mark for Review</span>
+            </button>
+            ${current.index === current.total - 1
+              ? `<button class="cbt-btn cbt-btn-submit" onclick="TestPage.next()">Submit Test ✓</button>`
+              : `<button class="cbt-btn cbt-btn-primary" onclick="TestPage.next()">Save & Next →</button>`
+            }
+          </div>
         </div>
 
-        <!-- Mobile Drawer Navigation Toggle (only visible on mobile) -->
-        <div class="mobile-only" style="position: fixed; bottom: 70px; right: 16px; z-index: 100;">
-          <button onclick="TestPage.toggleMobileNav()" style="width: 48px; height: 48px; border-radius: 50%; background: var(--brand-primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); border: none; font-size: 20px;">
-            📑
-          </button>
-        </div>
+        <!-- MOBILE FAB -->
+        <button class="cbt-mobile-fab" onclick="TestPage.toggleMobileNav()">📑</button>
 
-        <!-- Mobile Nav Sheet -->
-        <div class="mobile-nav-sheet" id="mobile-nav-sheet" style="display: none; position: fixed; inset: 0; z-index: var(--z-modal);">
-          <div style="position: absolute; inset: 0; background: var(--bg-overlay);" onclick="TestPage.toggleMobileNav()"></div>
-          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: var(--bg-surface); border-radius: var(--radius-xl) var(--radius-xl) 0 0; padding: 20px; max-height: 70vh; overflow-y: auto;">
-            <div style="font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); margin-bottom: 12px; text-align: center;">Jump to Question</div>
-            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;" id="nav-grid-mobile">
-              ${navStatus.map((ns, i) => {
-                const isVisited = this._visitedQuestions.has(i) || ns.current;
-                const isAnswered = ns.answered;
-                const isMarked = ns.review;
-                
-                let btnStyle = 'background: var(--bg-sunken); border: 1px solid var(--border-color); color: var(--text-secondary);';
-                if (isAnswered && isMarked) {
-                  btnStyle = 'background: var(--danger); border: 1px solid var(--danger); color: white;';
-                } else if (isMarked) {
-                  btnStyle = 'background: var(--warning); border: 1px solid var(--warning); color: white;';
-                } else if (isAnswered) {
-                  btnStyle = 'background: var(--success); border: 1px solid var(--success); color: white;';
-                } else if (isVisited) {
-                  btnStyle = 'background: var(--bg-primary); border: 1px solid var(--border-strong); color: var(--text-primary);';
-                }
-                
-                if (ns.current) {
-                  btnStyle += ' outline: 2px solid var(--brand-primary); outline-offset: 2px;';
-                }
-
-                return `
-                  <button onclick="TestPage.goTo(${i}); TestPage.toggleMobileNav();" style="width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; ${btnStyle}">
-                    ${i + 1}
-                  </button>
-                `;
-              }).join('')}
+        <!-- MOBILE NAV SHEET -->
+        <div class="cbt-mobile-sheet" id="mobile-nav-sheet">
+          <div class="cbt-mobile-overlay" onclick="TestPage.toggleMobileNav()"></div>
+          <div class="cbt-mobile-panel">
+            <div class="cbt-mobile-handle"></div>
+            <div class="cbt-palette-title" style="text-align:center; margin-bottom:12px;">Jump to Question</div>
+            <div class="cbt-legend" style="margin-bottom:16px;">
+              <div class="cbt-legend-item"><span class="cbt-legend-dot answered">✓</span> Answered</div>
+              <div class="cbt-legend-item"><span class="cbt-legend-dot not-answered">✕</span> Not Ans</div>
+              <div class="cbt-legend-item"><span class="cbt-legend-dot not-visited"></span> Not Visited</div>
+              <div class="cbt-legend-item"><span class="cbt-legend-dot marked">★</span> Marked</div>
+            </div>
+            <div class="cbt-mobile-grid" id="nav-grid-mobile">
+              ${this._renderNavButtons(navStatus, true)}
             </div>
           </div>
         </div>
@@ -233,38 +244,70 @@ const TestPage = {
     const isBookmarked = !!bookmarks[q.id];
 
     return `
-      <div class="tq-wrapper">
-        <div class="tq-header">
-          <div class="tq-num">Q ${current.index + 1} &nbsp;/&nbsp; ${current.total}</div>
-          <div class="tq-actions">
-            <button class="tq-action-btn tq-lang-btn" onclick="TestPage.toggleQuestionLanguage()">
-              &#127760; EN/HI
+      <div>
+        <div class="cbt-q-header">
+          <div class="cbt-q-number">
+            <span class="cbt-q-number-badge">${current.index + 1}</span>
+            <span class="cbt-q-of">of ${current.total}</span>
+          </div>
+          <div class="cbt-q-actions">
+            <button class="cbt-q-action-btn" onclick="TestPage.toggleQuestionLanguage()">
+              🌐 EN/HI
             </button>
-            <button class="tq-action-btn ${isBookmarked ? 'tq-bookmark-btn--active' : ''}" onclick="TestPage.toggleBookmark('${q.id}')" id="bookmark-btn-${q.id}" title="Bookmark">
-              ${isBookmarked ? '&#9733;' : '&#9734;'} ${isBookmarked ? 'Saved' : 'Save'}
+            <button class="cbt-q-action-btn ${isBookmarked ? 'active' : ''}" onclick="TestPage.toggleBookmark('${q.id}')" id="bookmark-btn-${q.id}" title="Bookmark">
+              ${isBookmarked ? '★ Saved' : '☆ Save'}
             </button>
-            <button class="tq-action-btn" onclick="TestPage._showReportModal(${current.index})" title="Report">
-              &#9873; Report
+            <button class="cbt-q-action-btn" onclick="TestPage._showReportModal(${current.index})" title="Report">
+              ⚑ Report
             </button>
           </div>
         </div>
 
-        <div class="tq-question">${q.question}</div>
+        <div class="cbt-q-text">${q.question}</div>
 
-        <div class="opt-list">
+        <div class="cbt-options">
           ${q.options.map((opt, i) => {
             const isSelected = current.selectedAnswer === i;
             return `
-              <button class="opt-btn ${isSelected ? 'opt-btn--selected' : ''}" onclick="TestPage.selectOption(${i})">
-                <span class="opt-label">${labels[i]}</span>
-                <span class="opt-text">${opt}</span>
-                <span class="opt-check">${isSelected ? '&#10003;' : ''}</span>
+              <button class="cbt-option ${isSelected ? 'selected' : ''}" onclick="TestPage.selectOption(${i})">
+                <span class="cbt-option-label">${labels[i]}</span>
+                <span class="cbt-option-text">${opt}</span>
+                <span class="cbt-option-check">✓</span>
               </button>
             `;
           }).join('')}
         </div>
       </div>
     `;
+  },
+
+  // Render nav buttons for both desktop and mobile palette
+  _renderNavButtons(navStatus, isMobile = false) {
+    return navStatus.map((ns, i) => {
+      const isVisited = this._visitedQuestions.has(i) || ns.current;
+      const isAnswered = ns.answered;
+      const isMarked = ns.review;
+
+      let cls = '';
+      if (isAnswered && isMarked) {
+        cls = 'marked-answered';
+      } else if (isMarked) {
+        cls = 'marked';
+      } else if (isAnswered) {
+        cls = 'answered';
+      } else if (isVisited) {
+        cls = 'not-answered';
+      }
+      // else: not-visited (default styling)
+
+      if (ns.current) cls += ' current';
+
+      const onclick = isMobile
+        ? `TestPage.goTo(${i}); TestPage.toggleMobileNav();`
+        : `TestPage.goTo(${i})`;
+
+      return `<button class="cbt-nav-btn ${cls}" onclick="${onclick}">${i + 1}</button>`;
+    }).join('');
   },
 
   afterRender() {
@@ -332,6 +375,20 @@ const TestPage = {
     }, { passive: true });
   },
 
+  // ── Fullscreen toggle ──
+  toggleFullscreen() {
+    const page = document.querySelector('.cbt-page');
+    if (!document.fullscreenElement) {
+      (page || document.documentElement).requestFullscreen?.().then(() => {
+        this._isFullscreen = true;
+      }).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => {
+        this._isFullscreen = false;
+      }).catch(() => {});
+    }
+  },
+
   // ── Timer with %-based thresholds ──
   startTimer() {
     this.stopTimer();
@@ -370,10 +427,10 @@ const TestPage = {
         const totalTime = TestEngine.state.totalTime;
         const percentLeft = result / totalTime;
 
-        timerDisplay.classList.remove('warning', 'danger', 'timer-shake');
+        timerDisplay.classList.remove('warning', 'critical');
 
         if (percentLeft <= 0.10) {
-          timerDisplay.classList.add('danger', 'timer-shake');
+          timerDisplay.classList.add('critical');
         } else if (percentLeft <= 0.20) {
           timerDisplay.classList.add('warning');
         }
@@ -640,19 +697,13 @@ const TestPage = {
     const grid = document.getElementById('nav-grid');
     if (grid) {
       const navStatus = TestEngine.getNavStatus();
-      grid.innerHTML = navStatus.map((ns, i) => `
-        <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
-                onclick="TestPage.goTo(${i})" id="nav-btn-${i}">${i + 1}</button>
-      `).join('');
+      grid.innerHTML = this._renderNavButtons(navStatus);
     }
     // Mobile nav
     const mGrid = document.getElementById('nav-grid-mobile');
     if (mGrid) {
       const navStatus = TestEngine.getNavStatus();
-      mGrid.innerHTML = navStatus.map((ns, i) => `
-        <button class="nav-btn ${ns.current ? 'current' : ''} ${ns.answered ? 'answered' : ''} ${ns.review ? 'review' : ''}"
-                onclick="TestPage.goTo(${i});TestPage.toggleMobileNav()">${i + 1}</button>
-      `).join('');
+      mGrid.innerHTML = this._renderNavButtons(navStatus, true);
     }
   },
 
@@ -764,8 +815,16 @@ const TestPage = {
   toggleMobileNav() {
     const sheet = document.getElementById('mobile-nav-sheet');
     if (sheet) {
-      const isVisible = sheet.style.display === 'block';
-      sheet.style.display = isVisible ? 'none' : 'block';
+      sheet.classList.toggle('open');
+    }
+  },
+
+  clearResponse() {
+    if (!TestEngine.state) return;
+    const current = TestEngine.getCurrentQuestion();
+    if (current.selectedAnswer !== null && current.selectedAnswer !== undefined) {
+      delete TestEngine.state.answers[current.index];
+      App.render();
     }
   },
 

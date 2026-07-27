@@ -21,12 +21,28 @@ const RailwayRenderer = {
   toggleMobilePalette() { RendererBase.toggleMobilePalette(); },
   updateViolationBadge() { RendererBase.updateViolationBadge(); },
 
+  // ── Dark Mode Toggle ──
+  _isDark: localStorage.getItem('rrb_dark_mode') === '1',
+
+  toggleDarkMode() {
+    this._isDark = !this._isDark;
+    localStorage.setItem('rrb_dark_mode', this._isDark ? '1' : '0');
+    const el = document.getElementById('rrb-container');
+    if (el) el.classList.toggle('rrb-dark', this._isDark);
+    const btn = document.getElementById('rrb-dark-toggle-btn');
+    if (btn) btn.textContent = this._isDark ? '☀️' : '🌙';
+  },
+
+  _getDarkClass() {
+    return this._isDark ? ' rrb-dark' : '';
+  },
+
   renderInstructions() {
     const preset = this._getPreset();
     if (!preset) return '';
     const sections = preset.sections || [];
     return `
-    <div class="rrb-mode" id="rrb-container">
+    <div class="rrb-mode${this._getDarkClass()}" id="rrb-container">
       <div class="rrb-header">
         <div class="rrb-header-left">
           <span class="rrb-logo">🚂 Indian Railways</span>
@@ -34,6 +50,7 @@ const RailwayRenderer = {
         </div>
         <div class="rrb-header-right">
           <span class="rrb-candidate">Candidate: ${this._getCandidateName()} | Roll: ${this._getCandidateRoll()}</span>
+          <button class="rrb-dark-toggle" id="rrb-dark-toggle-btn" onclick="RailwayRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <span class="rrb-profile-photo">👤</span>
         </div>
       </div>
@@ -89,7 +106,7 @@ const RailwayRenderer = {
     const vCount = typeof ExamProctor !== 'undefined' ? ExamProctor.getViolationCount() : 0;
 
     return `
-    <div class="rrb-mode" id="rrb-container">
+    <div class="rrb-mode${this._getDarkClass()}" id="rrb-container">
       <div class="rrb-header">
         <div class="rrb-header-left">
           <span class="rrb-logo-sm">🚂</span>
@@ -99,10 +116,11 @@ const RailwayRenderer = {
         <div class="rrb-header-right">
           ${typeof ExamProctor!=='undefined'?`<span class="ssc-violation-badge ${vCount===0?'clean':vCount>=2?'danger':'warn'}" id="cbt-violation-badge">${vCount===0?'✓':'⚠ '+vCount}</span>`:''}
           ${TestEngine.state.totalTime<99999?`<div class="rrb-timer" id="cbt-timer">${Helpers.formatTime(TestEngine.state.timeRemaining)}</div>`:''}
+          <button class="rrb-dark-toggle" id="rrb-dark-toggle-btn" onclick="RailwayRenderer.toggleDarkMode()" title="Toggle Dark Mode">${this._isDark ? '☀️' : '🌙'}</button>
           <button class="rrb-submit-btn" onclick="RailwayRenderer.showSubmitModal()" id="cbt-submit-btn">Submit</button>
         </div>
       </div>
-      ${sections.length>1?`<div class="rrb-section-bar" id="cbt-section-bar">${sections.map((s,i)=>`<button class="rrb-section-tab ${q.subject===s.subject?'active':''} ${this._lockedSections.has(s.subject)?'locked':''}" onclick="RailwayRenderer.jumpToSection('${s.subject}')">${s.name}</button>`).join('')}</div>`:''}
+      ${sections.length>1?`<div class="rrb-section-bar" id="cbt-section-bar">${sections.map((s,i)=>`<button class="rrb-section-tab ${(q._presetSection||q.subject)===s.subject?'active':''} ${this._lockedSections.has(s.subject)?'locked':''}" onclick="RailwayRenderer.jumpToSection('${s.subject}')">${s.name}</button>`).join('')}</div>`:''}
       <div class="rrb-body">
         <div class="rrb-question-panel">
           <div class="rrb-question-info"><span class="rrb-q-number">Q.${current.index+1} of ${current.total}</span><span class="rrb-q-section">${q.subject}</span><span class="rrb-q-marks">+${preset?.marksPerQuestion||1} / ${preset?.negativeMarking?'-'+preset.negativeValue:'No neg'}</span></div>
@@ -148,7 +166,7 @@ const RailwayRenderer = {
     document.querySelectorAll('.rrb-section-tab').forEach(t => t.classList.remove('active'));
     const preset = this._getPreset();
     const secs = preset?.sections || [];
-    const mi = secs.findIndex(s => s.subject === q.subject);
+    const mi = secs.findIndex(s => s.subject === (q._presetSection || q.subject));
     const tabs = document.querySelectorAll('.rrb-section-tab');
     if (mi>=0 && tabs[mi]) tabs[mi].classList.add('active');
   },

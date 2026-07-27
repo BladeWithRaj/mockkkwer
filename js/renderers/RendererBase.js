@@ -111,7 +111,7 @@ const RendererBase = {
     }
 
     this._currentSectionIdx = targetIdx >= 0 ? targetIdx : this._currentSectionIdx;
-    const idx = TestEngine.state.questions.findIndex(q => q.subject === subject);
+    const idx = TestEngine.state.questions.findIndex(q => (q._presetSection || q.subject) === subject);
     if (idx >= 0) TestPage.goTo(idx);
   },
 
@@ -175,7 +175,7 @@ const RendererBase = {
     const unansweredCount = total - answeredCount;
 
     const sectionStats = sections.map(sec => {
-      const sectionQs = questions.map((q, i) => ({ q, i })).filter(x => x.q.subject === sec.subject);
+      const sectionQs = questions.map((q, i) => ({ q, i })).filter(x => (x.q._presetSection || x.q.subject) === sec.subject);
       const ans = sectionQs.filter(x => answers[x.q.id] !== undefined && answers[x.q.id] !== null).length;
       const rev = sectionQs.filter(x => reviewed[x.i]).length;
       return { name: sec.name, total: sectionQs.length, answered: ans, unanswered: sectionQs.length - ans, marked: rev };
